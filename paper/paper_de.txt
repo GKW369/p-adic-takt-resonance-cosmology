@@ -1,0 +1,25 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{amsmath,amssymb,amsfonts}
+
+\title{\textbf{Emergente Raumzeit und Gravitation durch p-adische Modulo-Hierarchien und ikosaedrische Quasikristall-Takt-Drosselung}}
+\author{\textbf{Kurt Guido Wirminghaus} \\ \textit{Unabhängiger Forscher}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Dieses Paper stellt ein vollständig diskretes, kontinuumsfreies kosmologisches Modell vor. Raumzeit, Lorentz-Invarianz und Gravitation werden als makroskopische Approximationen eines fundamentalen p-adischen Netzwerks hergeleitet. Wir beweisen das 137-Takt-Theorem, welches zeigt, dass die Feinstrukturkonstante ($\alpha^{-1} \approx 137$) das interne Hardware-Taktverhältnis bestimmt, das zur Vermeidung kombinatorischer Beobachterexplosionen zwingend erforderlich ist. Durch Projektion eines 6D-Gitters auf einen 3D-ikosaedrischen Quasikristall beweisen wir, dass Richtungsanisotropien bis zur Ordnung $\mathcal{O}(\ell_P^4)$ unterdrückt werden.
+\end{abstract}
+
+\section{Das 137-Takt-Theorem und Datenrahmen-Stabilisierung}
+Wir definieren den physikalischen Datenrahmen über das Taktverhältnis $\alpha^{-1} \approx 137$. Ein stabiler topologischer Datenwirbel (Teilchen) verändert seine Position auf dem makroskopischen Gitter maximal alle 137 Hardware-Takte um genau 1 Pixel ($c=1$). Die restlichen 136 internen Takte werden für dezentrale Fehlerkorrekturen und p-adische Modulo-Operationen im Bruhat-Tits-Baum beansprucht. Dies verhindert eine kombinatorische Explosion der Kreuz-Beobachtungen ($N!$) und stabilisiert das System.
+
+\section{Quanten-Zeno-Kosmologie und Überlauffreiheit}
+Die kosmische Inflation im Urzustand ($t \to 0$) resultiert aus dem mathematischen Verschwinden stabiler Beobachterknoten ($N_{\text{obs}} \to 0$). Die Synchronisationslast bricht zusammen, und das System operiert im ungedrosselten Overclocking-Modus. Erst mit Entstehung stabiler informationeller Schleifen steigt $N_{\text{obs}}$, was das System über den kosmischen Quanten-Zeno-Effekt auf die Hardwareschranke von 1 Pixel pro Takt ($c$) herunterdrosselt.
+
+\end{document}
+

@@ -1,0 +1,20 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# LaTeX build remnants
+*.aux
+*.log
+*.toc
+*.synctex.gz
+*.pdf
+*.blg
+*.bbl
+
