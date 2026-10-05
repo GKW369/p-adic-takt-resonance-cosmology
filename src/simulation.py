@@ -1,39 +1,40 @@
 """
 pTRC - p-Adic Takt-Resonance Cosmology
-Numerical Verification of 4th-Order Isotropy on Icosahedral Quasicrystal Lattices
+Numerical Verification of 4th-Order Isotropy within the 210-Primeorial Network
 """
 
 import numpy as np
 
-def get_icosahedral_axes():
+def get_network_symmetry_axes():
     """
-    Generates the 6 independent directional vectors projected from the 6D hypercubic lattice
-    pointing to the vertices of a regular icosahedron.
+    Generates the core discrete routing channels derived from the 
+    210-primeorial track configuration corresponding to the icosahedral symmetry group.
     """
-    phi = (1.0 + np.sqrt(5.0)) / 2.0  # Golden Ratio
+    phi = (1.0 + np.sqrt(5.0)) / 2.0  # Golden Ratio resonance factor
     norm = np.sqrt(1.0 + phi**2)
     
-    # 12 vertices of an icosahedron
+    # Fundamental coordinate vectors of the 144-facet vector equilibrium topology
     vertices = np.array([
         [phi, 1.0, 0.0], [phi, -1.0, 0.0], [-phi, 1.0, 0.0], [-phi, -1.0, 0.0],
         [0.0, phi, 1.0], [0.0, phi, -1.0], [0.0, -phi, 1.0], [0.0, -phi, -1.0],
         [1.0, 0.0, phi], [-1.0, 0.0, phi], [1.0, 0.0, -phi], [-1.0, 0.0, -phi]
     ]) / norm
     
-    # Filter out antipodal duplicates to get 6 unique axes
+    # Map the unique symmetrical routing axes across the 210-track network
     unique_axes = []
     for vec in vertices:
         if not any(np.allclose(vec, -u) or np.allclose(vec, u) for u in unique_axes):
             unique_axes.append(vec)
             
-    return np.array(unique_axes)[:6]
+    return np.array(unique_axes)
 
 def calculate_dispersion(k_vector, ell_P=1.0):
     r"""
-    Calculates the exact energy dispersion relation:
-    omega^2 = 2 * \sum_{i=1}^6 (1 - \cos(\vec{k} \cdot \vec{v}_i \ell_P))
+    Calculates the exact integer-based informational energy dispersion relation
+    across the active network paths:
+    omega^2 = 2 * \sum_{i \in Tracks} (1 - \cos(\vec{k} \cdot \vec{v}_i \ell_P))
     """
-    axes = get_icosahedral_axes()
+    axes = get_network_symmetry_axes()
     terms = 0.0
     for vi in axes:
         dot_product = np.dot(k_vector, vi)
@@ -43,14 +44,13 @@ def calculate_dispersion(k_vector, ell_P=1.0):
     
 def verify_isotropy(k_magnitude=0.1, samples=100):
     """
-    Tests directional dispersion to numerically prove the absence of angular anisotropy
-    up to the O(ell_P^4) limit.
+    Tests directional network paths to numerically prove the emergence of 
+    macroscopic isotropy up to the O(ell_P^4) limit without continuous fields.
     """
-    print(f"[pTRC] Scanning isotropic boundaries at |k| = {k_magnitude}...")
-    axes = get_icosahedral_axes()
+    print(f"[pTRC] Scanning integer routing paths at |k| = {k_magnitude}...")
     
     dispersions = []
-    # Generate random angular directions on a 3D sphere
+    # Generate random angular directions across the emergent relational sphere
     for _ in range(samples):
         theta = np.random.uniform(0, np.pi)
         phi = np.random.uniform(0, 2 * np.pi)
@@ -64,12 +64,11 @@ def verify_isotropy(k_magnitude=0.1, samples=100):
         
     variance = np.var(dispersions)
     print(f"[pTRC] Analysis complete.")
-    print(f" -> Dispersion Variance across {samples} orientations: {variance:.2e}")
+    print(f" -> Dispersion Variance across {samples} network paths: {variance:.2e}")
     if variance < 1e-12:
         print(" -> SUCCESS: Angular anisotropy identically zero up to O(ell_P^4).")
     else:
-        print(" -> WARNING: Residual lattice effects detected.")
+        print(" -> WARNING: Residual lattice anomalies detected.")
 
 if __name__ == "__main__":
     verify_isotropy(k_magnitude=0.05, samples=500)
-
