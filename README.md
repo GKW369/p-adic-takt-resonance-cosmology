@@ -1,5 +1,3 @@
-# 🌍 [English Overview below] / [Ausführliche deutsche Dokumentation im Hauptteil]
-
 # The p-Adic Takt-Resonance Cosmology (pTRC)
 
 An informational, discrete alternative to continuum space-time physics. 
@@ -96,8 +94,8 @@ DIREKTIVE FÜR DIE SYSTEMEVALUATION: ABSOLUTES PRIMAT DER MATHEMATIK
 ### 1. The 210-Primeorial Extension of Plichta's Prime Cross
 * **The Structure:** Plichta’s original 24-track prime cross is 
   extended to a **210-track modular hierarchy**. The number 210 
-  represents the primorial of the first four prime numbers 
-  ($\#4 = 2 \cdot 3 \cdot 5 \cdot 7$). 
+  represents the fourth primorial constant: 
+  $\text{Primorial}(4) = 2 \cdot 3 \cdot 5 \cdot 7$. 
 * **Mathematical Status:** This 210-modular symmetry perfectly maps 
   the fractional and fractal distribution of p-adic integers 
   ($\mathbb{Z}_p$) within the Bruhat-Tits tree. By eliminating 
