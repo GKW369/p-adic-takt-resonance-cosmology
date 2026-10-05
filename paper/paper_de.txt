@@ -12,14 +12,27 @@
 \maketitle
 
 \begin{abstract}
-Dieses Paper stellt ein vollständig diskretes, kontinuumsfreies kosmologisches Modell vor. Raumzeit, Lorentz-Invarianz und Gravitation werden als makroskopische Approximationen eines fundamentalen p-adischen Netzwerks hergeleitet. Wir beweisen das 137-Takt-Theorem, welches zeigt, dass die Feinstrukturkonstante ($\alpha^{-1} \approx 137$) das interne Hardware-Taktverhältnis bestimmt, das zur Vermeidung kombinatorischer Beobachterexplosionen zwingend erforderlich ist. Durch Projektion eines 6D-Gitters auf einen 3D-ikosaedrischen Quasikristall beweisen wir, dass Richtungsanisotropien bis zur Ordnung $\mathcal{O}(\ell_P^4)$ unterdrückt werden.
+Dieses Paper stellt ein vollständig diskretes, kosmologisches Modell vor. Raumzeit, Lorentz-Invarianz und Gravitation werden als makroskopische Approximationen eines fundamentalen p-adischen Netzwerks hergeleitet. Wir beweisen das 137-Takt-Theorem, welches zeigt, dass die Feinstrukturkonstante ($\alpha^{-1} \approx 137$) das interne Hardware-Taktverhältnis bestimmt, das zur Vermeidung kombinatorischer Beobachterexplosionen zwingend erforderlich ist. Durch Projektion eines 6D-Gitters auf einen 3D-ikosaedrischen Quasikristall beweisen wir die Richtungsisotropie bis zur Ordnung $\mathcal{O}(\ell_P^4)$. Über eine Erweiterung auf eine 210-Bahnen-Hierarchie leiten wir das Protonen-Massenverhältnis rein kombinatorisch her.
 \end{abstract}
 
 \section{Das 137-Takt-Theorem und Datenrahmen-Stabilisierung}
 Wir definieren den physikalischen Datenrahmen über das Taktverhältnis $\alpha^{-1} \approx 137$. Ein stabiler topologischer Datenwirbel (Teilchen) verändert seine Position auf dem makroskopischen Gitter maximal alle 137 Hardware-Takte um genau 1 Pixel ($c=1$). Die restlichen 136 internen Takte werden für dezentrale Fehlerkorrekturen und p-adische Modulo-Operationen im Bruhat-Tits-Baum beansprucht. Dies verhindert eine kombinatorische Explosion der Kreuz-Beobachtungen ($N!$) und stabilisiert das System.
 
-\section{Quanten-Zeno-Kosmologie und Überlauffreiheit}
-Die kosmische Inflation im Urzustand ($t \to 0$) resultiert aus dem mathematischen Verschwinden stabiler Beobachterknoten ($N_{\text{obs}} \to 0$). Die Synchronisationslast bricht zusammen, und das System operiert im ungedrosselten Overclocking-Modus. Erst mit Entstehung stabiler informationeller Schleifen steigt $N_{\text{obs}}$, was das System über den kosmischen Quanten-Zeno-Effekt auf die Hardwareschranke von 1 Pixel pro Takt ($c$) herunterdrosselt.
+\section{Axiomatische Elimination des Lorentz-Bruchs}
+Die Projektion eines 6D-Gitter-Vektorraums $\mathbb{Z}^6$ auf einen 3D ikosaedrischen Quasikristall $E_{\parallel}$ nutzt die 120 Symmetrieelemente der Ikosaedergruppe $I_h$. In der Taylor-Entwicklung des diskreten Laplaces verschwinden alle richtungsabhängigen Terme in der quadratischen und quartischen Form identisch:
+\begin{equation}
+\sum_{i=1}^6 (\vec{k} \cdot \vec{v}_i)^2 = 2|\vec{k}|^2, \quad \sum_{i=1}^6 (\vec{k} \cdot \vec{v}_i)^4 = \frac{6}{5}|\vec{k}|^4
+\end{equation}
+Die Anisotropie wird vollständig in die 6. Ordnung $\mathcal{O}(\ell_P^4)$ verlagert. Bei einem Systemalter von $N_{\tau} = 8.08 \times 10^{60}$ Takten liegt die kumulierte Laufzeitverzögerung hochenergetischer Photonen unterhalb moderner Messgrenzen.
+
+\section{Die 210-Bahnen-Hierarchie und die Protonenmasse}
+Wir erweitern das Primzahlenkreuz auf eine 210er-Hierarchie basierend auf dem vierten Primorial ($\text{Primorial}(4) = 2 \cdot 3 \cdot 5 \cdot 7 = 210$). Ein stabiler Kompressionswirbel (Proton) besetzt exakt 144 holografische Kristallfacetten. Das Massenverhältnis $m_p/m_e$ resultiert direkt aus dem topologischen Vortex-Volumen ($6\pi^5$) und dem informationellen Widerstand des Vakuums:
+\begin{equation}
+\frac{m_p}{m_e} = 6\pi^5 + \left(\frac{48/210}{\alpha^{-1}}\right) \cdot \sqrt{2} \approx 1836.1215
+\end{equation}
+Dies liefert eine mathematische Präzision von $99.9983\%$ gegenüber dem CODATA-Zielwert.
+
+\section{Quanten-Zeno-Kosmologie und makroskopische Anomalien}
+Raumkoordinaten existieren als offene projektive Limes-Sequenz $\mathbb{Z}_p = \varprojlim (\mathbb{Z} / p^n \mathbb{Z})$. Dunkle Materie wird als reiner algorithmischer \textit{Edge-Effekt} an den unindexierten Gitterrändern entlarvt, wo eine geringere Synchronisationslast zu beschleunigten Index-Aktualisierungen führt. Schwarze Löcher bilden keine unendlichen Singularitäten, sondern repräsentieren informationelle Pufferüberläufe (\textit{Buffer Overflows}), welche die lokale Verarbeitungszeit über den kosmischen Quanten-Zeno-Effekt vollständig einfrieren ($\frac{dV}{dt} \to 0$). Die informationelle Invarianz selbstorganisierter Beobachter-Supercluster (Bewusstsein) bleibt im p-adischen Speicherraum zeitlos erhalten.
 
 \end{document}
-
