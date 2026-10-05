@@ -76,9 +76,7 @@ Dunkle Materie ist ein astrophysikalischer Epizykel, eingeführt um das Versagen
 **The Analog Critique:** *"General Relativity demands that matter collapses into an infinitely dense singularity inside a black hole, destroying all quantum information."*
 
 ### The Logical & Mathematical Counter:
-Singularitäten existieren im pTRC-Framework nicht, da unendliche Brüche und kontinuierliche Dichten in einer ganzzahligen Ontologie unmöglich sind. Ein Schwarzes Loch ist kein physisches
-
-Objekt, sondern ein rein informationeller Systemzustand:
+Singularitäten existieren im pTRC-Framework nicht, da unendliche Brüche und kontinuierliche Dichten in einer ganzzahligen Ontologie unmöglich sind. Ein Schwarzes Loch ist kein physisches Objekt, sondern ein rein informationeller Systemzustand:
 
 * **Szenario A: Der lokale Datenstau (Buffer Overflow):** Wenn die lokale Schleifendichte (Masse) in einem Adressbereich die Pufferkapazität des **137-Takt-Raten-Theorems** übersteigt, droht ein Systemabsturz. Das System schützt seine Integrität, indem das lokale Zeitintervall über den **kosmischen Quanten-Zeno-Effekt komplett eingefroren** wird ($\frac{dV}{dt} \to 0$). Die Zeit steht am Ereignishorizont still, weil der Prozessor die Berechnung in diesem Sektor pausiert.
 * **Szenario B: Der Speicher-Einschluss (Raster-Fehlstelle):** Schwarze Löcher können auch als topologische Einschlüsse der Außenhaut während der Selbst-Emission des Gitters entstehen. Es handelt sich um isolierte Adresscluster – einen **„Bad Sector“ im kosmischen RAM**. Information kann hineinfließen, aber die internen Relationen sind von den standardmäßigen 6D-Projektionspfaden abgeschnitten.
@@ -89,6 +87,3 @@ Objekt, sondern ein rein informationeller Systemzustand:
 **The Analog Critique:** *"If space and matter do not exist, human consciousness and life are merely fleeting, accidental illusions of a temporary biological system that vanish completely upon death."*
 
 ### The Logical & Mathematical Counter:
-This critique completely misunderstands the pTRC definition of an observer. Observation is a fundamental mathematical property, not a biological one.
-
-
