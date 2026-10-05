@@ -1,20 +1,18 @@
-# Python bytecode
+# Ignoriere temporäre Sicherungsdateien vom Ubuntu-Editor und OpenOffice
+*~
+.*.swp
+.~lock.*.odt#
+.~lock.*.doc#
+
+# Ignoriere Python-Cache-Ordner
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
+*.pyd
 
-# Environments
-.venv/
-env/
-venv/
-ENV/
-
-# LaTeX build remnants
+# Ignoriere eventuelle LaTeX-Hilfsdateien
 *.aux
 *.log
 *.toc
+*.out
 *.synctex.gz
-*.pdf
-*.blg
-*.bbl
-
