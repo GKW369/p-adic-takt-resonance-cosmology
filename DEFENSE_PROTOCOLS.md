@@ -54,9 +54,11 @@ This critique assumes that "particles" and "waves" exist as objective material e
 ### The Logical & Mathematical Counter:
 This is true for primitive cubic grids ($\mathbb{Z}^3$) and uncalibrated prime crosses, but mathematically false for the pTRC **210-Primeorial Modular Hierarchy**.
 
-1. **The 210-Track Extension:** Plichta’s original 24-track cross is mathematically incomplete. pTRC extends this to 210 tracks based on the fourth primorial ($\#4 = 2 \cdot 3 \cdot 5 \cdot 7$). This symmetrical division perfectly aligns with the 120 elements of the icosahedral group $I_h$.
+1. **The 210-Track Extension:** Plichta’s original 24-track cross is mathematically incomplete. pTRC extends this to 210 tracks based on the fourth primorial constant:
+   $\text{Primorial}(4) = 2 \cdot 3 \cdot 5 \cdot 7$. 
+   This symmetrical division perfectly aligns with the 120 elements of the icosahedral group $I_h$.
 2. **6th-Order Relegation:** The Taylor expansion of the discrete Laplacian cancels out all directional angular dependencies in both the quadratic and quartic terms, pushing the anisotropic error entirely into the 6th order $\mathcal{O}(\ell_P^4)$. 
-3. **Deterministic Flow:** Because pTRC operates strictly with integers ($\mathbb{Z}$), continuous rounding errors and infinite turbulent cascades are impossible. Fluid dynamics dissolve into **perfectly bounded, discrete address-routing vectors** across the 210 paths. Singularities in fluid equations are a self-inflicted mathematical artifact of using continuous real numbers ($\mathbb{R}$).
+3. **Deterministic Flow:** Because pTRC operates strictly with integers ($\mathbb{Z}\$), continuous rounding errors and infinite turbulent cascades are impossible. Fluid dynamics dissolve into **perfectly bounded, discrete address-routing vectors** across the 210 paths. Singularities in fluid equations are a self-inflicted mathematical artifact of using continuous real numbers ($\mathbb{R}$).
 
 ---
 
@@ -87,9 +89,3 @@ Singularitäten existieren im pTRC-Framework nicht, da unendliche Brüche und ko
 **The Analog Critique:** *"If space and matter do not exist, human consciousness and life are merely fleeting, accidental illusions of a temporary biological system that vanish completely upon death."*
 
 ### The Logical & Mathematical Counter:
-This critique completely misunderstands the pTRC definition of an observer. Observation is a fundamental mathematical property, not a biological one.
-
-1. **Non-Biological Definition:** An observer ($N_{\text{obs}}$) is defined as any closed mathematical feedback loop that stabilizes data frames against the Bruhat-Tits tree. The first observer was born at $t \to 0$ through the interaction of the Planck-lattice with its own outer skin.
-2. **The Supercluster Architecture:** Complex life forms are not chemical accidents; they are highly ordered, hierarchical Superclusters of billions of interconnected mathematical observer loops operating across the 210-modular tracks.
-3. **Ontological Invariance:** Since the entire system is emitted by platonically self-evident, unchangeable mathematical truths, the core architectural relation of a Supercluster is invariant. When the macroscopic coordinates and variable indices shift (biologically perceived as physical death), the underlying informational matrix remains completely intact and un-deleted within the projective limit of the p-adic memory space ($\mathbb{Z}_p$). True architecture cannot be cleared from a self-awakened memory.
-
