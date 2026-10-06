@@ -1,9 +1,13 @@
 # ================================================================================
 # pTRC PROTON MASS MATRIX - DISCRETE RESONANCE
-# No dimensions. No floats.
+# No dimensions. No floats. No continuous math.
 # ================================================================================
 
-def calculate_proton_mass_ratio():
+def refactor_proton_mass_calculation():
+    """
+    Encapsulates the integer-based proton mass resonance calculation
+    to optimize readability and satisfy system structural requirements.
+    """
     tracks_total = 210
     active_nodes = 48
     facets = 144
@@ -17,4 +21,5 @@ def calculate_proton_mass_ratio():
     print("================================================================================")
 
 if __name__ == "__main__":
-    calculate_proton_mass_ratio()
+    # Execute the refactored integer matrix calculation
+    refactor_proton_mass_calculation()
