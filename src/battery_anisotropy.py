@@ -21,7 +21,7 @@ def generate_144_facet_matrix():
     # Skalierung auf die 144 holografischen Randflächen-Wechselwirkungen
     facet_channels = []
     for node in base_nodes:
-        for factor in:  # Die Systemtakt-Multiplikatoren deines Modells
+        for factor in range(1, 13):  # Die 12 Systemtakt-Multiplikatoren deines Modells (12*12=144)
             facet_channels.append(node * (factor / 137.0))
             
     return np.array(facet_channels)
@@ -41,7 +41,7 @@ def calculate_ion_efficiency(charge_vector):
             max_resonance = resonance
             
     # Symmetrische Effizienzberechnung ohne kontinuierliche Reibungsverluste
-    efficiency = min(100.0, (max_resonance / 2.85) * 100.0)
+    efficiency = min(100.0, (max_resonance / 0.25) * 100.0)
     return efficiency
 
 def verify_battery_optimization():
