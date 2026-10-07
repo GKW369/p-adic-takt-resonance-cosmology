@@ -13,6 +13,7 @@ MODULES = [
     ("gravity_edge_sharing.py", "p-Adic Orbital Trajectory Mesh"),
     ("crypt_resonance.py", "Modulo-24 Symmetrical Cryptography"),
     ("casimir_vacuum_energy.py", "Finite Vacuum Casimir Counting"),
+    ("chemical_resonance.py", "Quantum Chemical Resonance Adressing"),
     ("battery_anisotropy.py", "Tesla 144-Facet Solid-State Battery"),
     ("internal_loopback.py", "Processor Core Loopback Diagnostics")
 ]
