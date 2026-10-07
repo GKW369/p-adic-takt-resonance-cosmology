@@ -53,7 +53,7 @@ def run_framework():
     print(" pTRC Operational Interface         | Status    | Lattice Resonance Behavior")
     print("--------------------------------------------------------------------------------")
     for desc, status, msg in results:
-        print(f" {desc:<35} | [{status:<7}] | {msg}")
+        print(f" {desc:<39} | [{status:<7}] | {msg}")
     print("================================================================================")
     print(" KERNEL STATUS: CONGRATULATIONS! ALL MATRIX NODES VALIDATED AND SECURED.")
     print("================================================================================")
