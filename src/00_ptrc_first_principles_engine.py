@@ -22,9 +22,9 @@ def run_framework():
     # Clear screen for a premium, professional video start
     os.system('clear')
     
-    print("================================================================================")
-    print("                pTRC CORE FRAMEWORK - INTEGRATED SYSTEM VALIDATION")
-    print("================================================================================")
+    print("======================================================================================")
+    print("                  pTRC CORE FRAMEWORK - INTEGRATED SYSTEM VALIDATION")
+    print("======================================================================================")
     print(" Executing discrete integer grid validation within Ubuntu Kernel...\n")
 
     results = []
@@ -47,16 +47,16 @@ def run_framework():
             results.append((description, "FAILED", "Module Inaccessible in Directory"))
 
     # THE FINAL UNMOVABLE DASHBOARD: Fits perfectly on one screen page
-    print("\n================================================================================")
+    print("\n======================================================================================")
     print("                       FINAL SYSTEM OPERATIONAL MATRIX")
-    print("================================================================================")
+    print("======================================================================================")
     print(" pTRC Operational Interface         | Status    | Lattice Resonance Behavior")
-    print("--------------------------------------------------------------------------------")
+    print("--------------------------------------------------------------------------------------")
     for desc, status, msg in results:
-        print(f" {desc:<39} | [{status:<7}] | {msg}")
-    print("================================================================================")
-    print(" KERNEL STATUS: CONGRATULATIONS! ALL MATRIX NODES VALIDATED AND SECURED.")
-    print("================================================================================")
+        print(f" {desc:<40} | [{status:<7}] | {msg}")
+    print("======================================================================================")
+    print("      KERNEL STATUS: CONGRATULATIONS! ALL MATRIX NODES VALIDATED AND SECURED.")
+    print("======================================================================================")
 
 if __name__ == "__main__":
     run_framework()
