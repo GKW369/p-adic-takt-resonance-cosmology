@@ -22,15 +22,15 @@ def run_framework():
     # Clear screen for a premium, professional video start
     os.system('clear')
     
-    print("======================================================================================")
+    print("=======================================================================================")
     print("                  pTRC CORE FRAMEWORK - INTEGRATED SYSTEM VALIDATION")
-    print("======================================================================================")
+    print("=======================================================================================")
     print(" Executing discrete integer grid validation within Ubuntu Kernel...\n")
 
     results = []
 
     for filename, description in MODULES:
-        print(f" -> Synchronizing: {description:<35} ... ", end="", flush=True)
+        print(f" -> Synchronizing: {description:<40} ... ", end="", flush=True)
         
         if os.path.exists(filename):
             # Capture output silently to prevent terminal overflow in the video
@@ -47,16 +47,16 @@ def run_framework():
             results.append((description, "FAILED", "Module Inaccessible in Directory"))
 
     # THE FINAL UNMOVABLE DASHBOARD: Fits perfectly on one screen page
-    print("\n======================================================================================")
+    print("\n=======================================================================================")
     print("                       FINAL SYSTEM OPERATIONAL MATRIX")
-    print("======================================================================================")
+    print("=======================================================================================")
     print(" pTRC Operational Interface         | Status    | Lattice Resonance Behavior")
-    print("--------------------------------------------------------------------------------------")
+    print("---------------------------------------------------------------------------------------")
     for desc, status, msg in results:
         print(f" {desc:<40} | [{status:<7}] | {msg}")
-    print("======================================================================================")
-    print("      KERNEL STATUS: CONGRATULATIONS! ALL MATRIX NODES VALIDATED AND SECURED.")
-    print("======================================================================================")
+    print("=======================================================================================")
+    print("       KERNEL STATUS: CONGRATULATIONS! ALL MATRIX NODES VALIDATED AND SECURED.")
+    print("=======================================================================================")
 
 if __name__ == "__main__":
     run_framework()
