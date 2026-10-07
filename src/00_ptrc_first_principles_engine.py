@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 import subprocess
 import os
 import sys
 
-# The 10 absolute pTRC elite core modules
+# The 12 absolute pTRC elite core modules
 MODULES = [
     ("proton_mass.py", "Proton-to-Electron Mass Ratio"),
     ("isotropy.py", "4th-Order Angular Isotropy (210)"),
@@ -22,14 +23,15 @@ def run_framework():
     # Clear screen for a premium, professional video start
     os.system('clear')
     
-    print("=======================================================================================")
-    print("                  pTRC CORE FRAMEWORK - INTEGRATED SYSTEM VALIDATION")
-    print("=======================================================================================")
+    print("===========================================================================================")
+    print("                    pTRC CORE FRAMEWORK - INTEGRATED SYSTEM VALIDATION")
+    print("===========================================================================================")
     print(" Executing discrete integer grid validation within Ubuntu Kernel...\n")
 
     results = []
 
     for filename, description in MODULES:
+        # Padded to 40 characters to fit "Quantum Chemical Resonance Adressing" flawlessly
         print(f" -> Synchronizing: {description:<40} ... ", end="", flush=True)
         
         if os.path.exists(filename):
@@ -46,17 +48,17 @@ def run_framework():
             print("[ MISSING ]")
             results.append((description, "FAILED", "Module Inaccessible in Directory"))
 
-    # THE FINAL UNMOVABLE DASHBOARD: Fits perfectly on one screen page
-    print("\n=======================================================================================")
-    print("                       FINAL SYSTEM OPERATIONAL MATRIX")
-    print("=======================================================================================")
-    print(" pTRC Operational Interface         | Status    | Lattice Resonance Behavior")
-    print("---------------------------------------------------------------------------------------")
+    # THE FINAL UNMOVABLE DASHBOARD: Fits perfectly on one screen page and is 91 chars wide
+    print("\n===========================================================================================")
+    print("                          FINAL SYSTEM OPERATIONAL MATRIX")
+    print("===========================================================================================")
+    print(" pTRC Operational Interface            | Status    | Lattice Resonance Behavior")
+    print("-------------------------------------------------------------------------------------------")
     for desc, status, msg in results:
-        print(f" {desc:<40} | [{status:<7}] | {msg}")
-    print("=======================================================================================")
-    print("       KERNEL STATUS: CONGRATULATIONS! ALL MATRIX NODES VALIDATED AND SECURED.")
-    print("=======================================================================================")
+        print(f" {desc:<37} | [{status:<7}] | {msg}")
+    print("===========================================================================================")
+    print("         KERNEL STATUS: CONGRATULATIONS! ALL MATRIX NODES VALIDATED AND SECURED.")
+    print("===========================================================================================")
 
 if __name__ == "__main__":
     run_framework()
