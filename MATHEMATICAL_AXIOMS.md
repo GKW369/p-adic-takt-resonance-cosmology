@@ -1,38 +1,33 @@
-================================================================================
-ALGEBRAISCHE FORMELSAMMLUNG: RAUM-QUANTISIERUNG UND INTERFERENZ-SIEB
-================================================================================
-Systembasis: Reduziertes Restsystem Modulo 24 (Plichta-Kreuz)
-Strahlenraum: S ∈ {1, 5, 7, 11, 13, 17, 19, 23} (Abel'sche Gruppe G)
---------------------------------------------------------------------------------
+# Algebraic Formula Matrix: Space Quantization and Interference Sieve
 
-[FORMEL 1: DIE RAUM-LOKALISIERUNG (STRAHLEN-BESTIMMUNG)]
-Jede Zahl N im Universum wird einem geometrischen Schwingungsstrahl (s) auf einer 
-diskreten Raumschicht (m) zugeordnet:
-   
-   N = 24 * m + s   wobei m ∈ ℕ₀ und s ∈ {1, 2, 3, ..., 24}
+* **System Base:** Reduced Remainder System Modulo 24 (The Prime Cross)
+* **Ray Space:** S elements belong to {1, 5, 7, 11, 13, 17, 19, 23} (Abelian Group G)
 
-[FORMEL 2: DIE GRUPPEN-INTERAKTION (DETERMINISTISCHE KREUZUNG)]
-Wenn zwei Raum-Frequenzen miteinander interagieren (Multiplikation), ist das 
-Ergebnis-Tor (s_ziel) streng symmetrisch über die Gruppenmultiplikation definiert:
-   
-   (s_1 * s_2) ≡ s_ziel (mod 24)
-   
-   Eigenschaft: ∀ s ∈ S gilt: (s * s) ≡ 1 (mod 24) [Selbstinversion zu Strahl 1]
+---
 
-[FORMEL 3: DIE ABSOLUTE ELIMINATIONS-GLEICHUNG (DAS SEHENDE SIEB)]
-Ein Kandidat C auf einem erlaubten Strahl s_ziel ist GENAU DANN eine Primzahl, 
-wenn er KEIN Interferenzknoten vorheriger Primbasen ist. 
-Mathematische Bedingung (KEINE DIVISION ERFORDERT):
+## FORMULA 1: Space Localization (Ray Determination)
+Every numerical value N within the computational universe is allocated to a discrete geometric vibration ray (s) on a corresponding digital matrix tier (m):
    
-   C ≠ (24 * m_1 + s_1) * (24 * m_2 + s_2)
-   
-   Für alle Schichten m_1, m_2 ≥ 0 und alle Strahlkombinationen, für die gilt:
-   (s_1 * s_2) ≡ s_ziel (mod 24).
+   N = 24 * m + s   where m belongs to N_0 and s belongs to {1, 2, 3, ..., 24}
 
-[FORMEL 4: GEOMETRISCHE BRÜCKE ZUR HOLOFRAKTALEN MATRIX (HARAMEIN)]
-Die Dimensionierung des Vektorgleichgewichts (144 offene Seiten des 64-Sterntetraeders) 
-ergibt sich direkt aus der hexagonalen Verdichtung des 24er-Kreuzes:
+## FORMULA 2: Group Interaction (Deterministic Frequency Crossing)
+When two spatial frequencies interact via multiplication, the resulting target gate (s_target) is strictly defined via symmetrical abelian group multiplication:
    
-   D_raum = 6 * |S| = 6 * 8 = 48 Grundvektoren
-   Matrix-Knoten = 3 * D_raum = 144 geometrische Randflächen
-================================================================================
+   (s_1 * s_2) === s_target (mod 24)
+   
+   Property: For all s belonging to S: (s * s) === 1 (mod 24) [Self-inversion to Ray 1]
+
+## FORMULA 3: The Absolute Elimination Equation (The Seeing Sieve)
+A candidate number C located on an allowed symmetry ray s_target is a PRIME NUMBER if and only if it is completely free of interference nodes from prior prime bases. 
+Mathematical execution condition (Requires ZERO floating-point divisions):
+   
+   C !== (24 * m_1 + s_1) * (24 * m_2 + s_2)
+   
+   For all matrix tiers m_1, m_2 >= 0 and all ray combinations satisfying:
+   (s_1 * s_2) === s_target (mod 24).
+
+## FORMULA 4: Geometric Bridge to the Holofractal Vector Equilibrium
+The structural dimensioning of the vector equilibrium (the 144 open facets of the matrix) is derived directly from the hexagonal compression of the 24-track prime cross:
+   
+   Space_Dimensions = 6 * |S| = 6 * 8 = 48 Fundamental Vectors
+   Matrix_Nodes = 3 * Space_Dimensions = 144 Holographic Surface Facets
