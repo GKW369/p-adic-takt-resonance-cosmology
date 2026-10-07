@@ -14,6 +14,7 @@ MODULES = [
     ("crypt_resonance.py", "Modulo-24 Symmetrical Cryptography"),
     ("casimir_vacuum_energy.py", "Finite Vacuum Casimir Counting"),
     ("battery_anisotropy.py", "Tesla 144-Facet Solid-State Battery")
+    ("internal_loopback.py", "Processor Core Loopback Diagnostics")
 ]
 
 def run_framework():
