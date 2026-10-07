@@ -72,7 +72,7 @@ Dark Matter is an astrophysical epicycle introduced to cover up the failure of c
 **The Analog Critique:** *"General Relativity demands that matter collapses into an infinitely dense singularity inside a black hole, destroying all quantum information."*
 
 ### The Counter-Argument:
-Singularities cannot exist in pTRC, as infinite fractions and continuous densities are impossible in an integer ontology. A black hole is a purely informational system state:
+# Singularities cannot exist in pTRC, as infinite fractions and continuous densities are impossible in an integer ontology. A black hole is a purely informational system state:
 * **Buffer Overflow Protection:** When local loop density (mass) exceeds the capacity of the **137 clock rate theorem**, a system crash is avoided by freezing the local time interval via the **Quantum-Zeno effect** (dV/dt -> 0). Time stops at the event horizon because the processor pauses calculation in that sector.
 * **Memory Inclusions (Bad Sectors):** Black holes can also act as isolated address clusters – a **"Bad Sector" in the cosmic RAM**. Information flows in, but internal relations are severed from standard network routing paths.
 
