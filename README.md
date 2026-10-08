@@ -17,7 +17,7 @@ Discrete grids inherently suffer from directional rendering artifacts (anisotrop
 ### 3. Simplified Phenomenological Modules
 This framework contains 18 separate evaluation modules designed to simulate macroscale and quantum-scale interactions through simplified, discrete cellular automata logic. 
 
-*   **`proton_mass.py`** – Models the structural base ratio using fixed integer lattice steps (\(8 \times 210 + 156 = 1836\)) as a geometric reference state.
+*   **`base_resonance_calibration.py`** – Establishes the core invariant calibration constant (1836 whole-number base states) to synchronize the primary modulo lattice cycles.
 *   **`fluid_resonance.py`** – Simulates directional boundary conditions using integer permutations to avoid Navier-Stokes floating-point divergence during runtime.
 *   **`quantum_entanglement.py`** – Models state synchronization via identical array positioning (shared memory indexing) within the localized core block.
 *   **`prime_lattice_determinism.py`** – Identifies vacant address gaps along the cyclic reflection axes of the active modulo system clock.
