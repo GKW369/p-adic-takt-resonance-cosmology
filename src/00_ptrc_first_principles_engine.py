@@ -5,7 +5,7 @@ import sys
 
 # The 18 absolute pTRC elite core modules
 MODULES = [
-    ("proton_mass.py", "Proton-to-Electron Mass Ratio"),
+    ("base_resonance_calibration.py", "Base Resonance Calibration"),
     ("isotropy.py", "4th-Order Angular Isotropy (210)"),
     ("alpha_emitter.py", "Topological Fine Structure Constant"),
     ("hubble_tension.py", "Hubble Tension Scale Shift"),
@@ -67,4 +67,3 @@ def run_framework():
 
 if __name__ == "__main__":
     run_framework()
-
