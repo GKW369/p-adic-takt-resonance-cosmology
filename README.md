@@ -20,13 +20,25 @@ To prevent directional lattice artifacts (anisotropy) inherent to discrete grids
 Electrons do not exist as continuous analog probability clouds. Instead, atomic valence shells are represented as shared modular resonance addresses. 
 * **Molecular Binding:** Chemical structures stabilize when their discrete lattice separation forms a clean harmonic divisor within the modulo clock.
 * **Information Biology:** "Life" is mathematically described as a self-evident feedback loop where independent subsystems continuously read and mirror their own local memory addresses (e.g., Target Memory Address 123) without information loss.
-* **Autonomous Life Simulation:** Instead of simulating organic life via chaotic, macro-scale approximations, the pTRC framework models living systems as localized cellular automata within the lattice. By initializing basic bit-states at designated memory sectors (e.g., Target Address 123), evolutionary complexity emerges deterministically as a direct result of continuous integer state-refreshes.
+
+### 4. Resolution of Modern Scientific Paradoxes
+By discarding the continuous analog approximation (\(\mathbb{R}^4\)), the pTRC architecture eliminates five of the greatest paradoxes in modern physics:
+* **EPR Non-Locality:** Entangled states do not transmit signals through space; they simply share the exact same modulo-24 core memory address within the processor kernel, triggering instantaneous state synchronization.
+* **Black Hole Singularities:** Infinite gravitational collapse is geometrically impossible. When mass-bit density reaches the strict pixel storage capacity limit governed by the 210-primeorial clock, spatial compression stops rigidly at a finite boundary (`radius >= 1 pixel`).
+* **CMB Propagation Anisotropy:** The chaotic-harmonic temperature variations measured in the cosmic microwave background (Big Bang Echo) are direct manifestations of the icosahedral quasicrystal grid. Orthogonal paths track straight, while diagonal paths incur cumulative pixel-routing delays over cosmological distances.
+
+### 5. Deterministic Prime Lattice Selection (O(1) Primality Verification)
+Instead of searching for unknown prime numbers via continuous analog brute-force approximations (e.g., Lucas-Lehmer tests forcing massive GPU server farm workloads), the pTRC framework refactors prime distribution into a deterministic hardware topology. Unknown primes are derived as vacant, unassigned structural slots along the symmetrical reflection axes of the active primeorial system clock:
+\[P_{\text{next}} = P_n \pm 1 \pmod{24}\]
+By resolving primality via pure positional mapping on the modular grid, computational complexity collapses from exponential search barriers down to static O(1) architectural address readouts.
+
+---
 
 ---
 
 ## 🛠️ Integrated Core Engine Modules
 
-The integrated system architecture consists of 12 elite core modules, managed and validated by the master engine launcher (`00_ptrc_first_principles_engine.py`):
+The integrated system architecture consists of 18 elite core modules, managed and validated by the master engine launcher (`00_ptrc_first_principles_engine.py`):
 
 *   **`proton_mass.py`** – Computes the proton-to-electron mass ratio through discrete informational invariance.
 *   **`isotropy.py`** – Verifies 4th-order macroscopic angular isotropy across the 210-primeorial grid.
@@ -40,6 +52,12 @@ The integrated system architecture consists of 12 elite core modules, managed an
 *   **`chemical_resonance.py`** – Validates molecular bonds through purely discrete integer matching without continuous wave functions.
 *   **`battery_anisotropy.py`** – Optimizes structural cell layouts (such as 144-facet solid-state cells) by resolving spatial lattice friction.
 *   **`internal_loopback.py`** – Simulates cognitive processor loopbacks, demonstrating how sensory shutdown enables autonomous internal memory defragmentation.
+*   **`quantum_entanglement.py`** – Simulates immediate quantum state synchronization via shared modulo-24 core indexing.
+*   **`prime_lattice_determinism.py`** – Computes deterministic prime numbers by predicting vacant grid coordinates along active modulo-210/24 reflection axes.
+*   **`black_hole_saturation.py`** – Resolves gravitational singularity crises through hardware-level lattice bounds.
+*   **`quantum_measurement_update.py`** – Redefines the wave collapse as a deterministic memory write-update process.
+*   **`thermodynamic_clock_cycle.py`** – Models the irreversible time arrow and cosmic echo propagation delays.
+*   **`black_hole_information_preservation.py`** – Guarantees absolute information conservation via integer modulo invariance.
 
 ---
 
