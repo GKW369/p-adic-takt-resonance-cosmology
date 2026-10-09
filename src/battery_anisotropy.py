@@ -29,7 +29,6 @@ def generate_144_facet_matrix():
             
     return np.array(facet_channels, dtype=np.int32)
 
-
 def calculate_ion_efficiency(charge_vector_scaled):
     channels = generate_144_facet_matrix()
     max_resonance = 0
