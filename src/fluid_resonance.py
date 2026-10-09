@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 pTRC Framework - Module: fluid_resonance.py
 Discrete Finite-Volume Lattice Integration for High-Velocity Aerospace Diagnostics.
@@ -14,13 +15,8 @@ inherent in classical continuous Navier-Stokes approximations. By operating
 exclusively within the discrete integer ring Z, this module guarantees absolute 
 numerical stability for high-complexity, non-linear coupled fluid boundaries under 
 exact initial boundary state injections.
-"""
 
-import numpy as np
-import sys
-
-"""
-pTRC Framework - Module: fluid_resonance.py
+Implementation:
 Pure Integer 2D Lattice-Gas Cellular Automaton (LGCA) Engine.
 Optimized for zero floating-point lag using modulo 210/24 boundary mappings.
 Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
@@ -28,7 +24,9 @@ Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
 
 import numpy as np
 import os
+import sys
 import time
+
 
 class FluidResonanceEngine:
     def __init__(self, width=64, height=32, target_resonance=210):
