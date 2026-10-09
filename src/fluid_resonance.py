@@ -76,6 +76,7 @@ class FluidResonanceEngine:
             new_grid[obs_mask, d] = 0
 
         # 3. KOLLISIONS-PHASE (Mikroskopischer Streuprozess nach HPP-Regeln)
+        # Treffen zwei Teilchen frontal aufeinander (0 und 2), rotieren sie um 90 Grad (zu 1 und 3)
         c_180 = (new_grid[:, :, 0] == 1) & (new_grid[:, :, 2] == 1) & (new_grid[:, :, 1] == 0) & (new_grid[:, :, 3] == 0)
         c_90  = (new_grid[:, :, 1] == 1) & (new_grid[:, :, 3] == 1) & (new_grid[:, :, 0] == 0) & (new_grid[:, :, 2] == 0)
 
