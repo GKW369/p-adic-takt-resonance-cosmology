@@ -15,7 +15,8 @@ class IsotropyEngine:
         
         # Diskrete icosaedrische Spiegel-Matrix in Z (skaliert mit SCALE zur Vermeidung von Floats)
         # Repräsentiert eine fundamentale Symmetrie-Transformation des Gitters
-        self.icosahedral_matrix_scaled = np.array([,
+        self.icosahedral_matrix_scaled = np.array([
+            [-1000, 0, 0],
             [0, -1000, 0],
             [0, 0, 1000]
         ], dtype=np.int32)
