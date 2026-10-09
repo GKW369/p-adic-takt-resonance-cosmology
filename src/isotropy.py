@@ -20,7 +20,6 @@ class IsotropyEngine:
             [0, -1000, 0],
             [0, 0, 1000]
         ], dtype=np.int32)
-
     def validate_directional_invariance(self, vector_x=12, vector_y=24, vector_z=48):
         """
         Transformiert einen Raumvektor über die diskrete Symmetriegruppe Ih.
