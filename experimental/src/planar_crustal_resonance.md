@@ -12,10 +12,10 @@ def calculate_planar_resonance_nodes():
     print("[pTRC-EXPERIMENTAL] Commencing Crustal Waveguide Matrix Check...")
     
     SCALE = 1000
-    # Das fundamentale planetare Primorial-Gitter Modulo 210
+    # The fundamental planetary primorial lattice Modulo 210
     PLANETARY_PRIMORIAL = 210
     
-    # Skalierte Test-Impuls-Vektoren (Simulierte Energie-Einspeisung im Labor)
+    # Scaled test impulse vectors (Simulated laboratory energy injection)
     injection_impulses = [
         np.array([12 * SCALE, 24 * SCALE, 156 * SCALE], dtype=np.int32),
         np.array([210 * SCALE, 0, 24 * SCALE], dtype=np.int32)
@@ -23,11 +23,11 @@ def calculate_planar_resonance_nodes():
     
     validated_nodes = 0
     for impulse in injection_impulses:
-        # Extraktion des Resonanz-Residuums über reine Ganzzahl-Arithmetik
+        # Extraction of the resonance residuum via pure integer arithmetic
         scalar_sum = int(np.sum(impulse)) // SCALE
         remainder = scalar_sum % PLANETARY_PRIMORIAL
         
-        # Wenn der Rest harmonisch im System aufgeht, steht der Kanal
+        # If the remainder resolves harmonically within the grid, the channel stands
         if remainder != 0:
             validated_nodes += 1
             
