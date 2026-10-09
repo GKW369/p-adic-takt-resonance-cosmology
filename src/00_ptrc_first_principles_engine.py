@@ -2,11 +2,7 @@
 """
 pTRC Framework - Module: 00_ptrc_first_principles_engine.py
 Master Orchestration Lattice & Validation Cascade for Elon Musk Video Demonstration.
-
-Description:
-Sequentially executes and monitors all 19 sub-modules within the Z-space core.
-Generates a comprehensive, scrolling real-time terminal audit trail showing 
-exact integer execution states, preventing any analog leakage.
+Refactored: Cinema-Wide Terminal Alignments (150 Character Line Width).
 """
 
 import os
@@ -15,12 +11,11 @@ import subprocess
 import time
 
 def run_lattice_validation():
-    print("===============================================================================")
+    print("======================================================================================================================================================")
     print("[ pTRC MASTER ENGINE ] Commencing Full First-Principles Integrity Audit...")
     print("[ ONTOLOGY AREA ] Ring Z - 100% Floating-Point-Free Discrete Lattice")
-    print("===============================================================================\n")
+    print("======================================================================================================================================================\n")
     
-    # Die 19 Produktions-Skripte im src-Ordner (exklusive dieser Engine selbst)
     sub_modules = [
         "alpha_emitter.py",
         "base_resonance_calibration.py",
@@ -50,14 +45,13 @@ def run_lattice_validation():
     start_total_ns = time.time_ns()
     
     for idx, module in enumerate(sub_modules, start=1):
-        module_path = os.path.join(src_dir, module)
         print(f"[{idx:02d}/19] LAUNCHING LATTICE APERTURE: {module}...")
+        module_path = os.path.join(src_dir, module)
         
         if not os.path.exists(module_path):
-            print(f" -> [ CRITICAL ERROR ] File missing on disk lattice path.")
+            print(f"    | [ CRITICAL ERROR ] File missing on disk lattice path.")
             continue
             
-        # Führt das Skript in einem isolierten Subprozess aus und fängt die echten Textausgaben ab
         try:
             result = subprocess.run(
                 [sys.executable, module_path],
@@ -66,7 +60,6 @@ def run_lattice_validation():
                 check=False
             )
             
-            # Gibt den echten Terminal-Output des Skripts eingerückt aus, damit man im Video alles sieht
             if result.stdout:
                 for line in result.stdout.strip().split("\n"):
                     print(f"    | {line}")
@@ -76,30 +69,27 @@ def run_lattice_validation():
                 passed_modules += 1
             else:
                 if result.stderr:
-                    print(f"    | [STDERR] {result.stderr.strip()}")
+                    for line in result.stderr.strip().split("\n"):
+                        print(f"    | [STDERR] {line}")
                 print(f" -> [ STATUS ] {module} -> FAILURE (Divergence Detected)\n")
                 
         except Exception as e:
-            print(f" -> [ EXCEPTION ] Execution blocked: {str(e)}\n")
+            print(f"    | [ EXCEPTION ] Execution blocked: {str(e)}\n")
             
-        # Kleiner künstlicher Takt-Delay in Nanosekunden für den optischen Scrolling-Effekt im Video
-        # 150 Millisekunden = 150.000.000 Nanosekunden
         time.sleep(0.15)
 
     end_total_ns = time.time_ns()
     total_duration_ms = (end_total_ns - start_total_ns) // 1000000
-    
-    # Berechnungen der Erfolgsquote im reinen Ganzzahlraum
     success_ratio_scaled = (passed_modules * SCALE) // len(sub_modules)
     
-    print("===============================================================================")
+    print("======================================================================================================================================================")
     print("[ AUDIT COMPLETE ] Final System Metric Summary:")
     print(f" -> Modules Checked        : {len(sub_modules)}")
     print(f" -> Modules Validated      : {passed_modules}")
     print(f" -> Gitter-Performance-Ratio: {success_ratio_scaled} Milli-Units")
     print(f" -> Total Computation Time : {total_duration_ms} Milli-Seconds Clock-Drag")
     print(" -> SYSTEM INTEGRITY      : 100% Discrete Integer Compliance Certified.")
-    print("===============================================================================")
+    print("======================================================================================================================================================")
     
     if passed_modules == len(sub_modules):
         sys.exit(0)
