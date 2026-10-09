@@ -32,4 +32,4 @@ By removing continuous floating-point fields ($\mathbb{R}$), the framework natur
     $$\rho_{\text{vac}} = \frac{\text{Unassigned Nodes}}{\text{Total Lattice Volume}}$$
 
 ---
-*Operational Parameter: All background calculations must preserve absolute integer бин-invariance.*
+*Operational Parameter: All background calculations must preserve absolute integer bit-invariance.*
