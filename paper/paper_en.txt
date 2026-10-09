@@ -3,8 +3,8 @@ pTRC CORE FRAMEWORK: A DISCRETE INTEGER COMPUTATIONAL PHYSICS ARCHITECTURE
 ================================================================================
 Author: Kurt Guido Wirminghaus
 Status: Independent Research / Open-Source Framework Proof of Concept
-Repository:https://github.com/GKW369/p-adic-takt-resonance-cosmology/tree/main
-License: MIT License
+Repository: ://github.com
+License: GNU General Public License v3 (GPLv3)
 
 ABSTRACT
 This paper introduces the pTRC (p-Adic Takt Resonance Cosmology) framework, a deterministic, integer-based computational alternative to continuous space-time physics modeling. By refactoring physical mechanics from continuous real-number fields (R^4) into finite, discrete coordinate matrices (Z), this architecture eliminates structural floating-point rounding errors and non-physical transcendental infinities. Utilizing a strict sub-clocking limit (c = 1 pixel/clock) combined with interlocking modular integer cycles (Z/210Z and Z/24Z), we present a high-efficiency algorithmic simulation engine. The framework's utility is demonstrated via fully operational computational modules for lossless fluid dynamics (Lattice-Gas Cellular Automata) and non-local quantum state synchronization (Shared-Memory Array Indexing).
