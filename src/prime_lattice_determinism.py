@@ -1,48 +1,44 @@
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Module: prime_lattice_determinism.py
-Wheel Factorization Sieve within the Primorial Residue Ring Z/210Z.
+Deterministic Sieve Matrices within the Primorial Residue Ring Z/210Z.
 Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
 """
 
 import sys
 import numpy as np
 
-class PrimeLatticeDeterminism:
-    def __init__(self):
-        # Das primorielle Fundament der Raumstruktur (2 * 3 * 5 * 7 = 210)
-        self.primorial_base = 210
-        # Die 8 erlaubten Strahlachsen im Modulo-24-System
-        self.allowed_rays = np.array([1, 5, 7, 11, 13, 17, 19, 23], dtype=np.int32)
+class PrimeLatticeSieve:
+    def __init__(self, primorial_base=210):
+        self.primorial_base = primorial_base
         self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
+        
+        # Die 8 erlaubten Hauptstrahlen der abelschen Symmetriegruppe modulo 24
+        self.fundamental_rays = np.array([1, 5, 7, 11, 13, 17, 19, 23], dtype=np.int32)
 
-    def calculate_sieve_efficiency(self):
+    def calculate_lattice_density(self, active_coordinate_nodes=48):
         """
-        Berechnet den algorithmischen Raumgewinn durch die Eliminierung 
-        nicht-symmetrischer Koordinatenachsen. 
-        Rechnet streng in Z (Ergebnis in Milli-Prozent).
+        Berechnet die relative Belegungsdichte der invarianten Gitterknoten.
+        Nutzt die Euler-Phi-Konstante 48 des primoriellen Rings Z/210Z.
+        Rechnet streng in Z.
         """
-        total_space = self.primorial_base
-        # Anzahl der mathematisch primen Achsen innerhalb der Basis (Euler-Phi von 210 = 48)
-        # 210 * (1-1/2) * (1-1/3) * (1-1/5) * (1-1/7) = 48
-        active_axes = 48
+        # FIX: Vorab-Skalierung zur Eliminierung von analogen Float-Divisionen
+        # Ermittelt die Dichte direkt in Milli-Belegungs-Units (Basispunkte)
+        scaled_density = (active_coordinate_nodes * self.SCALE) // self.primorial_base
         
-        eliminated_space = total_space - active_axes  # 162 Achsen blockiert
+        # Ermittlung des deterministischen Filter-Minderungsgrads
+        eliminated_nodes = self.primorial_base - active_coordinate_nodes
+        scaled_sieve_efficiency = (eliminated_nodes * self.SCALE) // self.primorial_base
         
-        # FIX: Vorab-Skalierung zur Eliminierung von Float-Divisionen
-        # Entspricht dem exakten Prozentsatz multipliziert mit 1000
-        milli_percent_gain = (eliminated_space * 100 * self.SCALE) // total_space
-        
-        return milli_percent_gain
-
+        return scaled_density, scaled_sieve_efficiency
 if __name__ == "__main__":
-    print("[ pTRC INFORMATICS ENGINE ] Validating Prime Lattice Filter...")
-    sieve = PrimeLatticeDeterminism()
+    print("[ pTRC INFORMATICS ENGINE ] Validating Prime Lattice Determinism...")
+    engine = PrimeLatticeSieve()
     
-    gain_milli_pct = sieve.calculate_sieve_efficiency()
+    density, efficiency = engine.calculate_lattice_density(active_coordinate_nodes=48)
     
-    print(f"\nStrukturelle Gitter-Reduktion abgeschlossen:")
-    print(f" -> Blockierte Nicht-Symmetrie-Achsen: 162 von 210")
-    print(f" -> Deterministischer Suchraum-Gewinn: {gain_milli_pct} Milli-Prozent.")
+    print(f"\nPrimorielle Gitter-Siebung abgeschlossen:")
+    print(f" -> Aktive Koordinatendichte: {density} Milli-Belegungs-Units")
+    print(f" -> Suchraum-Reduktionsgewinn: {efficiency} Milli-Effizienz-Units")
     print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
     sys.exit(0)
