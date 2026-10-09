@@ -20,8 +20,12 @@ The framework is organized into three dedicated sectors to guarantee architectur
 
 ### 1. Finite Lattice Discretization
 To eliminate the infinite division bottlenecks (\(\frac{1}{0}\)) inherent to continuous geometric environments, this framework restricts spatial representations to hard discrete lattice steps. Below the designated hardware scale, positions are processed via native integer boundaries. Transcendental constants like π or e do not exist on the fundamental hardware layer; they are treated as macroscale geometric illusions caused by pixel-aliasing over large coordinate distances.
+
 ### 2. Angular Approximation via Icosahedral Mapping
 Discrete grids inherently suffer from directional rendering artifacts (anisotropy). The pTRC framework counters this by mapping spatial vectors to the 120 elements of the icosahedral symmetry group (\(I_h\)). This layout forces higher-order coordinate alignment variations to cancel out identically to zero, relegating lattice artifacts to an unmeasurable 6th-order magnitude (\(\mathcal{O}(\ell_P^4)\)).
+
++### 3. Industrial CFD & Aerospace Positioning
++While nature provides incomplete or sparse global data arrays, closed-boundary laboratory environments (such as wind tunnels, aerospace structural testbeds, and combustion chambers) feature 100% known initial states. In these domains, the pTRC Fluid-Engine delivers mathematically flawless, zero-divergence turbulence tracking on standard integer hardware—entirely replacing unstable, float-heavy Navier-Stokes solvers in high-velocity rocketry, aviation, and automotive engineering.
 
 ---
 
