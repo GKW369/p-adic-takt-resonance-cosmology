@@ -3,7 +3,7 @@ pTRC CORE FRAMEWORK: EINE DISKRETE, GANZZAHLIGE SIMULATIONSARCHITEKTUR FÜR PHYS
 ================================================================================
 Autor: Kurt Guido Wirminghaus
 Status: Unabhängige Forschung / Open-Source Software Proof of Concept
-Repository: ://github.com
+Repository:https://github.com/GKW369/p-adic-takt-resonance-cosmology/tree/main
 Lizenz: GNU General Public License v3 (GPLv3)
 
 ABSTRAKT
