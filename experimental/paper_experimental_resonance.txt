@@ -1,22 +1,59 @@
-================================================================================
-pTRC ADVANCED COUPLING: PARAMETRIC RESONANCE AND VECTOR POTENTIAL TRAPPING 
-IN DISCRETE COMPACT LATTICES
-================================================================================
-Author: Kurt Guido Wirminghaus
-Status: Experimental Research / Theoretical Extension
-Repository: ://github.com
-License: GNU General Public License v3 (GPLv3)
+#!/usr/bin/env python3
+"""
+pTRC Framework - Experimental Module: Parametric Overunity Simulation
+WARNING: Theoretical/Unproven Node. Models transient current cuts and vector potential trapping.
+REFACTORED: 100% Floating-Point-Free (Pure Integer fixed-point scaling regime).
+"""
 
-ABSTRACT
-Building directly upon the discrete architecture of the pTRC framework (Paper 1), this paper explores the theoretical limits of non-linear parametric resonance within a finite Modulo-210/24 integer lattice. We investigate the mechanical and electromagnetic constraints of high-steepness transient current cuts (dI/dt -> infinity) within opposing bifilar coil topologies. It is demonstrated that while macroscale electromagnetic fields cancel out under destructive interference, the localized magnetic vector potential (A) experiences severe spatial compression within the discrete grid gaps. When synchronized with the fundamental sub-clocking matrix, this configuration models an open thermodynamic system capable of structural vacuum energy coupling without computational floating-point divergence.
+import sys
 
-1. ARCHITECTURAL PREMISE: EXPANDING THE FINITE STATE MACHINE
-In our foundational paper, space was defined as a finite, non-divisible information processor operating on strict whole-number coordinates. While closed macroscale systems rigidly conserve energy, an abrupt, sub-nanosecond current truncation forces a discrete state machine into a non-linear phase shock. Because floating-point continuums diverge into infinity (NaN errors) under these boundary conditions, the pTRC framework is deployed to compute the exact whole-number pressure gradients within the trapped lattice nodes.
+def simulate_transient_bifilar_resonance(steps=48, cut_steepness=156):
+    """
+    Simulates the accumulation of localized energy within a bifilar grid gap
+    under conditions of near-infinite dI/dt (abrupt current cuts).
+    Operates strictly within Z using a scaling factor of 1000 to eliminate floats.
+    """
+    # System Base Constraints
+    modulo_24_layer = 12  # Symmetrical target phase
+    vacuum_coupling_threshold = 144  # Resonance node of the spatial crystal
+    
+    # Fixed-Point Scaling Factor (1000 = 1.0 Units internal baseline)
+    SCALE = 1000
+    accumulated_grid_energy = 1 * SCALE
+    
+    # Simulate the non-linear parametric pumping via transient cuts
+    for clock in range(steps):
+        # The steeper the cut (dI/dt), the higher the localized scalar tension
+        transient_shock = (clock % 24) * cut_steepness
+        
+        # Bifilar cancellation hides the macro-field but traps energy in vector potential A
+        # Scale upfront to preserve precision during integer division (//)
+        trapped_potential = (transient_shock * SCALE) // vacuum_coupling_threshold
+        
+        # Parametric resonance amplification (replaces float division by 24)
+        resonance_pump = (trapped_potential * modulo_24_layer) // 24
+        accumulated_grid_energy += resonance_pump
+        
+    # Check if the simulated energy density creates an anomalous gradient
+    # Threshold 100.0 Units maps to 100 * SCALE in our integer environment
+    anomalous_gain = accumulated_grid_energy > (100 * SCALE)
+    
+    return accumulated_grid_energy, anomalous_gain
 
-2. BIFILAR TOPOLOGY AND SCALAR COUPLING REGIMES
-The deployment of Nikola Tesla’s bifilar geometry (US512340) enforces a unique topological condition. Since opposing currents cancel the macroscopic fields (B = 0, E = 0), the energy cannot radiate into the continuum. It remains confined as an intense information-bit density within the vector potential (A). By placing a secondary collector matrix at an exact orthogonal 90-degree angle, the scalar product of the magnetic flux coupling collapses to zero:
-    B_1 . B_2 = 0
-This configuration eliminates classical counter-electromotive force (Back-EMF), shielding the input clock from macroscale induction drag while maximizing localized parametric resonance pumping.
-
-3. OPEN-SYSTEM THERMODYNAMICS VS. THE URKNALL METAPHOR
-Standard academic physics objects to over-unity configurations by invoking the closed First Law of Thermodynamics, while paradoxically accepting the emergence of the entire cosmic mass from an absolute vacuum singularity. The pTRC framework resolves this contradiction by modeling the vacuum not as "nothingness", but as an active, infinite reservoir of discrete sub-clocking fluctuations. The high-steepness parametric pump does not violate energy conservation; it refactors the localized coil geometry as an open, resonant system coupled directly to the underlying hardware clock of the spatial matrix.
+if __name__ == "__main__":
+    # Execute the experimental validation path using Kurt's verified constants
+    energy_scaled, anomaly_detected = simulate_transient_bifilar_resonance(steps=48, cut_steepness=156)
+    
+    # Convert scaled integer back to display string format without float pollution
+    display_whole = energy_scaled // 1000
+    display_fraction = energy_scaled % 1000
+    
+    print(f"[ EXPERIMENTAL ] Parameter Tuning Core Operational.")
+    print(f" -> Localized Vector Potential Energy Matrix: {display_whole}.{display_fraction:03d} Units.")
+    
+    if anomaly_detected:
+        print(" -> STATUS: Anomalous Grid Resonance State Identified. Open-System Coupling Simulation Active.")
+        sys.exit(0)
+    else:
+        print(" -> STATUS: Sub-Critical Resonant Pumping.")
+        sys.exit(1)
