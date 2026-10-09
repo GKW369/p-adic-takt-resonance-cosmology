@@ -1,59 +1,36 @@
-r"""
-pTRC - p-Adic Takt-Resonance Cosmology (Part 5 - Cognitive Architecture)
-Symmetrical Quantum Neural Synchronizer for Neuralink Core Interfaces 
-via the Abelian Modulo-24 Observer Supercluster Framework.
+# -*- coding: utf-8 -*-
+"""
+pTRC Framework - Module: quantum_neural_network.py
+Lossless Biomimetic Signal Processing via Abelian Group Multiplications in Z/24Z.
+Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
 """
 
+import sys
 import numpy as np
 
-# Allowed ray space G of Kleinian Symmetry (Formula 1)
-S_RAYS = [1, 5, 7, 11, 13, 17, 19, 23]
-
-def process_synaptic_resonance(neuron_input_signal, link_ray_key):
-    r"""
-    Processes a neural signal without continuous activation functions.
-    Uses deterministic group multiplication modulo 24.
-    """
-    if link_ray_key not in S_RAYS:
-        return 0
+class QuantumNeuralNetwork:
+    def __init__(self, modulo_24_clock=24):
+        self.modulo_24_clock = modulo_24_clock
+        self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
         
-    # Integer conversion of synaptic charge
-    signal_quant = int(abs(neuron_input_signal)) % 24
-    if signal_quant == 0:
-        signal_quant = 1
-        
-    # Symmetrical entanglement on the clock ray
-    resonance_output = (signal_quant * link_ray_key) % 24
-    return resonance_output
+        # Symmetrische Strahlenschlüssel als erlaubte Gewichts-Knoten
+        self.network_weights = np.array([1, 5, 7, 11, 13, 17, 19, 23], dtype=np.int32)
 
-def verify_neural_link():
-    print("[pTRC-NEURALINK] Launching Observer Supercluster Simulation...")
-    print(" -> Synchronizing neural nodes via Modulo-24 resonance...")
-    
-    # Simulating a cluster of 5 biomimetic brain signals (frequencies)
-    biomimetic_inputs = [12.5, 45.0, 88.2, 104.9, 13.1]
-    
-    print("\n================================================================================")
-    print(" Biomimetic Input   |  Selected Ray Key     |  Emergent Synaptic Resonance")
-    print("--------------------------------------------------------------------------------")
-    
-    activated_nodes = []
-    for i, bio_sig in enumerate(biomimetic_inputs):
-        ray_key = S_RAYS[i % len(S_RAYS)]
-        res_out = process_synaptic_resonance(bio_sig, ray_key)
-        activated_nodes.append(res_out)
-        print(f"  {bio_sig:<18} |  {ray_key:<20} |  {res_out}")
+    def process_synaptic_activation(self, biomimetic_input=1836, synapse_index=1):
+        """
+        Berechnet die Aktivierung eines neuronalen Knotens ohne analoge Spannungsabfälle.
+        Nutzt die Invarianz der abelschen Gruppe anstelle kontinuierlicher Aktivierungsfunktionen.
+        Rechnet streng in Z.
+        """
+        # Auswahl eines diskreten Gewichtungsschlüssels aus dem Strahlraum
+        weight_key = self.network_weights[synapse_index % 8]
         
-    print("================================================================================")
-    
-    is_stable = all(0 <= n < 24 for n in activated_nodes)
-    
-    if is_stable and len(activated_nodes) == len(biomimetic_inputs):
-        print(" -> SUCCESS: Mind-Machine Interface flawless without analog voltage drops.")
-        print(" -> STATUS: The grid preserves the informational invariance of the network.")
-        print(" -> SUITABLE FOR: Neuralink Next-Gen N1 Processor Architectures.")
-    else:
-        print(" -> WARNING: Destructive interference detected in cognitive buffer.")
-
-if __name__ == "__main__":
-    verify_neural_link()
+        # Symmetrische Signalverschränkung (Gruppenmultiplikation modulo 24)
+        activated_state = (biomimetic_input * weight_key) % self.modulo_24_clock
+        
+        # Berechnung der kognitiven Signal-Integrität (Milli-Integritäts-Units)
+        # Gemessen über die Nähe zum invarianten Grundtakt-Strahl 1
+        phase_gap = abs(activated_state - 1)
+        milli_signal_integrity = ((self.modulo_24_clock - phase_gap) * self.SCALE) // self.modulo_24_clock
+        
+        return activated_state, milli_signal_integrity
