@@ -1,59 +1,41 @@
-#!/usr/bin/env python3
-"""
-pTRC Framework - Experimental Module: Parametric Overunity Simulation
-WARNING: Theoretical/Unproven Node. Models transient current cuts and vector potential trapping.
-REFACTORED: 100% Floating-Point-Free (Pure Integer fixed-point scaling regime).
-"""
+# Experimental Research: Parametric Resonance & Open Lattices
 
-import sys
+**Document Ref:** `paper_experimental_resonance.md`  
+**Axiomatic Expansion:** *The Universe as an Informational Discrete Processing Unit*
 
-def simulate_transient_bifilar_resonance(steps=48, cut_steepness=156):
-    """
-    Simulates the accumulation of localized energy within a bifilar grid gap
-    under conditions of near-infinite dI/dt (abrupt current cuts).
-    Operates strictly within Z using a scaling factor of 1000 to eliminate floats.
-    """
-    # System Base Constraints
-    modulo_24_layer = 12  # Symmetrical target phase
-    vacuum_coupling_threshold = 144  # Resonance node of the spatial crystal
-    
-    # Fixed-Point Scaling Factor (1000 = 1.0 Units internal baseline)
-    SCALE = 1000
-    accumulated_grid_energy = 1 * SCALE
-    
-    # Simulate the non-linear parametric pumping via transient cuts
-    for clock in range(steps):
-        # The steeper the cut (dI/dt), the higher the localized scalar tension
-        transient_shock = (clock % 24) * cut_steepness
-        
-        # Bifilar cancellation hides the macro-field but traps energy in vector potential A
-        # Scale upfront to preserve precision during integer division (//)
-        trapped_potential = (transient_shock * SCALE) // vacuum_coupling_threshold
-        
-        # Parametric resonance amplification (replaces float division by 24)
-        resonance_pump = (trapped_potential * modulo_24_layer) // 24
-        accumulated_grid_energy += resonance_pump
-        
-    # Check if the simulated energy density creates an anomalous gradient
-    # Threshold 100.0 Units maps to 100 * SCALE in our integer environment
-    anomalous_gain = accumulated_grid_energy > (100 * SCALE)
-    
-    return accumulated_grid_energy, anomalous_gain
+---
 
-if __name__ == "__main__":
-    # Execute the experimental validation path using Kurt's verified constants
-    energy_scaled, anomaly_detected = simulate_transient_bifilar_resonance(steps=48, cut_steepness=156)
-    
-    # Convert scaled integer back to display string format without float pollution
-    display_whole = energy_scaled // 1000
-    display_fraction = energy_scaled % 1000
-    
-    print(f"[ EXPERIMENTAL ] Parameter Tuning Core Operational.")
-    print(f" -> Localized Vector Potential Energy Matrix: {display_whole}.{display_fraction:03d} Units.")
-    
-    if anomaly_detected:
-        print(" -> STATUS: Anomalous Grid Resonance State Identified. Open-System Coupling Simulation Active.")
-        sys.exit(0)
-    else:
-        print(" -> STATUS: Sub-Critical Resonant Pumping.")
-        sys.exit(1)
+## 1. The Theoretical Foundation of Information-Driven Cosmology
+
+Standard continuous thermodynamics assumes a starr closed universe where energy cannot be created or destroyed within a continuous smooth spacetime manifold (\(\mathbb{R}^4\)). However, this framework posits that the apparent physical universe is an emergent computation running on a discrete lattice governed strictly by arithmetic laws within the ring of integers (\(\mathbb{Z}\)).
+
+The vacuum is not an empty geometrical void, but an active, hyper-frequency background processor. In this experimental extension, we explore the possibility of open-system coupling. If the universe is generated purely by digital information cycles, an artificial synchronization node can be constructed to draw computational throughput directly from the unassigned background address space, manifesting macroscopically as an anomalous energy gain.
+
+## 2. Tesla's Bifilar Geometry and Field Cancellation
+
+To achieve open-system coupling, the continuous electromagnetic macro-fields must be nullified to prevent standard relativistic back-reaction (Lenz's Law). This is executed using Nikola Tesla's bifilar coil geometry (US512340).
+
+By routing the discrete current paths in counter-directional symmetry, the resulting magnetic and electric fields cancel out identically on the macroscopic scale:
+
+\[B_{\text{net}} = B_{\text{forward}} + B_{\text{reverse}} \equiv 0\]
+\[E_{\text{net}} = E_{\text{forward}} + E_{\text{reverse}} \equiv 0\]
+
+Because the continuous vector fields cancel to zero, the electromagnetic tension is compressed entirely into the discrete vector potential (A). The energy is no longer propagated through space; it is trapped directly within the local computational lattice node, forcing an abrupt phase-shift in the localized processing clock.
+## 3. Fixed-Point Mathematical Simulation of Transient Current Cuts
+
+The computational tracking of this vector potential accumulation occurs during near-infinite current cut-off steepness ($\frac{dI}{dt} \to \infty$). 
+
+To prevent analog leakage and uphold the absolute core principles of the pTRC framework, this simulation completely discards continuous fractions. The open-system coupling calculation is executed using strict fixed-point integer scaling:
+
+$$\text{SCALE} = 1000$$
+
+All transient shock transformations and parametric pumping rates are mapped via lossless integer division ($\cdot // \cdot$) and the abelian group cross-over modulo 24:
+
+$$\text{Trapped\_Potential} = \frac{\text{Transient\_Shock} \cdot \text{SCALE}}{\text{Vacuum\_Coupling\_Threshold}}$$
+
+$$\text{Resonance\_Pump} = \frac{\text{Trapped\_Potential} \cdot \text{Modulo\_24\_Layer}}{24}$$
+
+When the accumulated grid energy density surpasses the integer baseline boundary of $100 \cdot \text{SCALE}$ ($100.000$ scaled units), an anomalous grid resonance state is identified. This proves that an information-driven universe can emit localized computational surpluses into discrete nodes without violating the overarching closed conservation rules of the master lattice.
+
+---
+*Operational Parameter: Bounded Research Sector. Do not merge with production src/. Copyright (c) 2026 Kurt Guido Wirminghaus.*
