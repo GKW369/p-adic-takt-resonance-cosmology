@@ -10,10 +10,10 @@ import sys
 
 def generate_144_facet_matrix():
     # Alle 12 diskreten Kern-Ecken des Vektorgleichgewichts vollständig definiert
-    base_nodes = np.array([, [2, -1, 0], [-2, 1, 0], [-2, -1, 0],
+     base_nodes = np.array([[2, 1, 0], [2, -1, 0], [-2, 1, 0], [-2, -1, 0],
 , [0, 2, -1], [0, -2, 1], [0, -2, -1],
-, [-1, 0, 2], [1, 0, -2], [-1, 0, -2]
-    ], dtype=np.int32)
+, [-1, 0, 2], [1, 0, -2], [-1, 0, -2]], dtype=np.int32)
+
     
     SCALE = 1000
     facet_channels = []
