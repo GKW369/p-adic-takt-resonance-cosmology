@@ -55,15 +55,12 @@ This software is licensed under the **GNU General Public License v3 (GPLv3)**. U
 ### 🎯 2. Commercial & Corporate Licensing (EA, Nintendo, Aerospace, AI)
 For commercial entities (e.g., video game publishers, sports simulations, aerospace developers, hardware-level AI compiler designers) requiring the integration of the pTRC integer-and-modulo physics architecture into **proprietary closed-source codebases**, a separate commercial license is mandatory. 
 
-## 🛡️ Security Policy
-Please review our [SECURITY.md](SECURITY.md) before integrating this framework into corporate pipelines. All lattice anomalies or potential buffer vulnerabilities must be reported privately to avoid exploiting closed proprietary systems.
-
 Commercial licensing bypasses the GPLv3 open-source requirements and grants the right to adapt the core algorithms for high-performance proprietary systems. 
 
 *   **For commercial licensing inquiries, architectural consulting, or corporate integration requests, contact the author privately:** 
     📧 **g.wirminghaus@gmx.de** 
 
-## 🛡️ Security Policy
+### 🛡️ 3. Security Policy
 Please review our [SECURITY.md](SECURITY.md) before integrating this framework into corporate pipelines. All lattice anomalies or potential buffer vulnerabilities must be reported privately to avoid exploiting closed proprietary systems.
 
 ---
