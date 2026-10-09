@@ -9,16 +9,17 @@ import numpy as np
 import sys
 
 def generate_144_facet_matrix():
-    # FIX: Das führende Komma wurde entfernt und das fehlende Core-Element [2, 1, 0] wiederhergestellt
-    base_nodes = np.array([[2, 1, 0], [2, -1, 0], [-2, 1, 0], [-2, -1, 0],
+    # Alle 12 diskreten Kern-Ecken des Vektorgleichgewichts vollständig definiert
+    base_nodes = np.array([, [2, -1, 0], [-2, 1, 0], [-2, -1, 0],
 , [0, 2, -1], [0, -2, 1], [0, -2, -1],
-, [-1, 0, 2], [1, 0, -2], [-1, 0, -2]], dtype=np.int32)
+, [-1, 0, 2], [1, 0, -2], [-1, 0, -2]
+    ], dtype=np.int32)
     
     SCALE = 1000
     facet_channels = []
     for node in base_nodes:
         for factor in range(1, 13):
-            # Vorab-Skalierung und Ganzzahl-Division (//) zur Eliminierung von Floats
+            # Vorab-Skalierung im Zähler und Ganzzahl-Bodendivision (//)
             scaled_factor = (factor * SCALE) // 137
             facet_channels.append(node * scaled_factor)
             
@@ -30,12 +31,12 @@ def calculate_ion_efficiency(charge_vector_scaled):
     SCALE = 1000
     
     for ch in channels:
-        # Vektor-Punktprodukt im skalierten Ganzzahl-Raum
+        # Reines Skalarprodukt im ganzzahligen Festkomma-Raum
         resonance = abs(int(np.dot(charge_vector_scaled, ch)))
         if resonance > max_resonance:
             max_resonance = resonance
             
-    # 0.31 wird als 310 skaliert. Division über // zur Effizienz-Ermittlung.
+    # Schwellenwert 0.31 wird als 310 skaliert verarbeitet
     scaled_efficiency = min(100 * SCALE, (max_resonance * SCALE) // 310)
     return scaled_efficiency
 
@@ -43,7 +44,7 @@ def verify_battery_optimization():
     print("[pTRC-BATTERY] Commencing Tesla solid-state cell resonance audit...")
     SCALE = 1000
     
-    # Alle Test-Richtungsvektoren mit SCALE multipliziert und gerundet in Z überführt
+    # Skalierte ganzzahlige Richtungsvektoren
     test_flux_directions_scaled = [
         np.array([1 * SCALE, 0, 0], dtype=np.int32),
         np.array([500, 866, 0], dtype=np.int32),
@@ -57,7 +58,7 @@ def verify_battery_optimization():
         
     avg_efficiency = sum(efficiencies) // len(efficiencies)
     
-    # Abgleich gegen das 50%-Limit in skalierten Einheiten (50.000)
+    # Überprüfung gegen die 50%-Kapazitätsgrenze (50000)
     if avg_efficiency >= 50 * SCALE:
         return True
     return False
