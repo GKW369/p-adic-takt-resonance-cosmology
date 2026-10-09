@@ -1,0 +1,37 @@
+name: pTRC Invariant Matrix Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-lattice:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install Runtime Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install numpy
+
+    - name: Execute Prime Lattice Filter Test
+      run: python src/prime_lattice_determinism.py
+
+    - name: Execute 2D Fluid Resonance Simulation
+      run: python src/fluid_resonance.py
+
+    - name: Execute Quantum Entanglement Invariance Test
+      run: python src/quantum_entanglement.py
+
+    - name: Execute Master Framework Engine Diagnostics
+      run: python src/00_ptrc_first_principles_engine.py
