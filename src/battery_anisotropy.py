@@ -9,11 +9,15 @@ import numpy as np
 import sys
 
 def generate_144_facet_matrix():
-    # Alle 12 diskreten Kern-Ecken des Vektorgleichgewichts vollständig definiert
-     base_nodes = np.array([[2, 1, 0], [2, -1, 0], [-2, 1, 0], [-2, -1, 0],
-, [0, 2, -1], [0, -2, 1], [0, -2, -1],
-, [-1, 0, 2], [1, 0, -2], [-1, 0, -2]], dtype=np.int32)
-
+    # Flaches Array, um Übertragungsfehler im Editor zu 100% auszuschließen
+    flat_nodes = [
+        2, 1, 0,   2, -1, 0,  -2, 1, 0,  -2, -1, 0,
+        0, 2, 1,   0, 2, -1,   0, -2, 1,  0, -2, -1,
+        1, 0, 2,  -1, 0, 2,    1, 0, -2, -1, 0, -2
+    ]
+    
+    # Rekonstruktion der 12 Kern-Ecken (12 Zeilen, 3 Spalten)
+    base_nodes = np.array(flat_nodes, dtype=np.int32).reshape(12, 3)
     
     SCALE = 1000
     facet_channels = []
@@ -24,6 +28,7 @@ def generate_144_facet_matrix():
             facet_channels.append(node * scaled_factor)
             
     return np.array(facet_channels, dtype=np.int32)
+
 
 def calculate_ion_efficiency(charge_vector_scaled):
     channels = generate_144_facet_matrix()
