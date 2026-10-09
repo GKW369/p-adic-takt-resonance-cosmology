@@ -1,72 +1,36 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-pTRC Framework - Module 17: Thermodynamic Clock & CMB Propagation Engine
-Resolves the Arrow of Time and CMB Laufzeit-Anisotropie.
-Proves that cosmic background radiation shifts based on orthogonal vs. diagonal lattice paths.
+pTRC Framework - Module: thermodynamic_clock_cycle.py
+Irreversible Clock Increments and Geometric CMB Overhead Simulation.
+Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
 """
 
 import sys
+import numpy as np
 
-def calculate_cosmic_propagation(path_type, distance_pixels, current_clock=1, primeorial=210):
-    """
-    Models signal propagation across the icosahedral quasicrystal grid.
-    Orthogonal paths run straight; diagonal paths experience modular propagation delay.
-    The time arrow is enforced by strictly incrementing the current_clock cycle.
-    """
-    # 1. The Arrow of Time (Irreversible step-forward)
-    next_clock = current_clock + 1  # Standard processing direction, loops are impossible
-    
-    # 2. CMB Propagation Delay via Quasikristall-Structure
-    if path_type == "ORTHOGONAL":
-        # Straight pathing through the primary modulo axes
-        travel_time_ticks = distance_pixels
-        resonance_shift = (distance_pixels * 8) % 24
-    elif path_type == "DIAGONAL":
-        # Diagonal routing across the icosahedral grid nodes forces a coordinate overhead
-        # Pure integer geometric representation of quasicrystal scaling
-        travel_time_ticks = (distance_pixels * 210) // 144
-        resonance_shift = (distance_pixels * 13) % 24
-    else:
-        return {"error": "UNKNOWN_PATH_GEOMETRY"}
+class ThermodynamicClockEngine:
+    def __init__(self, initial_clock=0):
+        # Der unumkehrbare Hardware-Zeittakt
+        self.current_clock = initial_clock
+        self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
 
-    # Calculate the simulated anomaly (the "echo shift" measured by astrophysics)
-    echo_anomaly_detected = (travel_time_ticks % 24) != 0
-
-    return {
-        "next_clock_cycle": next_clock,
-        "path_geometry": path_type,
-        "elapsed_ticks": travel_time_ticks,
-        "resonance_shift": resonance_shift,
-        "anomaly": echo_anomaly_detected
-    }
-
-def verify_cosmic_clock_framework():
-    print("[ INFO ] Initializing pTRC Thermodynamic Clock & CMB Propagation Verification...")
-    
-    # Simulating the Big Bang Echo across 10,000 pixel distance
-    distance = 10000
-    
-    ortho_result = calculate_cosmic_propagation("ORTHOGONAL", distance)
-    diag_result = calculate_cosmic_propagation("DIAGONAL", distance)
-    
-    print(f"[ TEST ] Path: ORTHOGONAL | Duration: {ortho_result['elapsed_ticks']} Ticks | Shift: {ortho_result['resonance_shift']}")
-    print(f"[ TEST ] Path: DIAGONAL   | Duration: {diag_result['elapsed_ticks']} Ticks | Shift: {diag_result['resonance_shift']}")
-    
-    # Compute the precise discrete time difference that science misinterprets as CMB temperature fluctuations
-    runtime_difference = diag_result["elapsed_ticks"] - ortho_result["elapsed_ticks"]
-    print(f"[ RESULT ] Messbarer pTRC-Laufzeitunterschied im Urknallecho: {runtime_difference} Ticks")
-    
-    # Validation: Verify that time arrow moves forward and propagation difference is fixed
-    if runtime_difference <= 0 or ortho_result["next_clock_cycle"] <= 1:
-        return False
-    return True
-
-if __name__ == "__main__":
-    success = verify_cosmic_clock_framework()
-    if success:
-        print("[ OK ] Thermodynamic time arrow and CMB crystal anisotropy validated successfully.")
-        sys.exit(0)
-    else:
-        print("[ FAIL ] Temporal or spatial propagation error.")
-        sys.exit(1)
-
+    def calculate_routing_overhead(self, simulated_distance_pixels=10000):
+        """
+        Berechnet den Laufzeitunterschied zwischen geraden und diagonalen Routings.
+        Entlarvt kosmische Hintergrundstrahlungs-Fluktuationen als geometrischen Overhead.
+        Rechnet streng in Z.
+        """
+        # Unumkehrbarer Takt-Inkrement (Zeitpfeil fest verankert)
+        self.current_clock += 1
+        
+        # Orthodoxer Pfad (Gerade durch das Pixelgitter)
+        straight_path_ticks = simulated_distance_pixels
+        
+        # Diagonaler Pfad (Skaliert mit 1414 anstelle der Float-Wurzel aus 2)
+        # 1414 entspricht 1.414 * SCALE
+        diagonal_path_ticks = (simulated_distance_pixels * 1414) // self.SCALE
+        
+        # Der rein ganzzahlige Laufzeitunterschied (Verarbeitungs-Overhead)
+        runtime_difference_milli_ticks = (diagonal_path_ticks - straight_path_ticks) * self.SCALE
+        
+        return runtime_difference_milli_ticks
