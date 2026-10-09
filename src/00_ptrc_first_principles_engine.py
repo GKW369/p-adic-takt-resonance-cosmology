@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Module: 00_ptrc_first_principles_engine.py
+pTRC Framework - Module: 00_ptrc_first_principles_engine.py (Teil 1 von 2)
 Master Orchestration Lattice & Validation Cascade for Elon Musk Video Demonstration.
 Refactored: Cinema-Wide Terminal Alignments (150 Character Line Width).
 """
@@ -11,11 +11,13 @@ import subprocess
 import time
 
 def run_lattice_validation():
+    # Massive, 150 Zeichen breite Kino-Trennlinien für den visuellen Effekt im Video
     print("======================================================================================================================================================")
     print("[ pTRC MASTER ENGINE ] Commencing Full First-Principles Integrity Audit...")
     print("[ ONTOLOGY AREA ] Ring Z - 100% Floating-Point-Free Discrete Lattice")
     print("======================================================================================================================================================\n")
     
+    # Die vollständige Liste aller 19 zu prüfenden Produktions-Skripte
     sub_modules = [
         "alpha_emitter.py",
         "base_resonance_calibration.py",
@@ -43,7 +45,15 @@ def run_lattice_validation():
     SCALE = 1000
     
     start_total_ns = time.time_ns()
-    
+# -*- coding: utf-8 -*-
+"""
+pTRC Framework - Module: 00_ptrc_first_principles_engine.py (Teil 2 von 2)
+Execution Loop, Subprocess Interception, and Final Certificate Generation.
+"""
+
+# HINWEIS: Setzt die Variablen und Listen aus Teil 1 nahtlos fort.
+# Der folgende Block gehört direkt unter 'start_total_ns = time.time_ns()' eingepflegt:
+
     for idx, module in enumerate(sub_modules, start=1):
         print(f"[{idx:02d}/19] LAUNCHING LATTICE APERTURE: {module}...")
         module_path = os.path.join(src_dir, module)
@@ -53,6 +63,7 @@ def run_lattice_validation():
             continue
             
         try:
+            # Führt jedes Skript isoliert aus und fängt Ausgaben ab
             result = subprocess.run(
                 [sys.executable, module_path],
                 capture_output=True,
@@ -60,6 +71,7 @@ def run_lattice_validation():
                 check=False
             )
             
+            # Gibt den Inhalt der Skripte live und eingerückt im Video-Stream aus
             if result.stdout:
                 for line in result.stdout.strip().split("\n"):
                     print(f"    | {line}")
@@ -76,6 +88,7 @@ def run_lattice_validation():
         except Exception as e:
             print(f"    | [ EXCEPTION ] Execution blocked: {str(e)}\n")
             
+        # Takt-Verzögerung für den flüssigen Scrolling-Effekt vor der Kamera
         time.sleep(0.15)
 
     end_total_ns = time.time_ns()
