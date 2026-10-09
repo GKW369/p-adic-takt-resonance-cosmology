@@ -4,7 +4,7 @@ pTRC CORE FRAMEWORK: EINE DISKRETE, GANZZAHLIGE SIMULATIONSARCHITEKTUR FÜR PHYS
 Autor: Kurt Guido Wirminghaus
 Status: Unabhängige Forschung / Open-Source Software Proof of Concept
 Repository: ://github.com
-Lizenz: GNU General Public License v3 (GPLv3))
+Lizenz: GNU General Public License v3 (GPLv3)
 
 ABSTRAKT
 Diese Arbeit stellt das pTRC-Framework (p-Adic Takt Resonance Cosmology) vor, eine deterministische, ganzzahlige rechentechnische Alternative zu kontinuierlichen Modellen der Raumzeit-Physik. Durch die Transformation physikalischer Mechanismen von kontinuierlichen reellen Zahlenfeldern (R^4) in finite, diskrete Koordinatenmatrizen (Z) eliminiert diese Architektur strukturelle Fließkomma-Rundungsfehler und unphysikalische transzendente Unendlichkeiten. Unter Nutzung einer strikten Untertaktungsgrenze (c = 1 Pixel/Takt) in Kombination mit ineinandergreifenden modularen Ganzzahlzyklen (Z/210Z und Z/24Z) präsentieren wir eine hocheffiziente algorithmische Simulations-Engine. Die Nützlichkeit des Frameworks wird durch voll funktionsfähige Berechnungsmodule für verlustfreie Fluiddynamik (Gitter-Gas-Automaten) und nicht-lokale Quantenzustands-Synchronisation (Shared-Memory-Array-Indizierung) demonstriert.
@@ -26,7 +26,7 @@ Um richtungsabhängige Rendering-Artefakte (Anisotropie) zu verhindern, die star
 In einer reinen Ganzzahl-Ontologie werden subatomare Massenverhältnisse als invariante Referenz-Kalibrierungszustände neu definiert, die zur Synchronisation der primorialen Gitterzyklen notwendig sind. Die ganzzahlige Basis-Kalibrierungskonstante M_c = 1836 wird durch die strikte Kopplung des achten Hauptzyklus des primorialen Takts und einer stabilen, nicht-dissipativen Phasenlage innerhalb des Modulo-24-Kontrolllayers hergeleitet:
     M_c = (8 x 210) + 156 = 1680 + 156 = 1836
 
-Der Residuen-Versatz R = 156 ist mathematisch eindeutig. Im Modulo-24-Kontrolltakt entspricht er der exakten strukturellen Halbtakt-Symmetrie:
+Der Residuen-Versatz R = 156 is mathematisch eindeutig. Im Modulo-24-Kontrolltakt entspricht er der exakten strukturellen Halbtakt-Symmetrie:
     156 mod 24 = 12
 
 Zudem wird die 156 über die aktiven, teilerfremden Siebknoten der Eulerschen Phi-Funktion phi(210) = 48 in Kombination mit dem strukturellen Goldener-Schnitt-Konstruktionswinkel (54 Grad) der Ikosaeder-Matrix abgeleitet:
