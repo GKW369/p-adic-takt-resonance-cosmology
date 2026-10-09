@@ -1,6 +1,26 @@
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Module: fluid_resonance.py
+Discrete Finite-Volume Lattice Integration for High-Velocity Aerospace Diagnostics.
+
+Application Domain: 
+Strictly optimized for deterministic laboratory environments, wind tunnel calibration, 
+and closed-boundary aerospace engineering (aerodynamics for rocketry, aviation, 
+and automotive structural design). 
+
+Mathematical Advantage:
+Eliminates floating-point accumulation noise and parametric scaling divergence 
+inherent in classical continuous Navier-Stokes approximations. By operating 
+exclusively within the discrete integer ring Z, this module guarantees absolute 
+numerical stability for high-complexity, non-linear coupled fluid boundaries under 
+exact initial boundary state injections.
+"""
+
+import numpy as np
+import sys
+
+"""
+pTRC Framework - Module: fluid_resonance.py
 Pure Integer 2D Lattice-Gas Cellular Automaton (LGCA) Engine.
 Optimized for zero floating-point lag using modulo 210/24 boundary mappings.
 Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
