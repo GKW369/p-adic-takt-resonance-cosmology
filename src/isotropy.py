@@ -47,6 +47,15 @@ if __name__ == "__main__":
     print("[ pTRC INFORMATICS ENGINE ] Validating Isotropic Lattice Symmetries...")
     engine = IsotropyEngine()
     
+    # =====================================================================
+    # KONTROLL-BLOCK: HIER PRÜFEN WIR, WAS WIRKLICH IM SKRIPT STEHT
+    # =====================================================================
+    print("\n--- DEEP INSPECTION LAYER ---")
+    print(f" -> Echte Dimensionen der Matrix im RAM: {engine.icosahedral_matrix_scaled.shape}")
+    print(" -> Geladene Matrix-Zeilen:")
+    print(engine.icosahedral_matrix_scaled)
+    # =====================================================================
+    
     # Validiere die Richtungsunabhängigkeit eines diskreten Test-Vektors
     isotropy_score = engine.validate_directional_invariance(vector_x=12, vector_y=24, vector_z=48)
     
