@@ -1,10 +1,10 @@
 ================================================================================
-pTRC CORE FRAMEWORK: A DISCRETE INTEGER COMPUTATIONAL PHYSICS ARCHITECTURE
+pTRC CORE FRAMEWORK: EINE DISKRETE, GANZZAHLIGE SIMULATIONSARCHITEKTUR FÜR PHYSIK
 ================================================================================
-Author: Kurt Guido Wirminghaus
-Status: Independent Research / Open-Source Framework Proof of Concept
+Autor: Kurt Guido Wirminghaus
+Status: Unabhängige Forschung / Open-Source Software Proof of Concept
 Repository: ://github.com
-License: GNU General Public License v3 (GPLv3)
+Lizenz: GNU General Public License v3 (GPLv3))
 
 ABSTRAKT
 Diese Arbeit stellt das pTRC-Framework (p-Adic Takt Resonance Cosmology) vor, eine deterministische, ganzzahlige rechentechnische Alternative zu kontinuierlichen Modellen der Raumzeit-Physik. Durch die Transformation physikalischer Mechanismen von kontinuierlichen reellen Zahlenfeldern (R^4) in finite, diskrete Koordinatenmatrizen (Z) eliminiert diese Architektur strukturelle Fließkomma-Rundungsfehler und unphysikalische transzendente Unendlichkeiten. Unter Nutzung einer strikten Untertaktungsgrenze (c = 1 Pixel/Takt) in Kombination mit ineinandergreifenden modularen Ganzzahlzyklen (Z/210Z und Z/24Z) präsentieren wir eine hocheffiziente algorithmische Simulations-Engine. Die Nützlichkeit des Frameworks wird durch voll funktionsfähige Berechnungsmodule für verlustfreie Fluiddynamik (Gitter-Gas-Automaten) und nicht-lokale Quantenzustands-Synchronisation (Shared-Memory-Array-Indizierung) demonstriert.
