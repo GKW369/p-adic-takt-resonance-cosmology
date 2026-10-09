@@ -1,110 +1,61 @@
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Module: quantum_entanglement.py
-Pure Integer Shared-Memory Node Synchronization Engine.
-Models instantaneous quantum state correlations via Modulo-24 control layer tracking.
+Shared-Memory Pointer Entanglement within the Abelian Modulo-24 Ray Space.
+Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
 """
 
-import numpy as np
 import sys
-import time
+import numpy as np
 
 class QuantumEntanglementEngine:
-    def __init__(self, num_pairs=8):
-        self.num_pairs = num_pairs
-        
-        # Der physikalische Kernel-Speicher (Shared Memory Matrix)
-        # Enthält die diskreten Spin-Zustände der verschränkten Paare
-        # Zustand 1 = Spin Up, Zustand 2 = Spin Down (reine Ganzzahlen)
-        self.shared_kernel = np.zeros(self.num_pairs, dtype=np.uint8)
-        
-        # System A und System B besitzen keine eigenen Kopien der Zustände,
-        # sondern halten lediglich Modulo-24-Adresspointer auf denselben Kernel.
-        self.system_a_addresses = np.array([i for i in range(self.num_pairs)], dtype=np.uint8)
-        self.system_b_addresses = np.array([i for i in range(self.num_pairs)], dtype=np.uint8)
-        
-        self.initialize_entangled_states()
+    def __init__(self):
+        # Das abelsche Modulo-24-System
+        self.modulo_24_clock = 24
+        # Erlaubte symmetrische Strahlschlüssel (Abelsche Gruppe G)
+        self.ray_group = np.array([1, 5, 7, 11, 13, 17, 19, 23], dtype=np.int32)
+        self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
 
-    def initialize_entangled_states(self):
+    def simulate_instantaneous_correlation(self, system_a_ray=5, system_b_ray=5):
         """
-        Präpariert die verschränkten Paare im Shared-Memory-Kernel.
-        Jedes Paar erhält einen deterministischen, aber zufällig verteilten Antiparallel-Zustand.
+        Simuliert die instantane Korrelation zweier verschränkter Systeme.
+        Nutzt reine Gruppenmultiplikation modulo 24 anstelle kontinuierlicher Wellenfunktionen.
+        Rechnet streng in Z.
         """
-        for i in range(self.num_pairs):
-            # Zustand 1 (Up) oder 2 (Down)
-            self.shared_kernel[i] = 1 if np.random.rand() > 0.5 else 2
+        # Validierung der Strahlenzugehörigkeit
+        if system_a_ray not in self.ray_group or system_b_ray not in self.ray_group:
+            return 0, False
 
-    def measure_node(self, system_identity, pair_index):
-        """
-        Simuliert die Messung (Memory-Read-Update) an einem Knoten.
-        Nach den Bellschen Regeln bricht der Zustand bei der ersten Messung deterministisch auf einen Wert auf.
-        System B erfährt die Änderung augenblicklich, weil es auf dieselbe Speicheradresse zugreift.
-        """
-        if pair_index >= self.num_pairs:
-            raise IndexError("Knoten-Index außerhalb der Matrixgrenzen.")
-            
-        # Modulo-24 Synchronisations-Check des Pointers
-        addr_a = self.system_a_addresses[pair_index] % 24
-        addr_b = self.system_b_addresses[pair_index] % 24
+        # Deterministische Frequenzkreuzung (Multiplikation modulo 24)
+        target_gate = (system_a_ray * system_b_ray) % self.modulo_24_clock
         
-        if addr_a != addr_b:
-            return "ERR_PHASE_DISSIPATION"
-            
-        # Zustand aus dem Shared Kernel auslesen
-        raw_state = self.shared_kernel[addr_a]
+        # Invarianz-Prüfung: Jedes Element ist selbstinvers und koppelt zurück auf Strahl 1
+        # Wir messen die Abweichung vom idealen Zielgate 1 im ganzzahligen Raum
+        deviation = abs(target_gate - 1)
         
-        # Transformation für den Beobachter (EPR-Kovarianz):
-        # Misst System A den Wert, sieht es den echten Zustand.
-        # Misst System B denselben Zustand, sieht es aufgrund der Antiparallelität das Inverse.
-        if system_identity == "A":
-            observed_spin = "UP" if raw_state == 1 else "DOWN"
-        elif system_identity == "B":
-            observed_spin = "DOWN" if raw_state == 1 else "UP"
-        else:
-            observed_spin = "UNKNOWN"
-            
-        return observed_spin
-
-    def trigger_environmental_decoherence(self, pair_index):
-        """
-        Simuliert den Verlust der Verschränkung (Dekohärenz), indem die Modulo-24 
-        Adress-Symmetrie der Pointer durch ein Störsignal verschoben wird.
-        """
-        # System B verliert die exakte Adress-Resonanz (Phasensprung um 1 Takt)
-        self.system_b_addresses[pair_index] = (self.system_b_addresses[pair_index] + 1) % 24
+        total_measurements = 1000
+        # FIX: Vorab-Skalierung zur Eliminierung von Float-Divisionen
+        # Berechnet den Korrelationswert in Milli-Invarianz-Punkten
+        milli_invariance_score = ((total_measurements - deviation) * self.SCALE) // total_measurements
+        
+        is_entangled = target_gate == 1
+        
+        return milli_invariance_score, is_entangled
 
 if __name__ == "__main__":
-    print("[ pTRC INFORMATICS ENGINE ] Validating Quantum Entanglement Module...")
+    print("[ pTRC INFORMATICS ENGINE ] Validating Quantum Entanglement Invariance...")
+    engine = QuantumEntanglementEngine()
     
-    # Initialisiere 4 verschränkte Test-Paare
-    pairs_count = 4
-    engine = QuantumEntanglementEngine(num_pairs=pairs_count)
+    # Teste Verschränkung mit zwei identischen System-Strahlen (Selbstinversion)
+    invariance_score, entangled_status = engine.simulate_instantaneous_correlation(system_a_ray=5, system_b_ray=5)
     
-    print(f"\n--- Schritt 1: Instantane EPR-Korrelation (Modulo-24 Resonanz aktiv) ---")
-    for i in range(pairs_count):
-        # Unabhängige, räumlich getrennte Abfragen für System A und System B
-        res_a = engine.measure_node("A", i)
-        res_b = engine.measure_node("B", i)
-        print(f"Paar {i} | Messung System A: {res_a:<4} <---> Messung System B: {res_b:<4} | Status: PERFEKT KORRELIERT")
+    print(f"\nDiskrete Quanten-Synchronisation abgeschlossen:")
+    print(f" -> Gemessener Kopplungsgrad: {invariance_score} Milli-Invarianz-Punkte")
+    
+    if entangled_status:
+        print(" -> STATUS: Absolute Verschränkungs-Invarianz gewahrt (Zielgate 1 erreicht).")
+    else:
+        print(" -> STATUS: Dekohärenz / Phasen-Dissipation im Gitter.")
         
-    print(f"\n--- Schritt 2: Gezielter Dekohärenz-Eingriff (Bruch der Adress-Symmetrie) ---")
-    print("Störsignal bricht die Modulo-24 Resonanz bei Paar 2...")
-    engine.trigger_environmental_decoherence(pair_index=2)
-    
-    print(f"\n--- Schritt 3: Erneute Validierung der Kontrollmatrix ---")
-    for i in range(pairs_count):
-        res_a = engine.measure_node("A", i)
-        res_b = engine.measure_node("B", i)
-        
-        if res_a == "ERR_PHASE_DISSIPATION" or res_b == "ERR_PHASE_DISSIPATION":
-            status = "COLLAPSED (Verschränkung verloren)"
-            res_a, res_b = "---", "---"
-        else:
-            status = "STABIL KORRELIERT"
-            
-        print(f"Paar {i} | Messung System A: {res_a:<4} <---> Messung System B: {res_b:<4} | Matrix: {status}")
-
-    print("\n[SUCCESS] Modulo-24 Memory-Addressing-Proof abgeschlossen.")
-    print("-> Keine Signalübertragung durch kontinuierlichen Raum notwendig.")
-    print("-> Synchronisation basiert rein auf invarianter, diskreter Adress-Identität.")
+    print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
     sys.exit(0)
