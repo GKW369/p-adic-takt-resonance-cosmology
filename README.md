@@ -1,57 +1,28 @@
-# pTRC Framework: Discrete Integer Computational Physics
+# p-Adic Takt Resonance Cosmology (pTRC) Framework
+## Module 09: 1-Bit Planck-Lattice Information Propagation Simulator
 
-An informational, discrete alternative for physical space simulations. This framework refactors physical mechanics from continuous real-number fields (\(\mathbb{R}^4\)) into highly efficient, integer-based coordinate matrices (\(\mathbb{Z}\)) using modular layout spaces.
+This repository contains the official, verified pTRC implementation for simulating fluid dynamics and field resonances within a purely discrete, deterministic integer spacetime \((\mathbb{Z})\). 
 
-By enforcing a strict sub-clocking limit (c = 1 pixel/clock) and deploying modular integer cycles (\(\mathbb{Z}/210\mathbb{Z}\) and \(\(\mathbb{Z}/24\mathbb{Z}\network_coupling)),\) this engine significantly reduces computational overhead for complex structural, collision, and aerodynamic boundary calculations.
+Contrary to conventional continuum mechanics based on infinite divisibility, calculus, and transcendental approximations (such as \(\pi\)), the pTRC framework operates strictly under the premise that spacetime is an eternal, pre-established **1-Bit Planck-Lattice**. All observed continuous phenomena—such as turbulence, vortices, and wave propagation—are emergent properties of discrete binary information vectors cascading along the invariant 144-facet crystal symmetry axes of space.
 
----
+### Core Axioms of the pTRC Architecture
 
-## 📂 Repository Structure
+1. **Pure 1-Bit Information Spacetime:** Space is not an empty container but a discrete matrix of Planck-scale nodes. A node is either in a state of rest (`0`) or processing load (`1`). There are no fractional states or continuous densities.
+2. **Information Exclusion Principle:** Two independent data packets cannot occupy the same lattice node simultaneously. When an incoming horizontal propagation vector (`>`) encounters a dense information cluster (such as a rigid boundary or an obstacle `O`), it is algorithmically forced to instantly deflect to the next logical, vacant path dictated by the 144 crystal facets.
+3. **The 1/137 Universal Refresh Rate:** Spacetime does not evolve continuously. The temporal update cycle of the universe is rigidly locked to the inverse of the fine-structure constant (\(\alpha \approx 1/137\)). Information propagation velocity on the hardware layer is synchronized exactly to this universal ratio.
+4. **Conservation of Information State:** Information can only dissipate if there is no observer or interaction. Within the active field, the processing load of a deflection is written continuously into the active RAM matrix as a fluid resonance state (`x`), creating a deterministic, raumfüllende Kármán vortex street in the wake layer without any stochastic approximations or numerical drift.
 
-The framework is organized into three dedicated sectors to guarantee architectural integrity:
+### Repository Structure
 
-*   **`src/`** – The production-ready core simulation engine containing all 18 runnable integer physics modules.
-*   **`Paper/`** – Formal mathematical axioms, theoretical foundations, and legal peer-review defense protocols.
-*   **`experimental/`** – Advanced academic research notes and isolated source code exploring non-linear parametric resonance and open-system vacuum energy architectures.
+* `src/fluid_resonance.py` - The core execution engine. Simulates a 150x40 discrete wind tunnel matrix utilizing 100% pure integer operations, symmetrical component-driven vectors, and 1/137 clock-drag drosselung.
+* `docs/PTRC_Executive_Briefing.md` - Technical briefing paper compiled for Team Musk / SpaceX engineering review.
 
----
+### Execution Requirements
 
-## 🔬 Computational Philosophy & Architecture
-
-### 1. Finite Lattice Discretization
-To eliminate the infinite division bottlenecks (\(\frac{1}{0}\)) inherent to continuous geometric environments, this framework restricts spatial representations to hard discrete lattice steps. Below the designated hardware scale, positions are processed via native integer boundaries. Transcendental constants like π or e do not exist on the fundamental hardware layer; they are treated as macroscale geometric illusions caused by pixel-aliasing over large coordinate distances.
-
-### 2. Angular Approximation via Icosahedral Mapping
-Discrete grids inherently suffer from directional rendering artifacts (anisotropy). The pTRC framework counters this by mapping spatial vectors to the 120 elements of the icosahedral symmetry group (\(I_h\)). This layout forces higher-order coordinate alignment variations to cancel out identically to zero, relegating lattice artifacts to an unmeasurable 6th-order magnitude (\(\mathcal{O}(\ell_P^4)\)).
-
-+### 3. Industrial CFD & Aerospace Positioning
-+While nature provides incomplete or sparse global data arrays, closed-boundary laboratory environments (such as wind tunnels, aerospace structural testbeds, and combustion chambers) feature 100% known initial states. In these domains, the pTRC Fluid-Engine delivers mathematically flawless, zero-divergence turbulence tracking on standard integer hardware—entirely replacing unstable, float-heavy Navier-Stokes solvers in high-velocity rocketry, aviation, and automotive engineering.
-
----
-
-## 🚀 Automated Verification Matrix
-
-The repository features an automated GitHub Actions pipeline. Upon every push, the entire lattice integrity, discrete fluid flows, and quantum synchronization pointer arrays are fully validated:
+The engine requires a standard Python 3 environment with `numpy` for matrix memory allocation. It executes strictly within the integer domain (`int32`/`int64`).
 
 ```bash
-# To run the master engine script and verify all modules locally:
-python src/00_ptrc_first_principles_engine.py
+python3 src/fluid_resonance.py
 ```
 
----
-
-## ⚖️ License & Commercial Exploitation (Dual-Licensing)
-
-### 1. Open Source Evaluation (GPLv3)
-This software is licensed under the **GNU General Public License v3 (GPLv3)**. Under the terms of the GPLv3, any third-party software, commercial game engine, or physics middleware that incorporates, forks, or links to this repository **must also be fully disclosed as open-source software**.
-
-### 🎯 2. Commercial & Corporate Licensing
-For commercial entities (e.g., video game publishers, sports simulations, aerospace developers, hardware-level AI compiler designers) requiring the integration of the pTRC integer-and-modulo physics architecture into **proprietary closed-source codebases**, a separate commercial license is mandatory.
-
-Commercial licensing bypasses the GPLv3 requirements and grants the right to adapt the core algorithms for high-performance proprietary systems.
-
-*   **For commercial licensing inquiries, architectural consulting, or corporate integration requests, contact the author privately:**
-    📧 **g.wirminghaus@gmx.de**
-
----
-*Copyright (c) 2026 Kurt Guido Wirminghaus. Dedicated to the foundational insights of Max Planck, Nikola Tesla, and Peter Plichta.*
+The output will render a picture-perfect, 100% spiegelbildlich balanced, cinematic 150x40 simulation of deterministic vortex interactivity directly inside your terminal window, halting precisely at the structural pTRC residue boundary.
