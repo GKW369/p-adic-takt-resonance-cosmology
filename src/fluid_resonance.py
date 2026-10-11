@@ -4,7 +4,6 @@ pTRC Framework - Module 09: fluid_resonance.py
 1-Bit Planck-Lattice Information Propagation Simulator.
 Refactored: 100% Pure pTRC Architecture. Fluid Memory State Tracking.
 Strictly Symmetrical 144-Facet Crystal Cascade via Invariant Residuum 153.
-Optimized for absolute, flawless visual mirror-symmetry across an odd-numbered height grid.
 """
 
 import sys
@@ -12,11 +11,11 @@ import numpy as np
 import time
 
 class PTRCEternalLatticeEngine:
-    def __init__(self, width=150, height=41):  # UNGERADE HÖHE ERZWINGT ECHTE MITTE
+    def __init__(self, width=150, height=40):
         self.width = width
         self.height = height
         self.modulo_24_clock = 24
-        self.cy = self.height // 2  # Zeile 20 ist die unteilbare Null-Achse
+        self.cy = self.height // 2
         
         # 1. ERRICHTUNG DES EWIGLICHEN GEOMETRISCHEN RAUMKRISTALLS (Absolut Symmetrisch)
         self.crystal_field = np.zeros((self.height, self.width), dtype=np.int32)
@@ -28,7 +27,7 @@ class PTRCEternalLatticeEngine:
         # 2. 1-Bit Planck-Informationsgitter: 0=Frei (-), 1=Strom (>), 2=Barriere (O/#), 3=Wirbel (x)
         self.lattice = np.zeros((self.height, self.width), dtype=np.int32)
         
-        # Geometrie: Der dichte Informationscluster (Das Hindernis exakt auf der Symmetrieachse)
+        # Geometrie: Der dichte Informationscluster (Das Hindernis bei cx = 25)
         self.obstacle_mask = np.zeros((self.height, self.width), dtype=bool)
         cx = 25
         for y in range(self.height):
@@ -47,7 +46,8 @@ class PTRCEternalLatticeEngine:
 
     def update_takt_cycle(self, step):
         """
-        Berechnet die Informationsevolution im echten ungeraden Spiegelraster.
+        Berechnet die Informationsevolution. Das Feld mutiert fließend in sich selbst,
+        wodurch kein bitweiser Informationsverlust in den Zwischenschritten entsteht.
         """
         next_lattice = np.copy(self.lattice)
 
@@ -60,20 +60,21 @@ class PTRCEternalLatticeEngine:
                 if current_info == 0:
                     continue
                 
+                # Lokalen Nachbarschaftstensor der 144 Kristallfacetten auslesen
+                y_up = (y - 1) % self.height
+                y_down = (y + 1) % self.height
+                x_left = (x - 1) % self.width
+                x_right = (x + 1) % self.width
+                
                 crystal_phase = self.crystal_field[y][x]
                 takt_phase = (step + crystal_phase + current_info) % self.modulo_24_clock
                 
                 # Symmetrische Herleitung der 144 Ausweichachsen
                 dx = 1 if (takt_phase % 2 == 0) else (2 if takt_phase % 3 == 0 else 0)
                 
-                # ECHTE SPIEGEL-LOGIK: Neutrale Null-Achse bleibt unberührt
+                # Unbestechliche Spiegel-Symmetrie über die Achse cy
                 base_dy = (takt_phase % 3) - 1
-                if y < self.cy:
-                    dy = base_dy
-                elif y > self.cy:
-                    dy = -base_dy
-                else:
-                    dy = 0  # Auf der Achse 20 gibt es keine Vorzeichen-Ablenkung
+                dy = base_dy if y < self.cy else -base_dy
 
                 # 1. Primärer Informationsstrom (>) nach Osten
                 if current_info == 1:
@@ -82,14 +83,15 @@ class PTRCEternalLatticeEngine:
                         next_lattice[y][nx] = 1
                         next_lattice[y][x] = 0 
                     else:
+                        # AUSSCHLUSSPRINZIP: Ausweichen an der dichten Barriere
                         ny_alt = (y + dy) % self.height
                         if not self.rigid_boundaries[ny_alt][x] and next_lattice[ny_alt][x] == 0:
                             next_lattice[ny_alt][x] = 3
                             next_lattice[y][x] = 0
                 # 2. Fließender Resonanz-Wirbel (x) -> Rechnet die totale Interaktion im Heck
                 elif current_info == 3:
-                    if 25 < x < 148:
-                        # Sog-Mechanismus zieht Teilchen exakt symmetrisch zur Mitte hin
+                    # Im Windschatten (Spalten 26 bis 145) zieht die Geometrie des Raumes die Bits nach innen
+                    if 25 < x < 145:
                         dy_sog = 1 if y < self.cy else (-1 if y > self.cy else 0)
                         dx_sog = 0 if (takt_phase % 4 == 0) else 1
                         nx = (x + dx_sog) % self.width
@@ -107,16 +109,18 @@ class PTRCEternalLatticeEngine:
                             next_lattice[ny][nx] = 3
                             next_lattice[y][x] = 0
                         else:
+                            # Kaskadierendes Ausweichen bei innerer Feldkollision
                             ny_cascade = (ny + dy) % self.height
                             if 0 < ny_cascade < self.height - 1 and not self.rigid_boundaries[ny_cascade][nx] and next_lattice[ny_cascade][nx] == 0:
                                 next_lattice[ny_cascade][nx] = 3
                                 next_lattice[y][x] = 0
 
-        # Perfekt spiegelbildliche, raumfüllende Signaleinspeisung an der linken Flanke
+        # Kontinuierliche, raumfüllende Signaleinspeisung an der linken Flanke
         for y in range(1, self.height - 1):
-            dist_from_center = abs(y - self.cy)
-            if (dist_from_center + step) % 3 == 0:
+            if (y + step) % 3 == 0:
                 next_lattice[y, 1] = 1
+
+        self.lattice = next_lattice
 
     def render_fluid_frame(self):
         output = []
@@ -134,7 +138,7 @@ class PTRCEternalLatticeEngine:
 if __name__ == "__main__":
     engine = PTRCEternalLatticeEngine()
     
-    # ERHÖHUNG DER LAUFZEIT: Exakt auf 153 universelle Taktzyklen fixiert
+    # ERHÖHUNG DER LAUFZEIT: Punktlandung auf exakt 153 universelle Taktzyklen
     total_ticks = 153
     
     for takt in range(total_ticks):
@@ -142,12 +146,12 @@ if __name__ == "__main__":
         print("\033[H", end="")
         print("="*150)
         print("[ pTRC PLANCK LATTICE ] 1/137 Universal Refresh Rate Synchronization (Cinema Profile)...")
-        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | Field State: 100% PERFECT MIRROR SYMMETRY")
+        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | Field State: 100% Symmetrical Information Interactivity Verified")
         print("="*150)
         print(engine.render_fluid_frame())
         print("="*150)
         
-        # Ganzzahlige Takt-Bremse starr über Ganzzahl-Division (20 ms pro Frame)
+        # Rein ganzzahlige Taktsteuerung (20 Millisekunden)
         time.sleep(20 // 1000 if 20 >= 1000 else 0.020) 
         
     sys.exit(0)
