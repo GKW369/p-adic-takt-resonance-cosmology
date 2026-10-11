@@ -1,6 +1,6 @@
 # pTRC Framework: Discrete Integer Computational Physics Engine
+
 **Core Motto:** "Are We Calculating Too Small?"  
-**Core Axiom:** *Before space existed, there was the Integer. Space is not a container; it is the geometric permission enabled by the whole number.*
 
 ---
 
@@ -66,4 +66,5 @@ For commercial entities requiring the integration of the pTRC integer-and-modulo
 📧 **g.wirminghaus@gmx.de**
 
 ---
-*Copyright (c) 2026 Kurt Guido Wirminghaus. Dedicated to the foundational insights of Albert Einstein, Max Planck, and Peter Plichta.*
+
+*Copyright (c) 2026 Kurt Guido Wirminghaus. Dedicated to the foundational insights of Max Planck, Nikola Tesla and Peter Plichta.*
