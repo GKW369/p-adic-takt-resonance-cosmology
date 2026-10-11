@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Experimental Module: Parametric Overunity Simulation
-WARNING: Isolated Theoretical Sandbox Node. Models transient current cuts in Z.
+pTRC Framework - Experimental Module: Parametric Resonance Simulation
+WARNING: Isolated Theoretical Research Node. Models transient current cuts in Z.
 Refactored: 100% Pure Integer Mechanics. Zero Fractional Approximations.
 """
 
@@ -10,7 +10,7 @@ import sys
 def simulate_transient_bifilar_resonance(steps=48, cut_steepness=156):
     """
     Simulates the accumulation of localized energy within a bifilar grid gap
-    under conditions of near-infinite dI/dt using strict undivisible whole numbers.
+    under conditions of near-infinite dI/dt using strict indivisible whole numbers.
     """
     modulo_24_layer = 12  
     accumulated_grid_energy = 1
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     print(f" -> Localized Vector Potential Energy Matrix: {energy} Units.")
     
     if anomaly_detected:
-        print(" -> STATUS: Anomalous Grid Resonance State Identified. Open-System Coupling Simulation Active.")
+        print(" -> STATUS: Grid Resonance State Identified. Open-System Matrix Transduction Dynamic Active.")
         sys.exit(0)
     else:
         print(" -> STATUS: Sub-Critical Resonant Pumping.")
