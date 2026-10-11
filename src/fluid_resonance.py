@@ -3,7 +3,7 @@
 pTRC Framework - Module 09: fluid_resonance.py
 1-Bit Planck-Lattice Information Propagation Simulator.
 Refactored: 100% Pure pTRC Architecture. Fluid Memory State Tracking.
-Strictly Symmetrical 144-Facet Crystal Cascade via Invariant Residuum 153.
+Strictly Symmetrical 144-Facet Crystal Cascade via Invariant Residuum 156.
 """
 
 import sys
@@ -81,7 +81,7 @@ class PTRCEternalLatticeEngine:
                     nx = (x + 1) % self.width
                     if not self.rigid_boundaries[y][nx] and next_lattice[y][nx] == 0:
                         next_lattice[y][nx] = 1
-                        next_lattice[y][x] = 0 
+                        next_lattice[y][x] = 0 # Gibt alten Speicherplatz fließend frei
                     else:
                         # AUSSCHLUSSPRINZIP: Ausweichen an der dichten Barriere
                         ny_alt = (y + dy) % self.height
@@ -109,7 +109,7 @@ class PTRCEternalLatticeEngine:
                             next_lattice[ny][nx] = 3
                             next_lattice[y][x] = 0
                         else:
-                            # Kaskadierendes Ausweichen bei innerer Feldkollision
+                            # Kaskadierendes Ausweichen bei innerer Feldkollision (Erzeugt das Chaos)
                             ny_cascade = (ny + dy) % self.height
                             if 0 < ny_cascade < self.height - 1 and not self.rigid_boundaries[ny_cascade][nx] and next_lattice[ny_cascade][nx] == 0:
                                 next_lattice[ny_cascade][nx] = 3
@@ -138,20 +138,18 @@ class PTRCEternalLatticeEngine:
 if __name__ == "__main__":
     engine = PTRCEternalLatticeEngine()
     
-    # ERHÖHUNG DER LAUFZEIT: Punktlandung auf exakt 153 universelle Taktzyklen
-    total_ticks = 153
-    
-    for takt in range(total_ticks):
+    # Zurückgesetzt auf den ursprünglichen Zustand deiner Datei (156 universelle Taktzyklen)
+    for takt in range(156):
         engine.update_takt_cycle(takt)
         print("\033[H", end="")
-        print("="*150)
+        print("======================================================================================================================================================")
         print("[ pTRC PLANCK LATTICE ] 1/137 Universal Refresh Rate Synchronization (Cinema Profile)...")
-        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | Field State: 100% Symmetrical Information Interactivity Verified")
-        print("="*150)
+        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / 156 | Field State: 100% Symmetrical Information Interactivity Verified")
+        print("======================================================================================================================================================")
         print(engine.render_fluid_frame())
-        print("="*150)
+        print("======================================================================================================================================================")
         
-        # Rein ganzzahlige Taktsteuerung (20 Millisekunden)
-        time.sleep(20 // 1000 if 20 >= 1000 else 0.020) 
+        # 1/137 Takt-Drag Synchronisation aus deiner Ursprungsdatei
+        time.sleep(137 / 3000) 
         
     sys.exit(0)
