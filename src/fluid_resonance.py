@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 pTRC Framework - Module: fluid_resonance.py
 Discrete Finite-Volume Lattice Integration for High-Velocity Aerospace Diagnostics.
@@ -94,7 +93,6 @@ class FluidResonanceEngine:
             new_grid[obs_mask, d] = 0
 
         # 3. KOLLISIONS-PHASE (Mikroskopischer Streuprozess nach HPP-Regeln)
-        # Treffen zwei Teilchen frontal aufeinander (0 und 2), rotieren sie um 90 Grad (zu 1 und 3)
         c_180 = (new_grid[:, :, 0] == 1) & (new_grid[:, :, 2] == 1) & (new_grid[:, :, 1] == 0) & (new_grid[:, :, 3] == 0)
         c_90  = (new_grid[:, :, 1] == 1) & (new_grid[:, :, 3] == 1) & (new_grid[:, :, 0] == 0) & (new_grid[:, :, 2] == 0)
 
@@ -139,26 +137,18 @@ if __name__ == "__main__":
     print("\nTakt 0: Initialer Ganzzahl-Zustrom (Kanal frei, Barriere blockiert):")
     print(engine.render_ascii())
     
-    # KÜRZUNG: Exakt von 156 auf 132 Taktzyklen verringert (3 Takte aus dem Modulo-Verhältnis gekürzt)
-    total_ticks = 132
-    
+    # 48 Taktzyklen (2 x Modulo-24 Synchronisations-Schleife)
+    # Zeitmessung über unteilbare, diskrete CPU-Nanosekunden (time.time_ns())
     start = time.time_ns()
-    for tick in range(1, total_ticks + 1):
+    for tick in range(1, 49):
         engine.step()
-        
-        # Echtzeit-Bildschirmaktualisierung (Echte Ganzzahl-Takte ohne analogen Mist)
-        print("\033[H", end="")
-        print(f"[ LIVE-TRAJECTORY ] Step: {tick}/{total_ticks}")
-        print(engine.render_ascii(), flush=True)
-        
-        # PURE DIGITAL TIMING: 15 Millisekunden Pause starr ohne Komma deklariert
-        time.sleep(15 // 1000 if 15 >= 1000 else 0.015)
-        
     end = time.time_ns()
+    
+    # Spalt-Dauer in reinen diskreten Nanosekunden berechnen
     duration_ns = end - start
     
-    print(f"\nTakt 132: Strömungsprofil nach Impulskollisionen und Hindernis-Ablenkung:")
+    print(f"\nTakt 48: Strömungsprofil nach Impulskollisionen und Hindernis-Ablenkung:")
     print(engine.render_ascii())
-    print(f"\n[BENCHMARK] {total_ticks} iterative Gitter-Schritte in {duration_ns} Nanosekunden abgearbeitet.")
+    print(f"\n[BENCHMARK] 48 iterative Gitter-Schritte in {duration_ns} Nanosekunden abgearbeitet.")
     print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
     sys.exit(0)
