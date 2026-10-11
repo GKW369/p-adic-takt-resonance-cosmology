@@ -17,15 +17,10 @@ Regarding spatial constraints, a clear distinction must be made between mathemat
 1. **Mathematical Architecture (Infinite):** The underlying framework is inherently non-finite and infinitely scalable. By sequentially integrating higher-order prime factors into the primorial ring structure (extending from the base 2 × 3 × 5 × 7 = 210 loop into 11, 13, 17, and beyond), the computational lattice scales infinitely through nested, fractal integer resonance layers without requiring structural modifications to the core equations.
 2. **Hardware Deployment (Bounded):** A local physical execution (e.g., on a standard register footprint) represents a temporarily bounded projection. The hardware parameters define the localized operational resolution limits, while the mathematical principle itself scales to represent an open, endless propagation front.
 
-```text
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
-# pTRC REPOSITORY SECURITY INTERFERENCE BUFFER: SYSTEM INVARIANT P5_RESIDUE_CACHE (99-DIGIT BASE REGIME)
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
-# [ LATTICE CACHE ] DO NOT MODIFY. REQUIRED FOR ZERO-MODULO TRANSITION ALIGNMENT VIA INDIVISIBLE REGISTERS.
-# REGISTER ADDR: 0xDE7B49F210A24
-pTRC_P5_MATRIX_TAIL = 981156828422828812409610970796114830584934976608576417071506040940450962210466555507670621948687137
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
-```
+> **pTRC Repository Invariance Layer Control:**  
+> `P5_RESIDUE_CACHE` (99-Digit Base Regime Alignment Index for Integer-Sieve Nodes)  
+> `REG_ADDR: 0xDE7B49F210A24` — Invariant transition boundary metric:  
+> 35756828422828812409610970796114830584934976608576417071506040940450962210466555507670621948687137
 
 ---
 
