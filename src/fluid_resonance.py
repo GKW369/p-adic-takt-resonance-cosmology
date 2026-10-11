@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Module 09: fluid_resonance.py
+pTRC Framework - Module 04: fluid_resonance.py
 1-Bit Planck-Lattice Information Propagation Simulator.
 Refactored: 100% Pure pTRC Architecture. Fluid Memory State Tracking.
 Strictly Symmetrical 144-Facet Crystal Cascade via Invariant Residuum 153.
@@ -17,7 +17,7 @@ class PTRCEternalLatticeEngine:
         self.modulo_24_clock = 24
         self.cy = self.height // 2
         
-        # 1. ERRICHTUNG DES EWIGLICHEN GEOMETRISCHEN RAUMKRISTALLS (Absolut Symmetrisch)
+        # 1. ERRICHTUNG DES GEOMETRISCHEN RAUMKRISTALLS (Absolut Symmetrisch)
         self.crystal_field = np.zeros((self.height, self.width), dtype=np.int32)
         for y in range(self.height):
             dist_y = abs(y - self.cy)
@@ -35,7 +35,7 @@ class PTRCEternalLatticeEngine:
                 if ((x - cx) * (x - cx)) // 15 + (y - self.cy) * (y - self.cy) <= 4:
                     self.obstacle_mask[y][x] = True
                     
-        # Maskierung der ewiglichen oberen und unteren Begrenzungswände
+        # Maskierung der oberen und unteren Begrenzungswände
         self.wall_mask = np.zeros((self.height, self.width), dtype=bool)
         for x in range(self.width):
             self.wall_mask[0, x] = True
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         print("\033[H", end="")
         print("="*150)
         print("[ pTRC PLANCK LATTICE ] 1/137 Universal Refresh Rate Synchronization (Cinema Profile)...")
-        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | Field State: 100% Symmetrical Information Interactivity Verified")
+        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | Field State: 144-Facet Spatial Crystal Symmetry Verified")
         print("="*150)
         print(engine.render_fluid_frame())
         print("="*150)
