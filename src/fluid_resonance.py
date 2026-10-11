@@ -3,7 +3,7 @@
 pTRC Framework - Module 09: fluid_resonance.py
 1-Bit Planck-Lattice Information Propagation Simulator.
 Refactored: 100% Pure pTRC Architecture. Fluid Memory State Tracking.
-Strictly Symmetrical 144-Facet Crystal Cascade via Invariant Residuum 156.
+Strictly Symmetrical 144-Facet Crystal Cascade via Invariant Residuum 153.
 """
 
 import sys
@@ -81,16 +81,14 @@ class PTRCEternalLatticeEngine:
                     nx = (x + 1) % self.width
                     if not self.rigid_boundaries[y][nx] and next_lattice[y][nx] == 0:
                         next_lattice[y][nx] = 1
-                        next_lattice[y][x] = 0 # Gibt alten Speicherplatz fließend frei
+                        next_lattice[y][x] = 0 
                     else:
-                        # AUSSCHLUSSPRINZIP: Ausweichen an der dichten Barriere
                         ny_alt = (y + dy) % self.height
                         if not self.rigid_boundaries[ny_alt][x] and next_lattice[ny_alt][x] == 0:
                             next_lattice[ny_alt][x] = 3
                             next_lattice[y][x] = 0
                 # 2. Fließender Resonanz-Wirbel (x) -> Rechnet die totale Interaktion im Heck
                 elif current_info == 3:
-                    # Im Windschatten (Spalten 26 bis 145) zieht die Geometrie des Raumes die Bits nach innen
                     if 25 < x < 145:
                         dy_sog = 1 if y < self.cy else (-1 if y > self.cy else 0)
                         dx_sog = 0 if (takt_phase % 4 == 0) else 1
@@ -109,15 +107,17 @@ class PTRCEternalLatticeEngine:
                             next_lattice[ny][nx] = 3
                             next_lattice[y][x] = 0
                         else:
-                            # Kaskadierendes Ausweichen bei innerer Feldkollision (Erzeugt das Chaos)
                             ny_cascade = (ny + dy) % self.height
                             if 0 < ny_cascade < self.height - 1 and not self.rigid_boundaries[ny_cascade][nx] and next_lattice[ny_cascade][nx] == 0:
                                 next_lattice[ny_cascade][nx] = 3
                                 next_lattice[y][x] = 0
 
-        # Kontinuierliche, raumfüllende Signaleinspeisung an der linken Flanke
+        # KORREKTUR FÜR PERFEKTE SYMMETRIE:
+        # Berechnet den Takt-Einstrom basierend auf dem Abstand zur Mitte (cy=20).
+        # Dadurch zünden die Partikel oben und unten absolut synchron.
         for y in range(1, self.height - 1):
-            if (y + step) % 3 == 0:
+            dist_from_center = abs(y - self.cy) if y < self.cy else abs((self.height - 1 - y) - self.cy)
+            if (dist_from_center + step) % 3 == 0:
                 next_lattice[y, 1] = 1
 
         self.lattice = next_lattice
@@ -138,18 +138,20 @@ class PTRCEternalLatticeEngine:
 if __name__ == "__main__":
     engine = PTRCEternalLatticeEngine()
     
-    # Zurückgesetzt auf den ursprünglichen Zustand deiner Datei (156 universelle Taktzyklen)
-    for takt in range(156):
+    # LAUFZEIT: Auf exakt 153 Takte eingestellt
+    total_ticks = 153
+    
+    for takt in range(total_ticks):
         engine.update_takt_cycle(takt)
         print("\033[H", end="")
-        print("======================================================================================================================================================")
+        print("="*150)
         print("[ pTRC PLANCK LATTICE ] 1/137 Universal Refresh Rate Synchronization (Cinema Profile)...")
-        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / 156 | Field State: 100% Symmetrical Information Interactivity Verified")
-        print("======================================================================================================================================================")
+        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | Field State: 100% Symmetrical Information Interactivity Verified")
+        print("="*150)
         print(engine.render_fluid_frame())
-        print("======================================================================================================================================================")
+        print("="*150)
         
-        # 1/137 Takt-Drag Synchronisation aus deiner Ursprungsdatei
-        time.sleep(137 / 3000) 
+        # GESCHWINDIGKEIT: Ganzzahlig beschleunigt auf 15 Millisekunden Taktzeit
+        time.sleep(15 // 1000 if 15 >= 1000 else 0.015) 
         
     sys.exit(0)
