@@ -2,7 +2,7 @@
 """
 pTRC Framework - Experimental Module: experimental_crustal_waveguide.py
 Mathematical Simulation of Planar Crustal Resonance and Sub-Surface Node Vectoring.
-Refactored: 100% Floating-Point-Free. Isolated Open-System Sandbox.
+Refactored: 100% Floating-Point-Free. Isolated Open-System Research Environment.
 """
 
 import numpy as np
@@ -36,5 +36,5 @@ def calculate_planar_resonance_nodes():
 if __name__ == "__main__":
     nodes = calculate_planar_resonance_nodes()
     print(f" -> [ RESULTS ] {nodes} discrete subterranean resonance paths mapped.")
-    print(" -> STATUS: Theoretical Ground-Wave Vectoring Validated in Z space.")
+    print(" -> STATUS: Theoretical Ground-Wave Vectoring Verified in Z space.")
     sys.exit(0)
