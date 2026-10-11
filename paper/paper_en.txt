@@ -3,7 +3,7 @@ pTRC CORE FRAMEWORK: A DISCRETE INTEGER COMPUTATIONAL PHYSICS ARCHITECTURE
 ================================================================================
 Author: Kurt Guido Wirminghaus
 Status: Independent Research / Open-Source Framework Proof of Concept
-Repository:https://github.com/GKW369/p-adic-takt-resonance-cosmology/tree/main
+Repository: https://github.com
 License: GNU General Public License v3 (GPLv3)
 
 ABSTRACT
@@ -37,7 +37,7 @@ Where the factor 3 defines the foundational three-dimensional coordinate baselin
 The experimental macroscale fractional tail (M_exp ≈ 1836.15267343) is proven to be an analytical illusion caused by macroscale pixel aliasing over large coordinate distances. It represents the cumulative network routing latency overhead (Clock Drag) of frequency-based laboratory measurements, while the core hardware state remains flawlessly integer.
 
 4. ALGORITHMIC SIMULATION ENGINE: CORE OPERATIONAL MODULES
-The framework's technological validity is verified via 18 separate, lauffähige Python modules managed by a master system validation script. Two key modules demonstrate the computational advantages of this architecture:
+The framework's technological validity is verified via 18 separate, lauffähige Python modules managed by a central integration and validation script. Two key modules demonstrate the computational advantages of this architecture:
 
 A. Lossless Fluid Dynamics (fluid_resonance.py)
 Operating as a 2D Lattice-Gas Cellular Automaton (LGCA), this engine executes fluid motion through deterministic bit-shifting (np.roll) and discrete particle collisions matching HPP rules. By operating completely without float variables, transcendental constants, or partial differential equations, the simulation executes complex aerodynamic boundary interactions with zero rounding lag and absolute mass-and-momentum conservation.
