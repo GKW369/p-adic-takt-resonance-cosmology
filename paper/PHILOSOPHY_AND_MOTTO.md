@@ -21,7 +21,7 @@ Physical space does not exist as an independent, finite container. It is an evol
 1. **Cosmic Inflation:** The near-light-speed expansion of the early lattice is resolved via computational register dynamics. In the near-absence of internal tracking structures (observers), the algorithmic overhead (Clock Drag) approaches zero, allowing maximum propagation velocity. The generation of matter and energy from an absolute void is rejected as a direct violation of the First Law of Thermodynamics; energy remains an invariant sum within the total register.
 2. **Boundary Acceleration:** The observed macroscale cosmic acceleration is not driven by hypothetical dark energy or unmapped matter fields. It is the mathematical consequence of the lattice constantly interacting with its own operational boundary layers at the two-dimensional outer boundary (2D-skin) of the propagation front:
 
-$$\text{Lattice\_Expansion} \equiv f(P_5) \pmod{210}$$
+$$\text{Lattice Expansion} \equiv f(P_5) \pmod{210}$$
 
 ---
 
@@ -42,7 +42,7 @@ Continuous energy distributions are analytical illusions; space-time transitions
 This framework provides the exact whole-number scaling laws for two historical foundations of discrete and resonance-based physics:
 
 1. **Peter Plichta’s Prime Cross:** Expanded from its baseline numerical configuration into a multi-layered primorial network modulo 210, utilizing integer interference sieves to locate structural density nodes in $O(1)$ without floating-point division.
-2. **Nikola Tesla’s Cavity Resonance Dynamics:** Integrating Tesla’s empirical determination of the earth-ionosphere boundary layer acting as a **global electromagnetic cavity resonator**. These whole-number vibrational ratios are converted into discrete, lossless routing matrices ($\mathbb{Z}/24\mathbb{Z}$ and \(\mathbb{Z}/210\mathbb{Z}\)). Planetary resonance conditions are governed entirely by whole-number harmonic ratios operating within the spatial lattice, validating early discrete resonance principles over analytical continuum approximations.
+2. **Nikola Tesla’s Cavity Resonance Dynamics:** Integrating Tesla’s empirical determination of the earth-ionosphere boundary layer acting as a **global electromagnetic cavity resonator**. These whole-number vibrational ratios are converted into discrete, lossless routing matrices ($\mathbb{Z}/24\mathbb{Z}$ and $\mathbb{Z}/210\mathbb{Z}$). Planetary resonance conditions are governed entirely by whole-number harmonic ratios operating within the spatial lattice, validating early discrete resonance principles over analytical continuum approximations.
 
 ---
 *Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
