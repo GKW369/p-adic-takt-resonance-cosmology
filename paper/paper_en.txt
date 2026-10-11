@@ -1,6 +1,6 @@
-================================================================================
+==========================================================================
 pTRC CORE FRAMEWORK: A DISCRETE INTEGER COMPUTATIONAL PHYSICS ARCHITECTURE
-================================================================================
+==========================================================================
 Author: Kurt Guido Wirminghaus
 Status: Independent Research / Open-Source Framework Proof of Concept
 Repository: https://github.com/GKW369/p-adic-takt-resonance-cosmology
