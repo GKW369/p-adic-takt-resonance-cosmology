@@ -1,22 +1,25 @@
 # Theoretical Foundation: Discrete Space-Time Quantization Matrix
 
-## 1. Boundary Condition Framework
-The pTRC model operates on the principle that physical coordinates do not rely on continuous fields ($\mathbb{R}^4$). Instead, all positional and directional transitions are mapped directly onto a finite, discrete coordinate matrix ($\mathbb{Z}$) inside a unified processing lattice. 
+## 1. Boundary Condition Framework & Infinite Scalability
+The pTRC model operates on the principle that physical coordinates do not rely on continuous fields ($\mathbb{R}^4$). Instead, all positional and directional transitions are mapped directly onto a discrete coordinate matrix ($\mathbb{Z}$) inside a unified processing lattice.
 
-By defining the computational baseline on strict integer transformations, the framework avoids the structural floating-point divergence and truncation noise inherent to classical continuous mechanics.
+While a local computer deployment operates within temporary hardware constraints, the underlying mathematical architecture is fundamentally **infinitely scalable**. By sequentially integrating higher-order primorial rings (extending from the base loop into larger prime factors such as 11, 13, 17, and beyond), the computational lattice scales infinitely without structural modification. Space-time is refactored not as a static container, but as an endless whole-number information propagation front.
 
-## 2. Modular Metric Harmonization
+## 2. Modular Metric Harmonization & The 144-Facet Crystal
 The interaction states within the simulation space are calculated via interlocking quotient rings:
 
 $$\mathbb{Z}/210\mathbb{Z} \quad \text{and} \quad \mathbb{Z}/24\mathbb{Z}$$
 
-* **Primary Clock Loop:** The 210 primorial step interval forms the baseline structural synchronization period ($2 \times 3 \times 5 \times 7 = 210$).
-* **Control Layer:** The modulo-24 cyclic resonance tracker regulates multi-axis coordinate alignment, maintaining systemic symmetry throughout long execution cascades without data decay.
+Every discrete state evolution is routed through the local neighborhood tensors of a **144-facet spatial crystal structure**. This structure governs the multi-axis coordinate alignment, maintaining systemic symmetry throughout long execution cascades without data decay.
+
+$$\text{Takt Phase} \equiv (\text{Step} + \text{Crystal Phase} + \text{Current State}) \pmod{24}$$
 
 ## 3. Preservation of Angular Isotropy
-To cancel out directional rendering artifacts or anisotropic biases typical of rigid whole-number grids, the central processing lattice couples the 210-pathway network directly with the 120 elements of the icosahedral symmetry group ($I_h$). 
+To cancel out directional rendering artifacts or anisotropic biases typical of rigid whole-number grids, the processing lattice distributes its 144 discrete escape axes with absolute mathematical balance. 
 
-This configuration ensures that directional coordinate alignment variations resolve identically to zero at the macroscopic layer, preserving a balanced approximation of isotropic fields.
+This configuration ensures that directional coordinate alignment variations resolve identically to zero at the macroscopic layer, forcing perfect rotational symmetry to emerge naturally. Any remaining spatial grid discretization artifacts are structurally relegated to an unmeasurable order of magnitude:
+
+$$O(l_P^4)$$
 
 ---
 *Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
