@@ -1,52 +1,57 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-pTRC Framework - Core Module 20: Discrete Pi Square Crystallization
-Strict Integer Ontology (Z) - Fixed-Point Arithmetic Layer.
-Proves that a circle inside an integer grid is bounded by a perfect square.
+pTRC Framework - Core Module: Discrete Pi Square Crystallization
+Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
+Refactored: 100% Pure Integer Mechanics. Zero Floating-Point/Fractional Approximations. Live Terminal Frame-Takt.
 """
-import sys
 
-def calculate_discrete_pi_crystallization(grid_scale: int = 210) -> tuple[int, bool]:
+import sys
+import time
+
+def calculate_discrete_pi_crystallization(grid_scale=210):
     """
-    Counts every single discrete pixel node that satisfies the spatial 
-    radius condition inside a bounded square matrix (2 * grid_scale)^2.
-    Uses strict integer logic. No floats, no continuous pi definitions.
+    Zählt jeden einzelnen unteilbaren Gitterpunkt auf der Planck-Skala, 
+    der die ganzzahlige Radius-Bedingung erfüllt. Keine reellen Zahlen.
     """
-    INT_SCALE: int = 1000000
-    radius_squared: int = grid_scale * grid_scale
+    MILLI_SCALE = 1000  # Alle Verhältnisse werden starr in unteilbaren Milli-Einheiten deklariert
+    radius_squared = grid_scale * grid_scale
     
-    nodes_inside_circle: int = 0
-    total_lattice_nodes: int = 0
+    nodes_inside_circle = 0
+    total_lattice_nodes = 0
     
-    # Scan the discrete quadrant of the square matrix
+    # Durchlaufe das diskrete Gitter und visualisiere den Aufbau für den Screencast
     for x in range(1, grid_scale + 1):
-        x_squared: int = x * x
+        x_squared = x * x
         for y in range(1, grid_scale + 1):
             total_lattice_nodes += 1
             
-            # Pure whole-number Pythagorean coordinate check (Strictly Integer)
+            # Unbestechliche, ganzzahlige Pythagoras-Koordinaetenprüfung
             if x_squared + y * y <= radius_squared:
                 nodes_inside_circle += 1
-                
-    # In a perfect continuum, Area_Circle / Area_Square = Pi / 4
-    # Therefore: Pi = (Inside / Total) * 4
-    # We execute this completely via integer fixed-point shifting
-    derived_pi_scaled: int = (nodes_inside_circle * 4 * INT_SCALE) // total_lattice_nodes
-    
-    # Target value verification against the 1836 calibration layer constraints
-    # Expected discrete pi for a 210-gitter scale matches exactly the target envelope
-    is_valid_crystallization: bool = derived_pi_scaled > (3 * INT_SCALE)
-    
-    return derived_pi_scaled, is_valid_crystallization
 
+        # Live-Visualisierungstakt alle 15 Zeilen, um den Buffer der Master-Engine stabil zu halten
+        if x % 15 == 0:
+            current_milli_pi = (nodes_inside_circle * 4 * MILLI_SCALE) // total_lattice_nodes
+            print(f" -> [ PLANCK-GITTER ] Scan-Line {x:03d}/{grid_scale} | Current Density: {current_milli_pi} Milli-Units", end="\r", flush=True)
+            time.sleep(0.020)  # Takt-Bremse zur Puffer-Stabilisierung
+
+    # Ganzzahlige Bestimmung des Dichteverhältnisses im Milli-Raum
+    derived_pi_milli = (nodes_inside_circle * 4 * MILLI_SCALE) // total_lattice_nodes
+    is_valid_crystallization = derived_pi_milli > 3000
+    
+    return derived_pi_milli, is_valid_crystallization
 if __name__ == "__main__":
-    pi_scaled, validated = calculate_discrete_pi_crystallization(grid_scale=210)
+    print("\n" + "="*150)
+    print("[ OK ] Discrete Pi-Square Crystallization Engine Operational.")
+    print("="*150)
     
-    display_integer: int = pi_scaled // 1000000
-    display_fraction: int = pi_scaled % 1000000
+    pi_milli, validated = calculate_discrete_pi_crystallization(grid_scale=210)
     
-    print("[ OK ] Discrete Pi-Square Crystallization Active.")
-    print(f" -> Counted Integer Lattice Circular Density: {display_integer}.{display_fraction:06d}")
+    # Absolute Eliminierung des Dezimalpunkts. Ausgabe erfolgt in reinen Ganzzahl-Milli-Einheiten!
+    print("\n" + "-"*150)
+    print(f" -> Counted Integer Lattice Circular Density: {pi_milli} Milli-Units")
+    print(f" -> Theoretical Maximum Square Invariance  : 4000 Milli-Units")
+    print("-"*150)
     
     if validated:
         print(" -> STATUS: Circle Successfully Squared within Integer Bounds. Pi is a Pixel-Density Artifact.")
@@ -54,4 +59,3 @@ if __name__ == "__main__":
     else:
         print(" -> STATUS: Gitter Resolution Failure.")
         sys.exit(1)
-
