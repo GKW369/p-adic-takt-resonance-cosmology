@@ -2,23 +2,7 @@
 """
 pTRC Framework - Module: fluid_resonance.py
 Discrete Finite-Volume Lattice Integration for High-Velocity Aerospace Diagnostics.
-
-Application Domain: 
-Strictly optimized for deterministic laboratory environments, wind tunnel calibration, 
-and closed-boundary aerospace engineering (aerodynamics for rocketry, aviation, 
-and automotive structural design). 
-
-Mathematical Advantage:
-Eliminates floating-point accumulation noise and parametric scaling divergence 
-inherent in classical continuous Navier-Stokes approximations. By operating 
-exclusively within the discrete integer ring Z, this module guarantees absolute 
-numerical stability for high-complexity, non-linear coupled fluid boundaries under 
-exact initial boundary state injections.
-
-Implementation:
-Pure Integer 2D Lattice-Gas Cellular Automaton (LGCA) Engine.
-Optimized for zero floating-point lag using modulo 210/24 boundary mappings.
-Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
+Original Format Target: 150-Character Cinema Profile (Static Execution).
 """
 
 import numpy as np
@@ -26,21 +10,18 @@ import os
 import sys
 import time
 
-
 class FluidResonanceEngine:
-    def __init__(self, width=64, height=32, target_resonance=210):
+    def __init__(self, width=150, height=20, target_resonance=210):
         self.width = width
         self.height = height
         self.target_resonance = target_resonance
         
-        # 4 orthogonale Richtungen für diskrete Teilchenbewegung:
-        # 0: Rechts (+x), 1: Oben (-y), 2: Links (-x), 3: Unten (+y)
-        # State-Matrix: (height, width, 4) als reine 8-Bit-Ganzzahlen (0 oder 1)
+        # 4 orthogonale Richtungen für diskrete Teilchenbewegung
         self.grid = np.zeros((self.height, self.width, 4), dtype=np.uint8)
         
-        # Geometrische Barriere im Strömungskanal (Gitter-Hindernis)
+        # Geometrische Barriere im Strömungskanal (Gitter-Hindernis im Kinoformat)
         self.obstacle = np.zeros((self.height, self.width), dtype=np.uint8)
-        cx, cy, r = width // 3, height // 2, height // 6
+        cx, cy, r = width // 3, height // 2, height // 4
         for y in range(self.height):
             for x in range(self.width):
                 if (x - cx)**2 + (y - cy)**2 <= r**2:
@@ -52,8 +33,7 @@ class FluidResonanceEngine:
         # Konstanter Taktstrom (Einstrom) von links nach rechts (Richtung 0)
         self.grid[:, :4, 0] = 1
         
-        # FIX: Reines Integer-Rauschen (0 bis 99) zur Aktivierung der statistischen Viskosität.
-        # Ersetzt np.random.rand() um floats im RAM komplett zu verhindern.
+        # Reines Integer-Rauschen (0 bis 99) zur Aktivierung der Viskosität
         rand_ints = np.random.randint(0, 100, size=(self.height, self.width, 4), dtype=np.uint8)
         self.grid[rand_ints > 75] = 1
         
@@ -65,7 +45,7 @@ class FluidResonanceEngine:
         """
         Führt einen diskreten Taktzyklus aus: Streaming -> Bounce-Back -> Collision
         """
-        # 1. STREAMING-PHASE (Perfekt verlustfreie Bit-Verschiebung im Ganzzahlgitter)
+        # 1. STREAMING-PHASE (Verlustfreie Bit-Verschiebung im Ganzzahlgitter)
         new_grid = np.zeros_like(self.grid)
         new_grid[:, :, 0] = np.roll(self.grid[:, :, 0], shift=1, axis=1)   # Rechts
         new_grid[:, :, 1] = np.roll(self.grid[:, :, 1], shift=-1, axis=0)  # Oben
@@ -92,7 +72,7 @@ class FluidResonanceEngine:
         for d in range(4):
             new_grid[obs_mask, d] = 0
 
-        # 3. KOLLISIONS-PHASE (Mikroskopischer Streuprozess nach HPP-Regeln)
+        # 3. KOLLISIONS-PHASE (Mikroskopischer Streuprozess)
         c_180 = (new_grid[:, :, 0] == 1) & (new_grid[:, :, 2] == 1) & (new_grid[:, :, 1] == 0) & (new_grid[:, :, 3] == 0)
         c_90  = (new_grid[:, :, 1] == 1) & (new_grid[:, :, 3] == 1) & (new_grid[:, :, 0] == 0) & (new_grid[:, :, 2] == 0)
 
@@ -104,17 +84,10 @@ class FluidResonanceEngine:
 
         self.grid = new_grid
     def get_density_matrix(self):
-        """
-        Berechnet die makroskopische Knotendichte skaliert über den Modulo-24 Kontrolllayer.
-        Maximal 4 Teilchen * 6er-Taktfaktor = 24 Resonanzstufen.
-        """
         raw_density = np.sum(self.grid, axis=2, dtype=np.uint8)
         return (raw_density * 6) % self.target_resonance
 
     def render_ascii(self):
-        """
-        Visualisiert die aerodynamische Druckverteilung im Terminal-Raster.
-        """
         density = self.get_density_matrix()
         chars = [" ", ".", "-", "=", "#"]
         output = []
@@ -122,7 +95,7 @@ class FluidResonanceEngine:
             row = ""
             for x in range(self.width):
                 if self.obstacle[y, x] == 1:
-                    row += "O"  # 'O' repräsentiert das Feststoff-Hindernis
+                    row += "O"
                 else:
                     val = density[y, x] // 5
                     idx = min(val, 4)
@@ -132,23 +105,24 @@ class FluidResonanceEngine:
 
 if __name__ == "__main__":
     print("[ pTRC INFORMATICS ENGINE ] Validating 2D Fluid-Resonance Module...")
-    engine = FluidResonanceEngine(width=60, height=16)
+    # Starre 150 Spalten Breite für exakte Kino-Symmetrie
+    engine = FluidResonanceEngine(width=150, height=20)
     
     print("\nTakt 0: Initialer Ganzzahl-Zustrom (Kanal frei, Barriere blockiert):")
     print(engine.render_ascii())
     
-    # 48 Taktzyklen (2 x Modulo-24 Synchronisations-Schleife)
-    # Zeitmessung über unteilbare, diskrete CPU-Nanosekunden (time.time_ns())
+    # Originale Taktlänge vor jeglichen Kürzungen
+    total_ticks = 156
+    
     start = time.time_ns()
-    for tick in range(1, 49):
+    for tick in range(1, total_ticks + 1):
         engine.step()
     end = time.time_ns()
     
-    # Spalt-Dauer in reinen diskreten Nanosekunden berechnen
     duration_ns = end - start
     
-    print(f"\nTakt 48: Strömungsprofil nach Impulskollisionen und Hindernis-Ablenkung:")
+    print(f"\nTakt 156: Strömungsprofil nach Impulskollisionen und Hindernis-Ablenkung:")
     print(engine.render_ascii())
-    print(f"\n[BENCHMARK] 48 iterative Gitter-Schritte in {duration_ns} Nanosekunden abgearbeitet.")
+    print(f"\n[BENCHMARK] {total_ticks} iterative Gitter-Schritte in {duration_ns} Nanosekunden abgearbeitet.")
     print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
     sys.exit(0)
