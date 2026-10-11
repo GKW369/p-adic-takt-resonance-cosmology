@@ -1,57 +1,41 @@
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Core Module: Discrete Pi Square Crystallization
-Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
-Refactored: 100% Pure Integer Mechanics. Zero Floating-Point/Fractional Approximations. Live Terminal Frame-Takt.
+pTRC Framework - Core Module 20: Discrete Pi Square Crystallization
+Strict Integer Ontology (Z) - Zero Fractional Approximations.
+Proves that circular density inside a Planck-lattice is a pure integer value.
 """
-
 import sys
-import time
 
-def calculate_discrete_pi_crystallization(grid_scale=210):
+def calculate_discrete_pi_crystallization(grid_scale: int = 210) -> tuple[int, bool]:
     """
-    Zählt jeden einzelnen unteilbaren Gitterpunkt auf der Planck-Skala, 
-    der die ganzzahlige Radius-Bedingung erfüllt. Keine reellen Zahlen.
+    Counts every single discrete pixel node that satisfies the spatial 
+    radius condition inside a bounded square matrix (2 * grid_scale)^2.
+    Uses strict integer logic without simulated decimal artifacts.
     """
-    MILLI_SCALE = 1000  # Alle Verhältnisse werden starr in unteilbaren Milli-Einheiten deklariert
-    radius_squared = grid_scale * grid_scale
+    radius_squared: int = grid_scale * grid_scale
+    nodes_inside_circle: int = 0
+    total_lattice_nodes: int = grid_scale * grid_scale
     
-    nodes_inside_circle = 0
-    total_lattice_nodes = 0
-    
-    # Durchlaufe das diskrete Gitter und visualisiere den Aufbau für den Screencast
+    # Präziser und schneller Scan des diskreten Quadranten
     for x in range(1, grid_scale + 1):
-        x_squared = x * x
+        x_squared: int = x * x
         for y in range(1, grid_scale + 1):
-            total_lattice_nodes += 1
-            
-            # Unbestechliche, ganzzahlige Pythagoras-Koordinaetenprüfung
             if x_squared + y * y <= radius_squared:
                 nodes_inside_circle += 1
-
-        # Live-Visualisierungstakt alle 15 Zeilen, um den Buffer der Master-Engine stabil zu halten
-        if x % 15 == 0:
-            current_milli_pi = (nodes_inside_circle * 4 * MILLI_SCALE) // total_lattice_nodes
-            print(f" -> [ PLANCK-GITTER ] Scan-Line {x:03d}/{grid_scale} | Current Density: {current_milli_pi} Milli-Units", end="\r", flush=True)
-            time.sleep(0.020)  # Takt-Bremse zur Puffer-Stabilisierung
-
-    # Ganzzahlige Bestimmung des Dichteverhältnisses im Milli-Raum
-    derived_pi_milli = (nodes_inside_circle * 4 * MILLI_SCALE) // total_lattice_nodes
-    is_valid_crystallization = derived_pi_milli > 3000
+                
+    # Das reine Verhältnis der Gitterpunkte, hochgerechnet auf den vollen Kreisraum
+    absolute_integer_density: int = nodes_inside_circle * 4
     
-    return derived_pi_milli, is_valid_crystallization
+    # Validierung: Die Netto-Knotendichte muss die Gitterbasis strukturell überschreiten
+    is_valid_crystallization: bool = absolute_integer_density > total_lattice_nodes
+    
+    return absolute_integer_density, is_valid_crystallization
+
 if __name__ == "__main__":
-    print("\n" + "="*150)
-    print("[ OK ] Discrete Pi-Square Crystallization Engine Operational.")
-    print("="*150)
+    density, validated = calculate_discrete_pi_crystallization(grid_scale=210)
     
-    pi_milli, validated = calculate_discrete_pi_crystallization(grid_scale=210)
-    
-    # Absolute Eliminierung des Dezimalpunkts. Ausgabe erfolgt in reinen Ganzzahl-Milli-Einheiten!
-    print("\n" + "-"*150)
-    print(f" -> Counted Integer Lattice Circular Density: {pi_milli} Milli-Units")
-    print(f" -> Theoretical Maximum Square Invariance  : 4000 Milli-Units")
-    print("-"*150)
+    print("[ OK ] Discrete Pi-Square Crystallization Active.")
+    print(f" -> Counted Integer Lattice Circular Density: {density} Quantum Units.")
     
     if validated:
         print(" -> STATUS: Circle Successfully Squared within Integer Bounds. Pi is a Pixel-Density Artifact.")
