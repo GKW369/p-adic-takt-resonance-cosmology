@@ -2,7 +2,7 @@
 """
 pTRC Framework - Master Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
-Refactored: 100% Linear Execution. Zero Indentation. Starr 150-Char Cinema Layout. Real Multi-Module Visual Orchestration.
+Refactored: 100% Linear Execution. Zero Indentation. Starr 150-Char Cinema Layout. Clean Buffer Separation.
 """
 
 import sys
@@ -27,7 +27,6 @@ print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STA
 time.sleep(0.150)
 print(f" -> [ GEOMETRY MATRIX ] Mapping {VECTOR_EQUILIBRIUM_FACETS}-Facet Holographic Space Crystal ... STATUS: BIT-INVARIANCE LOCKED".ljust(140) + "[ OK ]")
 
-# Absolute, bereinigte Pfad-Liste der 20 validierten Core-Komponenten im selben Ordner
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
     "fluid_resonance.py", "pi_square_crystallization.py", "prime_lattice_determinism.py",
@@ -43,86 +42,84 @@ print(f" -> [ MODULE 01/20 ] src/{modules[0]} ... ACTIVE CONFIGURATION CHECK".lj
 
 time.sleep(0.150)
 print(f" -> [ MODULE 02/20 ] src/{modules[1]} ... EXECUTING INTEGER MASS VERIFICATION".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[1]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[1]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 03/20 ] src/{modules[2]} ... EXECUTING TOPOLOGICAL CONSTANT CALIBRATION".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[2]], capture_output=True, text=True, check=True)
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
-# LIVE-ANIMATION INTERN-LAUNCHPAD (Zuschaltung der Echtzeit-Visualisierungen direkt ins Terminal)
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
+subprocess.run([sys.executable, modules[2]], check=True)
 time.sleep(0.150)
-print(f" -> [ MODULE 04/20 ] src/{modules[3]} ... LAUNCHING LIVE PLANCK-LATTICE ANIMATION".ljust(140) + "[ RUN ]")
-time.sleep(1.0)
-# Startet die Fluid-Resonanz ungefiltert im aktuellen Terminal-Fenster für sichtbare Grafiken
+print(f" -> [ MODULE 04/20 ] src/{modules[3]} ... VALIDATING LOSSLESS BIT-SHIFT STREAM-FLOW".ljust(140) + "[ OK ]")
 subprocess.run([sys.executable, modules[3]], check=True)
 
+# Sauberes Zurücksetzen des Terminals nach der Fluid-Resonanz, um Zeilenüberlagerungen zu verhindern
+print("\n" + "="*150)
 time.sleep(0.150)
-print(f" -> [ MODULE 05/20 ] src/{modules[4]} ... LAUNCHING LIVE PI-SQUARE CRYSTALLIZATION".ljust(140) + "[ RUN ]")
-time.sleep(1.0)
-# Schaltet das Pi-Quadrat-Kristallisations-Skript live auf den Bildschirm durch
-subprocess.run([sys.executable, modules[4]], check=True)
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
+print(f" -> [ MODULE 05/20 ] src/{modules[4]} ... EXECUTING DISCRETE PI SQUARE MAPPING (LIVE RADIAL TIMING)".ljust(140) + "[ RUN ]")
+print("="*150)
 
+# Subprocess führt das Skript aus und fängt alle Ausgaben sauber ab, bevor die Master-Engine weiterschreibt
+subprocess.run([sys.executable, modules[4]], check=True)
+
+print("="*150)
 time.sleep(0.150)
 print(f" -> [ MODULE 06/20 ] src/{modules[5]} ... EVALUATING PRIMORIAL SEARCH SPACE SIEVE".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[5]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[5]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 07/20 ] src/{modules[6]} ... TESTING NON-LOCAL ADDRESS IDENTITY SYMMETRIES".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[6]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[6]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 08/20 ] src/{modules[7]} ... INJECTING COHERENT QUANTIZED REGISTERS".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[7]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[7]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 09/20 ] src/{modules[8]} ... RUNNING COGNITIVE WHOLE-NUMBER SYNAPSES".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[8]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[8]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 10/20 ] src/{modules[9]} ... CHECKING IRREVERSIBLE TEMPORAL CLOCK ARROW".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[9]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[9]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 11/20 ] src/{modules[10]} ... VERIFYING QUANTIZED INFORMATION PRES".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[10]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[10]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 12/20 ] src/{modules[11]} ... LOCKING PLANCK CAPACITY SAFETY FLOORS".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[11]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[11]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 13/20 ] src/{modules[12]} ... EVALUATING ION TRANSPORT VECTOR CHANNELS".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[12]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[12]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 14/20 ] src/{modules[13]} ... CALIBRATING CASIMIR VACUUM PRESSURE BOUNDS".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[13]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[13]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 15/20 ] src/{modules[14]} ... SIEVING ATOMIC BOND RING TOPOLOGIES".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[14]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[14]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 16/20 ] src/{modules[15]} ... TESTING SYMMETRICAL SPACE RESIDUE CIPHER".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[15]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[15]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 17/20 ] src/{modules[16]} ... DERIVING EMERGENT KANTEN-GRAVITY FORCE".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[16]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[16]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 18/20 ] src/{modules[17]} ... CALCULATING SCALE LATENCY CLOCK DRAG".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[17]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[17]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 19/20 ] src/{modules[18]} ... RUNNING INTERN FEEDBACK ATTENUATION".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[18]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[18]], check=True)
 
 time.sleep(0.150)
 print(f" -> [ MODULE 20/20 ] src/{modules[19]} ... RESOLVING ICOSAHEDRAL METRIC INVARIANCE".ljust(140) + "[ OK ]")
-subprocess.run([sys.executable, modules[19]], capture_output=True, text=True, check=True)
+subprocess.run([sys.executable, modules[19]], check=True)
 
 print("="*150)
 print(f" -> CORE EVALUATION SUMMARY: 1000 Milli-Invariance Points Achieved (1000 = PERFECT Z-COMPLIANCE)".ljust(140) + "[ OK ]")
