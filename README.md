@@ -1,10 +1,13 @@
 # pTRC Framework: Discrete Integer Computational Physics Engine
 
-An informational, discrete alternative for physical space simulations. This engine refactors physical mechanics from continuous real-number fields (\(\mathbb{R}^4\)) into integer-based coordinate matrices (\(\mathbb{Z}\)) using modular layout spaces.
+**Master Motto:** *"Are We Calculating Too Small?"*  
+**Core Axiom:** *Before space existed, there was the Integer. Space is not a container; it is the geometric permission enabled by the whole number.*
+
+---
 
 ## 🔬 Computational Philosophy
 
-The pTRC framework stands on the shoulders of the monumental observation and combination skills of Albert Einstein and Mileva Marić. Their continuum physics perfectly described the macroscale behavior of the universe. However, if Max Planck’s quantum hypothesis is absolute, the universe possesses a fundamental pixelation limit where **1 is the smallest indivisible unit**.
+The pTRC framework stands on the shoulders of the monumental observation and combination skills of Albert Einstein and Mileva Marić. Their continuum physics perfectly described the macroscale behavior of the universe. However, if Max Planck’s quantum hypothesis is absolute, the universe possesses a fundamental pixelation limit where fractions do not exist and **1 is the smallest indivisible unit**.
 
 Instead of increasing raw computing power to combat floating-point divergence, this engine fundamentally simplifies the structural building block: **the number itself**. By expanding Peter Plichta’s prime cross onto a 210-level primorial ring combined with a 144-facet spatial crystal structure, the framework achieves an exact, lossless emulation of discrete physical interactions without any floating-point numbers.
 
@@ -12,8 +15,8 @@ Instead of increasing raw computing power to combat floating-point divergence, t
 
 ## 📂 Repository Structure
 
-*   **`src/`** – Production-ready core engine containing 19 fully validated, flat integer simulation modules.
-*   **`Paper/`** – Formal mathematical axioms, theoretical foundations, and peer-review defense protocols.
+*   **`src/`** – Production-ready core engine containing 20 fully validated, flat integer simulation modules.
+*   **`Paper/`** – Formal mathematical axioms, the philosophy manifest, and peer-review defense protocols.
 *   **`experimental/`** – Sandbox research exploring non-linear parametric resonance and subterranean waveguides.
 
 ---
@@ -30,6 +33,17 @@ By completely eliminating floating-point round-off errors and division-by-zero b
 | **Digital Audio Production (DSP)** | Cumulative quantization noise; digital filter degradation over cycles. | Invariant topological filtering using exact clock-nanosecond execution. | Absolute phase synchronization; **100% artifact-free, crystal-clear studio acoustics**. |
 | **Materials Science & Pharmacology** | Non-linear Schrödinger approximations requiring massive cluster arrays. | Harmonic molecular node alignment via discrete spatial quadrance. | **Real-time drug interaction sieving** and precise mirror-molecule chirality tracking. |
 | **Post-Quantum Cryptography** | Vulnerability of classical RSA/ECC encryption to quantum decay algorithms. | Symmetrical space-chiffrierung inside the cyclic residue ring Z/24Z. | Lightweight, **inherently unjammable communication metrics** for satellite networks. |
+## 🪐 Visual Demonstration: Pure Integer Circle Mechanics
+
+To see the engine's core philosophy in action, run the **Kreis-Resonance Engine** (`src/kreis_resonance.py`). This module projects a perfectly closed geometric curve onto a 150x40 cinema matrix profile using pure p-adic remainder classes—**completely eliminating the transcendental number Pi \((\pi)\) and all floating-point variables**:
+
+```bash
+# Execute the live 1-bit integer circle simulation:
+python src/kreis_resonance.py
+```
+
+---
+
 ## 🏃‍♂️ Automated Verification Matrix
 
 The repository features an automated GitHub Actions pipeline. Upon every push, the entire lattice integrity, discrete fluid flows, and quantum synchronization pointer arrays are fully validated without a single analog leakage.
