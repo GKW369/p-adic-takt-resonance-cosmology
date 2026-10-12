@@ -2,7 +2,7 @@
 
 **An infinitely scalable, 1-bit integer physics engine operating at c=1 pixel/clock. Bypasses floating-point accumulation noise and runtime divergence in fluid dynamics, neural networks, and cryptography via a pure 144-facet spatial crystal geometry and modulo-210/24 discrete state architecture. Zero float pollution. Certified for Z.**
 
-**Core Motto:** "Wir rechnen zu klein!" 
+**Core Motto:** "Are We Calculating Too Small?" 
 
 ---
 
@@ -36,8 +36,8 @@ By completely eliminating floating-point round-off errors and division-by-zero b
 
 ---
 
-## 🪐 Visual Demonstration: Pure Integer Circle Mechanics
-To visualize the framework's core computational velocity, run the integrated validation module (`src/fluid_resonance.py`). This component simulates a 1-bit information state propagation inside a bounded 150-character wide cinema profile. Instead of relying on non-linear continuous approximations, the system models real-time lattice dynamics across exactly **153 operational cycles** with absolute, flawless axial symmetry and zero informational decay.
+## 🪐 Visual Demonstration: Pure Integer Fluid Dynamics
+To visualize the real-time geometric velocity of the framework, run the designated fluid mechanics components. This simulation maps 1-bit cellular automata streams directly onto a bounded 150-character cinema layout. Instead of smooth fractional approximations, you can watch the system build flawless axial wavefronts, vortices, and vectors across exactly **153 operational cycles** with zero numerical decay or informational leakage.
 
 ```bash
 # Execute the live 1-bit integer fluid resonance simulation:
@@ -46,11 +46,11 @@ python src/fluid_resonance.py
 
 ---
 
-## 🏃‍♂️ Automated Verification Matrix
-The repository features an automated GitHub Actions pipeline. Upon every push, the entire lattice integrity, discrete fluid flows, and quantum synchronization pointer arrays are fully validated without a single analog leakage.
+## 🏃‍♂️ Automated Verification Matrix & Production Execution
+The repository includes an automated test framework tailored for continuous integration pipelines to enforce strict integer invariants upon every system update. To execute the main integration matrix locally and benchmark all **20 validation sub-modules** in a sequential, hardware-optimized cascade, deploy the core orchestration script:
 
-To run the core engine script and execute the 150-character wide visual validation cascade locally across all **20 validation sub-modules**:
 ```bash
+# Execute the complete 20-module core integration engine:
 python src/00_ptrc_first_principles_engine.py
 ```
 
