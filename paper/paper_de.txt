@@ -37,7 +37,7 @@ Wobei der Faktor 3 die fundamentale dreidimensionale Koordinatenbasis (axiale Tr
 Der experimentelle, makroskopische Nachkomma-Schwanz (M_exp ≈ 1836,15267343) wird als analytische Täuschung nachgewiesen, die durch Pixel-Aliasing über große Koordinatendistanzen entsteht. Er repräsentiert den kumulativen Netzwerk-Routing-Overhead (Clock Drag) frequenzbasierter Labormessungen, während der Kernzustand auf Hardware-Ebene makellos ganzzahlig bleibt.
 
 4. ALGORITHMISCHE SIMULATIONS-ENGINE: FUNKTIONALE CORE-MODULE
-Die technologische Validität des Frameworks wird durch 18 separate, lauffähige Python-Module verifiziert, die von einem zentralen Integrations- und Validierungsskript gesteuert werden. Zwei Schlüsselmodule demonstrieren die Rechenvorteile dieser Architektur:
+Die technologische Validität des Frameworks wird durch 20 separate, lauffähige Python-Module verifiziert, die von einem zentralen Integrations- und Validierungsskript gesteuert werden. Zwei Schlüsselmodule demonstrieren die Rechenvorteile dieser Architektur:
 
 A. Verlustfreie Fluiddynamik (fluid_resonance.py)
 Als 2D-Gitter-Gas-Automat (LGCA) führt diese Engine Strömungsbewegungen durch deterministische Bit-Verschiebungen (np.roll) und diskrete Teilchenkollisionen nach HPP-Regeln aus. Durch den vollständigen Verzicht auf Float-Variablen, transzendente Konstanten oder partielle Differentialgleichungen führt die Simulation komplexe aerodynamische Grenzzeit-Interaktionen mit absolut null Rundungsverzögerung und strikter Massen- und Impulserhaltung aus.
