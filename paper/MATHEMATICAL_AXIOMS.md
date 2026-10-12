@@ -27,9 +27,9 @@ $$C \neq (24 \cdot m_1 + s_1) \cdot (24 \cdot m_2 + s_2)$$
    
 For all matrix tiers $m_1, m_2 \ge 0$ and all ray combinations satisfying:
 $$(s_1 \cdot s_2) \equiv s_{\text{target}} \pmod{24}$$
+
 ## FORMULA 4: Geometric Bridge to the Holofractal Vector Equilibrium
 The structural dimensioning of the vector equilibrium (the 144 open facets of the matrix) is derived directly from the hexagonal compression of the 24-track prime cross:
    
 $$\text{Space\_Dimensions} = 6 \cdot |S| = 6 \cdot 8 = 48 \quad \text{Fundamental Vectors}$$
 $$\text{Matrix\_Nodes} = 3 \cdot \text{Space\_Dimensions} = 144 \quad \text{Holographic Surface Facets}$$
-
