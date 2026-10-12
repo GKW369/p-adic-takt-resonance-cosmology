@@ -1,3 +1,16 @@
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
+#
+# DUAL-LICENSING NOTICE:
+# Non-commercial, academic, and open-source usage is strictly governed by the 
+# GNU General Public License version 3 (GPLv3). Any commercial deployment, 
+# integration into proprietary, closed-source codebases, or corporate 
+# utilization explicitly requires a separate, individually negotiated 
+# Proprietary Commercial License from the copyright holder.
+#
+# THERE IS NO WARRANTY FOR THIS PROGRAM, TO THE EXTENT PERMITTED BY LAW.
+# ==============================================================================
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Module: casimir_vacuum_energy.py
@@ -17,7 +30,7 @@ class CasimirVacuumEngine:
     def calculate_vacuum_pressure(self, plate_distance_pixels=2, active_observer_loops=12):
         """
         Berechnet den finiten Casimir-Druck zwischen zwei diskreten Gitterebenen.
-        Verhindert divergente Unendlichkeiten durch rein rationale Restglieder.
+        Verhindert divergenten Unendlichkeiten durch rein rationale Restglieder.
         Rechnet streng in Z.
         """
         # Sicherstellen, dass die Plattendistanz nicht unter das Planck-Limit fällt
