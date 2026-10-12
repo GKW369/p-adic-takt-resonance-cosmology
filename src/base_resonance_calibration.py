@@ -1,3 +1,13 @@
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
+#
+# DUAL-LICENSING NOTICE:
+# Non-commercial, academic, and open-source usage is strictly governed by 
+# the GNU General Public License version 3 (GPLv3). Any commercial deployment,
+# integration into proprietary, closed-source codebases, or corporate utilization
+# explicitly requires a separate, individually negotiated commercial license.
+# ==============================================================================
 #!/usr/bin/env python3
 """
 pTRC Framework - Module 1: Proton-to-Electron Mass Ratio
@@ -27,4 +37,3 @@ if __name__ == "__main__":
     else:
         print("[ FAIL ] Quantum mass alignment divergence.")
         sys.exit(1)
-
