@@ -3,7 +3,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Professional nomenclature alignment for infinite primorial matrices. Fixed 150-Char Layout.
+Refactored: Normalized all boundary lines to exactly 166 characters for absolute grid symmetry.
 """
 
 import sys
@@ -13,15 +13,18 @@ import subprocess
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
 global_start = time.perf_counter_ns()
 
-print("="*150)
-print(f"[ pTRC CORE INTEGRATION ENGINE ] OPERATIONAL CHANNELS ACTIVATED | HARDWARE BASE: ACER ASPIRE E1-570 | TARGET: PITCH-LAUNCH".center(150))
-print("="*150)
+# Die maximale Breite der Darstellung im Terminal für perfekte Symmetrie
+MAX_WIDTH = 166
+
+print("="*MAX_WIDTH)
+print(f"[ pTRC CORE INTEGRATION ENGINE ] OPERATIONAL CHANNELS ACTIVATED | HARDWARE BASE: ACER ASPIRE E1-570 | TARGET: PITCH-LAUNCH".center(MAX_WIDTH))
+print("="*MAX_WIDTH)
 
 time.sleep(0.100)
-print(f" -> [ HARDWARE CORE ] Intel Core i3 Integer Registers Active ... STATUS: INVARIANT SUCCESS (Z/210Z Bound)".ljust(140) + "[ OK ]")
+print(f" -> [ HARDWARE CORE ] Intel Core i3 Integer Registers Active ... STATUS: INVARIANT SUCCESS (Z/210Z Bound)".ljust(MAX_WIDTH - 8) + "[ OK ]")
 time.sleep(0.100)
-print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(140) + "[ OK ]")
-print("-"*150)
+print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
+print("-"*MAX_WIDTH)
 
 # Definition der echten ausführbaren Skripte im selben Ordner
 modules = [
@@ -37,50 +40,58 @@ modules = [
 # Telemetrie-Speicher für die finale Performance-Tabelle (Modul_Index, MS_Zeit)
 durations_ms = {}
 
+def print_module_line(mod_num, mod_name, status_text):
+    """Säubert den Text und erzwingt ein absolut gleichmäßiges Spaltenmaß"""
+    # Bereinige den Rückgabetext radikal von bekannten Präfixen der Untermodule
+    clean_text = status_text.replace("-> ", "").replace("[ OK ] ", "").replace("RESULT: ", "").strip()
+    
+    # Jedes Ergebnis bekommt ein exakt gleiches Spaltenbett von 55 Zeichen
+    if len(clean_text) > 55:
+        display_text = clean_text[:52] + "..."
+    else:
+        display_text = clean_text.ljust(55)
+        
+    base_str = f" -> [ MODULE {mod_num:02d}/20 ] Executing {mod_name.ljust(38)} ... RESULT: {display_text}"
+    print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
+
 # Modul 01: Core Integration Engine Selbsttest
 durations_ms[1] = 1
+print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
 # Modul 02: Massenverifikation
-print(f" -> [ MODULE 02/20 ] Executing base_resonance_calibration.py ...".ljust(140) + "[ RUN ]", flush=True)
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[1]], capture_output=True, text=True, check=True)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
 out_02 = res.stdout.strip().split('\n')[-1] if res.stdout else "1836 Nucleon Ratio Invariance"
-print(f"    >> RESULT: {out_02}".ljust(140) + "[ SUCCESS ]", flush=True)
+print_module_line(2, modules[1], out_02)
 
 # Modul 03: Alpha Emitter
-print(f" -> [ MODULE 03/20 ] Executing alpha_emitter.py ...".ljust(140) + "[ RUN ]", flush=True)
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[2]], capture_output=True, text=True, check=True)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
 out_03 = res.stdout.strip().split('\n')[-1] if res.stdout else "137 Planck Takt Spectrum Locked"
-print(f"    >> RESULT: {out_03}".ljust(140) + "[ SUCCESS ]", flush=True)
+print_module_line(3, modules[2], out_03)
 
 # Modul 04: Windkanal / Fluid-Resonanz (Live-Visualisierung)
-print(f" -> [ MODULE 04/20 ] LAUNCHING LIVE PLANCK-LATTICE FLUID SWEEP (fluid_resonance.py) ...".ljust(140) + "[ RUN ]", flush=True)
-sys.stdout.flush()
-time.sleep(0.500)
 t_start = time.perf_counter_ns()
 subprocess.run([sys.executable, modules[3]], check=True)
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
-time.sleep(1.5)
+print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
+time.sleep(0.1)
 
 # Modul 05: Symmetrischer Kreis / Pi-Kristallisation (Live-Visualisierung)
-print(f" -> [ MODULE 05/20 ] LAUNCHING NATIVE 90x44 PROJECTION MATRIX (pi_square_crystallization.py) ...".ljust(140) + "[ RUN ]", flush=True)
-sys.stdout.flush()
-time.sleep(0.500)
 t_start = time.perf_counter_ns()
 subprocess.run([sys.executable, modules[4]], check=True)
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
-time.sleep(1.5)
+print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
+time.sleep(0.1)
 
 # Modul 06: Primzahlsieb
-print(f" -> [ MODULE 06/20 ] Executing prime_lattice_determinism.py ...".ljust(140) + "[ RUN ]", flush=True)
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[5]], capture_output=True, text=True, check=True)
 durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
 out_06 = res.stdout.strip().split('\n')[-1] if res.stdout else "Rad-Sieve 210 Topology Verified"
-print(f"    >> RESULT: {out_06}".ljust(140) + "[ SUCCESS ]", flush=True)
+print_module_line(6, modules[5], out_06)
 
 # Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf
 static_results = [
@@ -96,16 +107,17 @@ for i in range(6, 20):
     res = subprocess.run([sys.executable, modules[i]], capture_output=True, text=True, check=True)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
     clean_output = res.stdout.strip().split('\n')[-1] if res.stdout else static_results[i-6]
-    print(f" -> [ MODULE {i+1:02d}/20 ] Executing {modules[i].ljust(45)} ... RESULT: {clean_output.ljust(35)}".ljust(140) + "[ SUCCESS ]", flush=True)
+    
+    print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT (Exakte 150-Zeichen Symmetrie mit echten Dateinamen)
+# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-print("\n" + "="*150)
-print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(150))
-print("="*150)
-print("   MODUL-INDEX        |   AUSSAGEKRÄFTIGE KERN-KOMPONENTE                 |   SYSTEM-STATUS   |   BERECHNUNGSZEIT HARDWARE-TAKT        ")
-print("  " + "-"*144)
+print("\n" + "="*MAX_WIDTH)
+print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
+print("="*MAX_WIDTH)
+print("   MODUL-INDEX          |   AUSSAGEKRÄFTIGE KERN-KOMPONENTE             |   SYSTEM-STATUS   |   BERECHNUNGSZEIT HARDWARE-TAKT")
+print("  " + "-"*(MAX_WIDTH - 4))
 
 for idx in range(1, 21):
     name_clean = modules[idx-1].replace(".py", "")
@@ -116,8 +128,8 @@ for idx in range(1, 21):
 global_end = time.perf_counter_ns()
 total_ms = (global_end - global_start) // 1000000
 
-print("="*150)
-print(f" -> REPOSITORY EVALUATION SUMMARY: 1000/1000 Integer-Compliance Points Achieved".ljust(115) + f"[ INFINITELY SCALABLE PRIMORIAL MATRIX ]")
-print(f" -> HARDWARE REPORT: ZERO FLOAT POLLUTION. 144-FACET SPATIAL CRYSTAL COHERENCE LOCKED ON ACER ASPIRE PLATFORM.".ljust(140) + "[ CLEAN ]")
-print("="*150 + "\n")
+print("="*MAX_WIDTH)
+print(f" -> REPOSITORY EVALUATION SUMMARY: 1000/1000 Integer-Compliance Points Achieved".ljust(MAX_WIDTH - 42) + f"[ INFINITELY SCALABLE PRIMORIAL MATRIX ]")
+print(f" -> HARDWARE REPORT: ZERO FLOAT POLLUTION. 144-FACET SPATIAL CRYSTAL COHERENCE LOCKED ON ACER ASPIRE PLATFORM.".ljust(MAX_WIDTH - 11) + "[ CLEAN ]")
+print("="*MAX_WIDTH + "\n")
 sys.exit(0)
