@@ -64,7 +64,9 @@ This framework is governed by a standard dual-licensing strategy to balance open
 This software is licensed under the **GNU General Public License v3 (GPLv3)**. Under the terms of the GPLv3, any third-party software, commercial game engine, or physics middleware that incorporates, forks, or links to this repository **must also be fully disclosed as open-source software** under identical copyleft terms.
 
 ### 🎯 2. Proprietary Commercial License
-For commercial entities requiring the integration of the pTRC integer-and-modulo architecture into proprietary closed-source codebases, a separate commercial license is mandatory. This proprietary license grants full architectural consulting, custom integration profiles, and explicitly exempts the commercial partner from the GPLv3 copyleft obligations.
+For commercial entities requiring the integration of the pTRC integer-and-modulo architecture into proprietary closed-source codebases, a separate commercial license is mandatory. This proprietary license explicitly exempts the commercial partner from the GPLv3 copyleft obligations. 
+
+Architectural consulting, dedicated custom integration profiles, and hardware optimization services are available separately upon request to support commercial deployment.
 
 *For commercial licensing inquiries, architectural consulting, or corporate integration requests, contact the author privately:*  
 📧 **g.wirminghaus@gmx.de**
