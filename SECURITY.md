@@ -17,3 +17,8 @@ If you identify an calculation boundary bypass or a potential division-by-zero v
 
 Please report the mathematical anomaly privately to protect current commercial deployments:
 📩 **g.wirminghaus@gmx.de**
+
+---
+
+*Document Classification: Academic Defense Protocol / Security & Compliance Matrix.*  
+*Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
