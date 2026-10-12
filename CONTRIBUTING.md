@@ -39,3 +39,8 @@ When submitting changes, ensure your modifications strictly respect our decouple
 * **`experimental/`:** Advanced informational space research, non-linear parametric resonance, or open-system energy surplus calculations must remain isolated here. Never merge experimental open-system code into the stable `src/` core.
 
 By opening a Pull Request, you certify that you have successfully validated your code locally using the master engine script (`python src/00_ptrc_first_principles_engine.py`) and agree to publish your contributions under the project's GPLv3 license.
+
+---
+
+*Document Classification: Academic Defense Protocol / Peer-Review Verification Matrix.*  
+*Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
