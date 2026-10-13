@@ -88,3 +88,4 @@ class PTRCModularClockEngine:
         shift_amount = 1 if (current_hour < 12) else -1
         
         self.voxels = np.roll(self.voxels, shift_amount, axis=axis_to_roll)
+
