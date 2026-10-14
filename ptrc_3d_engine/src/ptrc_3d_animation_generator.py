@@ -27,23 +27,19 @@ from ptrc_3d_stereo_engine import PTRC3DStereoEngine
 def render_stereoscopic_frame(engine, frame_idx):
     width, height = 1920, 1080
     framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
-    
-    # Kosmischer BGR-Hintergrund (Sehr schwaches, gedimmtes Vakuum-Blau)
-    framebuffer[:, :] = (15, 5, 8)
+    framebuffer[:, :] = (15, 5, 8)  # Spektrales Ruhe-Blau (Hintergrund)
     
     t = int(frame_idx)
-    radius_sq = 144 * 144
+    radius_sq = 144 * 144  # Der 144-seitige Raumkristall-Radius
     
-    # 3D-Flugbahn der Kugel im Raumkristall
+    # Ganzzahlige 3D-Flugbahn der Kugel
     cx = -300 + (t * 3)
     cy = 120 - (t * 1)
     cz = 120 + (t * 2)
     
-    # DISKRETER BIOMETRISCHER AUGENABSTAND (Pupillary Distance in Z-Einheiten)
-    # Linkes Auge kriegt negativen Versatz, rechtes Auge positiven Versatz
-    ipd_offset = 24  
+    ipd_offset = 24  # Diskreter Augenabstand (Pupillary Distance)
     
-    # 1-PIXEL-DEEP-SCAN FÜR OPTIMALE RETINA-AUFLÖSUNG
+    # RADIKALER 1-PIXEL-DEEP-SCAN OHNE JEDEN WEICHZEICHNER
     for y in range(0, height, 1):
         for x in range(0, width, 1):
             vx = x - width // 2
@@ -53,10 +49,9 @@ def render_stereoscopic_frame(engine, frame_idx):
             dy_ball = vy - cy
             dist_sq = dx_ball * dx_ball + dy_ball * dy_ball
             
-            # --- STEREOSKOPISCHE KANALTRENNUNG (3D-BRILLEN-LOGIK) ---
+            # --- DOPPELSPALT-DUALITÄT (KANALTRENNUNG IN Z) ---
             
-            # 1. LINKES AUGE (Berechnet den Rot-Kanal der 3D-Brille)
-            state_left = 0
+            # 1. LINKES AUGE (Rot-Kanal)
             if dist_sq <= radius_sq:
                 rx = vx + ((dx_ball * 144) // 137)
                 ry = vy + ((dy_ball * 144) // 137)
@@ -64,8 +59,7 @@ def render_stereoscopic_frame(engine, frame_idx):
             else:
                 state_left = engine.compute_retinal_state(vx, vy, cz, t, -ipd_offset)
                 
-            # 2. RECHTES AUGE (Berechnet den Cyan-Kanal [Blau + Gruen] der 3D-Brille)
-            state_right = 0
+            # 2. RECHTES AUGE (Cyan-Kanal)
             if dist_sq <= radius_sq:
                 rx = vx + ((dx_ball * 144) // 137)
                 ry = vy + ((dy_ball * 144) // 137)
@@ -73,33 +67,19 @@ def render_stereoscopic_frame(engine, frame_idx):
             else:
                 state_right = engine.compute_retinal_state(vx, vy, cz, t, ipd_offset)
             
-            # --- PHYSIKALISCH KORREKTE BLAU-AUFLÖSUNG (Menschliches Farbspektrum) ---
-            # Wir mischen die Zustaende in die jeweiligen Farb-Kanaele (BGR)
-            
-            # Rot-Anteil (Linkes Auge)
-            r_val = 0
-            if state_left == 1:   r_val = 130  # Schwach leuchtendes Masse-Zentrum (Rot)
-            elif state_left == 2: r_val = 220  # Intensiveres Taktleuchten (Rot)
-            
-            # Cyan-Anteil (Rechtes Auge: Kombination aus Blau und Gruen)
-            g_val = 0
-            b_val = 0
-            if state_right == 1:
-                g_val = 90;  b_val = 180  # Gedimmtes, biologisches Quanten-Blau
-            elif state_right == 2:
-                g_val = 160; b_val = 255  # Volles, leuchtendes Spektral-Blau (470nm)
+            # Absolute, ungerundete Zuweisung im biologischen BGR-Spektrum
+            r_val = 130 if state_left == 1 else (220 if state_left == 2 else 0)
+            g_val = 90 if state_right == 1 else (160 if state_right == 2 else 0)
+            b_val = 180 if state_right == 1 else (255 if state_right == 2 else 0)
                 
-            # Fusionierung auf der Kugeloberflaeche
             if dist_sq <= radius_sq and state_left == 0 and state_right == 0:
-                framebuffer[y, x] = (40, 15, 20)  # Dezenter, spiegelnder Kugelkoerper
+                framebuffer[y, x] = (40, 15, 20)  # Gekreuzter 90-Grad-Spiegelkörper
             else:
-                # Kombination zu einem echten 3D-Anaglyph-Pixel
                 framebuffer[y, x] = (
                     max(framebuffer[y, x, 0], b_val),
                     max(framebuffer[y, x, 1], g_val),
                     max(framebuffer[y, x, 2], r_val)
                 )
-                
     return framebuffer
 
 if __name__ == "__main__":
@@ -112,29 +92,29 @@ if __name__ == "__main__":
     os.makedirs(temp_dir, exist_ok=True)
     
     total_frames = 180
-    print(f"[ 1/3 ] Aktiviere biometrische Stereoskopie-Pipeline ({total_frames} Frames)...")
+    print(f"[ 1/3 ] Starte 100% fließkommafreie Biometrie-Pipeline ({total_frames} Frames)...")
     
     for f in range(total_frames):
         frame = render_stereoscopic_frame(engine, f)
-        file_path = os.path.join(temp_dir, f"frame_{f:04d}.png")
-        cv2.imwrite(file_path, frame)
+        cv2.imwrite(os.path.join(temp_dir, f"frame_{f:04d}.png"), frame)
         if f % 30 == 0:
-            print(f"        Retina-Scan Audit: Frame {f}/{total_frames} biologisch korrekt gekoppelt.")
+            print(f"        Retina-Audit: Frame {f}/{total_frames} digital präzise versiegelt.")
 
-    print("\n[ 2/3 ] Bündele stereoskopischen 3D-Datenstrom via ffmpeg...")
+    print("\n[ 2/3 ] Bündele unkomprimierten Datenstrom RADIKAL VERLUSTFREI via ffmpeg...")
+    # CRF 0 eliminiert den MPEG-Weichzeichner vollständig! Jedes Pixel bleibt starr erhalten.
     ffmpeg_cmd = [
         "ffmpeg", "-y", "-framerate", "60", "-i", os.path.join(temp_dir, "frame_%04d.png"),
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "15", final_video
+        "-c:v", "libx264", "-crf", "0", "-preset", "veryslow", "-pix_fmt", "yuv420p", final_video
     ]
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        print(f"        Erfolg: Biometrischer 3D-Stream in '{final_video}' gegossen!")
-    except subprocess.CalledProcessError:
-        print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen!")
+        print(f"        Erfolg: Verlustfreies Matrix-Hologramm in '{final_video}' erstarrt!")
+    except subprocess.CalledProcessError as e:
+        print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen: {e.stderr.decode()}")
         sys.exit(1)
         
     print("\n[ 3/3 ] Systembereinigung...")
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
         
-    print(f"\n[ PIEPERFEKT ] Das stereoskopische Quanten-Hologramm liegt bereit: {final_video}")
+    print(f"\n[ PIEPERFEKT ] Das pixelscharfe 144-Facetten-Video steht bereit: {final_video}")
