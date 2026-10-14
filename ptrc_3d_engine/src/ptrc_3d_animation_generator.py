@@ -1,7 +1,12 @@
 # ==============================================================================
-# pTRC Framework - 1080p Holographic Sphere Flight Animation Pipeline
+# pTRC Framework - 1080p Direct MP4 Video Encoder & Auto-Cleanup Pipeline
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
-# GPLv3 Open Source / Commercial License Required
+#
+# DUAL-LICENSING NOTICE:
+# Non-commercial, academic, and open-source usage is strictly governed by 
+# the GNU General Public License version 3 (GPLv3). Any commercial deployment,
+# integration into proprietary, closed-source codebases, or corporate utilization
+# explicitly requires a separate, individually negotiated commercial license.
 # ==============================================================================
 # -*- coding: utf-8 -*-
 
@@ -58,7 +63,6 @@ def render_animation_frame(engine, frame_idx):
                     framebuffer[y:y+4, x:x+4] = (50, 30, 40)     # Spiegelnder Kugel-Körper
             else:
                 # DAS ENTKOPPELTE, REIN MATHEMATISCHE LEUCHT-GITTER
-                # Die Engine regelt die Verdickung nun vollkommen autark!
                 state = engine.compute_state(vx, vy, cz, frame_idx)
                 if state == 1:
                     framebuffer[y:y+4, x:x+4] = (0, 190, 255)    # Harmonisch verdicktes Amber-Gold
@@ -86,14 +90,14 @@ if __name__ == "__main__":
         if f % 30 == 0:
             print(f"        Taktstufe: {f}/{total_frames} Z-layers and shadows baked.")
 
-    print("\n[ 2/3 ] Bündele harmonischen Datenstrom via ffmpeg...")
+    print("\n[ 2/3 ] Bündele den rein ganzzahligen Datenstrom via ffmpeg...")
     ffmpeg_cmd = [
         "ffmpeg", "-y", "-framerate", "60", "-i", os.path.join(temp_dir, "frame_%04d.png"),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", final_video
     ]
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        print(f"        Erfolg: '{final_video}' wurde fehlerfrei generiert!")
+        print(f"        Erfolg: '{final_video}' wurde stabil erzeugt!")
     except subprocess.CalledProcessError:
         print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen!")
         sys.exit(1)
