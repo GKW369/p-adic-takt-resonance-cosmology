@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - 1080p Direct MP4 Video Encoder & Auto-Cleanup Pipeline
+# pTRC Framework - 1080p 3D Sphere Flight Animation & Auto-Cleanup Pipeline
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
 #
 # DUAL-LICENSING NOTICE:
@@ -16,100 +16,111 @@ import shutil
 import subprocess
 import numpy as np
 import cv2
-from ptrc_clock_core import PTRCModularClockEngine
 
-def render_1080p_frame(engine, depth_shift):
-    """Rendert ein absolut stabiles, rauschfreies 3D-Hologramm ohne Stroboskop-Blitzen"""
+# Importiere deine offizielle neue 3D-Engine
+from ptrc_3d_hologram_engine import PTRC3DHologramEngine
+
+def render_animation_frame(engine, ball_x, ball_y, ball_z, takt_level):
+    """Rendert ein Full-HD Frame mit fliegender, spiegelnder Kugel im 48-Strang-Sieb"""
     width, height = 1920, 1080
     framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
     
     # Tiefer kosmischer Indigo-Hintergrund (BGR)
-    framebuffer[:, :] = [35, 15, 20]
+    framebuffer[:, :] = (35, 15, 20)
     
-    # Fixierte Kristallachse 96 (Symmetrie-Anker)
-    axis_idx = 96
-    axis = engine.crystal_axes[axis_idx]
+    # Konstanter Radius der Kugel im Quadrat (reiner Integer-Raum)
+    ball_radius_sq = 144 * 144  # Abgestimmt auf deine 144 Kristallfacetten
     
-    # Die 8 invarianten Primstrahlen der Modulo-24-Uhr (Plichta-Basis)
-    uhr_rays = [1, 5, 7, 11, 13, 17, 19, 23]
-    
-    # DIE 48 PRIMORIALEN STRÄNGE MODULO 210
-    sieb_strands = [
-        1, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 
-        71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 121, 127, 131, 137, 139, 
-        143, 149, 151, 157, 163, 167, 169, 173, 179, 181, 187, 191, 193, 197, 199, 209
-    ]
-    
-    # Der Tiefenvorschub in die Speicherebene
-    z = int(depth_shift)
-    
-    # Schrittweite 4 fuer fluessiges, schnelles i3-Baking
+    # Schrittweite 4 fuer fluessiges Echtzeit-Baking auf dem Acer-Laptop
     for y in range(0, height, 4): 
         for x in range(0, width, 4):
+            # Zentrieren der Bildschirmkoordinaten
             nx = x - (width // 2)
             ny = y - (height // 2)
             
-            # STABILE SPIEGEL-SITUATION (Kein Wechsel mehr pro Frame!)
-            # Die 90-Grad-Kreuzung steht felsenfest im Raum
-            mx = -nx
-            my = ny
+            # 1. BERECHNUNG DER KUGEL-GEOMETRIE (Rein ganzzahlig im 3D-Raum)
+            # Distanz zum bewegten Kugelzentrum
+            dx_ball = nx - int(ball_x)
+            dy_ball = ny - int(ball_y)
+            dist_to_ball_sq = dx_ball * dx_ball + dy_ball * dy_ball
             
-            # Die Tiefenkomponente z verschiebt die Raumstruktur ganzzahlig
-            dx = mx + z
-            dy = my + z
+            # Pruefe, ob der Strahl die Kugel trifft
+            if dist_to_ball_sq <= ball_radius_sq:
+                # REIN GANZZAHLIGE SPIEGELUNG:
+                # Die Kugel invertiert die Raumkoordinaten ueber die Achsen der Engine
+                # und spiegelt das Gitter auf ihrer eigenen Oberflaeche
+                sx = -nx + int(ball_z)
+                sy = -ny + int(ball_z)
                 
-            quadrance = dx*dx + dy*dy
+                state = engine.compute_state(sx, sy, takt_level)
+                if state == 1:
+                    framebuffer[y:y+4, x:x+4] = (100, 220, 255) # Gespiegeltes Amber (heller)
+                elif state == 2:
+                    framebuffer[y:y+4, x:x+4] = (255, 255, 150) # Gespiegeltes Cyan-Leuchten
+                else:
+                    framebuffer[y:y+4, x:x+4] = (10, 5, 8)      # Tiefschwarzer Kugel-Kernaustritt
+                continue
             
-            # Filter 1: Das 48-Strang-Raumsieb modulo 210
-            if (quadrance % 210) in sieb_strands:
-                # Filter 2: Die zeitliche Phaseninterferenz der modulo 24 Uhr
-                # Das z im Phasenschluss sorgt fuer das harmonische Wandern der Knoten
-                phase = (dx * dy + 137 + z) % 24
+            # 2. BERECHNUNG DES UMGEBENDEN GITTERS VIA ENGINE
+            # Wir nutzen ball_z, um das Gitter synchron im Hintergrund fliessen zu lassen
+            state = engine.compute_state(nx + int(ball_z), ny + int(ball_z), takt_level)
+            
+            if state == 1:
+                framebuffer[y:y+4, x:x+4] = (0, 190, 255)     # Amber-Gold (Masseknoten)
+            elif state == 2:
+                # LEUCHTENDE GITTERSTREBEN: Erhoehte Farbintensitaet im Cyan-Bereich
+                framebuffer[y:y+4, x:x+4] = (255, 255, 50)    # Pulsierendes Electrical Cyan
+            elif state == 3:
+                framebuffer[y:y+4, x:x+4] = (0, 0, 0)         # Projizierter Schattenraum
                 
-                if phase == 12:
-                    framebuffer[y:y+4, x:x+4] = [0, 190, 255]      # Amber-Gold (Masse)
-                elif phase in uhr_rays:
-                    framebuffer[y:y+4, x:x+4] = [255, 255, 0]      # Electrical Cyan (Energie)
     return framebuffer
 
 if __name__ == "__main__":
-    engine = PTRCModularClockEngine()
+    # Initialisiere deine 3D-Engine
+    engine = PTRC3DHologramEngine()
     
     temp_dir = "ptrc_temp_frames"
-    final_video = "ptrc_3s_primorial_hologram.mp4"
+    final_video = "ptrc_3d_sphere_cosmology.mp4"
     
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
     
-    total_frames = 180
-    print(f"[ 1/3 ] Bake rauschfreie 48-Strang-Tiefenstruktur ({total_frames} Frames)...")
+    total_frames = 180  # 3 Sekunden bei 60 FPS
+    print(f"[ 1/3 ] Starte Schoepfungs-Animation ({total_frames} Frames, 60 FPS, 1080p)...")
     
     for f in range(total_frames):
-        # Sanfter Ganzzahl-Vorschub: 4 Einheiten pro Frame tief in die Struktur
-        depth_shift = f * 4
+        # DIE FLUGBAHN DER KUGEL: Rein ganzzahlige Schrittweiten durch das Gitter
+        # Die Kugel fliegt eine diskrete Schleife von links unten nach rechts oben
+        ball_x = -300 + (f * 3.5)
+        ball_y = 200 - (f * 2.2)
+        ball_z = f * 2  # Gleichzeitiger raeumlicher Vorschub des Hintergrundgitters
         
-        frame = render_1080p_frame(engine, depth_shift)
+        # Der Zeittakt fuer deine 90-Grad-Spiegelkopplung
+        takt_level = 1 + f
+        
+        frame = render_animation_frame(engine, ball_x, ball_y, ball_z, takt_level)
+        
         file_path = f"{temp_dir}/frame_{f:04d}.png"
         cv2.imwrite(file_path, frame)
         
         if f % 30 == 0:
-            print(f"        Tiefenstufe: {depth_shift} Einheiten vorwaerts gedrungen.")
+            print(f"        Animation-Baking: Frame {f}/{total_frames} prozessiert.")
 
-    print("\n[ 2/3 ] Buendele stabilisierten Ganzzahl-Datenstrom via ffmpeg...")
+    print("\n[ 2/3 ] Buendele leuchtenden 3D-Datenstrom via ffmpeg...")
     ffmpeg_cmd = [
         "ffmpeg", "-y",
         "-framerate", "60",
         "-i", f"{temp_dir}/frame_%04d.png",
         "-c:v", "libx264",
         "-pix_fmt", "yuv420p",
-        "-crf", "20",
+        "-crf", "18",  # Noch hoehere Qualitaet fuer messerscharfe Punkte auf dem Fernseher
         final_video
     ]
     
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        print(f"        Erfolg: '{final_video}' wurde absolut flackerfrei erzeugt!")
+        print(f"        Erfolg: '{final_video}' wurde absolut stabil erzeugt!")
     except subprocess.CalledProcessError:
         print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen!")
         sys.exit(1)
@@ -118,4 +129,4 @@ if __name__ == "__main__":
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
         
-    print(f"\n[ PIEPERFEKT ] Das stabile Hologramm liegt bereit: {final_video}")
+    print(f"\n[ PIEPERFEKT ] Deine spiegelnde Kugel fliegt durch das Gitter: {final_video}")
