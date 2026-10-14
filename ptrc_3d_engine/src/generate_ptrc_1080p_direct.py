@@ -18,71 +18,66 @@ import numpy as np
 import cv2
 from ptrc_clock_core import PTRCModularClockEngine
 
-def render_1080p_frame(engine, cam_x, cam_y, cam_z, frame_idx):
-    """Erzeugt ein Full-HD Frame (1920 x 1080) mit dynamischer Transformation"""
+def render_1080p_frame(engine, depth_shift, frame_idx):
+    """Rendert ein Full-HD Frame, indem sich der Beobachter DURCH die p-adischen Schichten bewegt"""
     width, height = 1920, 1080
+    framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
     
     # Tiefer kosmischer Indigo-Hintergrund (BGR für OpenCV)
-    framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
-    framebuffer[:, :] = [40, 0, 20]
+    framebuffer[:, :] = [35, 15, 20]
     
-    # Dynamische Projektionsachse basierend auf dem Takt
-    axis_idx = (engine.global_master_clock + frame_idx) % 144
+    # FIXIERTE KRISTALLACHSE 96: Perfekte Symmetrie für den rauschfreien Tiefenflug
+    axis_idx = 96
     axis = engine.crystal_axes[axis_idx]
     
-    # Die erlaubten Primzahlen-Strahlen des Z/24Z-Uhrsystems
+    # Die 8 erlaubten Primzahlen-Strahlen des Z/24Z-Uhrsystems
     prime_rays = [1, 5, 7, 11, 13, 17, 19, 23]
     
-    # Schrittweite 4 für schnelles, flüssiges Test-Rendering
-    for y in range(0, height, 4): 
-        for x in range(0, width, 4):
-            dx = (x - width // 2) + int(cam_x)
-            dy = (y - height // 2) + int(cam_y)
-            quadrance = dx*dx + dy*dy
+    for y in range(0, height, 1): # Pixelgenau (Schrittweite 1) für maximale Schärfe auf dem Fernseher!
+        for x in range(0, width, 1):
+            dx = x - width // 2
+            dy = y - height // 2
+            
+            # depth_shift verschiebt uns entlang der Achse durch die Quadranz-Schichten
+            quadrance = dx*dx + dy*dy + int(depth_shift)*10
             
             if (quadrance % 210) <= 156:
-                phase = (dx * dy + 137 + int(cam_z)) % 24
+                phase = (dx * dy + 137 + int(depth_shift)) % 24
                 
                 if phase == 12:
                     # Amber-Gold (B-G-R für OpenCV)
-                    framebuffer[y:y+4, x:x+4] = [0, 190, 255]
+                    framebuffer[y, x] = [0, 190, 255]
                 elif phase in prime_rays:
                     # Electrical Cyan (B-G-R für OpenCV)
-                    framebuffer[y:y+4, x:x+4] = [255, 255, 0]
+                    framebuffer[y, x] = [255, 255, 0]
     return framebuffer
 
 if __name__ == "__main__":
     engine = PTRCModularClockEngine()
     
-    # Temporärer Ordner und finales Video
     temp_dir = "ptrc_temp_frames"
     final_video = "ptrc_3s_test_flight.mp4"
     
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
     
     total_frames = 180  # 3 Sekunden bei 60 FPS
-    print(f"[ 1/3 ] Starte Frame-Baking ({total_frames} Frames, 1080p)...")
+    print(f"[ 1/3 ] Starte echten 3D-Tiefenflug auf Achse 96 ({total_frames} Frames, pixelgenau)...")
     
     for f in range(total_frames):
-        # Dynamische Flugbahn: Spirale ins Zentrum
-        angle = (f * 2 * np.pi) / 90
-        radius = 400 - (f * 1.5)
+        # Der Tiefen-Vorschub: Wir reisen pro Frame tiefer in die Gitterstruktur
+        depth_shift = f * 2
         
-        cam_x = radius * np.cos(angle)
-        cam_y = radius * np.sin(angle)
-        cam_z = f * 3
-        
-        frame = render_1080p_frame(engine, cam_x, cam_y, cam_z, f)
+        frame = render_1080p_frame(engine, depth_shift, f)
         
         file_path = f"{temp_dir}/frame_{f:04d}.png"
         cv2.imwrite(file_path, frame)
         
         if f % 30 == 0:
-            print(f"        Fortschritt: {f}/{total_frames} Frames fertig.")
+            print(f"        Fortschritt: {f}/{total_frames} Frames tiefer eingetaucht.")
 
-    print("\n[ 2/3 ] Starte automatische ffmpeg-Videobündelung...")
-    
-    # Der ffmpeg-Befehl als systemunabhängiges Array
+    print("\n[ 2/3 ] Bündele stabiles 3D-Video via ffmpeg...")
     ffmpeg_cmd = [
         "ffmpeg", "-y",
         "-framerate", "60",
@@ -93,17 +88,15 @@ if __name__ == "__main__":
         final_video
     ]
     
-    # Führt ffmpeg direkt im Hintergrund aus
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        print(f"        Erfolg: '{final_video}' wurde fehlerfrei generiert!")
+        print(f"        Erfolg: '{final_video}' wurde stabil erzeugt!")
     except subprocess.CalledProcessError as e:
-        print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen:\n{e.stderr.decode()}")
+        print(f"\n[ FEHLER ] ffmpeg fehlgeschlagen:\n{e.stderr.decode()}")
         sys.exit(1)
         
-    print("\n[ 3/3 ] Starte Systembereinigung (Lösche temporäre Bilder)...")
+    print("\n[ 3/3 ] Systembereinigung...")
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
-        print("        Bereinigung abgeschlossen: 25-GB-Speicherrisiko eliminiert.")
         
-    print(f"\n[ PIEPERFEKT ] Dein 3-Sekunden-Flug liegt bereit: {final_video}")
+    print(f"\n[ PIEPERFEKT ] Schau dir den echten Tiefenflug an: {final_video}")
