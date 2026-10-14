@@ -23,17 +23,17 @@ Rooted in the structural insights of Peter Plichta’s *Primzahlenkreuz* (Prime 
 - Mass nodes are locked invariant at **Phase 12**.
 - Energy/radiation fields propagate exclusively along the **8 invariant prime rays**: `{1, 5, 7, 11, 13, 17, 19, 23}`.
 
-### 2. The High-Resolution 48-Strang Primorial Space Sieve (\(\mathbb{Z}/210\mathbb{Z}\))
+### 2. The High-Resolution 48-Strand Primorial Space Sieve (\(\mathbb{Z}/210\mathbb{Z}\))
 While the 2D cross operates on 24 elements, the spatial crystal expansion scales directly into the next higher primorial ring via Euler's totient function φ(210).
 \[\varphi(210) = (2-1) \times (3-1) \times (5-1) \times (7-1) = 1 \times 2 \times 4 \times 6 = 48\]
 This generates **48 exact structural axes** across the number field, allowing for an incredibly sharp, crystalline micro-topology without a single analogue rounding error.
 
-### 3. Infinite Scalability (Fractal Extension)
+### 3. Infinite Scalability (Fractal Extension Matrix)
 The engine design is inherently open and scalable to deeper p-adic dimensions. The sieve can be expanded dynamically to higher primorials to increase geometric density:
 - **Modulo 2310:** φ(2310) = 480 primorial resonance strands.
 - **Modulo 30030:** φ(30030) = 5760 primorial resonance strands.
 
-### 4. Gekreuzte 90-Grad-Spiegelung (Holographic Immersion)
+### 4. Crossed 90-Degree Mirror Intercept (Holographic Immersion)
 To break out of flat 2D representations and completely immerse the observer inside the spatial matrix, the engine deploys a double orthogonal reflection system. By intersecting two axis-inversions at a precise 90-degree crossing angle, 1 equals -1 conditionally based on the master clock:
 - **Mirror 1:** Handles discrete sign inversion based on the individual Takt rhythm.
 - **Mirror 2:** Transposes the coordinates orthogonally, forcing inner geometric layers to expand outward, enveloping the 3D world natively.
@@ -43,7 +43,7 @@ To break out of flat 2D representations and completely immerse the observer insi
 ## 📁 Repository Assets in this Directory
 
 *   **`ptrc_clock_core.py`**: The core mathematical engine managing the Z/210Z and Z/24Z sieve matrices.
-*   **`ptrc_hologram_engine.py`**: The sovereign, standalone mathematical core. It contains no graphical dependencies and outputs raw physical states (`0 = Vacuum`, `1 = Mass`, `2 = Energy`).
+*   **`ptrc_hologram_engine.py`**: The sovereign, standalone mathematical core. It contains no graphical dependencies and outputs raw physical states (`0 = Vacuum`, `1 = Mass`, `2 = Energy`, `3 = Shadow`).
 *   **`main_renderer.py`**: The live 3D ray-marching terminal preview running along the 144 spatial facets.
 *   **`ptrc_4k_genesis.py`**: The fixed-point 4K Ultra-HD renderer which bakes pure number theory onto the disk.
 *   **`generate_ptrc_1080p_direct.py`**: The automated 60 FPS video production pipeline utilizing OpenCV and background `ffmpeg` muxing.
@@ -87,4 +87,4 @@ All algorithms, architectures, and rendering paradigms documented in this file a
 - **Commercial & Proprietary Deployment:** Any commercial integration into proprietary software, gaming engines, custom silicon architectures, or enterprise environments (specifically by console manufacturers or corporate developers) **explicitly requires a separate, individually negotiated commercial license** from the copyright holder.
 
 ---
-*The pTRC Graphics Layer is a proprietary subset of the p-adic Takt Resonance Cosmology engine.* [1]
+*The pTRC Graphics Layer is a proprietary subset of the p-adic Takt Resonance Cosmology engine.*
