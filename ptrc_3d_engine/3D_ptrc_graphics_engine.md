@@ -2,9 +2,9 @@
 **100% Pure Integer Discrete Physics in Z. Zero Floats. Zero Trigonometry.**
 
 ## Overview
-This directory contains the core implementation of the **p-adic Takt Resonance Cosmology (pTRC) 3D Graphics & Simulation Engine**. Unlike traditional graphics frameworks that rely heavily on hardware FPUs and analog trigonometric approximations, this engine operates entirely within the ring of integers (\(\mathbb{Z}\)) via a modular residue class clock system (Z/210Z and Z/24Z).
+This directory houses the official implementation of the **p-adic Takt Resonance Cosmology (pTRC) 3D Graphics & Simulation Engine**. Unlike traditional visualization frameworks relying on floating-point units and analog approximations, this engine functions entirely in the integer domain (\(\mathbb{Z}\)) via coupled residues (Z/210Z and Z/24Z).
 
-The engine executes structural spatial rendering by shifting the perspective of the observer directly on the information storage layer, beginning at **Takt Level 1 (The Fundamental Planck Origin)**. 
+By scaling the perspective of the observer directly on the information storage layer, commencing at **Takt Level 1 (The Fundamental Planck Origin)**, the system expands the space lattice natively, enveloping the terminal viewer without analytical rounding gaps.
 
 ---
 
@@ -28,7 +28,7 @@ While the 2D cross operates on 24 elements, the spatial crystal expansion scales
 \[\varphi(210) = (2-1) \times (3-1) \times (5-1) \times (7-1) = 1 \times 2 \times 4 \times 6 = 48\]
 This generates **48 exact structural axes** across the number field, allowing for an incredibly sharp, crystalline micro-topology without a single analogue rounding error.
 
-### 3. Infinite Scalability (Fractal Extension Matrix)
+### 3. Infinite Scalability (Fractal Extension)
 The engine design is inherently open and scalable to deeper p-adic dimensions. The sieve can be expanded dynamically to higher primorials to increase geometric density:
 - **Modulo 2310:** φ(2310) = 480 primorial resonance strands.
 - **Modulo 30030:** φ(30030) = 5760 primorial resonance strands.
