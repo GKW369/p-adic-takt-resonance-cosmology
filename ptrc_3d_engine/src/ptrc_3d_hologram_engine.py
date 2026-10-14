@@ -10,7 +10,7 @@
 # ==============================================================================
 # -*- coding: utf-8 -*-
 
-class PTRCHologramEngine:
+class PTRC3DHologramEngine:
     """
     Die fundamentale Ganzzahl-Engine des pTRC-Frameworks.
     Berechnet die raeumliche Resonanz und die holografische Schatten-Projektion
