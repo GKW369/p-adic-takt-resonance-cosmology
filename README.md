@@ -1,7 +1,7 @@
 # pTRC Framework: Discrete Integer Computational Physics Engine
 
-**Developed by Kurt Guido Wirminghaus**  
-**An infinitely scalable, deterministic integer graphics and simulation engine operating within the strict algebraic ring of integers (\(\mathbb{Z}\)). Bypasses floating-point accumulation noise, rounding-error divergences, and FPU-latency via a 144-facet spatial geometry, a multi-tiered primorial space sieve, and a 24-FPS takt-synchronized stereoscopic architecture. Zero float pollution.**
+**Architecture Designed by Kurt Guido Wirminghaus**  
+**An infinitely scalable, deterministic integer graphics and simulation engine operating within the strict algebraic ring of integers (\(\mathbb{Z}\)). Bypasses floating-point accumulation noise, rounding-error divergences, and FPU-latency via a 144-facet spatial geometry, a multi-tiered primorial space sieve, and a highly adaptive, phase-locked stereoscopic architecture dynamically scalable to any integer multiple or divisor of the modulo-24 base clock (e.g., 24, 120, 144, or 240 FPS). Zero float pollution.**
 
 ---
 
@@ -39,7 +39,9 @@ By completely removing floating-point units (FPU) from the computational loop, t
 ---
 
 ## 🪐 Visual Demonstration & Temporal Takt-Synchronization
-To guarantee that the visualization matches the underlying discrete mechanics, the output engine adheres to the **Temporal Takt-Synchronization Law**. Instead of using standard continuous 60-Hz rendering pipelines that introduce temporal interpolation artifacts ("Matsch-Effekt"), the video frame generation is rigidly synchronized to the internal clock of the **Modulo-24 Architecture** (**24 FPS**). 
+To guarantee that the visualization matches the underlying discrete mechanics, the output engine adheres to the **Temporal Takt-Synchronization Law**. Instead of using standard continuous 60-Hz rendering pipelines that introduce temporal interpolation artifacts ("Matsch-Effekt"), the video frame generation is dynamically scale-matched to the hardware target environment. 
+
+The framerate is rigidly locked to an integer multiple or divisor of the internal clock of the **Modulo-24 Architecture** (e.g., matching the **144-facet crystal symmetry at 144 FPS**, or high-refresh hardware targets at **240 FPS**), ensuring completely stutter-free, phase-locked playback.
 
 Combined with an uncompressed, lossless rendering profile (`-crf 0 -g 1`), the system eliminates any spatial or temporal pixel-smoothing. Every single frame is generated as an independent, unrounded, pixelsharp keyframe.
 
@@ -75,7 +77,7 @@ For commercial entities requiring the integration of the pTRC integer-and-modulo
 
 *For commercial licensing inquiries, structural code audits, or integration consulting, please contact the author directly:*  
 👤 **Author:** Kurt Guido Wirminghaus  
-📧 **Email:** g.wirminghaus@gmx.de  
+📧 **Email:** g.wmx.de -> (Bitte ersetze dies durch g.wirminghaus@gmx.de beim Kopieren)  
 
 ---
 
