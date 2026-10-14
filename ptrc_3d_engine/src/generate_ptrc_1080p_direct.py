@@ -24,7 +24,7 @@ def render_1080p_frame(engine, takt_level):
     framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
     
     # Tiefer kosmischer Indigo-Hintergrund (BGR fuer OpenCV)
-    framebuffer[:, :] = 
+    framebuffer[:, :] = [35, 15, 20] 
     
     # Fixierte Kristallachse 96 (Symmetrie-Anker)
     axis_idx = 96
