@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - 1080p Direct MP4 Video Encoder & Auto-Cleanup Pipeline
+# pTRC Framework - 1080p Holographic Crystal Flight Pipeline (Ebene 1 Start)
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
 #
 # DUAL-LICENSING NOTICE:
@@ -18,66 +18,70 @@ import numpy as np
 import cv2
 from ptrc_clock_core import PTRCModularClockEngine
 
-def render_1080p_frame(engine, depth_shift, frame_idx):
-    """Rendert ein Full-HD Frame, indem sich der Beobachter DURCH die p-adischen Schichten bewegt"""
+def render_1080p_frame(engine, depth_level, frame_idx):
+    """Rendert die holografische Projektion startend von Ebene 1"""
     width, height = 1920, 1080
     framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
     
-    # Tiefer kosmischer Indigo-Hintergrund (BGR für OpenCV)
+    # Tiefer kosmischer Indigo-Hintergrund
     framebuffer[:, :] = [35, 15, 20]
     
-    # FIXIERTE KRISTALLACHSE 96: Perfekte Symmetrie für den rauschfreien Tiefenflug
+    # Fixierte Kristallachse 96 (Symmetrie-Anker)
     axis_idx = 96
     axis = engine.crystal_axes[axis_idx]
-    
-    # Die 8 erlaubten Primzahlen-Strahlen des Z/24Z-Uhrsystems
     prime_rays = [1, 5, 7, 11, 13, 17, 19, 23]
     
-    for y in range(0, height, 1): # Pixelgenau (Schrittweite 1) für maximale Schärfe auf dem Fernseher!
-        for x in range(0, width, 1):
+    # Der aktuelle Zustand auf der Speicherebene (Z)
+    dz = int(depth_level)
+    
+    # Schrittweite 2 für scharfe Fernseher-Projektion
+    for y in range(0, height, 2): 
+        for x in range(0, width, 2):
             dx = x - width // 2
             dy = y - height // 2
             
-            # depth_shift verschiebt uns entlang der Achse durch die Quadranz-Schichten
-            quadrance = dx*dx + dy*dy + int(depth_shift)*10
+            # HOLOGRAFISCHE WECHSELWIRKUNG:
+            # Die Quadranz skaliert mit der Speicherebene dz, da das Gitter
+            # mit seinen Außengrenzen interagiert. Das erzeugt die echte Umhüllung!
+            quadrance = (dx*dx + dy*dy) * dz
             
+            # Raumsieb modulo 210 filtert die unendliche Zahl
             if (quadrance % 210) <= 156:
-                phase = (dx * dy + 137 + int(depth_shift)) % 24
+                # Phasen-Interferenz zwischen Speicher-Ebene und Raum-Hologramm
+                phase = (dx * dy * dz + 137) % 24
                 
                 if phase == 12:
-                    # Amber-Gold (B-G-R für OpenCV)
-                    framebuffer[y, x] = [0, 190, 255]
+                    framebuffer[y:y+2, x:x+2] = [0, 190, 255]     # Amber-Gold (Masse)
                 elif phase in prime_rays:
-                    # Electrical Cyan (B-G-R für OpenCV)
-                    framebuffer[y, x] = [255, 255, 0]
+                    framebuffer[y:y+2, x:x+2] = [255, 255, 0]     # Electrical Cyan (Energie)
     return framebuffer
 
 if __name__ == "__main__":
     engine = PTRCModularClockEngine()
     
     temp_dir = "ptrc_temp_frames"
-    final_video = "ptrc_3s_test_flight.mp4"
+    final_video = "ptrc_3s_hologram_flight.mp4"
     
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
     
     total_frames = 180  # 3 Sekunden bei 60 FPS
-    print(f"[ 1/3 ] Starte echten 3D-Tiefenflug auf Achse 96 ({total_frames} Frames, pixelgenau)...")
+    print(f"[ 1/3 ] Starte holografischen Tauchgang ab EBENE 1 ({total_frames} Frames)...")
     
     for f in range(total_frames):
-        # Der Tiefen-Vorschub: Wir reisen pro Frame tiefer in die Gitterstruktur
-        depth_shift = f * 2
+        # Wir starten exakt bei Ebene 1 und rücken pro Frame um 1 p-adische Ebene vor
+        depth_level = 1 + f
         
-        frame = render_1080p_frame(engine, depth_shift, f)
+        frame = render_1080p_frame(engine, depth_level, f)
         
         file_path = f"{temp_dir}/frame_{f:04d}.png"
         cv2.imwrite(file_path, frame)
         
         if f % 30 == 0:
-            print(f"        Fortschritt: {f}/{total_frames} Frames tiefer eingetaucht.")
+            print(f"        Speicherebene: {depth_level}/{total_frames} wird projiziert.")
 
-    print("\n[ 2/3 ] Bündele stabiles 3D-Video via ffmpeg...")
+    print("\n[ 2/3 ] Bündele holografischen Datenstrom via ffmpeg...")
     ffmpeg_cmd = [
         "ffmpeg", "-y",
         "-framerate", "60",
@@ -99,4 +103,4 @@ if __name__ == "__main__":
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
         
-    print(f"\n[ PIEPERFEKT ] Schau dir den echten Tiefenflug an: {final_video}")
+    print(f"\n[ PIEPERFEKT ] Das Hologramm ist bereit für den Fernseher: {final_video}")
