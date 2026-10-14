@@ -12,56 +12,61 @@
 
 class PTRC3DStereoEngine:
     def __init__(self):
-        # Das originale, unbestechliche Modulo-24 Uhrwerk (8 Primstrahlen nach Plichta)
-        self.prime_rays_24 = (1, 5, 7, 11, 13, 17, 19, 23)
+        # Die 8 erlaubten Hauptstrahlen der abelschen Symmetriegruppe aus deiner Urdatei
+        self.allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
         
-        # Das hochauflösende 48-Strang Raumsieb modulo 210 (Euler-Phi φ(210) = 48)
-        self.prime_strands_210 = (
-            1, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 
-            71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 121, 127, 131, 137, 139, 
-            143, 149, 151, 157, 163, 167, 169, 173, 179, 181, 187, 191, 193, 197, 199, 209
-        )
+        # SKALIERBARKEIT: Basis-Primorial 210 (Erweiterbar auf 2310 oder 30030)
+        self.PRIMORIAL_RING = 210  
+        
+        # Dein unbestechlicher Grenzknoten aus der Urdatei
+        self.INVARIANT_LIMIT = 156  
+        
         self.fine_structure_inverse = 137
         self.SCALE = 1000
 
     def compute_retinal_state(self, vx, vy, cz, takt_level, eye_offset):
-        """
-        Berechnet den Zustand eines Punktes auf der gekrümmten Netzhaut.
-        'eye_offset' simuliert den horizontalen Pupillenabstand (IPD).
-        """
+        """Berechnet den Netzhaut-Zustand exakt nach dem 156-Grenzknoten-Gesetz"""
         t = int(takt_level)
         
-        # BIOMETRISCHE NETZHAUT-KRÜMMUNG (Retinal Curvature Check)
-        # Die Netzhaut ist eine sphärische Schale. Wir berechnen den invarianten 
-        # Krümmungsradius (Augen-Ablesesensor) rein ganzzahlig über Quadrance-Faltung.
+        # SYSTEM-TAKT-SPIEGELUNG (np.roll-Äquivalent im unendlichen Raum)
+        # Berechnet die Verschiebung im positiven und negativen Bereich jenseits von -1
+        current_hour = t % 24
+        axis_to_roll = current_hour % 3
+        shift_amount = (t // 24) if (current_hour < 12) else -(t // 24)
+        
+        # Biometrische Netzhautkrümmung
         retinal_depth_sq = (vx * vx + vy * vy) // 144
         
-        # Verschiebung des Strahls durch die Linse unter Berücksichtigung des Auges (Parallaxe)
-        x_eye = vx + eye_offset
-        y_eye = vy
-        z_eye = cz - retinal_depth_sq  # Die Krümmung biegt die Z-Ebene nach hinten durch!
+        # Einkoppeln des Stereo-Versatzes und der Takt-Verschiebung
+        x_eye = vx + eye_offset + (shift_amount if axis_to_roll == 0 else 0)
+        y_eye = vy + (shift_amount if axis_to_roll == 1 else 0)
+        z_eye = cz - retinal_depth_sq + (shift_amount if axis_to_roll == 2 else 0)
         
-        # DIAGONALER CMB-PATH OVERHEAD (1414-Pfad-Faktor)
+        # Diogonaler CMB-Overhead
         dx_diag = (x_eye * 1414) // self.SCALE
         dy_diag = (y_eye * 1414) // self.SCALE
         
-        # 90-GRAD-KREUZSPIEGELUNG (Achsen-Inversion beidseitig in Z)
+        # 90-Grad-Kreuzspiegelung für die Richtungsumkehr
         if (t % 2) == 1:
-            mx = -dx_diag; my = -dy_diag; mz = -z_eye
+            mx, my, mz = -dx_diag, -dy_diag, -z_eye
         else:
-            mx = dx_diag; my = dy_diag; mz = z_eye
+            mx, my, mz = dx_diag, dy_diag, z_eye
             
         dx = mx + mz + t
         dy = my - mz
         quadrance = dx*dx + dy*dy + mz*mz
         
-        # MATRIX FILTRATION
-        if (quadrance % 210) in self.prime_strands_210:
-            phase = (dx * dy * (mz if mz != 0 else 1) + self.fine_structure_inverse + t) % 24
+        # 1. DAS MODULO-UHRSIEB (Exakt das Gesetz aus deiner Urdatei!)
+        residuum_primorial = quadrance % self.PRIMORIAL_RING
+        
+        if residuum_primorial <= self.INVARIANT_LIMIT:
             
-            if phase == 12:
-                return 1  # Invarianter Massenknoten (Amber-Gold)
-            elif phase in self.prime_rays_24:
-                return 2  # Leuchtender Energiestrang (Neon-Cyan)
+            # 2. DER Z/24Z KONTROLLTAKT-CHECK
+            takt_check = (dx * dy + self.fine_structure_inverse + t) % 24
+            
+            if takt_check in self.allowed_24_rays:
+                return 2  # Aktiver Resonanz-Knoten (Lichtleitend / Blau)
+            elif takt_check == 12:
+                return 1  # Invarianter Massen-Knoten (Materie / Gold)
                 
         return 0  # Biologisches Ruhe-Vakuum
