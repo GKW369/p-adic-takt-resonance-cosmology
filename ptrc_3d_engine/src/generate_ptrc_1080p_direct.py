@@ -29,7 +29,7 @@ def render_1080p_frame(engine, takt_level):
     # Fixierte Kristallachse 96 (Symmetrie-Anker)
     axis_idx = 96
     axis = engine.crystal_axes
-    prime_rays = 
+    prime_rays = [1, 5, 7, 11, 13, 17, 19, 23] 
     
     # Der aktuelle diskrete Taktzustand ab Ebene 1
     t = int(takt_level)
