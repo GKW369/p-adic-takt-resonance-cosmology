@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - 1080p Holographic Crystal Flight Pipeline (Ebene 1 Start)
+# pTRC Framework - 1080p Direct MP4 Video Encoder & Auto-Cleanup Pipeline
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
 #
 # DUAL-LICENSING NOTICE:
@@ -18,12 +18,12 @@ import numpy as np
 import cv2
 from ptrc_clock_core import PTRCModularClockEngine
 
-def render_1080p_frame(engine, depth_level, frame_idx):
-    """Rendert die holografische Projektion startend von Ebene 1"""
+def render_1080p_frame(engine, frame_idx):
+    """Rendert ein Full-HD Frame durch rein ganzzahliges Transponieren der Raum-Matrix"""
     width, height = 1920, 1080
     framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
     
-    # Tiefer kosmischer Indigo-Hintergrund
+    # Tiefer kosmischer Indigo-Hintergrund (BGR für OpenCV)
     framebuffer[:, :] = [35, 15, 20]
     
     # Fixierte Kristallachse 96 (Symmetrie-Anker)
@@ -31,57 +31,69 @@ def render_1080p_frame(engine, depth_level, frame_idx):
     axis = engine.crystal_axes[axis_idx]
     prime_rays = [1, 5, 7, 11, 13, 17, 19, 23]
     
-    # Der aktuelle Zustand auf der Speicherebene (Z)
-    dz = int(depth_level)
+    # Diskreter Transpositions-Takt basierend auf dem Frame
+    takt = frame_idx
     
-    # Schrittweite 2 für scharfe Fernseher-Projektion
-    for y in range(0, height, 2): 
-        for x in range(0, width, 2):
-            dx = x - width // 2
-            dy = y - height // 2
+    # Schrittweite 4 für schnelles, flüssiges Test-Rendering auf dem Acer
+    for y in range(0, height, 4): 
+        for x in range(0, width, 4):
+            # Zentrieren der Ur-Koordinaten
+            nx = x - width // 2
+            ny = y - height // 2
             
-            # HOLOGRAFISCHE WECHSELWIRKUNG:
-            # Die Quadranz skaliert mit der Speicherebene dz, da das Gitter
-            # mit seinen Außengrenzen interagiert. Das erzeugt die echte Umhüllung!
-            quadrance = (dx*dx + dy*dy) * dz
+            # REIN GANZZAHLIGES TRANSPONIEREN & ROTIEREN IN Z
+            # Wir nutzen diskrete Vorzeichenwechsel und Vertauschungen (Symmetriegruppe)
+            if takt % 4 == 0:
+                dx = nx + takt
+                dy = ny
+            elif takt % 4 == 1:
+                dx = -ny
+                dy = nx + takt
+            elif takt % 4 == 2:
+                dx = -nx - takt
+                dy = -ny
+            else:
+                dx = ny
+                dy = -nx - takt
+                
+            # Interaktive Rückkopplung mit den Außengrenzen des Gitters
+            quadrance = dx*dx + dy*dy
             
-            # Raumsieb modulo 210 filtert die unendliche Zahl
+            # Primoriales Raumsieb modulo 210
             if (quadrance % 210) <= 156:
-                # Phasen-Interferenz zwischen Speicher-Ebene und Raum-Hologramm
-                phase = (dx * dy * dz + 137) % 24
+                phase = (dx * dy + 137 + takt) % 24
                 
                 if phase == 12:
-                    framebuffer[y:y+2, x:x+2] = [0, 190, 255]     # Amber-Gold (Masse)
+                    # Amber-Gold (B-G-R für OpenCV)
+                    framebuffer[y:y+4, x:x+4] = [0, 190, 255]
                 elif phase in prime_rays:
-                    framebuffer[y:y+2, x:x+2] = [255, 255, 0]     # Electrical Cyan (Energie)
+                    # Electrical Cyan (B-G-R für OpenCV)
+                    framebuffer[y:y+4, x:x+4] = [255, 255, 0]
     return framebuffer
 
 if __name__ == "__main__":
     engine = PTRCModularClockEngine()
     
     temp_dir = "ptrc_temp_frames"
-    final_video = "ptrc_3s_hologram_flight.mp4"
+    final_video = "ptrc_3s_transposed_flight.mp4"
     
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
     
     total_frames = 180  # 3 Sekunden bei 60 FPS
-    print(f"[ 1/3 ] Starte holografischen Tauchgang ab EBENE 1 ({total_frames} Frames)...")
+    print(f"[ 1/3 ] Starte ganzzahliges Transponieren ({total_frames} Frames, 1080p)...")
     
     for f in range(total_frames):
-        # Wir starten exakt bei Ebene 1 und rücken pro Frame um 1 p-adische Ebene vor
-        depth_level = 1 + f
-        
-        frame = render_1080p_frame(engine, depth_level, f)
+        frame = render_1080p_frame(engine, f)
         
         file_path = f"{temp_dir}/frame_{f:04d}.png"
         cv2.imwrite(file_path, frame)
         
         if f % 30 == 0:
-            print(f"        Speicherebene: {depth_level}/{total_frames} wird projiziert.")
+            print(f"        Matrix-Transposition: Frame {f}/{total_frames} vollzogen.")
 
-    print("\n[ 2/3 ] Bündele holografischen Datenstrom via ffmpeg...")
+    print("\n[ 2/3 ] Bündele den rein ganzzahligen Datenstrom via ffmpeg...")
     ffmpeg_cmd = [
         "ffmpeg", "-y",
         "-framerate", "60",
@@ -103,4 +115,4 @@ if __name__ == "__main__":
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
         
-    print(f"\n[ PIEPERFEKT ] Das Hologramm ist bereit für den Fernseher: {final_video}")
+    print(f"\n[ PIEPERFEKT ] Das transponierte Gitter liegt bereit: {final_video}")
