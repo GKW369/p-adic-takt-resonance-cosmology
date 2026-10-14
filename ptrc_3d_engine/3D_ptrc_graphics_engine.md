@@ -37,16 +37,23 @@ This document specifies the deterministic, 100% floating-point-free 3D graphics 
 To run the native 144-facet spatial ray-marching preview directly inside your terminal, execute:
 ```bash
 python3 main_renderer.py
+
 ```
 
 To bake the loss-free 4K Ultra-HD fixed-point holofractal image, deploy:
 ```bash
 python3 ptrc_4k_genesis.py
+
 ```
 
-To generate the 2340 high-resolution frames for the 39-second presentation ride, run:
-```bash
-python3 generate_ptrc_4k_anim.py
+### Requirements & Automation Notice:
+- **`generate_ptrc_1080p_anim.py`** executes an automated pipeline. It generates the raw frame buffers, invokes `ffmpeg` in the background to compile the final `.mp4` video, and instantly purges the temporary image files to minimize local disk utilization.
+- **Dependency:** Ensure `ffmpeg` and `opencv-python` (`cv2`) are installed on your local machine before execution:
+  ```bash
+  sudo apt install ffmpeg
+  pip install opencv-python numpy
+  ```
+
 ```
 
 ## ⚖️ Intellectual Property & Licensing
@@ -57,4 +64,5 @@ All algorithms, architectures, and rendering paradigms documented in this file a
 - **Commercial & Proprietary Deployment:** Any commercial integration into proprietary software, gaming engines, custom silicon architectures, or enterprise environments (specifically by console manufacturers or corporate developers) **explicitly requires a separate, individually negotiated commercial license** from the copyright holder.
 
 ---
+
 *The pTRC Graphics Layer is a proprietary subset of the p-adic Takt Resonance Cosmology engine.*
