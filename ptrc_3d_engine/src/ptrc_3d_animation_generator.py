@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - 1080p Stereoscopic Retinal Video Encoder Pipeline
+# pTRC Framework - Pure Integer Takt-Synchronized Retina Video Encoder
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
 #
 # DUAL-LICENSING NOTICE:
@@ -97,14 +97,14 @@ if __name__ == "__main__":
     for f in range(total_frames):
         frame = render_stereoscopic_frame(engine, f)
         cv2.imwrite(os.path.join(temp_dir, f"frame_{f:04d}.png"), frame)
-        if f % 30 == 0:
-            print(f"        Retina-Audit: Frame {f}/{total_frames} digital präzise versiegelt.")
+        if f % 24 == 0:
+            print(f"        Takt-Synchronisation: Frame {f}/{total_frames} fest verankert.")
 
-    print("\n[ 2/3 ] Bündele unkomprimierten Datenstrom RADIKAL VERLUSTFREI via ffmpeg...")
-    # CRF 0 eliminiert den MPEG-Weichzeichner vollständig! Jedes Pixel bleibt starr erhalten.
+    print("\n[ 2/3 ] Bündele Datenstrom SYNCHRONISIERT AUF DEN 24er-SYSTEMTAKT...")
+    # CRF 0 und -g 1 eliminieren den Weichzeichner vollständig. Framerate auf 24 FPS gesetzt.
     ffmpeg_cmd = [
-        "ffmpeg", "-y", "-framerate", "60", "-i", os.path.join(temp_dir, "frame_%04d.png"),
-        "-c:v", "libx264", "-crf", "0", "-preset", "veryslow", "-pix_fmt", "yuv420p", final_video
+        "ffmpeg", "-y", "-framerate", "24", "-i", os.path.join(temp_dir, "frame_%04d.png"),
+        "-c:v", "libx264", "-crf", "0", "-preset", "veryslow", "-g", "1", "-pix_fmt", "yuv420p", final_video
     ]
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -117,4 +117,4 @@ if __name__ == "__main__":
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
         
-    print(f"\n[ PIEPERFEKT ] Das pixelscharfe 144-Facetten-Video steht bereit: {final_video}")
+    print(f"\n[ SYSTEMTAKT AKTIV ] Das raster-abgestimmte Video steht bereit: {final_video}")
