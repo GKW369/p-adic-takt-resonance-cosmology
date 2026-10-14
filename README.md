@@ -1,14 +1,15 @@
 # pTRC Framework: Discrete Integer Computational Physics Engine
 
+**Developed by Kurt Guido Wirminghaus**  
 **An infinitely scalable, deterministic integer graphics and simulation engine operating within the strict algebraic ring of integers (\(\mathbb{Z}\)). Bypasses floating-point accumulation noise, rounding-error divergences, and FPU-latency via a 144-facet spatial geometry, an invariant modulo-210 space sieve, and a 24-FPS takt-synchronized stereoscopic architecture. Zero float pollution.**
 
 ---
 
 ## 🔬 Mathematical Architecture & Ontology
-While classical continuum physics relies on continuous differential equations approximated via floating-point fields (\(\mathbb{R}^4\)), it inherently introduces non-deterministic truncation errors and cumulative rounding noise. The pTRC framework eliminates these computational constraints by shifting the entire simulation, state-tracking, and rendering layers into a deterministic, whole-number state machine within \(\mathbb{Z}\).
+While classical continuum physics relies on continuous differential equations approximated via floating-point fields (\(\mathbb{R}^4\)), it inherently introduces non-deterministic truncation errors and cumulative rounding noise. The pTRC framework eliminates these computational bottlenecks by shifting the entire simulation, state-tracking, and rendering layers into a deterministic, whole-number state machine within \(\mathbb{Z}\).
 
 ### Core Algebraic Components:
-1. **The Invariant Space Sieve (\(\mathbb{Z}/210\mathbb{Z}\)):** Spatial limits and node selections are governed by the prime residues of the primorial ring 210. Bound intersections are filtered deterministically via the **Wirminghaus Invariant Limit** (\(quadrance \pmod{210} \le 156\)), ensuring rigid lattice boundaries without floating-point boundary checks.
+1. **The Wirminghaus Invariant Limit (\(\mathbb{Z}/210\mathbb{Z}\)):** Spatial limits and node selections are governed by the prime residues of the primorial ring 210. Bound intersections are filtered deterministically via the **Wirminghaus Invariant Limit** (\(quadrance \pmod{210} \le 156\)), ensuring rigid lattice boundaries without floating-point boundary checks.
 2. **The Modulo-24 Universal Clock:** Multi-axis spatial orientation and signal activations operate within the reduced residue class group of \(\mathbb{Z}/24\mathbb{Z}\). Active energy nodes propagate along the **8 invariant prime rays** `{1, 5, 7, 11, 13, 17, 19, 23}`, utilizing cyclic group multiplications to handle state transformations losslessly.
 3. **Symmetrical Dual Polarity:** Spatial depth and 3D coordinate matrices alternate dynamically between complementary states via discrete sign inversion (`1` and `-1`). The boundaries of the negative integer domain are integrated cyclically, mirroring coordinates back into the active matrix array to preserve absolute information continuity.
 
@@ -72,8 +73,9 @@ This software is licensed under the **GNU General Public License v3 (GPLv3)**. A
 ### 🎯 2. Proprietary Commercial License
 For commercial entities requiring the integration of the pTRC integer-and-modulo architecture into proprietary, closed-source systems or proprietary silicon layouts, a separate commercial license is mandatory. This license exempts the commercial partner from the GPLv3 copyleft obligations.
 
-*For commercial licensing inquiries, structural code audits, or integration consulting, contact the author privately:*  
-📧 **g.wirminghaus@gmx.de**
+*For commercial licensing inquiries, structural code audits, or integration consulting, please contact the author directly:*  
+👤 **Author:** Kurt Guido Wirminghaus  
+📧 **Email:** g.wirminghaus@gmx.de  
 
 ---
 
