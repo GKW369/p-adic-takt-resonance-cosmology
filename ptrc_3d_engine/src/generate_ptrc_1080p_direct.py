@@ -18,82 +18,86 @@ import numpy as np
 import cv2
 from ptrc_clock_core import PTRCModularClockEngine
 
-def render_1080p_frame(engine, frame_idx):
-    """Rendert ein Full-HD Frame durch rein ganzzahliges Transponieren der Raum-Matrix"""
+def render_1080p_frame(engine, takt_level):
+    """Rendert die holografische Matrix ueber gekreuzte 90-Grad-Ganzzahlspiegelungen"""
     width, height = 1920, 1080
     framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
     
-    # Tiefer kosmischer Indigo-Hintergrund (BGR für OpenCV)
-    framebuffer[:, :] = [35, 15, 20]
+    # Tiefer kosmischer Indigo-Hintergrund (BGR fuer OpenCV)
+    framebuffer[:, :] = 
     
     # Fixierte Kristallachse 96 (Symmetrie-Anker)
     axis_idx = 96
-    axis = engine.crystal_axes[axis_idx]
-    prime_rays = [1, 5, 7, 11, 13, 17, 19, 23]
+    axis = engine.crystal_axes
+    prime_rays = 
     
-    # Diskreter Transpositions-Takt basierend auf dem Frame
-    takt = frame_idx
+    # Der aktuelle diskrete Taktzustand ab Ebene 1
+    t = int(takt_level)
     
-    # Schrittweite 4 für schnelles, flüssiges Test-Rendering auf dem Acer
-    for y in range(0, height, 4): 
-        for x in range(0, width, 4):
-            # Zentrieren der Ur-Koordinaten
-            nx = x - width // 2
-            ny = y - height // 2
+    # Schrittweite 2 fuer messerscharfe Tiefenwirkung auf dem 4K-Fernseher
+    for y in range(0, height, 2): 
+        for x in range(0, width, 2):
+            # Zentrieren auf den mathematischen Ursprung (Ebene 1)
+            nx = x - (width // 2)
+            ny = y - (height // 2)
             
-            # REIN GANZZAHLIGES TRANSPONIEREN & ROTIEREN IN Z
-            # Wir nutzen diskrete Vorzeichenwechsel und Vertauschungen (Symmetriegruppe)
-            if takt % 4 == 0:
-                dx = nx + takt
-                dy = ny
-            elif takt % 4 == 1:
-                dx = -ny
-                dy = nx + takt
-            elif takt % 4 == 2:
-                dx = -nx - takt
-                dy = -ny
+            # DIE 90-GRAD-KREUZSPIEGELUNG (HOLOGRAFISCHE SPEICHEREBENE)
+            # Spiegel 1 (Horizontal/Vertikal): Inversion über den Takt (1 ist -1)
+            if (t % 2) == 1:
+                mx = -nx
+                my = -ny
             else:
-                dx = ny
-                dy = -nx - takt
+                mx = nx
+                my = ny
                 
-            # Interaktive Rückkopplung mit den Außengrenzen des Gitters
+            # Spiegel 2 (90 Grad gekreuzt): Transposition der Achsen im Taktverlauf
+            # Faltet die inneren Schichten rein ganzzahlig nach aussen!
+            if ((t // 2) % 2) == 1:
+                dx = my + t
+                dy = mx
+            else:
+                dx = mx + t
+                dy = my
+                
+            # Orthogonale Interferenz mit den Aussengrenzen des Gitters
             quadrance = dx*dx + dy*dy
             
             # Primoriales Raumsieb modulo 210
             if (quadrance % 210) <= 156:
-                phase = (dx * dy + 137 + takt) % 24
+                phase = (dx * dy + 137 + t) % 24
                 
                 if phase == 12:
-                    # Amber-Gold (B-G-R für OpenCV)
-                    framebuffer[y:y+4, x:x+4] = [0, 190, 255]
+                    framebuffer[y:y+2, x:x+2] =     # Amber-Gold (Masse)
                 elif phase in prime_rays:
-                    # Electrical Cyan (B-G-R für OpenCV)
-                    framebuffer[y:y+4, x:x+4] = [255, 255, 0]
+                    framebuffer[y:y+2, x:x+2] =     # Electrical Cyan (Energie)
     return framebuffer
 
 if __name__ == "__main__":
     engine = PTRCModularClockEngine()
     
     temp_dir = "ptrc_temp_frames"
-    final_video = "ptrc_3s_transposed_flight.mp4"
+    final_video = "ptrc_3s_hologram_mirror.mp4"
     
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
     
     total_frames = 180  # 3 Sekunden bei 60 FPS
-    print(f"[ 1/3 ] Starte ganzzahliges Transponieren ({total_frames} Frames, 1080p)...")
+    print(f"[ 1/3 ] Starte holografische Kreuzspiegelung ab EBENE 1 ({total_frames} Frames)...")
     
     for f in range(total_frames):
-        frame = render_1080p_frame(engine, f)
+        # Wir starten exakt auf Ebene 1 und schalten die Spiegelungen pro Takt weiter
+        takt_level = 1 + f
+        
+        frame = render_1080p_frame(engine, takt_level)
         
         file_path = f"{temp_dir}/frame_{f:04d}.png"
         cv2.imwrite(file_path, frame)
         
         if f % 30 == 0:
-            print(f"        Matrix-Transposition: Frame {f}/{total_frames} vollzogen.")
+            print(f"        Spiegel-Takt: {takt_level}/{total_frames} interference computed.")
 
-    print("\n[ 2/3 ] Bündele den rein ganzzahligen Datenstrom via ffmpeg...")
+    print("\n[ 2/3 ] Bündele perfekten Ganzzahl-Datenstrom via ffmpeg...")
     ffmpeg_cmd = [
         "ffmpeg", "-y",
         "-framerate", "60",
@@ -106,13 +110,13 @@ if __name__ == "__main__":
     
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        print(f"        Erfolg: '{final_video}' wurde stabil erzeugt!")
+        print(f"        Erfolg: '{final_video}' wurde fehlerfrei generiert!")
     except subprocess.CalledProcessError as e:
-        print(f"\n[ FEHLER ] ffmpeg fehlgeschlagen:\n{e.stderr.decode()}")
+        print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen!")
         sys.exit(1)
         
     print("\n[ 3/3 ] Systembereinigung...")
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
         
-    print(f"\n[ PIEPERFEKT ] Das transponierte Gitter liegt bereit: {final_video}")
+    print(f"\n[ PIEPERFEKT ] Das gekreuzte Hologramm steht bereit: {final_video}")
