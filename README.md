@@ -1,47 +1,46 @@
 # pTRC Framework: Discrete Integer Computational Physics Engine
 
-**An infinitely scalable, deterministic integer graphics and simulation engine operating at a discrete velocity of c = 1 pixel per clock cycle. Bypasses floating-point accumulation noise and runtime divergence via a 144-facet spatial crystal geometry, an invariant modulo-210 space sieve, and a 24-FPS takt-synchronized stereo architecture. Zero float pollution. Certified for Z.**
-
-**Core Motto:** "Are We Calculating Too Small?"
+**An infinitely scalable, deterministic integer graphics and simulation engine operating within the strict algebraic ring of integers (\(\mathbb{Z}\)). Bypasses floating-point accumulation noise, rounding-error divergences, and FPU-latency via a 144-facet spatial geometry, an invariant modulo-210 space sieve, and a 24-FPS takt-synchronized stereoscopic architecture. Zero float pollution.**
 
 ---
 
-## 🔬 Computational Philosophy
-While classical continuum models rely on continuous differential equations (\(\mathbb{R}^4\)), they inherently introduce cumulative truncation errors, floating-point round-off noise, and non-physical boundary divergences. The pTRC framework eliminates these computational bottlenecks by shifting the entire simulation and rendering layer into a deterministic, whole-number state machine within the ring of integers (\(\mathbb{Z}\)).
+## 🔬 Mathematical Architecture & Ontology
+While classical continuum physics relies on continuous differential equations approximated via floating-point fields (\(\mathbb{R}^4\)), it inherently introduces non-deterministic truncation errors and cumulative rounding noise. The pTRC framework eliminates these computational constraints by shifting the entire simulation, state-tracking, and rendering layers into a deterministic, whole-number state machine within \(\mathbb{Z}\).
 
-Instead of continuous approximations or floating-point interpolations, multi-axis spatial interactions are processed as loss-free state-transitions through interlocking modular registers. The spatial architecture is bounded by the **Wirminghaus Invariant Limit** (\(quadrance \pmod{210} \le 156\)). 
-
-Information does not dissipate into fractional approximations; it mutates dynamically inside the integer register via fixed residue class rules. This guarantees absolute numerical invariance, maximum algorithmic execution speed on bare-metal hardware, and flawless structural symmetry across all operational scales.
+### Core Algebraic Components:
+1. **The Invariant Space Sieve (\(\mathbb{Z}/210\mathbb{Z}\)):** Spatial limits and node selections are governed by the prime residues of the primorial ring 210. Bound intersections are filtered deterministically via the **Wirminghaus Invariant Limit** (\(quadrance \pmod{210} \le 156\)), ensuring rigid lattice boundaries without floating-point boundary checks.
+2. **The Modulo-24 Universal Clock:** Multi-axis spatial orientation and signal activations operate within the reduced residue class group of \(\mathbb{Z}/24\mathbb{Z}\). Active energy nodes propagate along the **8 invariant prime rays** `{1, 5, 7, 11, 13, 17, 19, 23}`, utilizing cyclic group multiplications to handle state transformations losslessly.
+3. **Symmetrical Dual Polarity:** Spatial depth and 3D coordinate matrices alternate dynamically between complementary states via discrete sign inversion (`1` and `-1`). The boundaries of the negative integer domain are integrated cyclically, mirroring coordinates back into the active matrix array to preserve absolute information continuity.
 
 ---
 
 ## 📂 Repository Structure
-* **`src/`** – Production-ready core engine containing 20 fully validated, flat integer simulation modules.
-* **`paper/`** – Formal mathematical axioms, technical documentation, and peer-review defense protocols (`DEFENSE_PROTOCOLS.md`).
-* **`experimental/`** – Sandbox research exploring non-linear parametric resonance, kernel load protocols, and subterranean waveguides.
+* **`src/`** – Main production environment containing the 20 validated, flat integer simulation and validation modules.
+* **`paper/`** – Formal mathematical definitions, rigorous proofs, and technical peer-review defense protocols (`DEFENSE_PROTOCOLS.md`).
+* **`experimental/`** – Research sandbox for non-linear fixed-point resonance, real-time kernel tracking, and digital wave tests.
 * **`Root-Level`** – Deployment configurations only (`.gitignore`, `CONTRIBUTING.md`, `LICENSE`, `README.md`, `SECURITY.md`).
 
 ---
 
-## 🚀 Cross-Industry Deployment Matrix (Venture Capital Disruption Grid)
-By completely eliminating floating-point round-off errors and division-by-zero bottlenecks, the pTRC integer architecture drastically lowers computational latency and power consumption across complex digital simulation models:
+## 🚀 Architectural Deployment Matrix (Functional Impact Analysis)
+By completely removing floating-point units (FPU) from the computational loop, the pTRC framework optimizes processing throughput, thermal footprints, and numerical tracking in specialized hardware environments:
 
-| Industrial Sector | Classical Continuum Bottleneck (\(\mathbb{R}\)) | pTRC Integer Solution (\(\mathbb{Z}\)) | Measured Economic & Architectural Impact |
+| Industrial Sector | Classical Continuum Bottleneck (\(\mathbb{R}\)) | pTRC Integer Solution (\(\mathbb{Z}\)) | Technical & Architectural Impact |
 | :--- | :--- | :--- | :--- |
-| **High-Performance Compute & AI** | Expensive floating-point units (FPUs); massive thermal dissipation. | Pure integer inference layer executing state transitions via modulo-24 group matrices. | **Up to 80% reduction in server power consumption**; eliminates fluid-cooling bottlenecks. |
-| **Brain-Machine Interfaces & Neuro-Tech** | Thermal accumulation from float calculations damages live brain tissue (Max +1.0°C limit). | 1-bit discrete Takt-processing in Z with zero algorithmic overhead and no thermal floating-point lag. | **Ultra-low-latency real-time telemetry with near-zero heat dissipation**; enables completely "cold" implant chips. |
-| **Aerodynamics & Fluid Dynamics** | Diverging differential equations at supersonic speeds; truncation errors. | Lossless 2D/3D lattice-gas automata based on exact, discrete bit-shifting (`np.roll`). | Stable hypersonic CFD execution without simulation crashes or float noise. |
-| **Advanced Energy Storage & BMS** | Approximated cell balancing; localized thermal hotspots in dense arrays. | 144-facet vector equilibrium mapping for synchronized cell and ion-channel monitoring. | Potential **15-20% usable battery capacity increase** and highly optimized charging cycles. |
-| **Digital Audio Production (DSP)** | Cumulative quantization noise; digital filter degradation over cycles. | Invariant topological filtering using exact clock-nanosecond execution. | Absolute phase synchronization; **100% artifact-free, crystal-clear studio acoustics**. |
-| **Materials Science & Pharmacology** | Non-linear Schrödinger approximations requiring massive cluster arrays. | Harmonic molecular node alignment via discrete spatial quadrance and exact integer values. | **Real-time drug interaction sieving** and precise mirror-molecule chirality tracking. |
-| **Post-Quantum Cryptography & Satellites** | Vulnerability of classical RSA/ECC encryption to quantum decay algorithms. | Symmetrical space-encryption inside the cyclic residue ring \(\mathbb{Z}/24\mathbb{Z}\). | Lightweight, **inherently unjammable communication metrics** for orbital networks. |
+| **High-Performance Compute & AI** | Expensive FPU scheduling; non-deterministic floating-point accumulation noise during mass matrix scaling. | Pure integer inference layer executing deterministic state transformations via modulo-24 group matrices. | **Eliminates FPU-bound pipeline stalls**; provides 100% reproducible fixed-state inference matrices without rounding drift. |
+| **Neuro-Tech & Biosignal Tracking** | Thermal accumulation from continuous float interpolation creates heat dissipation hazards for low-power processing units. | Fixed-point, 1-bit discrete Takt-processing in Z, bypassing complex transcendental function overhead. | **Drastically reduces thermal power profiles** during local signal conditioning, allowing ultra-low-power, cold chip operations. |
+| **Aerodynamics & Fluid Dynamics** | Computational boundary failures and simulation divergence at extreme velocity transitions due to float truncation. | Lossless 2D/3D lattice-gas automata executing exact, discrete bit-shifting transformations (`np.roll`). | Guarantees absolute mass and energy conservation within the gitter; eliminates floating-point-induced simulation crashes. |
+| **Advanced Energy Storage / BMS** | Approximated state-of-charge calculation; floating-point tracking introduces drift over long-term cycle logging. | 144-facet vector equilibrium mapping for the numerical analysis of anisotropic ion transport pathways in solid-state lattices. | **Precise, drift-free tracking of structural charge distribution** and zero-overhead geometry filtering for crystalline battery materials. |
+| **Digital Audio Signal Processing** | Accumulation of high-frequency quantization noise during iterative cascading digital filter cycles. | Invariant topological filtering using exact, nanosecond-matched integer clock cycles. | **100% artifact-free, phase-synchronized studio acoustics** without degradation of digital filter states. |
+| **Materials Science & Chemistry** | High hardware cost for continuous approximations of molecular chirality and spatial orientations. | Exact geometric node alignment via discrete integer quadrance tracking and rigid spatial symmetries. | Efficient, real-time screening of mirror-molecule chirality states using precise integer coordinate matching. |
+| **Post-Quantum Cryptography** | Vulnerability of standard continuous keys to hardware-level side-channel timing analysis. | Cyclically closed, symmetrical matrix encryption inside the finite integer ring \(\mathbb{Z}/24\mathbb{Z}\). | Lightweight, **inherently stable communication metric** for low-power embedded transceivers and orbital networks. |
 
 ---
 
 ## 🪐 Visual Demonstration & Temporal Takt-Synchronization
-To visualize the real-time geometric velocity of the framework, run the designated fluid mechanics or rendering components. 
+To guarantee that the visualization matches the underlying discrete mechanics, the output engine adheres to the **Temporal Takt-Synchronization Law**. Instead of using standard continuous 60-Hz rendering pipelines that introduce temporal interpolation artifacts ("Matsch-Effekt"), the video frame generation is rigidly synchronized to the internal modulo-24 system clock (**24 FPS**). 
 
-The engine implements a strict **Temporal Takt-Synchronization Law**. Instead of using standard continuous 60-Hz rendering cycles that cause digital video artifacts, the execution speed is rigidly synchronized to the internal modulo-24 system clock (**24 FPS**). Combined with a lossless compression profile (`-crf 0 -g 1`), temporal pixel smoothing is completely eliminated, forcing every frame to be a perfectly stable, sharp keyframe image.
+Combined with an uncompressed, lossless rendering profile (`-crf 0 -g 1`), the system eliminates any spatial or temporal pixel-smoothing. Every single frame is generated as an independent, unrounded, pixelsharp keyframe.
 
 ```bash
 # Execute the live 1-bit integer fluid resonance simulation:
@@ -54,7 +53,7 @@ python experimental/ptrc_3d_animation_generator.py
 ---
 
 ## 🏃‍♂️ Automated Verification Matrix & Production Execution
-The repository includes an automated test framework tailored for continuous integration pipelines to enforce strict integer invariants upon every system update. To execute the main integration matrix locally and benchmark all **20 validation sub-modules** in a sequential, hardware-optimized cascade, deploy the core orchestration script:
+The repository includes an automated test environment designed for strict continuous integration. To benchmark all **20 validation sub-modules** in a sequential, hardware-optimized cascade, execute the main orchestration layer:
 
 ```bash
 # Execute the complete 20-module core integration engine:
@@ -65,17 +64,15 @@ python src/00_ptrc_first_principles_engine.py
 
 ## ⚖️ Dual-Licensing Strategy
 
-This framework is governed by a standard dual-licensing strategy to balance open-source academic collaboration with professional commercial integration.
+This framework is governed by a dual-licensing model to support open academic collaboration while protecting commercial integration rights.
 
-### 1. Open Source Evaluation (GPLv3)
-This software is licensed under the **GNU General Public License v3 (GPLv3)**. Under the terms of the GPLv3, any third-party software, commercial game engine, or physics middleware that incorporates, forks, or links to this repository **must also be fully disclosed as open-source software** under identical copyleft terms.
+### 1. Open Source Academic Tier (GPLv3)
+This software is licensed under the **GNU General Public License v3 (GPLv3)**. Any third-party software, commercial framework, or physics middleware that incorporates, forks, or links to this repository **must be disclosed as open-source software** under identical copyleft terms.
 
 ### 🎯 2. Proprietary Commercial License
-For commercial entities requiring the integration of the pTRC integer-and-modulo architecture into proprietary closed-source codebases, a separate commercial license is mandatory. This proprietary license explicitly exempts the commercial partner from the GPLv3 copyleft obligations.
+For commercial entities requiring the integration of the pTRC integer-and-modulo architecture into proprietary, closed-source systems or proprietary silicon layouts, a separate commercial license is mandatory. This license exempts the commercial partner from the GPLv3 copyleft obligations.
 
-Architectural consulting, dedicated custom integration profiles, and hardware optimization services are available separately upon request to support commercial deployment.
-
-*For commercial licensing inquiries, architectural consulting, or corporate integration requests, contact the author privately:*  
+*For commercial licensing inquiries, structural code audits, or integration consulting, contact the author privately:*  
 📧 **g.wirminghaus@gmx.de**
 
 ---
