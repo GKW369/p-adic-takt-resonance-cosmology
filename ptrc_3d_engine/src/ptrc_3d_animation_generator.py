@@ -1,13 +1,12 @@
 # ==============================================================================
-# pTRC Framework - Pure Integer Takt-Synchronized Retina Video Encoder
+# pTRC Framework - 1080p Kaleidoscope Takt-Synchronized Retina Video Encoder
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
 #
 # DUAL-LICENSING NOTICE:
 # Non-commercial, academic, and open-source usage is strictly governed by 
 # the GNU General Public License version 3 (GPLv3). Any commercial deployment,
 # integration into proprietary, closed-source codebases, or corporate 
-# utilization explicitly requires a separate, individually negotiated 
-# Proprietary Commercial License from the copyright holder.
+# utilization explicitly requires a separate, individually negotiated license.
 # ==============================================================================
 # -*- coding: utf-8 -*-
 
@@ -37,9 +36,9 @@ def render_stereoscopic_frame(engine, frame_idx):
     cy = 120 - (t * 1)
     cz = 120 + (t * 2)
     
-    ipd_offset = 24  # Diskreter Augenabstand (Pupillary Distance)
+    ipd_offset = 24  # Diskreter Augenabstand (Modulo-24 gekoppelt)
     
-    # RADIKALER 1-PIXEL-DEEP-SCAN OHNE JEDEN WEICHZEICHNER
+    # RADIKALER 1-PIXEL-DEEP-SCAN IM HOLOGRAPHISCHEN KREUZRAUM
     for y in range(0, height, 1):
         for x in range(0, width, 1):
             vx = x - width // 2
@@ -49,7 +48,7 @@ def render_stereoscopic_frame(engine, frame_idx):
             dy_ball = vy - cy
             dist_sq = dx_ball * dx_ball + dy_ball * dy_ball
             
-            # --- DOPPELSPALT-DUALITÄT (KANALTRENNUNG IN Z) ---
+            # --- DOPPELSPALT-DUALITÄT (KANALTRENNUNG IN Z VIA KALEIDOSKOP) ---
             
             # 1. LINKES AUGE (Rot-Kanal)
             if dist_sq <= radius_sq:
@@ -92,23 +91,23 @@ if __name__ == "__main__":
     os.makedirs(temp_dir, exist_ok=True)
     
     total_frames = 180
-    print(f"[ 1/3 ] Starte 100% fließkommafreie Biometrie-Pipeline ({total_frames} Frames)...")
+    print(f"[ 1/3 ] Starte 100% fließkommafreie Matrix-Pipeline ({total_frames} Frames)...")
     
     for f in range(total_frames):
         frame = render_stereoscopic_frame(engine, f)
         cv2.imwrite(os.path.join(temp_dir, f"frame_{f:04d}.png"), frame)
         if f % 24 == 0:
-            print(f"        Takt-Synchronisation: Frame {f}/{total_frames} fest verankert.")
+            print(f"        Takt-Synchronisation: Frame {f}/{total_frames} im 4-Quadranten-Kreuz verankert.")
 
-    print("\n[ 2/3 ] Bündele Datenstrom SYNCHRONISIERT AUF DEN 24er-SYSTEMTAKT...")
-    # CRF 0 und -g 1 eliminieren den Weichzeichner vollständig. Framerate auf 24 FPS gesetzt.
+    print("\n[ 2/3 ] Bündele Datenstrom SYNCHRONISIERT AUF DEN MODULO-24 TIMING-TAKT...")
+    # CRF 0 und -g 1 erzwingen unbestechliche, pixelscharfe Keyframes bei genau 24 FPS
     ffmpeg_cmd = [
         "ffmpeg", "-y", "-framerate", "24", "-i", os.path.join(temp_dir, "frame_%04d.png"),
-        "-c:v", "libx264", "-crf", "0", "-preset", "veryslow", "-g", "1", "-pix_fmt", "yuv420p", final_video
+        "A", "-c:v", "libx264", "-crf", "0", "-preset", "veryslow", "-g", "1", "-pix_fmt", "yuv420p", final_video
     ]
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        print(f"        Erfolg: Verlustfreies Matrix-Hologramm in '{final_video}' erstarrt!")
+        print(f"        Erfolg: Verlustfreies 4-Hologramm-Video in '{final_video}' erstarrt!")
     except subprocess.CalledProcessError as e:
         print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen: {e.stderr.decode()}")
         sys.exit(1)
