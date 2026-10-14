@@ -1,60 +1,116 @@
 # ==============================================================================
-# pTRC Framework - Pure Integer 3D Holographic Resonance Core Engine
+# pTRC Framework - 1080p High-Resolution 1-Pixel Spatial Sieve Renderer
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
-# GPLv3 Open Source / Commercial License Required
+#
+# DUAL-LICENSING NOTICE:
+# Non-commercial, academic, and open-source usage is strictly governed by 
+# the GNU General Public License version 3 (GPLv3). Any commercial deployment,
+# integration into proprietary, closed-source codebases, or corporate 
+# utilization explicitly requires a separate, individually negotiated 
+# Proprietary Commercial License from the copyright holder.
 # ==============================================================================
 # -*- coding: utf-8 -*-
 
-class PTRC3DHologramEngine:
-    def __init__(self):
-        # Das fundamentale Modulo-24 Uhrwerk (8 Primstrahlen nach Plichta)
-        self.prime_rays_24 = (1, 5, 7, 11, 13, 17, 19, 23)
-        
-        # Das 48-Strang Raumsieb modulo 210 (Skalierbare Primzahlenringerweiterung)
-        self.prime_strands_210 = (
-            1, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 
-            71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 121, 127, 131, 137, 139, 
-            143, 149, 151, 157, 163, 167, 169, 173, 179, 181, 187, 191, 193, 197, 199, 209
-        )
-        # Der unbestechliche Shutter-Takt und das Alpha-Limit
-        self.fine_structure_inverse = 137
-        self.invariant_residuum = 156
-        self.SCALE = 1000
+import os
+import sys
+import shutil
+import subprocess
+import numpy as np
+import cv2
 
-    def compute_state(self, x, y, z, takt_level):
-        """Berechnet den diskreten Zustand eines Knotens basierend auf der 144-Vektor-Isotropie"""
-        t = int(takt_level)
-        
-        # 1414-Pfad-Faktor für den CMB-Overhead
-        dx_diag = (x * 1414) // self.SCALE
-        dy_diag = (y * 1414) // self.SCALE
-        
-        # 90-GRAD-KREUZSPIEGELUNG (Beidseitig nutzbar in Z)
-        if (t % 2) == 1:
-            mx = -dx_diag
-            my = -dy_diag
-            mz = -z
-        else:
-            mx = dx_diag
-            my = dy_diag
-            mz = z
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
+from ptrc_3d_hologram_engine import PTRC3DHologramEngine
+
+def render_animation_frame(engine, frame_idx):
+    width, height = 1920, 1080
+    framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
+    
+    # Tiefer kosmischer Indigo-Hintergrund (BGR)
+    framebuffer[:, :] = (35, 15, 20)
+    
+    # 144er Kristall-Radius im Quadrat
+    radius = 180
+    radius_sq = radius * radius
+    
+    # Sanfter, kontinuierlicher 3D-Flug des Kugelzentrums
+    cx = -300 + (frame_idx * 3)
+    cy = 150 - (frame_idx * 1)
+    cz = 100 + (frame_idx * 2)
+    
+    # Takt-Dynamik gekoppelt an das 137er-Planck-Limit
+    t = int(frame_idx)
+    
+    # RADIKALER 1-PIXEL-DEEP-SCAN: Berechnet jeden Bildpunkt einzeln für maximale Schärfe!
+    for y in range(0, height, 1): 
+        for x in range(0, width, 1):
+            vx = x - width // 2
+            vy = y - height // 2
             
-        # Achsen-Transposition mit integrierter Tiefe
-        dx = mx + mz + t
-        dy = my - mz
-        
-        # Satz des Pythagoras als reine, wurzelfreie Quadrance
-        quadrance = dx*dx + dy*dy + mz*mz
-        
-        # 1. FILTRATION: Modulo 210 Raumsieb
-        if (quadrance % 210) in self.prime_strands_210:
+            # Distanz zum Kugel-Resonanzzentrum
+            dx_ball = vx - cx
+            dy_ball = vy - cy
+            dist_sq = dx_ball * dx_ball + dy_ball * dy_ball
             
-            # 2. FILTRATION: Modulo 24 Phasen-Taktung
-            phase = (dx * dy * (mz if mz != 0 else 1) + self.fine_structure_inverse + t) % 24
-            
-            if phase == 12:
-                return 1  # Invarianter Massenknoten (Amber-Gold)
-            elif phase in self.prime_rays_24:
-                return 2  # Leuchtender Energiestrang (Neon-Cyan)
+            if dist_sq <= radius_sq:
+                # REINE HOLOGRAFISCHE KREUZSPIEGELUNG AUF DER OBERFLÄCHE
+                # Der 1414-Overhead beugt das Feld direkt auf der Kugelkrümmung
+                rx = vx + ((dx_ball * 1414) // 1000)
+                ry = vy + ((dy_ball * 1414) // 1000)
+                rz = cz - (t % 24)
                 
-        return 0  # Indigo-Vakuum
+                state = engine.compute_state(rx, ry, rz, t)
+                if state == 1:
+                    framebuffer[y, x] = (100, 220, 255)  # Aufglühendes Bernstein-Gold
+                elif state == 2:
+                    framebuffer[y, x] = (255, 255, 180)  # Hochauflösendes Neon-Cyan
+                else:
+                    framebuffer[y, x] = (55, 25, 30)     # Strukturierter Kugel-Körper
+            else:
+                # UNGESTÖRTES HINTERGRUND-GITTER
+                state = engine.compute_state(vx, vy, cz, t)
+                if state == 1:
+                    framebuffer[y, x] = (0, 190, 255)    # Messerscharfe Gold-Streben
+                elif state == 2:
+                    framebuffer[y, x] = (255, 255, 0)    # Messerscharfe Neon-Cyan Röhren
+                    
+    return framebuffer
+
+if __name__ == "__main__":
+    engine = PTRC3DHologramEngine()
+    temp_dir = os.path.join(current_dir, "ptrc_temp_frames")
+    final_video = os.path.join(current_dir, "ptrc_3d_sphere_flight.mp4")
+    
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    total_frames = 180  # 3 Sekunden echtes 60-FPS-Kino-Profil
+    print(f"[ 1/3 ] Aktiviere 1-Pixel-Deep-Scan Pipeline ({total_frames} Frames)...")
+    
+    for f in range(total_frames):
+        frame = render_animation_frame(engine, f)
+        file_path = os.path.join(temp_dir, f"frame_{f:04d}.png")
+        cv2.imwrite(file_path, frame)
+        if f % 30 == 0:
+            print(f"        Auflösungs-Audit: Frame {f}/{total_frames} ultra-scharf auf die Platte gehämmert.")
+
+    print("\n[ 2/3 ] Bündele unkomprimierten 1080p-Datenstrom via ffmpeg...")
+    ffmpeg_cmd = [
+        "ffmpeg", "-y", "-framerate", "60", "-i", os.path.join(temp_dir, "frame_%04d.png"),
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "15", final_video  # CRF 15 für absolute Studio-Qualität
+    ]
+    try:
+        subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        print(f"        Erfolg: Ultra-HD Matrix-Stream stabil in '{final_video}' gegossen!")
+    except subprocess.CalledProcessError:
+        print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen!")
+        sys.exit(1)
+        
+    print("\n[ 3/3 ] Systembereinigung...")
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+        
+    print(f"\n[ PIEPERFEKT ] Das hochauflösende 3D-Hologramm steht bereit: {final_video}")
