@@ -23,51 +23,62 @@ if current_dir not in sys.path:
 
 from ptrc_3d_hologram_engine import PTRC3DHologramEngine
 
-def render_animation_frame(engine, frame_idx):
+def render_animation_frame(engine, absolute_takt, eye_offset=0):
+    """
+    Rendert ein Frame. 'eye_offset' ist der ganzzahlige Adress-Versatz 
+    für die spätere 3D-Headset-Stereoskopie!
+    """
     width, height = 1920, 1080
     framebuffer = np.zeros((height, width, 3), dtype=np.uint8)
-    framebuffer[:, :] = (35, 15, 20)  # Indigo Hintergrund
+    framebuffer[:, :] = (35, 15, 20)  # Indigo
     
-    # Kugel-Parameter (144er Symmetrie-Radius im Quadrat)
-    radius = 144
-    radius_sq = radius * radius
+    t = int(absolute_takt)
+    radius_sq = 144 * 144  # Gekoppelt an die 144er-Vektor-Matrix
     
-    # 3D-Flugbahn der Kugel (Ganzzahlige Schritte rauf, runter und durch die Tiefe Z)
-    cx = -250 + (frame_idx * 4)
-    cy = 120 - (frame_idx * 2)
-    cz = 150 + (frame_idx * 3)
+    # 3D-Kugelzentrum wandert rein ganzzahlig
+    cx = -300 + (t // 40) + eye_offset
+    cy = 150 - (t // 80)
+    cz = 200 + (t // 60)
     
     for y in range(0, height, 4):
         for x in range(0, width, 4):
             vx = x - width // 2
             vy = y - height // 2
             
-            # Distanz des Pixelstrahls zur fliegenden Kugel
             dx_ball = vx - cx
             dy_ball = vy - cy
-            dist_sq = dx_ball*dx_ball + dy_ball*dy_ball
+            dist_sq = dx_ball * dx_ball + dy_ball * dy_ball
             
+            # PRÜFUNG: SCHNITTSTELLE KUGELOBERFLÄCHE
             if dist_sq <= radius_sq:
-                # OBERFLÄCHEN-SPIEGELUNG: Die Kugel wirft die Strahlen über die 
-                # gekreuzten Achsen negativ zurück in die pTRC-Engine
-                rx = -dx_ball * 2
-                ry = -dy_ball * 2
-                rz = -cz  # Inversion in die Tiefe
+                # LICHTAUSBREITUNGS-EFFEKT:
+                # Wir berechnen die Lichtbrechung auf der Kugel über den 144er-Kanal-Faktor
+                rx = vx + ((dx_ball * 144) // 137)
+                ry = vy + ((dy_ball * 144) // 137)
+                rz = cz - (t % 153)
                 
-                state = engine.compute_state(rx, ry, rz, frame_idx)
+                state = engine.compute_state(rx, ry, rz, t)
                 if state == 1:
-                    framebuffer[y:y+4, x:x+4] = (150, 230, 255)  # Glänzendes Amber-Gold
+                    framebuffer[y:y+4, x:x+4] = (100, 210, 255) # Plastisches Gold-Glühen
                 elif state == 2:
-                    framebuffer[y:y+4, x:x+4] = (255, 255, 200)  # Glänzendes Neon-Cyan
+                    framebuffer[y:y+4, x:x+4] = (255, 255, 180) # Neon-Cyan Licht-Kaskade
                 else:
-                    framebuffer[y:y+4, x:x+4] = (50, 30, 40)     # Spiegelnder Kugel-Körper
+                    framebuffer[y:y+4, x:x+4] = (60, 25, 35)    # Kugel-Körper
             else:
-                # DAS ENTKOPPELTE, REIN MATHEMATISCHE LEUCHT-GITTER
-                state = engine.compute_state(vx, vy, cz, frame_idx)
+                # STRÖMUNGSMISCHUNG & FLUID-RESORANZ IM HINTERGRUND
+                if cx < vx < cx + 400 and abs(dy_ball) < 180:
+                    sog_x = vx - (t % 24)
+                    sog_y = vy + (1 if vy < cy else -1)
+                    state = engine.compute_state(sog_x, sog_y, cz, t)
+                else:
+                    state = engine.compute_state(vx, vy, cz, t)
+                    
                 if state == 1:
-                    framebuffer[y:y+4, x:x+4] = (0, 190, 255)    # Harmonisch verdicktes Amber-Gold
+                    framebuffer[y:y+4, x:x+4] = (0, 190, 255)   # Amber Gitterbalken
                 elif state == 2:
-                    framebuffer[y:y+4, x:x+4] = (255, 255, 0)    # Harmonisch verdicktes Neon-Cyan
+                    framebuffer[y:y+4, x:x+4] = (255, 255, 0)   # Leuchtende Neonröhren
+                elif cx < vx < cx + 200 and state == 0:
+                    framebuffer[y:y+4, x:x+4] = (45, 15, 60)    # Fluid-Wirbel-Schimmer
                     
     return framebuffer
 
@@ -80,24 +91,27 @@ if __name__ == "__main__":
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
     
-    total_frames = 180
-    print(f"[ 1/3 ] Starte rein modulare 3D-Animations-Projektion ({total_frames} Frames)...")
+    total_frames = 120
+    print(f"[ 1/3 ] Bake 137-Takt-Animation mit 144-Vektor Lichtbrechung...")
     
     for f in range(total_frames):
-        frame = render_animation_frame(engine, f)
+        # Refresh exakt alle 137 Takte (Alpha-Axiom)
+        absolute_takt = f * 137
+        
+        frame = render_animation_frame(engine, absolute_takt, eye_offset=0)
         file_path = os.path.join(temp_dir, f"frame_{f:04d}.png")
         cv2.imwrite(file_path, frame)
-        if f % 30 == 0:
-            print(f"        Taktstufe: {f}/{total_frames} Z-layers and shadows baked.")
+        if f % 20 == 0:
+            print(f"        Realität erzeugt bei Takt: {absolute_takt}")
 
-    print("\n[ 2/3 ] Bündele den rein ganzzahligen Datenstrom via ffmpeg...")
+    print("\n[ 2/3 ] Bündele 137-Takt-Datenstrom via ffmpeg...")
     ffmpeg_cmd = [
-        "ffmpeg", "-y", "-framerate", "60", "-i", os.path.join(temp_dir, "frame_%04d.png"),
+        "ffmpeg", "-y", "-framerate", "30", "-i", os.path.join(temp_dir, "frame_%04d.png"),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", final_video
     ]
     try:
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        print(f"        Erfolg: '{final_video}' wurde stabil erzeugt!")
+        print(f"        Erfolg: '{final_video}' wurde erzeugt!")
     except subprocess.CalledProcessError:
         print(f"\n[ FEHLER ] ffmpeg-Kompilierung fehlgeschlagen!")
         sys.exit(1)
@@ -106,4 +120,4 @@ if __name__ == "__main__":
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
         
-    print(f"\n[ PIEPERFEKT ] Die rein ganzzahlige Animation liegt bereit: {final_video}")
+    print(f"\n[ PIEPERFEKT ] Das quantisierte Licht-Hologramm steht bereit: {final_video}")
