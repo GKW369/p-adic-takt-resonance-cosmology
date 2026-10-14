@@ -1,79 +1,66 @@
 # ==============================================================================
-# pTRC Framework - Pure Integer 3D Holographic Resonance & Shadow Projection Engine
+# pTRC Framework - Pure Integer 3D Holographic Resonance Core Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
-#
-# DUAL-LICENSING NOTICE:
-# Non-commercial, academic, and open-source usage is strictly governed by 
-# the GNU General Public License version 3 (GPLv3). Any commercial deployment,
-# integration into proprietary, closed-source codebases, or corporate utilization
-# explicitly requires a separate, individually negotiated commercial license.
+# GPLv3 Open Source / Commercial License Required
 # ==============================================================================
 # -*- coding: utf-8 -*-
 
 class PTRC3DHologramEngine:
-    """
-    Die fundamentale Ganzzahl-Engine des pTRC-Frameworks.
-    Berechnet die raeumliche Resonanz und die holografische Schatten-Projektion
-    von Koerpern ueber gekreuzte 90-Grad-Spiegelungen und das modulo 210 Sieb.
-    
-    100% FREI VON FLIESSKOMMAZAHLEN (FLOAT-FREE). OPERIERT AUSSCHLIESSLICH IN Z.
-    """
-    
     def __init__(self):
-        # Das fundamentale Uhrwerk (Modulo 24)
+        # Das fundamentale Modulo-24 Uhrwerk (8 Primstrahlen nach Plichta)
         self.prime_rays_24 = (1, 5, 7, 11, 13, 17, 19, 23)
         
-        # Das hochaufloesende Raumsieb (Modulo 210)
+        # Das 48-Strang Raumsieb modulo 210 (Skalierbare Primzahlenringerweiterung)
         self.prime_strands_210 = (
             1, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 
             71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 121, 127, 131, 137, 139, 
             143, 149, 151, 157, 163, 167, 169, 173, 179, 181, 187, 191, 193, 197, 199, 209
         )
-        
-        # Der unbestechliche Shutter-Takt der Vakuum-Interferenz
         self.quantum_vacuum_shutter = 137
 
-    def compute_state(self, nx, ny, takt_level):
+    def compute_state(self, x, y, z, takt_level):
         """
-        Berechnet den Zustand eines diskreten Raumknotens inklusive Koerper-Schatten.
-        
-        Rueckgabewerte:
-          0 = Vakuum / Hintergrund (Indigo)
-          1 = Invarianter Massenknoten (Amber-Gold)
-          2 = Erlaubter Primstrahl / Energiestrang (Cyan)
-          3 = Projizierter Schattenraum (Tiefschwarz / Abwesenheit von Resonanz)
+        Berechnet den Zustand eines Knotens. Operiert beidseitig im positiven und 
+        negativen Ganzzahlbereich über die 90-Grad-Kreuzspiegelung.
         """
         t = int(takt_level)
         
-        # 1. DEFINE VIRTUAL BODY (Ein rein ganzzahliger Test-Koerper im Raum)
-        # Ein diskreter Plankscher Massenblock im Zentrum des Gitters
-        body_radius_sq = 40000  # Ganzzahliges Quadrat des Radius (ca. 200 Pixel)
-        
-        # 2. APPLICATION OF THE CROSS-MIRRORS FOR SHADOW MAPPING
-        # Der Spiegel transportiert die Koerper-Information entlang der 90-Grad-Achsen
-        dx = nx * t
-        dy = ny * t
-        
-        # Pruefe über die gekreuzten Spiegelachsen, ob der Informationsstrahl 
-        # den virtuellen Koerper schneidet und somit blockiert wird
-        if (nx * nx + ny * ny) <= (body_radius_sq // (t if t > 0 else 1)):
-            # Der Beobachter befindet sich direkt im Koerper oder dessen Kern-Schatten
-            return 3
+        # DIE 90-GRAD-KREUZSPIEGELUNG FÜR DIE TIEFEN-INFORMATION (Z)
+        # Spiegel 1: Inversion (1 ist -1 bei ungeradem Takt)
+        if (t % 2) == 1:
+            mx = -x
+            my = -y
+            mz = -z
+        else:
+            mx = x
+            my = y
+            mz = z
             
-        # Spiegel-Interferenz fuer die raeumliche Schatten-Projektion auf die Aussengrenzen
-        # Wenn die gespiegelte Projektion den Koerper-Symmetrieknoten trifft, entsteht Schatten
-        if ((dx // 210) * (dx // 210) + (dy // 210) * (dy // 210)) == 137:
-            return 3  # Der Koerper wirft einen harmonischen Schatten auf das Raumsieb
+        # Spiegel 2: Orthogonale Achsen-Transposition mit integrierter Tiefe mz
+        if ((t // 2) % 2) == 1:
+            dx = my + mz + t
+            dy = mx - mz
+        else:
+            dx = mx + mz + t
+            dy = my - mz
             
-        # 3. STANDARD PRIMORIAL FILTRATION (Wenn kein Schatten die Phase blockiert)
-        quadrance = dx * dx + dy * dy
+        # Diskrete 3D-Quadranz (Interferenz mit den Außengrenzen des Gitters)
+        quadrance = dx*dx + dy*dy + mz*mz
         
+        # 1. FILTRATION: Modulo 210 Raumsieb (48 primoriale Stränge)
         if (quadrance % 210) in self.prime_strands_210:
-            phase = (dx * dy + self.quantum_vacuum_shutter + t) % 24
             
+            # 2. FILTRATION & REIN GANZZAHLIGE VERDICKUNG (Modulo 24 Phase)
+            # Die Phase bestimmt die mathematische Resonanz-Ausdehnung
+            phase = (dx * dy * (mz if mz != 0 else 1) + self.quantum_vacuum_shutter + t) % 24
+            
+            # Kern-Resonanz (Zentrum des Gitterstrangs)
             if phase == 12:
-                return 1  # Masse (Amber-Gold)
-            elif phase in self.prime_rays_24:
-                return 2  # Energie (Electrical Cyan)
+                return 1  # Invarianter Massenknoten (Amber-Gold)
                 
-        return 0  # Vakuum (Indigo)
+            # Erweiterte Phasen-Nachbarschaft (Ganzzahlige Verdickung des Leuchtens)
+            # Wenn die Phase nahe an den Primstrahlen liegt, leuchtet die Umgebung mit
+            elif phase in self.prime_rays_24:
+                return 2  # Leuchtender Energiestrang (Neon-Cyan)
+                
+        return 0  # Kosmisches Indigo-Vakuumsieb
