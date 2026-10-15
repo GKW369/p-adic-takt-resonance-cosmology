@@ -1,7 +1,7 @@
 # pTRC Framework: Discrete Integer Computational Physics Engine
 
 **Architecture Designed by Kurt Guido Wirminghaus**  
-**An infinitely scalable, deterministic integer graphics and simulation engine operating within the strict algebraic ring of integers (\(\mathbb{Z}\)). Bypasses floating-point accumulation noise, rounding-error divergences, and FPU-latency via a 144-facet spatial geometry, a multi-tiered primorial space sieve, and a highly adaptive, phase-locked stereoscopic architecture dynamically scalable to any integer multiple or divisor of the modulo-24 base clock (e.g., 24, 120, 144, or 240 FPS). Zero float pollution.**
+**An infinitely scalable, deterministic integer graphics and simulation engine operating within the strict algebraic ring of integers (\(\mathbb{Z}\)). Bypasses floating-point accumulation noise, rounding-error divergences, and FPU-latency via a 144-facet spatial geometry, a multi-tiered primorial space sieve, and a fully flexible, multi-frequency takt-synchronized stereoscopic architecture. Zero float pollution.**
 
 ---
 
@@ -10,8 +10,9 @@ While classical continuum physics relies on continuous differential equations ap
 
 ### Core Algebraic Components:
 1. **The Modulo-24 Universal Clock Architecture:** Multi-axis spatial orientation and synaptic signal activations operate within the reduced residue class group of the cyclic **Modulo-24 Architecture** (\(\mathbb{Z}/24\mathbb{Z}\)). Active energy nodes propagate strictly along the **8 invariant prime rays** `{1, 5, 7, 11, 13, 17, 19, 23}`, utilizing discrete group multiplications to handle state transformations losslessly without angular approximations.
-2. **Multi-Tiered Primorial Sieve Scaling (The Gear-Train Principle):** Spatial resolution and grid density are scaled without fractional scaling factors. The framework utilizes interlocking, concentric primorial rings acting as discrete mathematical gears. The primary spatial bounds are filtered via the **Wirminghaus Invariant Limit** (\(quadrance \pmod{210} \le 156\)) based on the \(2 \times 3 \times 5 \times 7\) primorial ring. Higher-order resolution layers scale discrete structural expansion by cascading into superior primorial rings (e.g., Modulo 2310, Modulo 30030), multiplying lattice density while maintaining absolute numerical invariance.
-3. **Holographic 90-Degree Crossed-Mirror Inversion:** Spatial depth and 3D coordinate matrices alternate dynamically between complementary states via discrete sign inversion (`1` and `-1`). Instead of linear reflections, the engine deploys a holographic reconstruction mechanism utilizing two orthogonal, right-angled crossed mirrors. The boundary intersection of these crossed planes creates an exact 90-degree intercept. Coordinates crossing the boundary of -1 are cyclically processed and holographically mirrored back into the active matrix array, ensuring 100% information conservation and real-time biometric stereo synthesis.
+2. **Multi-Frequency Takt-Synchronization (Flexible Framing):** The temporal frame-generation is completely flexible and scales dynamically across any integer harmonic or sub-harmonic division of the modulo-24 base clock. The output engine seamlessly locks onto high-resolution display rates (e.g., 24, 48, 144, up to 240+ FPS) without temporal phase-drift. Synchronized with an uncompressed, lossless rendering profile (`-crf 0 -g 1`), the system eliminates any spatial or temporal pixel-smoothing, forcing every frame to be generated as an independent, unrounded, pixelsharp keyframe.
+3. **Multi-Tiered Primorial Sieve Scaling (The Gear-Train Principle):** Spatial resolution and grid density are scaled without fractional scaling factors. The framework utilizes interlocking, concentric primorial rings acting as discrete mathematical gears. The primary spatial bounds are filtered via the **Wirminghaus Invariant Limit** (\(quadrance \pmod{210} \le 156\)) based on the 2 × 3 × 5 × 7 primorial ring. Higher-order resolution layers scale discrete structural expansion by cascading into superior primorial rings (e.g., Modulo 2310, Modulo 30030), multiplying lattice density while maintaining absolute numerical invariance.
+4. **Holographic 90-Degree Crossed-Mirror Inversion:** Spatial depth and 3D coordinate matrices alternate dynamically between complementary states via discrete sign inversion (`1` and `-1`). Instead of linear reflections, the engine deploys a holographic reconstruction mechanism utilizing two orthogonal, right-angled crossed mirrors. The boundary intersection of these crossed planes creates an exact 90-degree intercept, partitioning the information space into **4 symmetrical, synchronized quadrants**. Coordinates crossing the boundary of -1 are cyclically processed and holographically mirrored back into the active matrix array, ensuring 100% information conservation and real-time biometric stereo synthesis.
 
 ---
 
@@ -39,11 +40,7 @@ By completely removing floating-point units (FPU) from the computational loop, t
 ---
 
 ## 🪐 Visual Demonstration & Temporal Takt-Synchronization
-To guarantee that the visualization matches the underlying discrete mechanics, the output engine adheres to the **Temporal Takt-Synchronization Law**. Instead of using standard continuous 60-Hz rendering pipelines that introduce temporal interpolation artifacts ("Matsch-Effekt"), the video frame generation is dynamically scale-matched to the hardware target environment. 
-
-The framerate is rigidly locked to an integer multiple or divisor of the internal clock of the **Modulo-24 Architecture** (e.g., matching the **144-facet crystal symmetry at 144 FPS**, or high-refresh hardware targets at **240 FPS**), ensuring completely stutter-free, phase-locked playback.
-
-Combined with an uncompressed, lossless rendering profile (`-crf 0 -g 1`), the system eliminates any spatial or temporal pixel-smoothing. Every single frame is generated as an independent, unrounded, pixelsharp keyframe.
+To run the designated fluid mechanics or rendering components under strict harmonic alignment, deploy the respective scripts. The flexible framing mechanism allows the engine to lock onto display-native intervals perfectly matching the hardware specs:
 
 ```bash
 # Execute the live 1-bit integer fluid resonance simulation:
@@ -77,7 +74,7 @@ For commercial entities requiring the integration of the pTRC integer-and-modulo
 
 *For commercial licensing inquiries, structural code audits, or integration consulting, please contact the author directly:*  
 👤 **Author:** Kurt Guido Wirminghaus  
-📧 **Email:** g.wmx.de -> (Bitte ersetze dies durch g.wirminghaus@gmx.de beim Kopieren)  
+📧 **Email:** g.wirminghaus@gmx.de  
 
 ---
 
