@@ -2,19 +2,24 @@
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
-# LICENSE & LIABILITY NOTICE:
-# Academic, non-commercial research and evaluation is permitted strictly under 
-# the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
-# integration requires a separate, individually negotiated commercial infrastructure 
-# waiver issued directly by the author.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
 #
-# WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
-# ==============================================================================
+# You should have received a copy of the GNU Affero General Public License
+# along with this program (see the LICENSE file in the root directory).
+# If not, see <https://gnu.org>.
+#
+# For commercial licensing, enterprise integration, or proprietary deployment
+# options, please contact the author directly.
+# ========================================================================
+
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Core Sieve Module: Deterministic Prime Lattice Sieve
