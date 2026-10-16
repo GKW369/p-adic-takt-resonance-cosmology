@@ -1,3 +1,22 @@
+<!--
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# LICENSE & LIABILITY NOTICE:
+# Academic, non-commercial research and evaluation is permitted strictly under 
+# the terms of the GNU Affero General Public License version 3 (AGPLv3).
+# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+#
+# ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
+# integration requires a separate, individually negotiated commercial infrastructure 
+# waiver issued directly by the author.
+#
+# WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
+# ==============================================================================
+-->
 # Algebraic Formula Matrix: Space Quantization and Interference Sieve
 
 *   **System Base:** Reduced Remainder System Modulo 24 (The Prime Cross)
