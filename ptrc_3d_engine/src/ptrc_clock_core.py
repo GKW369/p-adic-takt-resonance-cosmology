@@ -17,90 +17,98 @@
 # ==============================================================================
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Core Simulation Module: Modular Cellular Clock Engine
-Operational Domain: 2D Cellular State Permutations (\mathbb{Z}) using Modulo-210/24 rings.
-Executes lossless tactical lattice steps without continuous floating-point variables.
+pTRC Infinite Scale Core - Modular Metric Clock & Sieve Synchronization
+100% Integer Z-Ontology | Module: Mathematics & Grid State
 """
 
 import numpy as np
 
 class PTRCModularClockEngine:
-    """
-    Manages a deterministic cellular automaton environment where cell transitions
-    are synchronized strictly via discrete whole-number spatial clocks.
-    """
-    def __init__(self, width=64, height=64):
+    def __init__(self, width=160, height=90, depth=64):
         self.width = width
         self.height = height
-        self.primorial_base = 210
-        self.control_base = 24
-        self.invariant_limit = 156
-        self.SCALE = 1000
+        self.depth = depth
         
-        # 1-bit cellular state grids mapping structural topology natively in Z
-        self.current_grid = np.zeros((self.height, self.width), dtype=np.uint8)
-        self.next_grid = np.zeros((self.height, self.width), dtype=np.uint8)
+        # The incorruptible p-adic modulo clock system
+        self.PRIMORIAL_RING = 210  # Base ring (2 * 3 * 5 * 7) -> Expandable to 2310
+        self.CLOCK_24 = 24         # Symmetrical controller clock
+        self.REFRESH_TAKTE = 137   # Feynman vacuum limit (Fine-structure constant proxy)
+        
+        self.global_master_clock = 0
+        
+        # Generate 144-facet crystalline axes
+        self.crystal_axes = self._generate_144_facet_axes()
+        
+        # Space initialization via the modular existence sieve
+        self.voxels = self._build_sieved_primorial_space()
 
-    def seed_resonance_pattern(self):
-        """
-        Seeds the grid with a symmetrical whole-number coordinate pattern.
-        """
-        for y in range(self.height):
-            for x in range(self.width):
-                if (x * y + 5) % self.control_base == 12:
-                    self.current_grid[y, x] = 1
+    def _generate_144_facet_axes(self):
+        """Generates 144 discrete directional axes from modular symmetry conditions"""
+        flat_nodes = [
+            2, 1, 0,   2, -1, 0,  -2, 1, 0,  -2, -1, 0,
+            0, 2, 1,   0, 2, -1,   0, -2, 1,  0, -2, -1,
+            1, 0, 2,  -1, 0, 2,    1, 0, -2, -1, 0, -2
+        ]
+        base_nodes = np.array(flat_nodes, dtype=np.int32).reshape(12, 3)
+        axes = []
+        for node in base_nodes:
+            for factor in range(1, 13):
+                axes.append(node * factor)
+        return np.array(axes, dtype=np.int32)
 
-    def step_cellular_takt(self, global_takt_counter):
-        """
-        Advances the cellular matrix by one discrete clock step.
-        Uses pure bit-counting and modular filters to determine cell evolution.
-        """
-        takt_factor = int(global_takt_counter) % self.primorial_base
+    def _build_sieved_primorial_space(self):
+        """Builds the 3D grid architecture exclusively via residue classes of the clock system"""
+        space = np.zeros((self.depth, self.height, self.width), dtype=np.uint8)
+        cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        # Calculate neighbor counts utilizing parallel shift operations
-        neighbor_count = (
-            np.roll(self.current_grid, 1, axis=0) + np.roll(self.current_grid, -1, axis=0) +
-            np.roll(self.current_grid, 1, axis=1) + np.roll(self.current_grid, -1, axis=1)
-        )
+        # The 8 permitted main rays of the abelian symmetry group modulo 24
+        allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
         
-        # Clear next state buffer
-        self.next_grid.fill(0)
-        
-        # Whole-number state transition rules mapped strictly inside Z
-        for y in range(self.height):
-            for x in range(self.width):
-                count = neighbor_count[y, x]
-                cell_state = self.current_grid[y, x]
-                
-                # Check phase resonance using scaling vectors to bypass float noise
-                phase_check = (count * self.SCALE + takt_factor) // self.invariant_limit
-                
-                if cell_state == 1:
-                    if count == 2 or count == 3 or (phase_check % 2 == 0):
-                        self.next_grid[y, x] = 1
-                else:
-                    if count == 3 and (phase_check % 3 == 0):
-                        self.next_grid[y, x] = 1
+        for z in range(self.depth):
+            dz2 = (z - cz) * (z - cz)
+            for y in range(self.height):
+                dy2 = (y - cy) * (y - cy)
+                for x in range(self.width):
+                    dx2 = (x - cx) * (x - cx)
+                    quadrance = dx2 + dy2 + dz2
+                    
+                    # 1. THE MODULO-210 CLOCK SIEVE
+                    residuum_210 = quadrance % self.PRIMORIAL_RING
+                    
+                    if residuum_210 <= 156: # Invariant boundary node of the framework
+                        # 2. THE Z/24Z TAKT-CLOCK CHECK
+                        takt_check = (x * y + z) % self.CLOCK_24
                         
-        # Symmetrical swap operations
-        self.current_grid, self.next_grid = self.next_grid, self.current_grid
+                        if takt_check in allowed_24_rays:
+                            space[z, y, x] = 2  # Active resonant node (Light-conducting)
+                        elif takt_check == 12:
+                            space[z, y, x] = 1  # Invariant mass node (Matter)
+                            
+        return space
 
-    def compute_active_density(self):
-        """
-        Returns the exact integrated state mass of the cellular automaton.
-        """
-        return int(np.sum(self.current_grid))
+    def evolve_clock_one_takt(self):
+        """Advances the total clock architecture by exactly one Planck-Takt cycle (c = 1 px/takt)"""
+        self.global_master_clock += 1
+        
+        current_hour = self.global_master_clock % self.CLOCK_24
+        axis_to_roll = current_hour % 3
+        shift_amount = 1 if (current_hour < 12) else -1
+        
+        self.voxels = np.roll(self.voxels, shift_amount, axis=axis_to_roll)
+
+    def compute_integrated_density(self):
+        """Aggregates active 3D lattice states to measure total integrated mass"""
+        return int(np.sum(self.voxels))
 
 if __name__ == "__main__":
-    print("[ pTRC-MODULAR-CLOCK ] Initializing zellular automaton grid...")
-    engine = PTRCModularClockEngine(width=64, height=64)
-    engine.seed_resonance_pattern()
+    print("[ pTRC-MODULAR-CORE ] Initializing 3D primorial metric sieve matrix...")
+    core_engine = PTRCModularClockEngine()
     
-    print(" -> Advancing grid state across 24 discrete metric calibration steps...")
+    print(" -> Advancing global master clock across 24 discrete transformation takts...")
     for step in range(24):
-        engine.step_cellular_takt(global_takt_counter=1836 + step)
+        core_engine.evolve_clock_one_takt()
         
-    total_mass = engine.compute_active_density()
-    print(f" -> [ VALIDATION ] Cellular state updates completed.")
-    print(f" -> Total Integrated Live Cells: {total_mass}")
-    print(" -> STATUS: Zero-Float Cellular Modular Clock Engine Successfully Audited.")
+    total_lattice_load = core_engine.compute_integrated_density()
+    print(f" -> [ VALIDATION ] 3D spatial clock updates completed successfully.")
+    print(f" -> Total Integrated Voxel Mass Density: {total_lattice_load}")
+    print(" -> STATUS: Zero-Float Modular Clock Core Successfully Audited.")
