@@ -1,4 +1,3 @@
-<!--
 # ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
@@ -6,7 +5,7 @@
 # LICENSE & LIABILITY NOTICE:
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+# For the complete, unedited license text see: https://gnu.org
 #
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
@@ -16,7 +15,6 @@
 # IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
 # ==============================================================================
--->
 name: pTRC Core Invariance & AGPLv3 Audit
 
 on:
@@ -44,7 +42,6 @@ jobs:
 
     - name: Run Core First-Principles Orchestrator
       run: |
-        # Verifiziert alle Validierungs-Submodule im sequenziellen Takt
         python src/00_ptrc_first_principles_engine.py
 
     - name: Audit Static Code-Hygiene (Zero-Float-Rule)
@@ -52,19 +49,14 @@ jobs:
         echo "======================================================================"
         echo "   STARTING STATIC ANALYSIS LAYER: TESTING FOR ANALOG LEAKAGE FIELDS"
         echo "======================================================================"
-        
-        # 1. Suche nach verbotenen float-Deklarationen oder Dezi-Punkten im Code-Kern
         if grep -r --include="*.py" -E "\bfloat\b|\b[0-9]+\.[0-9]+\b" src/ experimental/; then
           echo " -> [ CRITICAL ERROR ] Analog Leakage detected! Banned float fields found in RAM mapping."
           exit 1
         fi
-        
-        # 2. Suche nach ungeschützten Analog-Divisionen (Einzelslash '/')
         if grep -r --include="*.py" -E "[a-zA-Z0-9_)]\s*/\s*[a-zA-Z0-9_]" src/ experimental/; then
           echo " -> [ CRITICAL ERROR ] Analog Division Exploit! Double-slash (//) floor division required."
           exit 1
         fi
-        
         echo "STATUS: 100% Floating-Point-Free Invariance Confirmed."
 
     - name: Audit Symmetrical License-Headers (AGPLv3 Coherence)
@@ -72,11 +64,8 @@ jobs:
         echo "======================================================================"
         echo "   STARTING LEGAL ANALYSIS LAYER: TESTING FOR LICENSE COHERENCE"
         echo "======================================================================"
-        
-        # Überprüft, ob fälschlicherweise alte GPLv3-Deklarationen in die Header rutschen
-        if grep -r --include="*.py" "General Public License version 3 (GPLv3)" src/ experimental/; then
-          echo " -> [ LICENSE CONFLICT ] Deprecated GPLv3 string detected! AGPLv3 compliance broken."
+        if ! grep -r --include="*.py" "https://gnu.org" src/ experimental/; then
+          echo " -> [ LICENSE CONFLICT ] Missing or unverified AGPLv3 deep-link compliance header!"
           exit 1
         fi
-        
         echo "STATUS: AGPLv3 Symmetrical Headers verified across all core nodes."
