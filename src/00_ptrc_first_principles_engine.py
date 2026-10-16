@@ -4,9 +4,12 @@
 #
 # DUAL-LICENSING NOTICE:
 # Non-commercial, academic, and open-source usage is strictly governed by 
-# the GNU General Public License version 3 (GPLv3). Any commercial deployment,
-# integration into proprietary, closed-source codebases, or corporate utilization
-# explicitly requires a separate, individually negotiated commercial license.
+# the GNU Affero General Public License version 3 (AGPLv3). Any commercial deployment,
+# integration into proprietary, closed-source codebases, or corporate 
+# utilization explicitly requires a separate, individually negotiated 
+# Proprietary Commercial License from the copyright holder.
+#
+# THERE IS NO WARRANTY FOR THIS PROGRAM, TO THE EXTENT PERMITTED BY LAW.
 # ==============================================================================
 # -*- coding: utf-8 -*-
 """
@@ -28,6 +31,7 @@ MAX_WIDTH = 166
 
 print("="*MAX_WIDTH)
 print(f"[ pTRC CORE INTEGRATION ENGINE ] OPERATIONAL CHANNELS ACTIVATED | HARDWARE BASE: ACER ASPIRE E1-570 | TARGET: PITCH-LAUNCH".center(MAX_WIDTH))
+print(f"[ LICENSED UNDER GNU AGPLv3 | REMOTE NETWORK USERS HOLD THE RIGHT TO REQUEST COMPLETE SOURCE CODE ]".center(MAX_WIDTH))
 print("="*MAX_WIDTH)
 
 time.sleep(0.100)
