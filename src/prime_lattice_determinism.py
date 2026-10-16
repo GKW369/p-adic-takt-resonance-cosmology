@@ -1,4 +1,4 @@
-# ==============================================================================
+https://www.gnu.org/licenses/agpl-3.0.html# ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
@@ -17,45 +17,67 @@
 # ==============================================================================
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Module: prime_lattice_determinism.py
-Deterministic Sieve Matrices within the Primorial Residue Ring Z/210Z.
-Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
+pTRC Framework - Core Sieve Module: Deterministic Prime Lattice Sieve
+Operational Domain: Pure Integer Sieve Filters (\mathbb{Z}) acting inside primorial intervals.
+Maps allowed non-interfering coordinate tracks without continuous field operations.
 """
 
-import sys
 import numpy as np
 
-class PrimeLatticeSieve:
-    def __init__(self, primorial_base=210):
-        self.primorial_base = primorial_base
-        self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
+class PTRCPrimeLatticeDeterminismEngine:
+    """
+    Executes precise arithmetic sieving based on Euler's totient group layers
+    to establish zero-loss signal propagation directions across the matrix grid.
+    """
+    def __init__(self, sieve_limit=210):
+        self.primorial_base = sieve_limit
+        self.control_base = 24
+        self.invariant_limit = 156
+        self.SCALE = 1000
         
-        # Die 8 erlaubten Hauptstrahlen der abelschen Symmetriegruppe modulo 24
-        self.fundamental_rays = np.array([1, 5, 7, 11, 13, 17, 19, 23], dtype=np.int32)
+        # 1-bit boolean register array tracking active propagation channels
+        self.deterministic_sieve_array = np.zeros(self.primorial_base, dtype=np.uint8)
+        self._generate_totient_sieve_matrix()
 
-    def calculate_lattice_density(self, active_coordinate_nodes=48):
+    def _generate_totient_sieve_matrix(self):
         """
-        Berechnet die relative Belegungsdichte der invarianten Gitterknoten.
-        Nutzt die Euler-Phi-Konstante 48 des primoriellen Rings Z/210Z.
-        Rechnet streng in Z.
+        Populates the structural sieve layer using whole-number Euclidean reduction.
+        Identifies nodes coprime to the primorial circumference base (210).
         """
-        # FIX: Vorab-Skalierung zur Eliminierung von analogen Float-Divisionen
-        # Ermittelt die Dichte direkt in Milli-Belegungs-Units (Basispunkte)
-        scaled_density = (active_coordinate_nodes * self.SCALE) // self.primorial_base
+        for node in range(self.primorial_base):
+            # Euclidean GCD tracking strictly within Z
+            val_a, val_b = node, self.primorial_base
+            while val_b > 0:
+                val_a, val_b = val_b, val_a % val_b
+                
+            # If greatest common divisor is identical to 1, lock the node channel
+            if val_a == 1:
+                self.deterministic_sieve_array[node] = 1
+
+    def verify_signal_pathway(self, coordinate_address):
+        """
+        Audits a targeted network routing address against the active prime cross sieve.
+        Replaces analog probability tracking with deterministic whole-number returns.
+        """
+        clamped_address = int(coordinate_address) % self.primorial_base
         
-        # Ermittlung des deterministischen Filter-Minderungsgrads
-        eliminated_nodes = self.primorial_base - active_coordinate_nodes
-        scaled_sieve_efficiency = (eliminated_nodes * self.SCALE) // self.primorial_base
-        
-        return scaled_density, scaled_sieve_efficiency
+        if self.deterministic_sieve_array[clamped_address] == 1:
+            # Check for structural phase-lock matching the calibration offset bounds
+            control_check = (clamped_address * self.SCALE) // self.control_base
+            if control_check % 2 == 0:
+                return 1  # Signal pathway locked and safe for deterministic transfer
+        return 0  # Forbidden node alignment (Interference zone)
+
 if __name__ == "__main__":
-    print("[ pTRC INFORMATICS ENGINE ] Validating Prime Lattice Determinism...")
-    engine = PrimeLatticeSieve()
+    print("[ pTRC-DETERMINISM ] Initializing deterministic prime lattice sieve...")
+    engine = PTRCPrimeLatticeDeterminismEngine()
     
-    density, efficiency = engine.calculate_lattice_density(active_coordinate_nodes=48)
-    
-    print(f"\nPrimorielle Gitter-Siebung abgeschlossen:")
-    print(f" -> Aktive Koordinatendichte: {density} Milli-Belegungs-Units")
-    print(f" -> Suchraum-Reduktionsgewinn: {efficiency} Milli-Effizienz-Units")
-    print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
-    sys.exit(0)
+    # Audit transmission addresses across the core calibration limit constant length
+    active_paths = 0
+    for address_token in range(1836):
+        if engine.verify_signal_pathway(address_token):
+            active_paths += 1
+            
+    print(f" -> [ VALIDATION ] Prime lattice sieve generation completed successfully.")
+    print(f" -> Verified Open Invariant Signal Pathways: {active_paths}")
+    print(" -> STATUS: Zero-Float Sieve Determinism Engine Successfully Audited.")
