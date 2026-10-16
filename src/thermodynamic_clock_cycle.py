@@ -4,10 +4,11 @@
 #
 # DUAL-LICENSING NOTICE:
 # Non-commercial, academic, and open-source usage is strictly governed by 
-the GNU Affero General Public License version 3 (AGPLv3). Any commercial deployment,
+# the GNU Affero General Public License version 3 (AGPLv3). Any commercial deployment,
 # integration into proprietary, closed-source codebases, or corporate utilization
 # explicitly requires a separate, individually negotiated commercial license.
 # ==============================================================================
+
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Module: thermodynamic_clock_cycle.py
