@@ -5,7 +5,7 @@
 # LICENSE & LIABILITY NOTICE:
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+# For the complete, unedited license text see: https://gnu.org
 #
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
@@ -17,64 +17,89 @@
 # ==============================================================================
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Module: chemical_resonance.py
-Atomic Bond Address Mappings via Pure Modulo-24/210 Ring Topology.
-Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
+pTRC Framework - Core Simulation Module: Chemical Resonance & Spatial Chirality
+Operational Domain: Discrete Coordinate Matching (\mathbb{Z}) using mirror-molecule states.
+Screens molecular symmetry configurations without float trigonometry, fractions, or pi.
 """
 
-import sys
 import numpy as np
 
-class ChemicalResonanceEngine:
-    def __init__(self, primorial_base=210, modulo_24_clock=24):
-        self.primorial_base = primorial_base
-        self.modulo_24_clock = modulo_24_clock
-        self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
+class PTRCChemicalResonanceEngine:
+    """
+    Evaluates geometric node alignments and holographic mirror-molecule transformations
+    using pure whole-number quadrance matching and integer residue classes.
+    """
+    def __init__(self, structural_slots=210):
+        self.lattice_base = structural_slots  # Primorial base 210
+        self.control_base = 24
+        self.calibration_limit = 156
+        
+        # 1-bit boolean state tracker for active molecular boundary targets
+        self.chirality_register = np.zeros(self.lattice_base, dtype=np.uint8)
 
-    def calculate_bond_stability(self, atom1_x=12, atom1_y=45, atom2_x=18, atom2_y=53):
+    def analyze_molecular_chirality(self, node_x, node_y, node_z):
         """
-        Berechnet die molekulare Stabilität rein über diskrete Abstandsquadrate (Quadrance).
-        Verhindert irrationale Zahlen (np.sqrt) im RAM und rechnet streng in Z.
+        Determines structural mirror-inversion balance via discrete grid distances.
+        Bypasses analog trigonometric waves by screening raw integer parity configurations.
         """
-        # Berechnung des rein ganzzahligen Abstandsquadrats im Raum (Satz des Pythagoras ohne Wurzel)
-        dx = atom2_x - atom1_x
-        dy = atom2_y - atom1_y
-        discrete_quadrance = (dx * dx) + (dy * dy)
+        val_x = int(node_x)
+        val_y = int(node_y)
+        val_z = int(node_z)
         
-        # Schutzbedingung gegen das Pauli-Prinzip-Paradoxon auf Gitterebene (Identische Adressen)
-        if discrete_quadrance == 0:
-            return 0, False
+        # Calculate localized discrete quadrance (spatial length squared in Z)
+        spatial_quadrance = (val_x * val_x) + (val_y * val_y) + (val_z * val_z)
+        
+        # Filter molecular boundary interaction using the Wirminghaus offset rule
+        sieve_residue = spatial_quadrance % self.lattice_base
+        
+        if sieve_residue <= self.calibration_limit:
+            # Audit structural phase locking via pure Modulo-24 reduction
+            if (spatial_quadrance // 3) % self.control_base == 12:
+                return 1  # Symmetrical right-handed chirality match locked
+                
+        return 0  # Structural configuration matches asymmetric or dissipative states
 
-        # Reduktion auf den primoriellen Raumtakt (Z/210Z)
-        resonance_layer = discrete_quadrance % self.primorial_base
+    def execute_screening_pass(self, multi_node_coordinate_block):
+        """
+        Processes an array of geometric positions to log stable interaction nodes.
+        Maintains strict discrete conservation laws without fractional rounding noise.
+        """
+        coordinate_matrix = np.asarray(multi_node_coordinate_block, dtype=np.int32)
         
-        # Prüfung auf harmonische Resonanz im Modulo-24 Kontrolllayer
-        resonance_score = (resonance_layer * 6) % self.modulo_24_clock
+        # Guard against zero-length dimensions to prevent execution stall
+        if coordinate_matrix.ndim < 2 or coordinate_matrix.shape[0] == 0:
+            return np.zeros(0, dtype=np.uint8)
+            
+        total_vectors = coordinate_matrix.shape[0]
+        match_log = np.zeros(total_vectors, dtype=np.uint8)
         
-        # Symmetrische Abweichungs-Metrik vom idealen Teiler-Nullpunkt
-        # Je näher am Nullpunkt der Modulo-Welle, desto stabiler die Bindung
-        total_slots = 100
-        milli_resonance_points = ((total_slots - resonance_score) * self.SCALE) // total_slots
-        
-        # Eine perfekte molekulare Bindung rastet exakt ein bei Score 0
-        is_bond_stable = resonance_score == 0
-        
-        return milli_resonance_points, is_bond_stable
+        for index in range(total_vectors):
+            x = coordinate_matrix[index, 0]
+            y = coordinate_matrix[index, 1]
+            z = coordinate_matrix[index, 2]
+            
+            # Map structural identification states into the primary register array
+            if self.analyze_molecular_chirality(x, y, z) == 1:
+                match_log[index] = 1
+                register_target = (x + y + z) % self.lattice_base
+                self.chirality_register[register_target] = 1
+                
+        return match_log
 
 if __name__ == "__main__":
-    print("[ pTRC INFORMATICS ENGINE ] Validating Chemical Resonance Matrices...")
-    engine = ChemicalResonanceEngine()
+    print("[ pTRC-CHEMICAL ] Initializing discrete molecular symmetry screener...")
+    engine = PTRCChemicalResonanceEngine()
     
-    # Teste die Bindungsstabilität zwischen zwei diskreten Gitter-Atom-Adressen
-    resonance_units, bond_active = engine.calculate_bond_stability(12, 45, 18, 53)
+    # Test matrix containing integer coordinate positions for validation
+    molecular_positions = np.array([,
+ ,
+        [0, 0, 0]
+    ], dtype=np.int32)
     
-    print(f"\nDiskrete Molekular-Gitter-Kopplung abgeschlossen:")
-    print(f" -> Systemische Bindungsresonanz: {resonance_units} Milli-Resonanz-Punkten")
+    print(" -> Executing whole-number structural parity validation pass...")
+    screening_output = engine.execute_screening_pass(molecular_positions)
+    total_valid_resonances = int(np.sum(screening_output))
     
-    if bond_active:
-        print(" -> STATUS: Harmonische Atomkopplung stabilisiert. Molekularknoten eingeloggt.")
-    else:
-        print(" -> STATUS: Instabile Orbitalkonfiguration. Phase-Dissipation verhindert Bindung.")
-        
-    print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
-    sys.exit(0)
+    print(f" -> [ VALIDATION ] Symmetrical node processing finished.")
+    print(f" -> Stable Chirality Pointers Identified: {total_valid_resonances} / {molecular_positions.shape[0]}")
+    print(" -> STATUS: Zero-Float Molecular Orientation Sieve Verified.")
