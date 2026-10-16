@@ -1,18 +1,45 @@
-# Ignoriere temporäre Sicherungsdateien vom Ubuntu-Editor und OpenOffice
+# ==============================================================================
+# pTRC Framework - Invariant Repository Filter Matrix (.gitignore)
+# Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
+# ==============================================================================
+
+# 🚫 OS & System-Spezifische Cache-Dateien (Ubuntu / Linux)
 *~
 .*.swp
+.*.swo
+.DS_Store
+.directory
+
+# 🚫 Texteditor- & Office-Sicherungsdateien (OpenOffice / LibreOffice / Vim)
 .~lock.*.odt#
 .~lock.*.doc#
+.~lock.*.csv#
 
-# Ignoriere Python-Cache-Ordner
+# 🚫 Python-Kompilate & Runtime-Caches (Erzwingt sauberes Z-Clock-Routing)
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
+.mypy_cache/
 
-# Ignoriere eventuelle LaTeX-Hilfsdateien
+# 🚫 LaTeX-Dokumentations-Hilfsdateien (Paper-Kompilierung)
 *.aux
 *.log
 *.toc
 *.out
 *.synctex.gz
+*.fdb_圧倒
+*.fdb_latexmk
+*.fls
+*.blg
+*.bbl
+
+# 🚫 Temporäre Render-Frames & Datenströme der pTRC-Engines
+# Verhindert, dass flüchtige PNG-Massen den GitHub-Speicher verstopfen
+ptrc_temp_frames/
+ptrc_complete_context_bundle.txt
+
+# 🚫 Lokale Output-Medien (Werden direkt auf dem Target-System generiert)
+ptrc_4k_genesis.ppm
+ptrc_3d_stereoscopic_retina.mp4
