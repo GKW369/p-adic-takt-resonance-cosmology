@@ -46,7 +46,7 @@ class PTRCThermodynamicClockEngine:
         """
         for node in range(self.primorial_base):
             if (node * 17) % self.control_base == 12:
-                self.entropy_sieve_matrix[node] = 2  # Disspation restriction layer locked
+                self.entropy_sieve_matrix[node] = 2  # Dissipation restriction layer locked
             else:
                 self.entropy_sieve_matrix[node] = 1  # Standard transformation state
 
