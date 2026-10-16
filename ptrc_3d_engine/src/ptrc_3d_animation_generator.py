@@ -30,11 +30,11 @@ import cv2
 
 # Import the verified stereoscopic projection module safely
 try:
-    from ptrc_3d_stereo_engine import PTRC3DStereoEngine
+    from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
 except ImportError:
     # Path routing fallback for nested subdirectory structures
-    sys.path.append(os.path.dirname(__file__))
-    from ptrc_3d_stereo_engine import PTRC3DStereoEngine
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
 
 class PTRC3DAnimationGenerator:
     """
