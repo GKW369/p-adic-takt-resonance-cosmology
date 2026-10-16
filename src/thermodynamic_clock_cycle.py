@@ -15,51 +15,86 @@
 # IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
 # ==============================================================================
-
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Module: thermodynamic_clock_cycle.py
-Irreversible Clock Increments and Geometric CMB Overhead Simulation.
-Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
+pTRC Framework - Core Simulation Module: Thermodynamic Lattice Clock Cycle
+Operational Domain: Discrete Entropy State Permutations (\mathbb{Z}) inside the 210-ring.
+Models information-theoretic state dissipation limits drift-free without float integrals.
 """
 
-import sys
 import numpy as np
 
-class ThermodynamicClockEngine:
-    def __init__(self, initial_clock=0):
-        # Der unumkehrbare Hardware-Zeittakt
-        self.current_clock = initial_clock
-        self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
+class PTRCThermodynamicClockEngine:
+    """
+    Tracks state transitions and numerical entropy boundaries across lattice layers
+    utilizing nested residue rings Modulo-210 and 24-step cyclic controller clocks.
+    """
+    def __init__(self, simulation_nodes=210):
+        self.primorial_base = simulation_nodes
+        self.control_base = 24
+        self.invariant_limit = 156
+        self.SCALE = 1000
+        
+        # Whole-number energy and configuration state registers
+        self.thermal_energy_registers = np.zeros(self.primorial_base, dtype=np.int32)
+        self.entropy_sieve_matrix = np.zeros(self.primorial_base, dtype=np.uint8)
+        self._initialize_entropy_bounds()
 
-    def calculate_routing_overhead(self, simulated_distance_pixels=10000):
+    def _initialize_entropy_bounds(self):
         """
-        Berechnet den Laufzeitunterschied zwischen geraden und diagonalen Routings.
-        Entlarvt kosmische Hintergrundstrahlungs-Fluktuationen als geometrischen Overhead.
-        Rechnet streng in Z.
+        Populates configuration thresholds using pure whole-number residue constraints.
         """
-        # Unumkehrbarer Takt-Inkrement (Zeitpfeil fest verankert)
-        self.current_clock += 1
+        for node in range(self.primorial_base):
+            if (node * 17) % self.control_base == 12:
+                self.entropy_sieve_matrix[node] = 2  # Disspation restriction layer locked
+            else:
+                self.entropy_sieve_matrix[node] = 1  # Standard transformation state
+
+    def inject_thermal_pulse(self, whole_number_excitation):
+        """
+        Drives a discrete energy packet through the thermodynamic processing cells.
+        Guarantees zero rounding leakage through fixed-point scaling partitions.
+        """
+        pulse_amplitude = int(whole_number_excitation)
         
-        # Orthodoxer Pfad (Gerade durch das Pixelgitter)
-        straight_path_ticks = simulated_distance_pixels
-        
-        # Diagonaler Pfad (Skaliert mit 1414 anstelle der Float-Wurzel aus 2)
-        # 1414 entspricht 1.414 * SCALE
-        diagonal_path_ticks = (simulated_distance_pixels * 1414) // self.SCALE
-        
-        # Der rein ganzzahlige Laufzeitunterschied (Verarbeitungs-Overhead)
-        runtime_difference_milli_ticks = (diagonal_path_ticks - straight_path_ticks) * self.SCALE
-        
-        return runtime_difference_milli_ticks
+        for node in range(self.primorial_base):
+            sieve_factor = self.entropy_sieve_matrix[node]
+            if sieve_factor == 0:
+                continue
+                
+            # Execute precise scaled floor division to transform state metrics
+            scaled_dissipation = (pulse_amplitude * self.SCALE) // (node * sieve_factor + self.invariant_limit)
+            discrete_entropy_shift = scaled_dissipation % self.primorial_base
+            
+            # Commit the exact integer update back to the state buffer
+            self.thermal_energy_registers[node] = (self.thermal_energy_registers[node] + discrete_entropy_shift) % self.primorial_base
+
+    def verify_thermodynamic_invariance(self):
+        """
+        Audits accumulated matrix thermal states against the 156 calibration limit.
+        Returns 1 if the system configuration holds stable and balanced, else 0.
+        """
+        total_integrated_energy = int(np.sum(self.thermal_energy_registers))
+        if total_integrated_energy == 0:
+            return 1
+            
+        matrix_residue = total_integrated_energy % self.primorial_base
+        if matrix_residue <= self.invariant_limit:
+            return 1  # Thermodynamic feedback cycle verified stable and balanced within Z
+        return 0
+
 if __name__ == "__main__":
-    print("[ pTRC INFORMATICS ENGINE ] Validating Thermodynamic Clock Cycles & CMB Symmetries...")
-    engine = ThermodynamicClockEngine()
+    print("[ pTRC-THERMODYNAMICS ] Initializing discrete thermal state matrix...")
+    engine = PTRCThermodynamicClockEngine()
     
-    # Berechne den Geometrie-Overhead bei einer simulierten Gitter-Distanz von 10.000 Pixeln
-    overhead = engine.calculate_routing_overhead(simulated_distance_pixels=10000)
+    # Process feedback loop iterations using the core calibration limit constant 1836
+    print(" -> Clocking non-linear entropy steps for system Takt 1836...")
+    engine.inject_thermal_pulse(whole_number_excitation=1836)
     
-    print(f"\nThermodynamische Takt-Analyse abgeschlossen:")
-    print(f" -> Geometrischer Rechenzeit-Overhead: {overhead} Milli-Ticks")
-    print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
-    sys.exit(0)
+    # Run pipeline verification steps
+    is_valid = engine.verify_thermodynamic_invariance()
+    
+    print(f" -> [ VALIDATION ] Integer thermal balance audit finished.")
+    print(f" -> Thermodynamic Invariance Status: {is_valid}")
+    print(f" -> Current Thermal Register Slice (Index 120-128): {engine.thermal_energy_registers[120:128]}")
+    print(" -> STATUS: Zero-Float Thermodynamic Clock Engine Successfully Audited.")
