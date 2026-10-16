@@ -6,7 +6,6 @@
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
 # For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
-#
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
 # waiver issued directly by the author.
@@ -17,111 +16,103 @@
 # ==============================================================================
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Module: quantum_entanglement.py
-Pure Integer Shared-Memory Node Synchronization Engine.
-Models instantaneous quantum state correlations via Modulo-24 control layer tracking.
-Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
+pTRC Framework - Core Simulation Module: Shared-Memory Node Synchronization
+Operational Domain: Non-local quantum correlation modeling via discrete integer matrices.
+Enforces multi-node quantum entanglement state mapping without continuous spatial metrics.
 """
 
 import numpy as np
-import sys
-import time
 
-class QuantumEntanglementEngine:
-    def __init__(self, num_pairs=8):
-        self.num_pairs = num_pairs
+class PTRCQuantumEntanglementEngine:
+    """
+    Executes deterministic, zero-float simulations of entangled states
+    using shared kernel-memory indexing and discrete phase modulations.
+    """
+    def __init__(self, operational_nodes=24):
+        self.control_base = 24
+        self.total_nodes = operational_nodes
         
-        # Der physikalische Kernel-Speicher (Shared Memory Matrix)
-        # Enthält die diskreten Spin-Zustände der verschränkten Paare
-        # Zustand 1 = Spin Up, Zustand 2 = Spin Down (reine Ganzzahlen)
-        self.shared_kernel = np.zeros(self.num_pairs, dtype=np.uint8)
+        # Combined shared-memory matrix buffer layout tracking state and phase indexes
+        self.shared_kernel = np.zeros((2, self.total_nodes), dtype=np.int32)
         
-        # System A und System B besitzen keine eigenen Kopien der Zustände,
-        # sondern halten lediglich Modulo-24-Adresspointer auf denselben Kernel.
-        self.system_a_addresses = np.array([i for i in range(self.num_pairs)], dtype=np.uint8)
-        self.system_b_addresses = np.array([i for i in range(self.num_pairs)], dtype=np.uint8)
-        
-        self.initialize_entangled_states()
+        # Shared-memory mapping table storing integer pointer addresses
+        self.entanglement_registry = np.zeros(self.total_nodes, dtype=np.int32)
+        self._initialize_lattice_pointers()
 
-    def initialize_entangled_states(self):
+    def _initialize_lattice_pointers(self):
         """
-        Präpariert die verschränkten Paare im Shared-Memory-Kernel.
-        Jedes Paar erhält einen deterministischen, aber zufällig verteilten Antiparallel-Zustand.
+        Sets up the default identity pointers for the lattice grid.
+        Initially, each node references its own address index.
         """
-        # FIX: Reines Integer-Routing (0 oder 1) zur Festlegung der Spins.
-        # Ersetzt np.random.rand() um floats im RAM vollständig zu verhindern.
-        rand_bits = np.random.randint(0, 2, size=self.num_pairs, dtype=np.uint8)
-        
-        for i in range(self.num_pairs):
-            # Zustand 1 (Up) oder 2 (Down) basierend auf unteilbaren Integer-Bits
-            self.shared_kernel[i] = 1 if rand_bits[i] == 1 else 2
-    def measure_node(self, system_identity, pair_index):
-        """
-        Simuliert die Messung (Memory-Read-Update) an einem Knoten.
-        Nach den Bellschen Regeln bricht der Zustand bei der ersten Messung deterministisch auf einen Wert auf.
-        System B erfährt die Änderung augenblicklich, weil es auf dieselbe Speicheradresse zugreift.
-        """
-        if pair_index >= self.num_pairs:
-            raise IndexError("Knoten-Index außerhalb der Matrixgrenzen.")
-            
-        # Modulo-24 Synchronisations-Check des Pointers
-        addr_a = self.system_a_addresses[pair_index] % 24
-        addr_b = self.system_b_addresses[pair_index] % 24
-        
-        if addr_a != addr_b:
-            return "ERR_PHASE_DISSIPATION"
-            
-        # Zustand aus dem Shared Kernel auslesen
-        raw_state = self.shared_kernel[addr_a]
-        
-        # Transformation für den Beobachter (EPR-Kovarianz):
-        if system_identity == "A":
-            observed_spin = "UP" if raw_state == 1 else "DOWN"
-        elif system_identity == "B":
-            observed_spin = "DOWN" if raw_state == 1 else "UP"
-        else:
-            observed_spin = "UNKNOWN"
-            
-        return observed_spin
+        for node in range(self.total_nodes):
+            self.entanglement_registry[node] = node
 
-    def trigger_environmental_decoherence(self, pair_index):
+    def establish_entangled_pair(self, node_a, node_b):
         """
-        Simuliert den Verlust der Verschränkung (Dekohärenz), indem die Modulo-24 
-        Adress-Symmetrie der Pointer durch ein Störsignal verschoben wird.
+        Binds two spatial nodes into a singular operational state.
+        Instead of simulating fields, node_b is forced to mirror the core 
+        kernel pointer address of node_a within the shared-memory registry.
         """
-        # System B verliert die exakte Adress-Resonanz (Phasensprung um 1 Takt)
-        self.system_b_addresses[pair_index] = (self.system_b_addresses[pair_index] + 1) % 24
+        idx_a = node_a % self.total_nodes
+        idx_b = node_b % self.total_nodes
+        
+        # Route the address pointer of node_b directly to node_a's register slot
+        self.entanglement_registry[idx_b] = self.entanglement_registry[idx_a]
+
+    def trigger_measurement_collapse(self, target_node, excitation_vector):
+        """
+        Collapses the discrete state of the target node and updates all 
+        registered shared-memory targets instantly without spatial lag.
+        Operates entirely through pure whole-number assignments.
+        """
+        idx_target = target_node % self.total_nodes
+        target_pointer = self.entanglement_registry[idx_target]
+        
+        # Calculate new discrete binary state via deterministic mod-2 thresholding
+        new_binary_state = int(excitation_vector % 2)
+        new_phase_shift = int(excitation_vector % self.control_base)
+        
+        # Scan the entire grid registry for nodes matching the same shared pointer
+        for node in range(self.total_nodes):
+            if self.entanglement_registry[node] == target_pointer:
+                self.shared_kernel[0, node] = new_binary_state
+                # Opposite node index receives the inverse discrete phase shift
+                if node != idx_target:
+                    self.shared_kernel[1, node] = (self.control_base - new_phase_shift) % self.control_base
+                else:
+                    self.shared_kernel[1, node] = new_phase_shift
+
+    def verify_correlation_integrity(self, node_a, node_b):
+        """
+        Validates the state alignment between two points in the framework.
+        Returns 1 if the shared-memory architecture is intact, else 0.
+        """
+        idx_a = node_a % self.total_nodes
+        idx_b = node_b % self.total_nodes
+        
+        # Check if both nodes share the identical core address source
+        if self.entanglement_registry[idx_a] == self.entanglement_registry[idx_b]:
+            # Sum up phases to check for perfect anti-symmetric balance (Modulo 24)
+            combined_phase = (self.shared_kernel[1, idx_a] + self.shared_kernel[1, idx_b]) % self.control_base
+            if combined_phase == 0:
+                return 1
+        return 0
 
 if __name__ == "__main__":
-    print("[ pTRC INFORMATICS ENGINE ] Validating Quantum Entanglement Module...")
+    print("[ pTRC-QUANTUM ] Initializing discrete entanglement matrix...")
+    engine = PTRCQuantumEntanglementEngine(operational_nodes=24)
     
-    pairs_count = 4
-    engine = QuantumEntanglementEngine(num_pairs=pairs_count)
+    # Establish non-local binding between node index 4 and node index 17
+    engine.establish_entangled_pair(node_a=4, node_b=17)
     
-    print(f"\n--- Schritt 1: Instantane EPR-Korrelation (Modulo-24 Resonanz aktiv) ---")
-    for i in range(pairs_count):
-        res_a = engine.measure_node("A", i)
-        res_b = engine.measure_node("B", i)
-        print(f"Paar {i} | Messung System A: {res_a:<4} <---> Messung System B: {res_b:<4} | Status: PERFEKT KORRELIERT")
-        
-    print(f"\n--- Schritt 2: Gezielter Dekohärenz-Eingriff (Bruch der Adress-Symmetrie) ---")
-    print("Störsignal bricht die Modulo-24 Resonanz bei Paar 2...")
-    engine.trigger_environmental_decoherence(pair_index=2)
+    # Trigger measurement collapse via an integer excitation value of 1836
+    print(" -> Executing discrete measurement command (Calibration Takt = 1836)...")
+    engine.trigger_measurement_collapse(target_node=4, excitation_vector=1836)
     
-    print(f"\n--- Schritt 3: Erneute Validierung der Kontrollmatrix ---")
-    for i in range(pairs_count):
-        res_a = engine.measure_node("A", i)
-        res_b = engine.measure_node("B", i)
-        
-        if res_a == "ERR_PHASE_DISSIPATION" or res_b == "ERR_PHASE_DISSIPATION":
-            status = "COLLAPSED (Verschränkung verloren)"
-            res_a, res_b = "---", "---"
-        else:
-            status = "STABIL KORRELIERT"
-            
-        print(f"Paar {i} | Messung System A: {res_a:<4} <---> Messung System B: {res_b:<4} | Matrix: {status}")
-
-    print("\n[SUCCESS] Modulo-24 Memory-Addressing-Proof abgeschlossen.")
-    print("-> Keine Signalübertragung durch kontinuierlichen Raum notwendig.")
-    print("-> Synchronisation basiert rein auf invarianter, diskreter Adress-Identität.")
-    sys.exit(0)
+    # Check if the correlation rules hold true
+    is_valid = engine.verify_correlation_integrity(node_a=4, node_b=17)
+    
+    print(f" -> [ VALIDATION ] State correlation integrity check: {is_valid}")
+    print(f" -> Shared Kernel Matrix States: {engine.shared_kernel[0]}")
+    print(f" -> Shared Kernel Matrix Phases: {engine.shared_kernel[1]}")
+    print(" -> STATUS: Zero-Float Entanglement Protocol Successfully Secured.")
