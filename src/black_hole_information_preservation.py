@@ -5,7 +5,7 @@
 # LICENSE & LIABILITY NOTICE:
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://gnu.org
+# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
 #
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
@@ -100,6 +100,5 @@ if __name__ == "__main__":
     
     print(f" -> [ VALIDATION ] Horizon information state tracking finished.")
     print(f" -> Conservation Sieve Parity Status: {parity_valid}")
-    print(f" -> Active Horizon Bits Vector (First 24 Cells): {self.horizon_bit_registers[0:24]}")
+    print(f" -> Active Horizon Bits Vector (First 24 Cells): {engine.horizon_bit_registers[0:24]}")
     print(" -> STATUS: Zero-Float Information Preservation Matrix Verified Secure.")
-
