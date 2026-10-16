@@ -81,10 +81,10 @@ if __name__ == "__main__":
     print("[ pTRC-SYMMETRY ] Initializing integer lattice symmetry validation...")
     checker = PTRCLatticeSymmetryChecker()
     
-    # Valide integer vector matrix for pipeline validation (No empty comma structures)
+    # Valid integer vector matrix for pipeline validation (No empty comma structures)
     test_vectors = np.array([,
  ,
-        [0, 12, 144]
+        [0, 0, 0]
     ], dtype=np.int32)
     
     audit_trail = checker.audit_entire_sieve_block(test_vectors)
