@@ -6,7 +6,6 @@
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
 # For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
-#
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
 # waiver issued directly by the author.
@@ -35,7 +34,7 @@ class PTRCGravityEdgeSharingEngine:
         self.grid_size = spatial_size
         self.scale_factor = 1000
         
-        # curate the discrete density field and potential wells inside the Z-space
+        # Curate the discrete density field and potential wells inside the Z-space
         self.mass_distribution_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.int32)
         self.potential_field_grid = np.zeros((self.grid_size, self.grid_size), dtype=np.int32)
 
