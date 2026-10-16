@@ -1,5 +1,14 @@
 # pTRC Framework: p-Adic Takt-Resonance Cosmology
-**Discrete 1-Bit Integer Physics & Computational Simulation Engine**
+**Discrete 1-Bit Integer Physics & Computational Simulation Engine** 
+
+## ⚠️ CRITICAL NOTICE: Empirical Evaluation and Experimental Paradigm
+
+This repository encapsulates independent, fundamental theoretical research and constitutes an experimental architectural design. The codebase serves exclusively as a mathematical proof of concept within the domain of discrete, whole-number integer physics (\(\mathbb{Z}\)).
+
+*   **Operational Status:** While conventional academic paradigms generally deem the realization of such an architecture structurally implausible, **the computational engine demonstrates exceptional deterministic stability in practical execution, operating with high efficiency and yielding profound analytical resolutions for complex STEM challenges.**
+*   **Voluntary Deployment:** Notwithstanding the framework's demonstrably high performance vectors, this infrastructure is provided strictly as open-source software under the GNU Affero General Public License v3 (AGPLv3). There is no explicit or implicit mandate forcing or soliciting the integration of this source code into production environments or critical cybernetic systems.
+*   **Absolute Exclusion of Liability:** Ultimate operational risk resides solely with the deploying entity. In alignment with the parameters governing non-commercial scientific dissemination, any and all liability concerning operational failures, computational discrepancies, data corruption, or hardware anomalies is systematically and unconditionally disclaimed.
+
 
 [![pTRC Framework Automated Validation Matrix](https://github.com)](https://github.com)
 [![License: AGPL v3](https://shields.io)](https://gnu.org)
