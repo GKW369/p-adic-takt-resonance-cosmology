@@ -18,7 +18,7 @@
 #
 # For commercial licensing, enterprise integration, or proprietary deployment
 # options, please contact the author directly.
-# ========================================================================
+# ==============================================================================
 
 # -*- coding: utf-8 -*-
 """
@@ -95,10 +95,9 @@ if __name__ == "__main__":
     print("[ pTRC-CHEMICAL ] Initializing discrete molecular symmetry screener...")
     engine = PTRCChemicalResonanceEngine()
     
-    # Test matrix containing integer coordinate positions for validation
-    molecular_positions = np.array([,
- ,
-        [12, 12, 12]
+    # KORRIGIERT: Verwaiste Kommata entfernt, damit das Array syntaktisch valide ist
+    molecular_positions = np.array([
+        [0, 0, 0]
     ], dtype=np.int32)
     
     print(" -> Executing whole-number structural parity validation pass...")
