@@ -83,3 +83,42 @@ By completely removing floating-point units (FPU) from the computational loop, t
 | **Advanced Energy Storage / BMS** | Approximated state-of-charge calculation; floating-point tracking introduces drift over long-term cycle logging. | 144-facet vector equilibrium mapping and cascaded primorial gears for the numerical analysis of anisotropic ion transport pathways in solid-state lattices. | **Precise, drift-free tracking of structural charge distribution** and zero-overhead geometry filtering for crystalline battery materials. |
 | **Digital Audio Signal Processing** | Accumulation of high-frequency quantization noise during iterative cascading digital filter cycles. | Invariant topological filtering using exact, nanosecond-matched integer clock cycles via nested modular rings. | **100% artifact-free, phase-synchronized studio acoustics** without degradation of digital filter states. |
 | **Materials Science & Chemistry** | High hardware cost for continuous approximations of molecular chirality and spatial orientations. | Exact geometric node alignment via discrete integer quadrance tracking and holographic crossed-mirror symmetries. | Efficient, real-time screening of mirror-molecule chirality states using precise integer coordinate matching. |
+
+| **Post-Quantum Cryptography** | Vulnerability of standard continuous keys to hardware-level side-channel timing analysis. | Cyclically closed, symmetrical matrix encryption inside the multi-tiered primorial integer rings of the Modulo-24 Architecture. | Lightweight, **inherently stable communication metric** for low-power embedded transceivers and orbital networks. |
+
+---
+
+## 6. Visual Demonstration & Temporal Takt-Synchronization
+
+To guarantee that the visualization matches the underlying discrete mechanics, the output engine adheres to the **Temporal Takt-Synchronization Law**. Instead of using standard continuous 60-Hz rendering pipelines that introduce temporal interpolation artifacts ("Matsch-Effekt"), the video frame generation is dynamically scale-matched to the hardware target environment.
+
+The framerate is rigidly locked to an integer multiple or divisor of the internal clock of the Modulo-24 Architecture (e.g., matching the **144-facet crystal symmetry at 144 FPS**, or high-refresh hardware targets at **240 FPS**), ensuring completely stutter-free, phase-locked playback.
+
+Combined with an uncompressed, lossless rendering profile (`-crf 0 -g 1`), the system eliminates any spatial or temporal pixel-smoothing. Every single frame is generated as an independent, unrounded, pixelsharp keyframe.
+
+```bash
+# Execute the live 1-bit integer fluid resonance simulation:
+python src/fluid_resonance.py
+
+# Execute the 1080p takt-synchronized stereoscopic retina generator:
+python experimental/ptrc_3d_animation_generator.py
+```
+
+---
+
+## 7. Licensing & Absolute Exclusion of Liability
+
+The pTRC framework is governed by a strict open-source and professional dual-licensing model to protect academic integrity while facilitating industrial utilization. Licensing operations are conducted by the author as an independent researcher under German law (§ 18 EStG).
+
+### A. Academic Evaluation Tier (AGPLv3)
+This software is licensed under the GNU Affero General Public License v3 (AGPLv3). Any third-party software, commercial framework, or physics middleware that incorporates, forks, or links to this repository remotely via a network must disclose its entire source code under identical copyleft terms.
+
+### B. Commercial Infrastructure License & Revenue
+Commercial deployment in proprietary, closed-source, or industrial environments requires a formal commercial license waiver issued directly by the author. All received revenues are declared directly under German personal income tax regulations. For inquiries regarding corporate acquisition schedules and pricing matrices, contact: **g.wirminghaus@gmx.de**
+
+### C. Strict Zero-Liability Agreement ("As-Is" Clause)
+By downloading, compiling, or utilizing this software in any environment, you explicitly agree to the following terms:
+*   **Absolute Risk Transfer:** The software is provided "as is", without warranty of any kind. The entire risk as to the quality, performance, and mathematical output of the engine is entirely with the user.
+*   **No Indemnity:** The author accepts no responsibility and shall not be held liable for any operational failures, system damage, financial losses, data corruption, or hardware defects caused by the deployment of these algorithms. 
+*   **Official License Text:** For the unedited conditions governing distribution and the network-delivery source clauses, see the official registry: https://gnu.org
+*   **Self-Reliance:** If you integrate this framework into commercial pipelines, you are solely responsible for validation, sandboxing, and error correction. The author provides no deployment support.
