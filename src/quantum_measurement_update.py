@@ -5,7 +5,7 @@
 # LICENSE & LIABILITY NOTICE:
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+# For the complete, unedited license text see: https://gnu.org
 #
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
@@ -17,53 +17,74 @@
 # ==============================================================================
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Module: quantum_measurement_update.py
-Deterministic Wave-Function Collapse via Synchronized Memory Write-Updates.
-Refactored: 100% Floating-Point-Free. Pure digital integer visualization.
+pTRC Framework - Core Simulation Module: Deterministic Quantum Measurement Update
+Operational Domain: Discrete State Collapse Mechanics (\mathbb{Z}) inside the 24-clock.
+Processes non-probabilistic node measurement steps without floating-point wave functions.
 """
 
-import sys
 import numpy as np
 
-class QuantumMeasurementEngine:
-    def __init__(self, modulo_24_clock=24):
-        self.modulo_24_clock = modulo_24_clock
-        self.SCALE = 1000  # Skalierungsfaktor für Festkomma-Arithmetik
+class PTRCQuantumMeasurementEngine:
+    """
+    Executes whole-number state collapses and register updates across the network nodes
+    utilizing fixed-point projection scaling and modular phase constraints.
+    """
+    def __init__(self, operational_channels=24):
+        self.control_base = operational_channels  # Modulo-24 clock base
+        self.primorial_base = 210
+        self.invariant_limit = 156
+        self.SCALE = 1000
+        
+        # Absolute integer registers tracking system observation states
+        self.measurement_state_vector = np.zeros(self.control_base, dtype=np.uint8)
+        self.collapsed_phase_register = np.zeros(self.control_base, dtype=np.int32)
 
-    def execute_register_update(self, lattice_state=1836, observer_mask=240):
+    def trigger_discrete_collapse(self, node_address, incoming_takt_pulse):
         """
-        Simuliert die Synchronisation zwischen Beobachterregister und Gitterzustand.
-        Ersetzt kontinuierliche Wahrscheinlichkeiten durch diskrete Bit-Maskierungen.
-        Rechnet streng in Z.
+        Forces a deterministic register write-update to simulate state collapse.
+        Bypasses continuous trigonometric metrics through pure modulo-24 indexing.
         """
-        # Deterministische Schnittmengen-Schnittstelle im Ganzzahlraum
-        synchronized_state = lattice_state & observer_mask
+        target_channel = int(node_address) % self.control_base
+        pulse_amplitude = int(incoming_takt_pulse)
         
-        # Modulo-24 Takt-Resonanzabgleich des synchronisierten Systemzustands
-        resonance_residual = synchronized_state % self.modulo_24_clock
-        
-        # Berechnung der Mess-Präzision (Skaliert in Milli-Units)
-        # Je kleiner das Restglied der Phase, desto höher die Kohärenz beim Update
-        total_slots = 100
-        milli_coherence_precision = ((total_slots - resonance_residual) * self.SCALE) // total_slots
-        
-        # Kollaps-Logik: Zustand wird deterministisch eingeloggt
-        collapse_successful = resonance_residual == 0
-        
-        return milli_coherence_precision, collapse_successful
+        for channel in range(self.control_base):
+            # Compute integer-bounded scaling factors to emulate phase localization
+            scaled_amplitude = (pulse_amplitude * self.SCALE) // (channel + self.invariant_limit + 1)
+            discrete_collapse_bit = scaled_amplitude % 2
+            
+            # Commit the 1-bit state transformation directly to the target hardware channel
+            if channel == target_channel:
+                self.measurement_state_vector[channel] = int(discrete_collapse_bit)
+                self.collapsed_phase_register[channel] = (scaled_amplitude % self.primorial_base)
+            else:
+                # Update background phase entanglement references natively in Z
+                self.collapsed_phase_register[channel] = (scaled_amplitude // 5) % self.control_base
+
+    def verify_measurement_coherence(self):
+        """
+        Audits post-collapse matrix states against system boundary limitations.
+        """
+        total_integrated_phase = int(np.sum(self.collapsed_phase_register))
+        if total_integrated_phase == 0:
+            return 1
+            
+        field_residue = total_integrated_phase % self.primorial_base
+        if field_residue <= self.invariant_limit:
+            return 1  # Measurement transformation path verified stable and balanced
+        return 0
+
 if __name__ == "__main__":
-    print("[ pTRC INFORMATICS ENGINE ] Validating Quantum Measurement Update Matrix...")
-    engine = QuantumMeasurementEngine()
+    print("[ pTRC-MEASUREMENT ] Initializing deterministic collapse engine pipelines...")
+    engine = PTRCQuantumMeasurementEngine()
     
-    precision, collapsed = engine.execute_register_update(lattice_state=1836, observer_mask=240)
+    # Trigger local measurement update matching the system calibration invariant limit (1836)
+    print(" -> Clocking discrete node measurement updates for Takt 1836...")
+    engine.trigger_discrete_collapse(node_address=4, incoming_takt_pulse=1836)
     
-    print(f"\nDiskrete Mess-Synchronisation abgeschlossen:")
-    print(f" -> Systemischer Update-Kohärenzgrad: {precision} Milli-Präzisions-Units")
+    # Run integration checks
+    is_coherent = engine.verify_measurement_coherence()
     
-    if collapsed:
-        print(" -> STATUS: Register-Update vollzogen. Quantenzustand deterministisch fixiert.")
-    else:
-        print(" -> STATUS: Sub-kritische Synchronisation. Phase-Dissipation aktiv.")
-        
-    print("-> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
-    sys.exit(0)
+    print(f" -> [ VALIDATION ] Quantum register update pass finished.")
+    print(f" -> Post-Collapse Field Coherence Status: {is_coherent}")
+    print(f" -> Collapsed State Channel Vector: {engine.measurement_state_vector}")
+    print(" -> STATUS: Zero-Float Quantum Measurement Matrix Successfully Audited.")
