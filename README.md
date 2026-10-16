@@ -12,7 +12,7 @@
 
 ## 🔬 1. Das pTRC-Axiom: Das Kontinuum ist ein Rechenfehler
 
-Das **pTRC-Framework (p-Adic Takt-Resonance Cosmology)** ist eine deterministische, vollständig ganzzahlige Alternative zu kontinuierlichen Modellen der Raumzeit-Physik. Die moderne Computerphysik stützt sich auf die Approximation kontinuierlicher reeller Zahlen mittels Fließkommavariablen (\(\mathbb{R}^4\)). Diese Architektur führt inhärent zu kumulativen Rundungsfehlern, Rechenzeit-Verzögerungen (Lag) und unphysikalischen Korrekturen wie Dunkler Materie oder Vakuumdivergenzen. Die Annahme eines unendlich teilbaren Raumzeit-Hintergrunds erzeugt mathematische Singularitäten (\(1/0 \to \infty\)), die High-Performance-Simulationspipelines blockieren.
+Das **pTRC-Framework (p-Adic Takt-Resonance Cosmology)** ist eine deterministische, vollständig ganzzahlige Alternative zu kontinuierlichen Modellen der Raumzeit-Physik. Die moderne Computerphysik stützt sich auf die Approximation kontinuierlicher reeller Zahlen mittels Fließkommavariablen (\(\mathbb{R}^4\)). Diese Architektur führt inhärent zu kumulativen Rundungsfehlern, Rechenzeit-Verzögerungen (Lag) und unphysikalischen Korrekturen wie Dunkler Materie oder Vakuumdivergenzen. Die Annahme eines unendlich teilbaren Raumzeit-Hintergrunds erzeugt mathematische Singularitäten (1/0 → ∞), die High-Performance-Simulationspipelines blockieren.
 
 Das pTRC-Framework löst diese Blockaden auf, indem es das Kontinuum vollständig verwirft. Vor dem Raum existierte der Integer. Raum ist kein eigenständiger Behälter, sondern die durch die ganze Zahl ermöglichte geometrische Erlaubnis. Der Raum wird als finiter, diskreter Informationsprozessor neu definiert, der strikt auf Ganzzahlkoordinaten und reiner Modulo-Arithmetik innerhalb des algebraischen Rings der ganzen Zahlen (\(\mathbb{Z}\)) operiert.
 
@@ -21,7 +21,6 @@ Das pTRC-Framework löst diese Blockaden auf, indem es das Kontinuum vollständi
 * **Schutz vor Analog-Lecks:** Die standardmäßige analoge Division (`/`) ist als *Analog Leakage Exploit* gesperrt, da sie Python dazu zwingt, kontinuierliche Felder im RAM zu instanziieren. Rationale Verhältnisse werden über eine feste Festkomma-Skalierung (`SCALE = 1000`) und strikte Ganzzahl-Bodendivision (`//`) abgebildet.
   * *Beispiel:* `result = (value * SCALE) // divisor`
 * **Strikte deterministische Reversibilität:** Keine kontinuierlichen Zufallssampling-Methoden (wie `np.random.rand()`). Pseudorandomisierung erfolgt ausschließlich über ganzzahlig begrenzte Generatoren (`np.random.randint()`); Zeitmessungs-Benchmarks laufen undivisibel über CPU-Nanosekunden (`time.time_ns()`).
-
 ---
 
 ## 🧬 2. Kern-Mathematik, Gitter-Quantisierung & Isotropie
@@ -49,6 +48,7 @@ Zudem wird die 156 über die aktiven, teilerfremden Siebknoten der Eulerschen Ph
 \[156 = (3 \times 48) + 12 = 144 + 12\]
 
 Wobei der Faktor 3 die fundamentale dreidimensionale Koordinatenbasis (axiale Trinität) definiert. Jede andere Ganzzahl würde zu einer Phasen-Asymmetrie und sofortiger modularer Interferenz führen. Der experimentelle, makroskopische Nachkomma-Schwanz (\(M_{\text{exp}} \approx 1836,15267343\)) ist eine analytische Täuschung, die durch Pixel-Aliasing über große Koordinatendistanzen entsteht. Er repräsentiert lediglich den kumulativen Netzwerk-Routing-Overhead (Clock Drag) frequenzbasierter Labormessungen, während der Kernzustand auf Hardware-Ebene makellos ganzzahlig bleibt.
+
 ---
 
 ## 🪐 3. Die Ontologische Kosmologie: Unendliche Gitterausbreitung
@@ -82,7 +82,7 @@ Wenn zwei räumliche Frequenzen multiplikativ interagieren, ist das resultierend
 *Symmetrieeigenschaft:* Für alle $s \in S$: $(s \cdot s) \equiv 1 \pmod{24}$ [Selbstinversion zu Strahl 1].
 
 ### FORMULA 3: Die absolute Eliminationsgleichung (Das Sehende Sieb)
-Ein Kandidatenwert $C$ auf einem erlaubten Symmetriestrahl $s_{\text{target}}$ ist eine **PRIMZAHL**, wenn er vollkommen frei von Interferenzknoten vorheriger Primzahlbasen ist. Ausführungsbedingung ohne Fließkommadivisionen:
+Ein Kandidatenwert $C$ auf einem erlaubten Symmetriestrahl $s_{\text{target}}$ is eine **PRIMZAHL**, wenn er vollkommen frei von Interferenzknoten vorheriger Primzahlbasen ist. Ausführungsbedingung ohne Fließkommadivisionen:
 \[C \neq (24 \cdot m_1 + s_1) \cdot (24 \cdot m_2 + s_2)\]
 Für alle Matrixebenen $m_1, m_2 \ge 0$ und alle Strahlkombinationen, die $(s_1 \cdot s_2) \equiv s_{\text{target}} \pmod{24}$ erfüllen.
 
@@ -90,7 +90,6 @@ Für alle Matrixebenen $m_1, m_2 \ge 0$ und alle Strahlkombinationen, die $(s_1 
 Die strukturelle Dimensionierung des Vektorgleichgewichts (die 144 offenen Facetten der Matrix) leitet sich direkt aus der hexagonalen Kompression des 24-spurigen Primzahlkreuzes ab ($S \in \{1, 5, 7, 11, 13, 17, 19, 23\}$):
 \[\text{Raum-Dimensionen} = 6 \cdot |S| = 6 \cdot 8 = 48 \quad \text{Fundamentale Vektoren}\]
 \[\text{Matrix-Knoten} = 3 \cdot \text{Raum-Dimensionen} = 144 \quad \text{Holographische Oberflächen-Facetten}\]
-
 ---
 
 ## 🚀 5. Core Applications & Industrial Use Cases
@@ -101,6 +100,7 @@ Das pTRC-Framework beweist, dass komplexe physikalische Multiskalen-Phänomene o
 * **Hardwarenahe KI-Compiler & Edge Computing:** Ultra-effiziente Ausführung neuronaler Netzwerke direkt auf Integer-basierten CPU-Registern, perfekt optimiert für ressourcenarme oder autarke Hardware-Plattformen.
 * **Biometrische & Neurotechnische Biosignal-Chips:** Umwelt- und verlustfreie Echtzeit-Verarbeitung von stereoskopischen Seh- und Sensorsignalen über die integrierte 1-Bit Retinal Stereo-Symmetrie direkt auf Silizium-Ebene (ASICs/FPGAs).
 * **Kryptographische Invarianz-Systeme:** Mathematisch unknackbare Verschlüsselungsarchitekturen, die die Selbstinversion der abelschen Modulo-24-Gruppe nutzen, um gegen hardwareseitige Side-Channel-Timing-Analysen geschützt zu sein.
+
 ---
 
 ## 🎛️ 6. Algorithmische Simulations-Engine (Die 20 Core-Module)
@@ -127,7 +127,7 @@ Die technologische Validität des Frameworks wird durch die zentrale Integration
 | **MODULE 16** | `crypt_resonance` | Abelsche Chiffrierung im selbstinversen Modulo-24-Strahlraum | `[ VALID ]` |
 | **MODULE 17** | `gravity_edge_sharing` | Emergente Gravitation und Bahnberechnung über geteilte Gitterkanten | `[ VALID ]` |
 | **MODULE 18** | `hubble_tension` | Hubble-Spannung als skalenabhängige Netzwerk-Latenz | `[ VALID ]` |
-| **MODULE 19** | `internal_loopback` | Deterministische Dämpfungs-Rückkopplungsschleifen im Gitter | `[ VALID ]` |
+| **MODULE 19** | `internal_loopback` | Deterministische Dämpfungs-Rückkopplucksschleifen im Gitter | `[ VALID ]` |
 | **MODULE 20** | `isotropy` | Richtungs-Invarianz-Validierung via Ikosaeder-Spiegelmatrizen | `[ VALID ]` |
 
 ---
@@ -136,6 +136,7 @@ Die technologische Validität des Frameworks wird durch die zentrale Integration
 
 * **`ptrc_4k_genesis.py`:** Generiert ein pixelscharfes, unkomprimiertes 4K Ultra-HD-Bild (`3840x2160` PPM), das das pure, unkorrumpierte Interferenzmuster des primoriellen Modulo-210 Raumsiebs direkt auf die Festplatte brennt.
 * **`ptrc_retina_encoder.py`:** Ein takt-synchronisierter stereoskopischer 1080p Video-Encoder. Berechnet eine mathematische Anaglyphen-Trennung (Links: Rot-Kanal, Rechts: Cyan-Kanal) über den rechtwinkligen 90-Grad-Hologrammkreuz-Wechsel im RAM. Bündelt die Frames verlustfrei mittels FFmpeg bei exakt 24 FPS (`-c:v libx264 -crf 0 -g 1`).
+
 ---
 
 ## 🔬 8. Das algebraische Kaleidoskop-Prinzip (Winkelbegrenzte Infovervielfachung)
@@ -160,8 +161,8 @@ Die Energie wird als diskretes Vektorpotential (A) direkt im lokalen Berechnungs
 
 Diese Architektur ist strikt in zwei voneinander getrennte Verwertungspfade unterteilt:
 
-1. **Academic Evaluation Branch (Open Source):** Reguliert durch die **GNU Affero General Public License Version 3 (AGPLv3)**. Kostenfrei für nicht-kommerzielle, akademische Forschung und universitäre Gabelungen. Jede netzwerkbasierte Interaktion (SaaS, Cloud-Simulations-API) verpflichtet zwingend zur vollständigen Offenlegung des umgebenden Quellcodes unter identischen AGPLv3-Bedingungen. Der vollständige, unverkürzte Lizenztext ist integraler Bestandteil dieses Schutzkonzepts und kann unter der offiziellen Adresse [GNU AGPL-3.0 Repository Text](https://gnu.org "GNU AGPLv3 Core License Text") eingesehen werden.
-2. **Proprietary Commercial Branch:** Jede Nutzung, die nicht mit den Offenlegungspflichten der AGPLv3 konform ist oder sein kann, erfordert vor der Inbetriebnahme den Erwerb einer separaten, kommerziellen Lizenz. Dies betrifft insbesondere:
+1. **Academic Evaluation Branch (Open Source):** Reguliert durch die **GNU Affero General Public License Version 3 (AGPLv3)**. Kostenfrei für nicht-kommerzielle, akademische Forschung und universitäre Gabelungen. Jede netzwerkbasierte Interaktion (SaaS, Cloud-Simulations-API) verpflichtet zwingend zur vollständigen Offenlegung des umgebenden Quellcodes unter identischen AGPLv3-Bedingungen. Der vollständige, unverkürzte Lizenztext ist integraler Bestandteil dieses Schutzkonzepts und kann unter der offiziellen Adresse [GNU AGPL-3.0 Repository Text](https://gnu.org) eingesehen werden.
+2. **Proprietary Commercial Branch:** Jede Nutzung, die nicht mit den Offenlegungspflichten der AGPLv3 konform ist oder sein kann, erfordert vor der Inbetriebnahme den Erwerb einer separaten, proprietären kommerziellen Lizenz (`COMMERCIAL_LICENSING.md`). Dies betrifft insbesondere:
    * Die Bereitstellung kommerzieller Middleware-Streams oder APIs.
    * Die hardwareseitige Integration der 144-Facetten-Routingvektoren in Silizium, ASICs, FPGAs oder neurotechnische Bio-Chips.
    * Die kommerzielle Skalierung offener Lattice-Architekturen zur Energietransduktion.
@@ -181,4 +182,4 @@ Deutschland
 📧 E-Mail: g.wirminghaus@gmx.de  
 📞 Telefon: +49 157 54055027  
 
-*Urheberrechtshinweis: Alle mathematischen Architekturen, Spektralgrafiken, 4K-Rastersiebe, Texturen und Quelltexte innerhalb dieses Repositories sind geistiges Eigentum des Autors. Copyright (c) 2026 Kurt Guido Wirminghaus. Alle Rechte vorbehalten.* 
+*Urheberrechtshinweis: Alle mathematischen Architekturen, Spektralgrafiken, 4K-Rastersiebe, Texturen und Quelltexte innerhalb dieses Repositories sind geistiges Eigentum des Autors. Copyright (c) 2026 Kurt Guido Wirminghaus. Alle Rechte vorbehalten.*
