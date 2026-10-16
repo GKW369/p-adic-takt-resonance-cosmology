@@ -120,5 +120,5 @@ Commercial deployment in proprietary, closed-source, or industrial environments 
 By downloading, compiling, or utilizing this software in any environment, you explicitly agree to the following terms:
 *   **Absolute Risk Transfer:** The software is provided "as is", without warranty of any kind. The entire risk as to the quality, performance, and mathematical output of the engine is entirely with the user.
 *   **No Indemnity:** The author accepts no responsibility and shall not be held liable for any operational failures, system damage, financial losses, data corruption, or hardware defects caused by the deployment of these algorithms. 
-*   **Official License Text:** For the unedited conditions governing distribution and the network-delivery source clauses, see the official registry: https://gnu.org
+*   **Official License Text:** For the unedited conditions governing distribution and the network-delivery source clauses, see the official registry: [https://gnu.org](https://www.gnu.org/licenses/agpl-3.0.html)
 *   **Self-Reliance:** If you integrate this framework into commercial pipelines, you are solely responsible for validation, sandboxing, and error correction. The author provides no deployment support.
