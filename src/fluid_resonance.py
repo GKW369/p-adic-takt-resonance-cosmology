@@ -5,7 +5,7 @@
 # LICENSE & LIABILITY NOTICE:
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+# For the complete, unedited license text see: ghttps://www.gnu.org/licenses/agpl-3.0.html
 #
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
@@ -111,4 +111,3 @@ if __name__ == "__main__":
     print(f" -> [ VALIDATION ] Operational execution cycles successful.")
     print(f" -> Total Integrated Lattice Mass: {total_lattice_mass} Particles.")
     print(" -> STATUS: Lossless Integer Fluid Transport Phase Verified.")
-
