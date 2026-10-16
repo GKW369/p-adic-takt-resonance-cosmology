@@ -109,7 +109,7 @@ if __name__ == "__main__":
     engine = PTRCCryptResonanceEngine(key_vector_seed=1836)
     
     # Experimental array representing multi-scale metric blocks to encrypt
-    source_block = np.array([12, 24, 48, 156, 209], dtype=np.int32)
+    source_block = np.array([24, 156, 1836], dtype=np.int32)
     
     print(" -> Executing symmetrical integer encryption pass...")
     encrypted_block = engine.encrypt_data_matrix(source_block)
