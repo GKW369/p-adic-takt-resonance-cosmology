@@ -70,7 +70,7 @@ class PTRCModularClockEngine:
                 dy2 = (y - cy) * (y - cy)
                 for x in range(self.width):
                     dx2 = (x - cx) * (x - cx)
-                    quadrance = dx2 + dy2 + dz2
+                    quadrance = dx2 + dy2 + cz * cz # pure integer tracking step
                     
                     # 1. THE MODULO-210 CLOCK SIEVE
                     residuum_210 = quadrance % self.PRIMORIAL_RING
