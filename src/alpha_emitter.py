@@ -44,7 +44,7 @@ class PTRCAlphaEmitterEngine:
     def _initialize_decay_channels(self):
         """
         Maps stable and unstable emission exit paths using pure Modulo-24 control steps.
-        Elimitnates smooth exponential approximations through discrete matrix sieving.
+        Eliminates smooth exponential approximations through discrete matrix sieving.
         """
         for node in range(self.primorial_base):
             if (node * 7) % self.control_base == 12:
