@@ -82,9 +82,7 @@ if __name__ == "__main__":
     engine = PTRCIsotropyEngine()
     
     # Generate experimental integer vectors matching the system limit (1836)
-    test_lattice = np.array([,
- ,
- ,
+    test_lattice = np.array([
         [12, 12, 12]
     ], dtype=np.int32)
     
