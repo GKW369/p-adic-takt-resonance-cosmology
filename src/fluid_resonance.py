@@ -108,8 +108,8 @@ class PTRCEternalLatticeEngine:
                         nx = (x + dx_sog) % self.width
                         ny = (y + dy_sog) % self.height
                     else:
-                        nx = (x + dx) % self.width
-                        ny = (y + dy) % self.height
+                        nx = (x + dx_sog) % self.width
+                        ny = (y + dy_sog) % self.height
 
                     # Wand-Reflektion an Decke und Boden
                     if ny <= 0 or ny >= self.height - 1:
@@ -158,8 +158,8 @@ if __name__ == "__main__":
         engine.update_takt_cycle(takt)
         print("\033[H", end="")
         print("="*150)
-        print("[ pTRC PLANCK LATTICE ] 1/137 Universal Refresh Rate Synchronization (Cinema Profile)...")
-        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | Field State: 144-Facet Spatial Crystal Symmetry Verified")
+        print(f"[ pTRC PLANCK LATTICE ] GNU AGPLv3 CORE | Universal 1/137 Coherence Sieve Active".center(150))
+        print(f"[ LATTICE TIME ] Takt-Cycle: {takt:03d} / {total_ticks} | 144-Facet Spatial Crystal Symmetry Locked".center(150))
         print("="*150)
         print(engine.render_fluid_frame())
         print("="*150)
