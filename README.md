@@ -4,6 +4,7 @@
 [![pTRC Framework Automated Validation Matrix](https://github.com)](https://github.com)
 [![License: AGPL v3](https://shields.io)](https://gnu.org)
 
+
 > **Motto:** *"Wir rechnen zu klein!"*  
 > **Architektur-Design & Konzept:** Kurt Guido Wirminghaus  
 > **Hardware-Plattform Baseline:** ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
@@ -143,7 +144,8 @@ Die technologische Validität des Frameworks wird durch die zentrale Integration
 
 In einem kontinuierlichen Koordinatensystem benötigt das Ändern von Abfanggrenzen transzendente trigonometrische Transformationen, die sofort Rundungsfehler einbringen. Im pTRC-Framework wird dies strikt über diskrete Teiler der zyklischen Modulo-24-Uhr-Architektur gelöst. Wenn sich zwei reflektierende Matrixebenen in einem ganzzahligen Teilungswinkel schneiden, erzeugt die interne Reflexion eine automatisierte Replikationskaskade. Die Engine berechnet nur die Basis-Sichtbarkeitsknoten innerhalb des aktiven Master-Quadranten (`PTRC3DStereoEngine`); das verbleibende Netzwerk wird verlustfrei über ganzzahlige Vorzeicheninversionen instanziiert.
 * **90-Grad-Schnittpunkt (Das orthogonale Kreuz):** Erzeugt exakt 4 Symmetrische Informationshologramme, wodurch die Rechenlast drastisch komprimiert wird.
-* **Kaskadierte Unterwinkel (Primoriel-Kristall-Multiplikator):** Durch Verschieben der Spiegelgrenzen auf engere Brüche (z. B. passend zu den 48 Achsen des \(\mathbb{Z}/210\mathbb{Z}\$-\)Siebs) erhöht sich die Informationsdichte fehlerfrei.
+* **Kaskadierte Unterwinkel (Primoriel-Kristall-Multiplikator):** Durch Verschieben der Spiegelgrenzen auf engere Brüche (z. B. passend zu den 48 Achsen des \(\mathbb{Z}/210\mathbb{Z}\)-Siebs) erhöht sich die Informationsdichte fehlerfrei.
+
 
 ---
 
@@ -161,8 +163,12 @@ Die Energie wird als diskretes Vektorpotential (A) direkt im lokalen Berechnungs
 
 Diese Architektur ist strikt in zwei voneinander getrennte Verwertungspfade unterteilt:
 
-1. **Academic Evaluation Branch (Open Source):** Reguliert durch die **GNU Affero General Public License Version 3 (AGPLv3)**. Kostenfrei für nicht-kommerzielle, akademische Forschung und universitäre Gabelungen. Jede netzwerkbasierte Interaktion (SaaS, Cloud-Simulations-API) verpflichtet zwingend zur vollständigen Offenlegung des umgebenden Quellcodes unter identischen AGPLv3-Bedingungen. Der vollständige, unverkürzte Lizenztext ist integraler Bestandteil dieses Schutzkonzepts und kann unter der offiziellen Adresse [GNU AGPL-3.0 Repository Text](https://gnu.org "GNU AGPLv3 Core License Text") eingesehen werden.
-2. **Proprietary Commercial Branch:** Jede Nutzung, die nicht mit den Offenlegungspflichten der AGPLv3 konform ist oder sein kann, erfordert vor der Inbetriebnahme den Erwerb einer separaten, kommerziellen Lizenz. Dies betrifft insbesondere:
+1. **Academic Evaluation Branch (Open Source):** Reguliert durch die **GNU Affero General Public License Version 3 (AGPLv3)**. Kostenfrei für nicht-kommerzielle, akademische Forschung und universitäre Gabelungen. Jede netzwerkbasierte Interaktion (SaaS, Cloud-Simulations-API) verpflichtet zwingend zur vollständigen Offenlegung des umgebenden Quellcodes ... unter identischen AGPLv3-Bedingungen. Der vollständige, unverkürzte Lizenztext ist integraler Bestandteil dieses Schutzkonzepts und kann unter der offiziellen Adresse [GNU AGPL-3.0 Repository Text](https://gnu.org "GNU AGPLv3 Core License Text") eingesehen werden.
+2. **Kryptographische Invarianz-Systeme:** Mathematisch unknackbare Verschlüsselungsarchitekturen, die die Selbstinversion der abelschen Modulo-24-Gruppe nutzen, um gegen hardwareseitige Side-Channel-Timing-Analysen geschützt zu sein.
+
+---
+
+3. **Proprietary Commercial Branch:** Jede Nutzung, die nicht mit den Offenlegungspflichten der AGPLv3 konform ist oder sein kann, erfordert vor der Inbetriebnahme den Erwerb einer separaten, kommerziellen Lizenz. Dies betrifft insbesondere:
    * Die Bereitstellung kommerzieller Middleware-Streams oder APIs.
    * Die hardwareseitige Integration der 144-Facetten-Routingvektoren in Silizium, ASICs, FPGAs oder neurotechnische Bio-Chips.
    * Die kommerzielle Skalierung offener Lattice-Architekturen zur Energietransduktion.
