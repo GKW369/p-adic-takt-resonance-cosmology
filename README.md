@@ -15,13 +15,13 @@ This repository encapsulates independent, fundamental theoretical research and c
 
 ## Abstract
 
-This repository introduces the pTRC (p-Adic Takt Resonance Cosmology) framework, a fully deterministic, whole-number computational alternative to continuous spacetime manifolds (\(\mathbb{R}^4\)). By mapping physical mechanics directly onto finite, discrete coordinate matrices (\(\mathbb{Z}\)), this architecture systematically eliminates structural floating-point truncation errors and unphysical transcendental infinities. Utilizing a strict sub-clock velocity boundary (\(c = 1\,\text{pixel/clock}\)) combined with interlocking modular integer rings (\(\mathbb{Z}/210\mathbb{Z}\) and \(\mathbb{Z}/24\mathbb{Z}\)), we present a zero-loss discrete simulation engine. The empirical validity of the framework is verified via functional computational modules demonstrating lossless lattice-gas fluid dynamics and non-local quantum state indexing.
+This repository introduces the pTRC (p-Adic Takt Resonance Cosmology) framework, a fully deterministic, whole-number computational alternative to continuous spacetime manifolds (\(\mathbb{R}^4\)). By mapping physical mechanics directly onto finite, discrete coordinate matrices (\(\mathbb{Z}\)), this architecture systematically eliminates structural floating-point truncation errors and unphysical transcendental infinities. Utilizing a strict sub-clock velocity boundary (c = 1 pixel/clock) combined with interlocking modular integer rings (\(\mathbb{Z}/210\mathbb{Z}\) and \(\mathbb{Z}/24\mathbb{Z}\)), we present a zero-loss discrete simulation engine. The empirical validity of the framework is verified via functional computational modules demonstrating lossless lattice-gas fluid dynamics and non-local quantum state indexing.
 
 ---
 
 ## 1. Introduction: The Critical Failure of Continuous Calculation
 
-Modern computational physics remains heavily reliant on approximating continuous real numbers using floating-point variables. This paradigm inherently introduces cumulative rounding errors, computational lag, and unphysical macro-corrections (e.g., dark matter approximations or vacuum divergences). The axiomatic assumption of an infinitely divisible spacetime background inevitably generates mathematical singularities (\(1/0 \to \infty\)) that choke high-performance simulation pipelines.
+Modern computational physics remains heavily reliant on approximating continuous real numbers using floating-point variables. This paradigm inherently introduces cumulative rounding errors, computational lag, and unphysical macro-corrections (e.g., dark matter approximations or vacuum divergences). The axiomatic assumption of an infinitely divisible spacetime background inevitably generates mathematical singularities (1/0 → ∞) that choke high-performance simulation pipelines.
 
 The pTRC framework resolves these structural bottlenecks by discarding the continuum entirely. Space is redefined as a finite, discrete informational processor operating strictly on integer coordinates and pure modulo arithmetic.
 
@@ -31,10 +31,10 @@ The pTRC framework resolves these structural bottlenecks by discarding the conti
 
 The foundational simulation space is governed by a strict discrete primorial lattice hierarchy defined by the interlocking residue rings:
 
-$$\mathbb{Z} / 210\mathbb{Z} \quad \text{and} \quad \mathbb{Z} / 24\mathbb{Z}$$
+\[\mathbb{Z} / 210\mathbb{Z} \quad \text{and} \quad \mathbb{Z} / 24\mathbb{Z}\]
 
 Where 210 represents the core primorial cycle length derived from the prime intersection of the foundational four bases:
-$$2 \cdot 3 \cdot 5 \cdot 7 = 210$$
+\[2 \cdot 3 \cdot 5 \cdot 7 = 210\]
 
 To eliminate directional rendering artifacts (anisotropy) inherent to rigid discrete grids, the pTRC framework couples this 210-way network with the 120 elements of the icosahedral symmetry group (\(I_h\)). This mathematical configuration forces macroscopic directional deviations of the coordinates to cancel out identically to zero. Lattice artifacts are compressed into an unmeasurable scale of the sixth order \(\mathcal{O}(l_P^4)\), far below current empirical detection limits, thereby preserving a flawless macroscopic approximation of isotropic fields.
 
@@ -44,18 +44,19 @@ To eliminate directional rendering artifacts (anisotropy) inherent to rigid disc
 
 Within a pure integer ontology, subatomic mass ratios are redefined as invariant reference calibration states necessary to synchronize the underlying primorial lattice cycles. The integer base calibration constant \(M_c = 1836\) is derived via the strict coupling of the eighth primary cycle of the primorial clock and a stable, non-dissipative phase angle within the Modulo-24 control layer:
 
-$$M_c = (8 \cdot 210) + 156 = 1680 + 156 = 1836$$
+\[M_c = (8 \cdot 210) + 156 = 1680 + 156 = 1836\]
 
-The residual offset \(R = 156\) is mathematically unique. Within the Modulo-24 control clock, it maps to the exact structural half-cycle symmetry:
-$$156 \equiv 12 \pmod{24}$$
+The residual offset R = 156 is mathematically unique. Within the Modulo-24 control clock, it maps to the exact structural half-cycle symmetry:
+\[156 \equiv 12 \pmod{24}\]
 
-Furthermore, 156 is derived from the active coprime sieve nodes of Euler's totient function \(\phi(210) = 48\) in combination with the structural golden-ratio construction angle (\(54^\circ\)) of the icosahedral matrix:
+Furthermore, 156 is derived from the active coprime sieve nodes of Euler's totient function φ(210) = 48 in combination with the structural golden-ratio construction angle (54°) of the icosahedral matrix:
 
-$$156 = (3 \cdot 48) + 12 = 144 + 12$$
+\[156 = (3 \cdot 48) + 12 = 144 + 12\]
 
 Where the factor of 3 defines the foundational three-dimensional coordinate basis (the axial trinity). Any other integer would introduce phase asymmetry and immediate modular interference.
 
 *Architectural Performance Note:* Although the pTRC framework is mathematically modeled as a radically novel and experimental paradigm, the enclosed execution modules confirm that the total elimination of floating-point truncation errors is not merely a theoretical construct, but already operates with absolute precision and optimal runtime efficiency in empirical application.
+
 ---
 
 ## 4. Algorithmic Simulation Engine: Functional Core Modules
@@ -87,4 +88,5 @@ Commercial deployment in proprietary, closed-source, or industrial environments 
 By downloading, compiling, or utilizing this software in any environment, you explicitly agree to the following terms:
 *   **Absolute Risk Transfer:** The software is provided "as is", without warranty of any kind. The entire risk as to the quality, performance, and mathematical output of the engine is entirely with the user.
 *   **No Indemnity:** The author accepts no responsibility and shall not be held liable for any operational failures, system damage, financial losses, data corruption, or hardware defects caused by the deployment of these algorithms. 
+*   **Official License Text:** For the unedited conditions governing distribution and the network-delivery source clauses, see the official registry: **https://gnu.org**
 *   **Self-Reliance:** If you integrate this framework into commercial pipelines, you are solely responsible for validation, sandboxing, and error correction. The author provides no deployment support.
