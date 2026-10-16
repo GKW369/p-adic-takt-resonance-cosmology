@@ -12,7 +12,7 @@
 
 ## 🔬 1. Das pTRC-Axiom: Das Kontinuum ist ein Rechenfehler
 
-Das **pTRC-Framework (p-Adic Takt-Resonance Cosmology)** ist eine deterministische, vollständig ganzzahlige Alternative zu kontinuierlichen Modellen der Raumzeit-Physik. Die moderne Computerphysik stützt sich auf die Approximation kontinuierlicher reeller Zahlen mittels Fließkommavariablen (\(\mathbb{R}^4\)). Diese Architektur führt inhärent zu kumulativen Rundungsfehlern, Rechenzeit-Verzögerungen (Lag) und unphysikalischen Korrekturen wie Dunkler Materie oder Vakuumdivergenzen. Die Annahme eines unendlich teilbaren Raumzeit-Hintergrunds erzeugt mathematische Singularitäten (1/0 → ∞), die High-Performance-Simulationspipelines blockieren.
+Das **pTRC-Framework (p-Adic Takt-Resonance Cosmology)** ist eine deterministische, vollständig ganzzahlige Alternative zu kontinuierlichen Modellen der Raumzeit-Physik. Die moderne Computerphysik stützt sich auf die Approximation kontinuierlicher reeller Zahlen mittels Fließkommavariablen (\(\mathbb{R}^4\)). Diese Architektur führt inhärent zu kumulativen Rundungsfehlern, Rechenzeit-Verzögerungen (Lag) und unphysikalischen Korrekturen wie Dunkler Materie oder Vakuumdivergenzen. Die Annahme eines unendlich teilbaren Raumzeit-Hintergrunds erzeugt mathematische Singularitäten (\(1/0 \to \infty\)), die High-Performance-Simulationspipelines blockieren.
 
 Das pTRC-Framework löst diese Blockaden auf, indem es das Kontinuum vollständig verwirft. Vor dem Raum existierte der Integer. Raum ist kein eigenständiger Behälter, sondern die durch die ganze Zahl ermöglichte geometrische Erlaubnis. Der Raum wird als finiter, diskreter Informationsprozessor neu definiert, der strikt auf Ganzzahlkoordinaten und reiner Modulo-Arithmetik innerhalb des algebraischen Rings der ganzen Zahlen (\(\mathbb{Z}\)) operiert.
 
@@ -30,7 +30,7 @@ Der fundamentale Simulationsraum wird durch eine strikte diskrete primoriale Git
 
 \[\mathbb{Z}/210\mathbb{Z} \quad \text{und} \quad \mathbb{Z}/24\mathbb{Z}\]
 
-Dabei repräsentiert 210 die primoriale Kernzykluslänge, die aus dem Primzahl-Schnittpunkt der ersten vier Basis-Komponenten hervorgeht (2 × 3 × 5 × 7 = 210). Die multi-axiale räumliche Orientierung und synaptische Signalaktivierung operieren innerhalb der reduzierten Restklassengruppe modulo 24 (Das Primzahlkreuz).
+Dabei repräsentiert 210 die primoriale Kernzykluslänge, die aus dem Primzahl-Schnittpunkt der ersten vier Basis-Komponenten hervorgeht (\(2 \times 3 \times 5 \times 7 = 210\)). Die multi-axiale räumliche Orientierung und synaptische Signalaktivierung operieren innerhalb der reduzierten Restklassengruppe modulo 24 (Das Primzahlkreuz).
 
 ### Erhaltung der makroskopischen Isotropie
 Um richtungsabhängige Rendering-Artefakte (Anisotropie) zu verhindern, die starren diskreten Gittern eigen sind, koppelt das pTRC-Framework dieses 210-Wege-Netzwerk mit den 120 Elementen der Ikosaeder-Symmetriegruppe (\(I_h\)). Diese mathematische Konfiguration erzwingt, dass sich makroskopische Richtungsabweichungen der Koordinaten identisch zu Null aufheben. Gitterartefakte werden in eine unmessbar kleine Größenordnung der 6. Ordnung \(O(l_P^4)\) verdrängt (weit unterhalb aktueller makroskopischer Messgrenzen), wodurch eine präzise makroskopische Approximation isotroper Felder gewahrt bleibt. Die Verteilung der 144 diskreten Fluchtachsen des Raumes erfolgt in absoluter mathematischer Balance.
@@ -40,11 +40,11 @@ In einer reinen Ganzzahl-Ontologie werden subatomare Massenverhältnisse als inv
 
 \[M_c = (8 \times 210) + 156 = 1680 + 156 = 1836\]
 
-Der Residuen-Versatz R = 156 (**Wirminghaus Invariant Limit**) ist mathematisch eindeutig. Im Modulo-24-Kontrolltakt entspricht er der exakten strukturellen Halbtakt-Symmetrie:
+Der Residuen-Versatz \(R = 156\) (**Wirminghaus Invariant Limit**) ist mathematisch eindeutig. Im Modulo-24-Kontrolltakt entspricht er der exakten strukturellen Halbtakt-Symmetrie:
 
 \[156 \pmod{24} = 12\]
 
-Zudem wird die 156 über die aktiven, teilerfremden Siebknoten der Eulerschen Phi-Funktion φ(210) = 48 in Kombination mit dem strukturellen Goldener-Schnitt-Konstruktionswinkel (54 Grad) der Ikosaeder-Matrix abgeleitet:
+Zudem wird die 156 über die aktiven, teilerfremden Siebknoten der Eulerschen Phi-Funktion \(\phi(210) = 48\) in Kombination mit dem strukturellen Goldener-Schnitt-Konstruktionswinkel (54 Grad) der Ikosaeder-Matrix abgeleitet:
 
 \[156 = (3 \times 48) + 12 = 144 + 12\]
 
@@ -141,8 +141,8 @@ Die technologische Validität des Frameworks wird durch die zentrale Integration
 ## 🔬 8. Das algebraische Kaleidoskop-Prinzip (Winkelbegrenzte Infovervielfachung)
 
 In einem kontinuierlichen Koordinatensystem benötigt das Ändern von Abfanggrenzen transzendente trigonometrische Transformationen, die sofort Rundungsfehler einbringen. Im pTRC-Framework wird dies strikt über diskrete Teiler der zyklischen Modulo-24-Uhr-Architektur gelöst. Wenn sich zwei reflektierende Matrixebenen in einem ganzzahligen Teilungswinkel schneiden, erzeugt die interne Reflexion eine automatisierte Replikationskaskade. Die Engine berechnet nur die Basis-Sichtbarkeitsknoten innerhalb des aktiven Master-Quadranten (`PTRC3DStereoEngine`); das verbleibende Netzwerk wird verlustfrei über ganzzahlige Vorzeicheninversionen instanziiert.
-* **90-Grad-Schnittpunkt (Das orthogonale Kreuz):** Erzeugt exakt 4 symmetrische Informationshologramme, wodurch die Rechenlast drastisch komprimiert wird.
-* **Kaskadierte Unterwinkel (Primoriel-Kristall-Multiplikator):** Durch Verschieben der Spiegelgrenzen auf engere Brüche (z. B. passend zu den 48 Achsen des \(\mathbb{Z}/210\mathbb{Z}\)-Siebs) erhöht sich die Informationsdichte fehlerfrei.
+* **90-Grad-Schnittpunkt (Das orthogonale Kreuz):** Erzeugt exakt 4 Symmetrische Informationshologramme, wodurch die Rechenlast drastisch komprimiert wird.
+* **Kaskadierte Unterwinkel (Primoriel-Kristall-Multiplikator):** Durch Verschieben der Spiegelgrenzen auf engere Brüche (z. B. passend zu den 48 Achsen des \(\mathbb{Z}/210\mathbb{Z}\)--Siebs) erhöht sich die Informationsdichte fehlerfrei.
 
 ---
 
@@ -181,4 +181,4 @@ Deutschland
 📧 E-Mail: g.wirminghaus@gmx.de  
 📞 Telefon: +49 157 54055027  
 
-*Urheberrechtshinweis: Alle mathematischen Architekturen, Spektralgrafiken, 4K-Rastersiebe, Texturen und Quelltexte innerhalb dieses Repositories sind geistiges Eigentum des Autors. Copyright (c) 2026 Kurt Guido Wirminghaus. Alle Rechte vorbehalten.*
+*Urheberrechtshinweis: Alle mathematischen Architekturen, Spektralgrafiken, 4K-Rastersiebe, Texturen und Quelltexte innerhalb dieses Repositories sind geistiges Eigentum des Autors. Copyright (c) 2026 Kurt Guido Wirminghaus. Alle Rechte vorbehalten.* 
