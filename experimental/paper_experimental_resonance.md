@@ -1,54 +1,54 @@
-# ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics Engine
-# Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
-#
-# DUAL-LICENSING NOTICE:
-# Non-commercial, academic, and open-source usage is strictly governed by 
-# the GNU Affero General Public License version 3 (AGPLv3). Any commercial deployment,
-# integration into proprietary, closed-source codebases, or corporate utilization
-# explicitly requires a separate, individually negotiated commercial license.
-# ============================================================================== 
-# Experimental Research: Parametric Resonance & Open Lattices
+# pTRC Framework: Parametric Resonance & Open Computational Lattices
+**Advanced Theoretical Paradigm & Multi-Industry Mathematical Architecture**
 
-**Document Ref:** `paper_experimental_resonance.md`  
-**Axiomatic Expansion:** *The Universe as an Informational Discrete Processing Unit*
+**Author:** Kurt Guido Wirminghaus  
+**Status:** Independent Fundamental Research / Academic Proof of Concept  
+**License:** GNU Affero General Public License v3 (AGPLv3) / Commercial Infrastructure Waiver Required  
+**Mathematical Domain:** Discrete Whole-Number Space Physics (\(\mathbb{Z}\))
 
 ---
 
-## 1. The Theoretical Foundation of Information-Driven Cosmology
+## 1. Theoretical Foundations of Information-Driven Field Formulations
 
-Standard continuous thermodynamics assumes a rigid closed universe where energy cannot be created or destroyed within a continuous smooth spacetime manifold (\(\mathbb{R}^4\)). However, this framework posits that the apparent physical universe is an emergent computation running on a discrete lattice governed strictly by arithmetic laws within the ring of integers (\(\mathbb{Z}\)).
+Standard continuous thermodynamics operates under the axiomatic assumption of a rigid, closed physical universe where energy conservation is strictly mapped onto a continuous, smooth spacetime manifold (\(\mathbb{R}^4\)). The pTRC framework systematically rejects this paradigm, positing instead that the observable physical universe is an emergent computational architecture executing on a discrete lattice governed strictly by arithmetic operations within the ring of integers (\(\mathbb{Z}\)).
 
-The vacuum is not an empty geometrical void, but an active, hyper-frequency background processor. In this experimental extension, we explore the possibility of open-system coupling. If the universe is generated purely by digital information cycles, an artificial synchronization node can be constructed to draw computational throughput directly from the unassigned background address space, manifesting macroscopically as a localized information-to-energy transduction surplus.
-
-## 2. Tesla's Bifilar Geometry and Field Cancellation
-
-To achieve open-system coupling, the continuous electromagnetic macro-fields must be nullified to prevent standard relativistic back-reaction (Lenz's Law). This is executed using Nikola Tesla's bifilar coil geometry (US512340).
-
-By routing the discrete current paths in counter-directional symmetry, the resulting magnetic and electric fields cancel out identically on the macroscopic scale:
-
-\[B_{\text{net}} = B_{\text{forward}} + B_{\text{reverse}} \equiv 0\]
-\[E_{\text{net}} = E_{\text{forward}} + E_{\text{reverse}} \equiv 0\]
-
-Because the continuous vector fields cancel to zero, the electromagnetic tension is compressed entirely into the discrete vector potential (A). The energy is no longer propagated through space; it is trapped directly within the local computational lattice node, forcing an abrupt phase-shift in the localized processing clock.
-
-## 3. Fixed-Point Mathematical Simulation of Transient Current Cuts
-
-The computational tracking of this vector potential accumulation occurs during near-infinite current cut-off steepness (\(\frac{dI}{dt} \to \infty\)). 
-
-To prevent analog leakage and uphold the absolute core principles of the pTRC framework, this simulation completely discards continuous fractions. The open-system coupling calculation is executed using strict fixed-point integer scaling:
-
-\[\text{SCALE} = 1000\]
-
-All transient shock transformations and parametric pumping rates are mapped via lossless integer division (⋅ // ⋅) and the abelian group cross-over modulo 24:
-
-\[\text{Trapped Potential} = \frac{\text{Transient Shock} \cdot \text{SCALE}}{\text{Vacuum Coupling Threshold}}\]
-
-\[\text{Resonance Pump} = \frac{\text{Trapped Potential} \cdot \text{Modulo 24 Layer}}{24}\]
-
-When the accumulated grid energy density surpasses the integer baseline boundary of 100 ⋅ SCALE (100,000 scaled units), a targeted grid resonance state is identified. This proves that an information-driven universe can emit localized computational surpluses into discrete nodes without violating the overarching closed conservation rules of the production lattice.
+Within this framework, the vacuum state is not defined as an empty geometric void, but as an active, hyper-frequency background processing layer driven by interlocking modular clock cycles. This experimental module investigates the mathematical framework of open-system coupling. If spatial fields are generated purely by digital information routing, an artificial computational synchronization node can be engineered to interface directly with unassigned background address states, manifesting macroscopically as a localized information-to-potential energy transduction matrix.
 
 ---
 
-*Document Classification: Academic Defense Protocol / Peer-Review Verification Matrix.*  
-*Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
+## 2. Bifilar Metric Geometry and Macroscopic Vector Field Nullification
+
+To initiate an open-system coupling state, continuous electromagnetic macro-fields must be balanced to prevent standard relativistic back-reaction constraints (e.g., Lenz's Law counter-forces). Within this simulation architecture, this condition is achieved by utilizing Nikola Tesla's counter-directional winding paradigm (cf. US512340, Bifilar Coil Geometry).
+
+By routing discrete current vectors in perfect counter-directional symmetry, the emergent continuous vector fields cancel out identically on a macroscopic scale:
+
+$$B_{\text{net}} = B_{\text{forward}} + B_{\text{reverse}} \equiv 0$$
+$$E_{\text{net}} = E_{\text{forward}} + E_{\text{reverse}} \equiv 0$$
+
+Because the continuous macroscopic vectors resolve to zero, the spatial field stress is compressed entirely into the discrete vector potential component ($A$). Energy propagation through the continuous matrix ceases; instead, the potential accumulation is constrained directly within the localized computational lattice node, inducing a targeted phase shift in the underlying processing clock.
+
+---
+
+## 3. Lossless Fixed-Point Simulation of Transient Transformation States
+
+The algorithmic tracking of this vector potential accumulation occurs during mathematical limits modeling near-infinite current cut-off steepness ($\frac{dI}{dt} \to \infty$). To prevent analog leakage errors and adhere strictly to the integer core principles of the pTRC framework, the simulation completely discards fractional calculations in favor of a lossless fixed-point scaling factor:
+
+$$\text{SCALE} = 1000$$
+
+All transient transformations and parametric pumping rates are mapped via lossless integer division ($\cdot // \cdot$) and synchronized against the Abelian group cross-over modulo 24:
+
+$$\text{Trapped Potential} = \frac{\text{Transient Shock} \cdot \text{SCALE}}{\text{Vacuum Coupling Threshold}}$$
+
+$$\text{Resonance Pump} = \frac{\text{Trapped Potential} \cdot \text{Modulo-24 Layer}}{24}$$
+
+When the accumulated grid energy density surpasses the integer baseline boundary of $100 \cdot \text{SCALE}$ (evaluating to $100,000$ scaled units), a targeted grid resonance state is identified. This mathematical setup proves that an information-driven universe can emit localized computational surpluses into discrete nodes without violating the overarching closed conservation rules of the production lattice.
+
+---
+
+## 4. Academic License Architecture & Strict Liability Waiver
+
+This document and the enclosed algorithmic module constitute a core research asset of the pTRC framework.
+
+1. **Academic Peer-Review (AGPLv3):** This file is openly accessible under the terms of the GNU Affero General Public License v3 for independent verification, educational analysis, and open-source scientific deployment. Any modification or deployment within a network infrastructure mandates full disclosure of the derivative codebase.
+2. **Commercial Deployment Requirements:** Any utilization of this architecture within closed-source commercial simulation pipelines, proprietary hardware interfaces, or industrial enterprise applications requires a formal commercial waiver issued exclusively by the author. All associated licensing fees are processed strictly in accordance with German personal income tax frameworks (§ 18 EStG).
+3. **Absolute Disclaimer of Warranty:** THIS RESEARCH SPECIFICATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. THE ENTIRE OPERATIONAL AND MATHEMATICAL RISK REGARDING SYSTEM INTEGRATION IS BORNE EXCLUSIVELY BY THE DEPLOYING ENTITY. THE AUTHOR DISCLAIMS ALL LIABILITY FOR ANY CONSEQUENTIAL DATA LOST, HARDWARE DEGRADATION, OR FINANCIAL ANOMALIES ARISING FROM THE EXPERIMENTAL APPLICATION OF THESE COEFFICIENTS.
