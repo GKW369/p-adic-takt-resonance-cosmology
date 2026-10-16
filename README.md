@@ -127,17 +127,27 @@ python experimental/ptrc_3d_animation_generator.py
 
 ## 7. Licensing & Absolute Exclusion of Liability
 
-The pTRC framework is governed by a strict open-source and professional dual-licensing model to protect academic integrity while facilitating industrial utilization. Licensing operations are conducted by the author as an independent researcher under German law (§ 18 EStG).
+## 📄 Licensing & Dual-Licensing Framework (Freelance Research / § 18 EStG)
 
-### A. Academic Evaluation Tier (AGPLv3)
-This software is licensed under the GNU Affero General Public License v3 (AGPLv3). Any third-party software, commercial framework, or physics middleware that incorporates, forks, or links to this repository remotely via a network must disclose its entire source code under identical copyleft terms.
+The pTRC framework is a free open-source project. In order to protect academic freedom while facilitating seamless industrial integration, the software is commercialized under a **Dual-Licensing Model**. Operations and licensing vectors are administered by the author as an independent, freelance scientist under German personal tax regulations (§ 18 EStG).
 
-### B. Commercial Infrastructure License & Revenue
-Commercial deployment in proprietary, closed-source, or industrial environments requires a formal commercial license waiver issued directly by the author. All received revenues are declared directly under German personal income tax regulations. For inquiries regarding corporate acquisition schedules and pricing matrices, contact: **g.wirminghaus@gmx.de**
+### A. Academic and Open-Source Tier (GNU AGPLv3)
+For academic research, peer evaluation, and the open-source community, this software is provided strictly under the terms of the **GNU Affero General Public License v3 (AGPLv3)**.
+
+* **Network Copyleft Trigger:** The AGPLv3 contains a strict provision for network deployment. If you modify or integrate the pTRC framework into an application that interacts with users over a network (e.g., Cloud environments, SaaS architectures, or internal enterprise backend pipelines), **you are legally obligated to disclose the entire source code of the entire combined application** under the same AGPLv3 terms.
+
+### B. Commercial Infrastructure License & Enterprise Waivers
+Corporate entities or proprietary platforms wishing to embed the pTRC framework into closed-source commercial architectures without disclosing their internal source code cannot operate under the AGPLv3.
+
+For these scenarios, the **acquisition of a separate Commercial Infrastructure License (Enterprise Waiver)** is required. This waiver explicitly exempts your deployment from the copyleft obligations of the AGPLv3.
+
+For individual licensing matrices, enterprise deployment waivers, or commercial partnerships, please contact the author directly:
+
+* **Author:** Kurt Guido Wirminghaus
+* **Contact:** g.wirminghaus@gmx.de
 
 ### C. Strict Zero-Liability Agreement ("As-Is" Clause)
-By downloading, compiling, or utilizing this software in any environment, you explicitly agree to the following terms:
-*   **Absolute Risk Transfer:** The software is provided "as is", without warranty of any kind. The entire risk as to the quality, performance, and mathematical output of the engine is entirely with the user.
-*   **No Indemnity:** The author accepts no responsibility and shall not be held liable for any operational failures, system damage, financial losses, data corruption, or hardware defects caused by the deployment of these algorithms. 
-*   **Official License Text:** For the unedited conditions governing distribution and the network-delivery source clauses, see the official registry: [https://gnu.org](https://www.gnu.org/licenses/agpl-3.0.html)
-*   **Self-Reliance:** If you integrate this framework into commercial pipelines, you are solely responsible for validation, sandboxing, and error correction. The author provides no deployment support.
+Given that this framework constitutes fundamental, highly experimental theoretical research within the domain of discrete, whole-number integer physics ($\mathbb{Z}$), any and all deployments are executed entirely at the user's own risk.
+
+The software is provided "as is", without warranty of any kind, express or implied. The author accepts no responsibility and shall not be held liable for any operational failures, system anomalies, data corruption, financial losses, or hardware defects resulting from the integration of these algorithms. Full validation, testing, and sandboxing remain the sole responsibility of the deploying entity.
+
