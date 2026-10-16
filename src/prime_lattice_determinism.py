@@ -1,4 +1,4 @@
-https://www.gnu.org/licenses/agpl-3.0.html# ==============================================================================
+# ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
