@@ -14,11 +14,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://gnu.org>.
-#
-# For commercial licensing, enterprise integration, or proprietary deployment
-# options, please contact the author directly.
-# ========================================================================
+# If not, see <https://www.gnu.org/licenses/>.
+# ==============================================================================
+
 
 # -*- coding: utf-8 -*-
 """
