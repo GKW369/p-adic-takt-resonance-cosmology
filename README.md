@@ -49,7 +49,6 @@ Zudem wird die 156 über die aktiven, teilerfremden Siebknoten der Eulerschen Ph
 \[156 = (3 \times 48) + 12 = 144 + 12\]
 
 Wobei der Faktor 3 die fundamentale dreidimensionale Koordinatenbasis (axiale Trinität) definiert. Jede andere Ganzzahl würde zu einer Phasen-Asymmetrie und sofortiger modularer Interferenz führen. Der experimentelle, makroskopische Nachkomma-Schwanz (\(M_{\text{exp}} \approx 1836,15267343\)) ist eine analytische Täuschung, die durch Pixel-Aliasing über große Koordinatendistanzen entsteht. Er repräsentiert lediglich den kumulativen Netzwerk-Routing-Overhead (Clock Drag) frequenzbasierter Labormessungen, während der Kernzustand auf Hardware-Ebene makellos ganzzahlig bleibt.
-
 ---
 
 ## 🪐 3. Die Ontologische Kosmologie: Unendliche Gitterausbreitung
@@ -68,27 +67,28 @@ Der physikalische Raum ist ein evolutionäres Koordinatenphänomen, das durch di
 ### 3.3 Das Register-Write-Update (Auflösung des Welle-Teilchen-Dualismus)
 Der klassische Welle-Teilchen-Dualismus ist ein architektonisches Paradoxon. Das pTRC-Framework löst dieses auf, indem es sowohl Masse als auch Welleninterferenz als lokalisierte Ganzzahl-Informations-Updates definiert. Das Einbringen eines Detektors kollabiert keine physikalische Wahrscheinlichkeitswelle. Die Interaktion erzwingt ein deterministisches **Register-Write-Update**, welches den diskreten Koordinatenwert starr in den lokalen Hardware-Speicher einrastet:
 \[\text{State}_{\text{observer}} \leftarrow \text{State}_{\text{lattice}} \cap \text{Mask}_{\text{clock}}\]
+
 ---
 
 ## 🧮 4. Die algebraische Formelmatrix
 
 ### FORMULA 1: Raum-Lokalisierung (Strahl-Bestimmung)
-Jeder numerische Wert N innerhalb des Rechenuniversums wird einem diskreten geometrischen Vibrationsstrahl (s) auf einer entsprechenden digitalen Matrixebene (m) unterscheidbar zugewiesen:
+Jeder numerische Wert $N$ innerhalb des Rechenuniversums wird einem diskreten geometrischen Vibrationsstrahl ($s$) auf einer entsprechenden digitalen Matrixebene ($m$) unterscheidbar zugewiesen:
 \[N = 24 \cdot m + s \quad \text{wobei} \quad m \in \mathbb{N}_0 \quad \text{und} \quad s \in \{1, 2, 3, \dots, 24\}\]
 
 ### FORMULA 2: Gruppen-Interaktion (Deterministische Frequenzkreuzung)
-Wenn zwei räumliche Frequenzen multiplikativ interagieren, ist das resultierende Zieltor (\(s_{\text{target}}\)) strikt über die symmetrische abelsche Gruppenmultiplikation definiert:
+Wenn zwei räumliche Frequenzen multiplikativ interagieren, ist das resultierende Zieltor ($s_{\text{target}}$) strikt über die symmetrische abelsche Gruppenmultiplikation definiert:
 \[(s_1 \cdot s_2) \equiv s_{\text{target}} \pmod{24}\]
-*Symmetrieeigenschaft:* Für alle s ∈ S: \((s \cdot s) \equiv 1 \pmod{24}\) [Selbstinversion zu Strahl 1].
+*Symmetrieeigenschaft:* Für alle $s \in S$: $(s \cdot s) \equiv 1 \pmod{24}$ [Selbstinversion zu Strahl 1].
 
 ### FORMULA 3: Die absolute Eliminationsgleichung (Das Sehende Sieb)
-Ein Kandidatenwert C auf einem erlaubten Symmetriestrahl \(s_{\text{target}}\) ist eine **PRIMZAHL**, wenn er vollkommen frei von Interferenzknoten vorheriger Primzahlbasen ist. Ausführungsbedingung ohne Fließkommadivisionen:
+Ein Kandidatenwert $C$ auf einem erlaubten Symmetriestrahl $s_{\text{target}}$ ist eine **PRIMZAHL**, wenn er vollkommen frei von Interferenzknoten vorheriger Primzahlbasen ist. Ausführungsbedingung ohne Fließkommadivisionen:
 \[C \neq (24 \cdot m_1 + s_1) \cdot (24 \cdot m_2 + s_2)\]
-Für alle Matrixebenen m₁, m₂ ≥ 0 und alle Strahlkombinationen, die \((s_1 \cdot s_2) \equiv s_{\text{target}} \pmod{24}\) erfüllen.
+Für alle Matrixebenen $m_1, m_2 \ge 0$ und alle Strahlkombinationen, die $(s_1 \cdot s_2) \equiv s_{\text{target}} \pmod{24}$ erfüllen.
 
 ### FORMULA 4: Geometric Bridge zum Holofraktal-Vektorgleichgewicht
-Die strukturelle Dimensionierung des Vektorgleichgewichts (die 144 offenen Facetten der Matrix) leitet sich direkt aus der hexagonalen Kompression des 24-spurigen Primzahlkreuzes ab (\(S \in \{1, 5, 7, 11, 13, 17, 19, 23\}\)):
-\[\text{Raum-Dimensionen} = 6 \cdot \vert{}S\vert{} = 6 \cdot 8 = 48 \quad \text{Fundamentale Vektoren}\]
+Die strukturelle Dimensionierung des Vektorgleichgewichts (die 144 offenen Facetten der Matrix) leitet sich direkt aus der hexagonalen Kompression des 24-spurigen Primzahlkreuzes ab ($S \in \{1, 5, 7, 11, 13, 17, 19, 23\}$):
+\[\text{Raum-Dimensionen} = 6 \cdot |S| = 6 \cdot 8 = 48 \quad \text{Fundamentale Vektoren}\]
 \[\text{Matrix-Knoten} = 3 \cdot \text{Raum-Dimensionen} = 144 \quad \text{Holographische Oberflächen-Facetten}\]
 
 ---
@@ -101,7 +101,6 @@ Das pTRC-Framework beweist, dass komplexe physikalische Multiskalen-Phänomene o
 * **Hardwarenahe KI-Compiler & Edge Computing:** Ultra-effiziente Ausführung neuronaler Netzwerke direkt auf Integer-basierten CPU-Registern, perfekt optimiert für ressourcenarme oder autarke Hardware-Plattformen.
 * **Biometrische & Neurotechnische Biosignal-Chips:** Umwelt- und verlustfreie Echtzeit-Verarbeitung von stereoskopischen Seh- und Sensorsignalen über die integrierte 1-Bit Retinal Stereo-Symmetrie direkt auf Silizium-Ebene (ASICs/FPGAs).
 * **Kryptographische Invarianz-Systeme:** Mathematisch unknackbare Verschlüsselungsarchitekturen, die die Selbstinversion der abelschen Modulo-24-Gruppe nutzen, um gegen hardwareseitige Side-Channel-Timing-Analysen geschützt zu sein.
-
 ---
 
 ## 🎛️ 6. Algorithmische Simulations-Engine (Die 20 Core-Module)
@@ -130,13 +129,13 @@ Die technologische Validität des Frameworks wird durch die zentrale Integration
 | **MODULE 18** | `hubble_tension` | Hubble-Spannung als skalenabhängige Netzwerk-Latenz | `[ VALID ]` |
 | **MODULE 19** | `internal_loopback` | Deterministische Dämpfungs-Rückkopplungsschleifen im Gitter | `[ VALID ]` |
 | **MODULE 20** | `isotropy` | Richtungs-Invarianz-Validierung via Ikosaeder-Spiegelmatrizen | `[ VALID ]` |
+
 ---
 
 ## 🎨 7. Grafik- & Visualisierungs-Pipelines
 
 * **`ptrc_4k_genesis.py`:** Generiert ein pixelscharfes, unkomprimiertes 4K Ultra-HD-Bild (`3840x2160` PPM), das das pure, unkorrumpierte Interferenzmuster des primoriellen Modulo-210 Raumsiebs direkt auf die Festplatte brennt.
 * **`ptrc_retina_encoder.py`:** Ein takt-synchronisierter stereoskopischer 1080p Video-Encoder. Berechnet eine mathematische Anaglyphen-Trennung (Links: Rot-Kanal, Rechts: Cyan-Kanal) über den rechtwinkligen 90-Grad-Hologrammkreuz-Wechsel im RAM. Bündelt die Frames verlustfrei mittels FFmpeg bei exakt 24 FPS (`-c:v libx264 -crf 0 -g 1`).
-
 ---
 
 ## 🔬 8. Das algebraische Kaleidoskop-Prinzip (Winkelbegrenzte Infovervielfachung)
