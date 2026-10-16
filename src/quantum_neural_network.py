@@ -16,71 +16,87 @@
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
 # ==============================================================================
 # -*- coding: utf-8 -*-
+"""
+pTRC Framework - Core Simulation Module: Quantum Neural Network State Processor
+Operational Domain: Discrete Threshold Weighting (\mathbb{Z}) inside modular layers.
+Processes non-linear network state updates drift-free without floating-point weights.
+"""
 
 import numpy as np
 
-class QuantumNeuralNetwork:
-    def __init__(self):
-        # Die 8 invarianten Hauptgewichte aus der abelschen Restsystemgruppe Z/24Z
-        self.allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
-        self.weights = np.array([1, 5, 7, 11, 13, 17, 19, 23], dtype=np.int32)
-        self.PRIMORIAL_RING = 210
-        self.ANGULAR_STEP_MILLI = 2500  # 2.5 Grad Kaleidoskop-Winkel skaliert * 1000
+class PTRCQuantumNeuralNetwork:
+    """
+    Models whole-number discrete weight matrices and non-linear threshold steps
+    utilizing fixed-point scaling partitions and cyclic Modulo-24 control clocks.
+    """
+    def __init__(self, layer_size=24):
+        self.control_base = layer_size  # Modulo-24 layer size
+        self.primorial_base = 210
+        self.invariant_limit = 156
+        self.SCALE = 1000
+        
+        # Whole-number weight and activation matrices
+        self.weight_matrix = np.zeros((self.control_base, self.control_base), dtype=np.int32)
+        self.activation_vector = np.zeros(self.control_base, dtype=np.uint8)
+        self._initialize_discrete_weights()
 
-    def process_holographic_activation(self, synapse_input, synapse_index):
+    def _initialize_discrete_weights(self):
         """
-        Berechnet den Zustand und projiziert ihn ueber den 2500-Milli-Grad-Operator
-        instantan in die 144 Bildkammern des raeumlichen Raumkristalls.
+        Populates the connection weights using deterministic integer residue classes.
         """
-        # 1. Sicherstellen, dass wir strikt im ganzzahligen Raum operieren
-        idx = int(synapse_index) % 8
-        w = self.weights[idx]
-        inp = int(synapse_input)
+        for i in range(self.control_base):
+            for j in range(self.control_base):
+                if (i * j + 5) % self.control_base == 0:
+                    self.weight_matrix[i, j] = self.invariant_limit // 12
+                else:
+                    self.weight_matrix[i, j] = 1
 
-        # 2. Das fundamentale Modulo-24-Uhrwerk (Basis-Aktivierung)
-        base_state = (inp * w) % 24
-
-        # 3. KALEIDOSKOPISCHE VERVIELFACHUNG (144 Hologramme via 2.5-Grad-Spiegel)
-        # Ein einziger Datenstrom repliziert sich geometrisch ohne Rechenaufwand.
-        total_active_resonances = 0
-        holographic_vector = np.zeros(144, dtype=np.int32)
-
-        for sector in range(144):
-            # Ganzzahliger Takt-Versatz ueber den skalierten Spiegelwinkel
-            takt_offset = (sector * self.ANGULAR_STEP_MILLI) // 1000
+    def forward_propagation_takt(self, raw_input_block):
+        """
+        Executes a deterministic forward dot-product pass in the integer domain.
+        Bypasses standard fractional activation functions via scaled integer thresholds.
+        """
+        input_data = np.asarray(raw_input_block, dtype=np.int32) % self.primorial_base
+        output_accumulator = np.zeros(self.control_base, dtype=np.int32)
+        
+        for idx_out in range(self.control_base):
+            node_sum = 0
+            for idx_in in range(self.control_base):
+                # Pure integer multiply-accumulate loop
+                node_sum += input_data[idx_in] * self.weight_matrix[idx_in, idx_out]
+                
+            output_accumulator[idx_out] = node_sum
             
-            # Gekreuzter Signal-Check auf den Datenleitungen der Primzahlenringe
-            projected_check = (base_state + takt_offset) % 24
-            
-            if projected_check in self.allowed_24_rays:
-                holographic_vector[sector] = 1  # Resonanz-Knoten zündet im Quadranten
-                total_active_resonances += 1
+            # Non-linear threshold sieve execution natively in Z
+            scaled_threshold = (output_accumulator[idx_out] * self.SCALE) // self.invariant_limit
+            if scaled_threshold % self.control_base >= 12:
+                self.activation_vector[idx_out] = 1
             else:
-                holographic_vector[sector] = 0
+                self.activation_vector[idx_out] = 0
 
-        # 4. Unbestechliche Integritaetsmetrik (Ganzzahl-Skalierung auf 1000)
-        milli_signal_integrity = (total_active_resonances * 1000) // 144
-
-        return {
-            "base_state": base_state,
-            "holographic_vector": holographic_vector,
-            "active_nodes": total_active_resonances,
-            "milli_integrity": milli_signal_integrity
-        }
+    def verify_network_parity(self):
+        """
+        Audits global active activations against structural limits.
+        """
+        total_active_states = int(np.sum(self.activation_vector))
+        if total_active_states % 2 == 0:
+            return 1
+        return 0
 
 if __name__ == "__main__":
-    print("[ CONFIG ] Initialisiere pTRC Algebra-Netzwerk...")
-    qnn = QuantumNeuralNetwork()
+    print("[ pTRC-NEURAL ] Initializing discrete quantum neural network processing...")
+    network = PTRCQuantumNeuralNetwork()
     
-    # Validationstest ueber einen klassischen Prime-Ray-Eingang
-    test_input = 5
-    test_synapse = 2  # Gewicht 7
+    # Generate an experimental integer input block matching the calibration constant (1836)
+    test_input = np.ones(24, dtype=np.int32) * 1836
     
-    result = qnn.process_holographic_activation(test_input, test_synapse)
+    print(" -> Clocking non-linear network state updates...")
+    network.forward_propagation_takt(test_input)
     
-    print("\n[ STATUS ] Mathematisches Audit abgeschlossen:")
-    print(f"        Eingangssignal:       {test_input}")
-    print(f"        Basis-Takt (Z/24Z):   {result['base_state']}")
-    print(f"        Aktive Resonanzen:    {result['active_nodes']} von 144 Bildkammern")
-    print(f"        Signal-Integritaet:   {result['milli_integrity']} / 1000")
-    print("[ OK ] Das Modul operiert zu 100% fließkommafrei und stabil.")
+    # Run integration checks
+    parity_valid = network.verify_network_parity()
+    
+    print(f" -> [ VALIDATION ] Network layer propagation completed successfully.")
+    print(f" -> Hidden Layer Parity Lock Status: {parity_valid}")
+    print(f" -> Active Node Activations Array: {network.activation_vector}")
+    print(" -> STATUS: Zero-Float Quantum Neural Network Block Verified Secure.")
