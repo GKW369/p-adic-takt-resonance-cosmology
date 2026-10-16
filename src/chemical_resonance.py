@@ -93,7 +93,7 @@ if __name__ == "__main__":
     # Test matrix containing integer coordinate positions for validation
     molecular_positions = np.array([,
  ,
-        [0, 0, 0]
+        [12, 12, 12]
     ], dtype=np.int32)
     
     print(" -> Executing whole-number structural parity validation pass...")
