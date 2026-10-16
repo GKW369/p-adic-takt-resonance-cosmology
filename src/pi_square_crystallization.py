@@ -32,7 +32,8 @@ def render_native_quadratic_circle():
     # Terminal-Inhalt hard löschen und Cursor nach oben links setzen
     print("\033[2J\033[H", end="", flush=True) 
     print("="*90)
-    print(f"[ pTRC ] NATIVE 90x44 QUADRATIC PROJECTION".center(90))
+    print(f"[ pTRC CORE ] NATIVE 90x44 QUADRATIC PROJECTION".center(90))
+    print(f"[ LICENSED UNDER GNU AGPLv3 - SOURCE CODE ENTITLEMENT ACTIVE ]".center(90))
     print("="*90)
     
     # Der Radius wird starr an die neue vertikale Schmerzgrenze angepasst
