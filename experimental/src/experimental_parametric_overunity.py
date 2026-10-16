@@ -16,6 +16,7 @@
 # along with this program (see the LICENSE file in the root directory).
 # If not, see <https://www.gnu.org/licenses/>.
 # ==========================================================================
+
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Experimental Module: Parametric Resonance Simulation
