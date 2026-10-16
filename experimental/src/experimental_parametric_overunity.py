@@ -1,3 +1,4 @@
+<!--
 # ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
@@ -19,6 +20,7 @@
 # For commercial licensing, enterprise integration, or proprietary deployment
 # options, please contact the author directly.
 # ========================================================================
+-->
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Experimental Module: Parametric Resonance Simulation
