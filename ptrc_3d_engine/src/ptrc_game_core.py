@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
 Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Pure Vectorized Holographic Matrix Projection with fixed np.isin() filters.
+Optimized: Pure Vectorized Holographic Matrix Projection with fixed attribute links.
 """
 
 import os
@@ -73,9 +73,11 @@ class PTRC3DGameEngine:
         self.depth = 128
         self.primorial_base = 210
         self.control_base = 24
+        self.invariant_limit = 156  # Als echtes Klassenattribut fixiert
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         
+        # Interaktive Reiseparameter des Beobachters
         self.pos_x_offset = 0
         self.pos_y_offset = 0
         self.pos_z_offset = 0
@@ -88,7 +90,7 @@ class PTRC3DGameEngine:
         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        allowed_24_list = [1, 5, 7, 11, 13, 17, 19, 23]
+        allowed_24_list = [1, 5, 7, 11, 12, 13, 17, 19, 23]
         
         print("\n[ HOLOGRAMM ] Reine holografische Spiegel-Interferenz aktiv!")
         print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
@@ -136,15 +138,13 @@ class PTRC3DGameEngine:
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask], out_x_right[valid_mask]] = 1
 
             # ==================================================================
-            # !!! TARGET ZONE: KORRIGIERTE HOLOGRAFISCHE MATRIX-SPIEGEL-KUGEL !!!
+            # !!! TARGET ZONE: HOLOGRAFISCHE MATRIX-SPIEGEL-KUGEL !!!
             # ==================================================================
-            # Erzeuge 2D-Gitterkoordinaten für das Full-HD Sichtfeld
             grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
             
             screen_cx = self.stereo_engine.width // 2
             screen_cy = self.stereo_engine.height // 2
             
-            # Koordinatenverschiebungen bezogen auf den linken und rechten Spiegel
             dx_left = grid_x - (screen_cx - 8)
             dx_right = grid_x - (screen_cx + 8)
             dy = grid_y - screen_cy
@@ -152,7 +152,7 @@ class PTRC3DGameEngine:
             quadrance_left = (dx_left * dx_left) + (dy * dy)
             quadrance_right = (dx_right * dx_right) + (dy * dy)
             
-            # Nutzung von np.isin() und bitweisen Operatoren (|) für NumPy-Matrizen
+            # Fehlerkorrektur: Nutzt jetzt self.invariant_limit fehlerfrei
             mask_takt_left = np.isin(quadrance_left % self.control_base, allowed_24_list)
             mask_prim_left = (quadrance_left % self.primorial_base) <= self.invariant_limit
             sphere_mask_left = (quadrance_left < 7000) & (mask_takt_left | mask_prim_left)
@@ -161,7 +161,7 @@ class PTRC3DGameEngine:
             mask_prim_right = (quadrance_right % self.primorial_base) <= self.invariant_limit
             sphere_mask_right = (quadrance_right < 7000) & (mask_takt_right | mask_prim_right)
             
-            # Injiziere die Kugel rein als strukturierte 1-Bit Licht- und Schatten-Interferenz
+            # Zuweisung an die 1-Bit Stereo-Buffer
             self.stereo_engine.left_eye_buffer[sphere_mask_left] = 1
             self.stereo_engine.right_eye_buffer[sphere_mask_right] = 1
             # ==================================================================
@@ -182,7 +182,7 @@ class PTRC3DGameEngine:
             dt = end_time - start_time
             fps = 1.0 / dt if dt > 0 else 999.0
             
-            # HUD-Anzeige zurück im reinen, unbestechlichen Monochrom-Look
+            # HUD-Anzeige
             cv2.putText(bw_scene, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | HOLOGRAPHIC RECONSTRUCTION ACTIVE", 
                         (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
             cv2.putText(bw_scene, f"VECTORS: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", 
