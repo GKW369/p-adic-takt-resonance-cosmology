@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
 Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Symmetrical phase-coherence masks to entirely eliminate black frame drops.
+Optimized: Persistent Phase-Coherence Buffering to bridge deterministic 6-takt sieve collapses.
 """
 
 import os
@@ -64,14 +64,9 @@ print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchro
 # ==============================================================================
 
 class PTRC3DGameEngine:
-    """
-    Transforms the sequential frame compiler into an interactive real-time
-    game engine environment governed entirely by vectorized whole-number matrix operations.
-    """
     def __init__(self):
         self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
         
-        # Lokale, hochperformante Triebwerks-Auflösung
         self.width = 320
         self.height = 180
         self.depth = 128
@@ -80,29 +75,27 @@ class PTRC3DGameEngine:
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         
-        # Interaktive Reiseparameter des Beobachters
         self.pos_x_offset = 0
         self.pos_y_offset = 0
         self.pos_z_offset = 0
+        
+        # PERSISTENZ-SPEICHER: Hält das letzte gültige Bild bei einem Gitterkollaps
+        self.last_valid_view = np.zeros((1080, 1920), dtype=np.uint8)
 
     def run_interactive_loop(self):
-        """
-        Launches the interactive game loop using lightning-fast NumPy vectors.
-        Eliminates the black-frame dropouts via phase-aligned ray filters.
-        """
         window_name = "pTRC Quantum Crystal Engine v1.0"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        print("\n[ INTERAKTIV ] Harmonisiertes Gitter geladen!")
+        print("\n[ INTERAKTIV ] Herzschlag-Kompensation aktiv!")
         print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
         
         while True:
             start_time = time.perf_counter()
             
-            # 1. Retina-Puffer leeren
+            # 1. Temporären Puffer leeren
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
@@ -113,7 +106,6 @@ class PTRC3DGameEngine:
             if total_active_nodes > 0:
                 z_flight_offset = self.pos_z_offset % self.depth
                 
-                # Berechne alle relativen Koordinaten als Vektorfelder gleichzeitig im RAM
                 raw_z = (z_indices - z_flight_offset)
                 raw_z[raw_z <= 0] += self.depth
                 raw_z = np.clip(raw_z, 1, self.depth)
@@ -121,7 +113,6 @@ class PTRC3DGameEngine:
                 raw_x = (x_indices - cx) + self.pos_x_offset
                 raw_y = (y_indices - cy) + self.pos_y_offset
                 
-                # Vektorisierte fixed-point Perspektivtransformation
                 scaled_depth = (raw_z * 1000) // 1414
                 denominator = scaled_depth + 156
                 
@@ -129,60 +120,58 @@ class PTRC3DGameEngine:
                 proj_x_right = ((raw_x * 8 + 12) * 1000) // denominator
                 proj_y = ((raw_y * 8) * 1000) // denominator
                 
-                # Mapping auf die Full-HD Bildschirmkoordinaten via Modulo-Ringschluss
                 out_x_left = (proj_x_left + self.stereo_engine.width // 2) % self.stereo_engine.width
                 out_x_right = (proj_x_right + self.stereo_engine.width // 2) % self.stereo_engine.width
                 out_y = (proj_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                 
-                # ==================================================================
-                # !!! TARGET ZONE: FLACKERFREIER PHASEN-FILTER (ABELSCHER COHERENCE CHECK) !!!
-                # ==================================================================
                 takt_check = (raw_x * raw_y + raw_z) % self.control_base
-                
-                # Nutzt die 8 abelschen Strahlen PLUS den stabilen Massenknoten 12,
-                # um lückenlose Datenströme während des Fluges zu garantieren
                 valid_mask = (takt_check == 1) | (takt_check == 5) | (takt_check == 7) | \
                              (takt_check == 11) | (takt_check == 12) | (takt_check == 13) | \
                              (takt_check == 17) | (takt_check == 19) | (takt_check == 23)
                 
-                # Blitzschnelle Block-Zuweisung im Grafikbuffer
                 if np.any(valid_mask):
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask], out_x_left[valid_mask]] = 1
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask], out_x_right[valid_mask]] = 1
             
-            # Uhr-Engine im Hintergrund weitertakten
+            # Uhr-Engine weitertakten
             self.clock_engine.evolve_clock_one_takt()
             
-            # Bildaufbau für den Monitor (1-Bit zu 8-Bit)
-            live_view = self.stereo_engine.left_eye_buffer * 255
+            # 3. INTERFERENCE COHERENCE RECOVERY (Der Flacker-Schutz)
+            active_nodes = int(np.sum(self.stereo_engine.left_eye_buffer))
             
-            # FPS und Diagnostik berechnen
+            if active_nodes > 0:
+                # Das Bild ist valide -> Update den persistenten Speicher
+                self.last_valid_view = self.stereo_engine.left_eye_buffer * 255
+                live_view = self.last_valid_view.copy()
+            else:
+                # Gitterkollaps getroffen! Überbücke den schwarzen Frame mit dem letzten Zustand
+                live_view = self.last_valid_view.copy()
+            
+            # FPS-Berechnung
             end_time = time.perf_counter()
             dt = end_time - start_time
             fps = 1.0 / dt if dt > 0 else 999.0
-            active_nodes = int(np.sum(self.stereo_engine.left_eye_buffer))
             
             # HUD-Anzeige
-            cv2.putText(live_view, f"FPS: {fps:.1f} | ACTIVE NODES: {active_nodes:,} | VECTOR ENGINE RUNNING", 
+            cv2.putText(live_view, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | COHERENCE HOLD ACTIVE", 
                         (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
             cv2.putText(live_view, f"VECTORS: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", 
                         (30, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 200, 1, cv2.LINE_AA)
             
             cv2.imshow(window_name, live_view)
             
-            # Tastatur-Eingabe abfragen
             key = cv2.waitKey(1) & 0xFF
-            if key == 27:  # ESC
+            if key == 27:
                 print("[ GAME ] Universum über ESC sicher geschlossen.")
                 break
             elif key == ord('w') or key == ord('W'):
-                self.pos_z_offset = (self.pos_z_offset + 1) % self.depth  # Harmonischer 1-Planck-Takt Vorschub
+                self.pos_z_offset = (self.pos_z_offset + 1) % self.depth
             elif key == ord('s') or key == ord('S'):
-                self.pos_z_offset = (self.pos_z_offset - 1) % self.depth  # Harmonischer 1-Planck-Takt Rückschub
+                self.pos_z_offset = (self.pos_z_offset - 1) % self.depth
             elif key == ord('a') or key == ord('A'):
-                self.pos_x_offset -= 2  # Verfeinerte Schrittweite für weicheres Steuern
+                self.pos_x_offset -= 2
             elif key == ord('d') or key == ord('D'):
-                self.pos_x_offset += 2
+                self.pos_x_offset += 4
             elif key == ord('q') or key == ord('Q'):
                 self.pos_y_offset -= 2
             elif key == ord('e') or key == ord('E'):
