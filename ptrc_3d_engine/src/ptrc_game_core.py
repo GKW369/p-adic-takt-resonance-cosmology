@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
 Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Pure Holographic Intersection Engine modeling the observer via mirror interference.
+Optimized: Pure Vectorized Holographic Matrix Projection with fixed np.isin() filters.
 """
 
 import os
@@ -88,7 +88,7 @@ class PTRC3DGameEngine:
         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
+        allowed_24_list = [1, 5, 7, 11, 13, 17, 19, 23]
         
         print("\n[ HOLOGRAMM ] Reine holografische Spiegel-Interferenz aktiv!")
         print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
@@ -136,28 +136,30 @@ class PTRC3DGameEngine:
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask], out_x_right[valid_mask]] = 1
 
             # ==================================================================
-            # !!! TARGET ZONE: HOLOGRAFISCHE SPIEGEL-KUGEL (TRUE 1-BIT SHADOW) !!!
+            # !!! TARGET ZONE: KORRIGIERTE HOLOGRAFISCHE MATRIX-SPIEGEL-KUGEL !!!
             # ==================================================================
-            # Wir generieren ein mathematisch stabiles Beobachter-Interferenzfeld im 3D-Raum.
-            # KEINE Kreise, KEINE künstlichen Farben. Rein gekreuzte Entfernungs-Modulo-Spiegel.
+            # Erzeuge 2D-Gitterkoordinaten für das Full-HD Sichtfeld
             grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
             
-            # Versatzkoordinaten bezogen auf die virtuellen gekreuzten Augenspiegel (Hologramm-Mitte)
             screen_cx = self.stereo_engine.width // 2
             screen_cy = self.stereo_engine.height // 2
             
+            # Koordinatenverschiebungen bezogen auf den linken und rechten Spiegel
             dx_left = grid_x - (screen_cx - 8)
             dx_right = grid_x - (screen_cx + 8)
             dy = grid_y - screen_cy
             
-            # Berechne die gekreuzte Inversions-Quadrance im 2D-Sichtfeld
             quadrance_left = (dx_left * dx_left) + (dy * dy)
             quadrance_right = (dx_right * dx_right) + (dy * dy)
             
-            # Der Schatten/Die Plastizität entsteht rein durch das uhrgesteuerte Modulo-Sieb.
-            # Nur Punkte, die im Restklassenring der Spiegel harmonieren, spannen die Kugel auf.
-            sphere_mask_left = (quadrance_left < 7000) & ((quadrance_left % 24) in allowed_24_rays or (quadrance_left % 210 <= 156))
-            sphere_mask_right = (quadrance_right < 7000) & ((quadrance_right % 24) in allowed_24_rays or (quadrance_right % 210 <= 156))
+            # Nutzung von np.isin() und bitweisen Operatoren (|) für NumPy-Matrizen
+            mask_takt_left = np.isin(quadrance_left % self.control_base, allowed_24_list)
+            mask_prim_left = (quadrance_left % self.primorial_base) <= self.invariant_limit
+            sphere_mask_left = (quadrance_left < 7000) & (mask_takt_left | mask_prim_left)
+            
+            mask_takt_right = np.isin(quadrance_right % self.control_base, allowed_24_list)
+            mask_prim_right = (quadrance_right % self.primorial_base) <= self.invariant_limit
+            sphere_mask_right = (quadrance_right < 7000) & (mask_takt_right | mask_prim_right)
             
             # Injiziere die Kugel rein als strukturierte 1-Bit Licht- und Schatten-Interferenz
             self.stereo_engine.left_eye_buffer[sphere_mask_left] = 1
