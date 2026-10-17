@@ -87,7 +87,6 @@ class PTRC3DGameEngine:
         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
         
         print("\n[ OBSERVER ] Massiver Farbkörper-Beobachter im fließenden Gitter installiert!")
         print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
@@ -147,17 +146,15 @@ class PTRC3DGameEngine:
             # ==================================================================
             # 2. !!! TARGET ZONE: RGB-FARBINJEKTION & MASSIVE KUGEL-STANZE !!!
             # ==================================================================
-            # Wandle das Schwarz-Weiß-Bild in ein 3-Kanal RGB-Farbbild um (Bilder werden farbtauglich)
-            color_scene = cv2.cvtColor(bw_matrix, cv2.cvtColor(bw_matrix, cv2.COLOR_GRAY2BGR) if hasattr(cv2, 'COLOR_GRAY2BGR') else cv2.COLOR_GRAY2RGB)
-            if color_scene.ndim == 2 or color_scene.shape[2] != 3:
-                color_scene = cv2.merge([bw_matrix, bw_matrix, bw_matrix])
+            # Korrigierte, saubere 3-Kanal-Farbkonvertierung für OpenCV
+            color_scene = cv2.cvtColor(bw_matrix, cv2.COLOR_GRAY2BGR)
             
             # Definiere das Zentrum und den Radius für deinen Beobachterkörper
             center_point = (self.stereo_engine.width // 2, self.stereo_engine.height // 2)
             sphere_radius = 80
             
-            # Farbdefinition im BGR-Format von OpenCV: (Blau, Grüner Anteil, Roter Anteil)
-            # Hier gewählt: Ein leuchtendes Quanten-Cyan-Blau (Blau=255, Grün=180, Rot=0)
+            # Farbdefinition im BGR-Format von OpenCV: (Blau, Grün, Rot)
+            # Hier gewählt: Ein leuchtendes Quanten-Cyan-Blau
             sphere_color = (255, 180, 0)
             
             # Zeichne eine VOLLFLÄCHIG AUSGEFÜLLTE KUGEL (Thickness = -1 stanzt den Körper massiv)
