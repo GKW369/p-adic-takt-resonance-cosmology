@@ -19,46 +19,59 @@
 
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Experimental Module: Parametric Resonance Simulation
-WARNING: Isolated Theoretical Research Node. Models transient current cuts in Z.
-Refactored: 100% Pure Integer Mechanics. Zero Fractional Approximations.
+pTRC Framework - Experimental Module: Parametric Overunity Simulation
+WARNING: Theoretical/Unproven Node. Models transient current cuts and vector potential trapping.
+Refactored: 100% Floating-Point-Free. Pure Z ontology. Fixed Analog Leakage Exploit.
 """
 
 import sys
 
-def simulate_transient_bifilar_resonance(steps=48, cut_steepness=156):
+def simulate_transient_bifilar_resonance(steps=48, cut_steepness=1000):
     """
     Simulates the accumulation of localized energy within a bifilar grid gap
-    under conditions of near-infinite dI/dt using strict indivisible whole numbers.
+    under conditions of near-infinite dI/dt (abrupt current cuts).
     """
-    modulo_24_layer = 12  
-    accumulated_grid_energy = 1
-    vacuum_coupling_threshold = 144  
+    # System Base Constraints & Fixed-Point Scaling Metric
+    SCALE = 1000  # Skalierungsfaktor zur Eliminierung von continuous floats
+    modulo_24_layer = 12  # Symmetrical target phase
     
+    # Initiale Energie wird im skalierten Festkomma-Raum verankert (1.0 * SCALE)
+    accumulated_grid_energy_scaled = 1 * SCALE
+    vacuum_coupling_threshold = 144  # Resonance node of the spatial crystal
+    
+    # Simulate the non-linear parametric pumping via transient cuts
     for clock in range(steps):
+        # The steeper the cut (dI/dt), the higher the localized scalar tension
         transient_shock = (clock % 24) * cut_steepness
         
-        # Reine Ganzzahl-Interaktion ohne künstliche Nachkomma-Skalierung
-        trapped_potential = transient_shock // vacuum_coupling_threshold
+        # Bifilar cancellation hides the macro-field but traps energy in vector potential A.
+        # FIX: Vorab-Skalierung im Zähler und strikte Ganzzahl-Bodendivision (//)
+        trapped_potential_scaled = (transient_shock * SCALE) // vacuum_coupling_threshold
         
-        # Modulo-Taktpumpe operiert starr auf unteilbaren Einheiten
-        resonance_pump = (trapped_potential * modulo_24_layer) // 24
-        accumulated_grid_energy += resonance_pump
+        # Parametric resonance amplification via modular phase cross-over layer
+        # FIX: Verlustfreie Ganzzahl-Verrechnung über den skalierten Raum
+        resonance_pump_scaled = (trapped_potential_scaled * modulo_24_layer) // 24
+        accumulated_grid_energy_scaled += resonance_pump_scaled
         
-    # Überprüfung gegen die reine ganzzahlige Energieschwelle
-    anomalous_gain = accumulated_grid_energy > 100
+    # Check if the simulated energy density surpasses the integer baseline boundary of 100 * SCALE
+    anomalous_gain = accumulated_grid_energy_scaled > (100 * SCALE)
     
-    return accumulated_grid_energy, anomalous_gain
+    return accumulated_grid_energy_scaled, anomalous_gain
 
 if __name__ == "__main__":
-    energy, anomaly_detected = simulate_transient_bifilar_resonance(steps=48, cut_steepness=156)
+    # Execute the experimental validation path
+    energy_scaled, anomaly_detected = simulate_transient_bifilar_resonance(steps=48, cut_steepness=156)
     
     print(f"[ EXPERIMENTAL ] Parameter Tuning Core Operational.")
-    print(f" -> Localized Vector Potential Energy Matrix: {energy} Units.")
+    # Output Layer Formatierung: Ersetzt die Float-Dezimaldarstellung (.2f) 
+    # durch die Ausgabe des nativen skalierten Integers (Milli-Units)
+    print(f" -> Localized Vector Potential Energy Matrix: {energy_scaled} Milli-Energy-Units.")
     
     if anomaly_detected:
-        print(" -> STATUS: Grid Resonance State Identified. Open-System Matrix Transduction Dynamic Active.")
+        print(" -> STATUS: Anomalous Grid Resonance State Identified. Open-System Coupling Simulation Active.")
+        print(" -> ZERO Floating-Point Errors. Absolute Integer Invariance achieved.")
         sys.exit(0)
     else:
         print(" -> STATUS: Sub-Critical Resonant Pumping.")
         sys.exit(1)
+
