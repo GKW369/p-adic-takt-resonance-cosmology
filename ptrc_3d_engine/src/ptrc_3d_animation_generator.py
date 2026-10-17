@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation Pipeline: Hyper-Dignity Voxel Flight Sieve
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Auto-cleaning frame engine. Deletes raw artifacts on pipeline completion.
+Optimized: Intelligent Namespace Resolver protecting pipeline paths from ModuleNotFoundError.
 """
 
 import os
@@ -30,14 +30,37 @@ import subprocess
 import numpy as np
 import cv2
 
-# Sicheres Importieren der beiden verifizierten Kernkomponenten
+# ==============================================================================
+# !!! TARGET ZONE: INTELLIGENTE IMPORT-ABFHRUNG GEGEN MODULENOTFOUNDERROR !!!
+# MARKER: PTRC_DYNAMIC_IMPORT_RESOLVER_2026
+# ==============================================================================
 try:
-    from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
-    from src.ptrc_modular_clock_engine import PTRCModularClockEngine
+    # 1. Versuch: Direkter Import aus demselben Ordner (Behebt den Fehler)
+    from ptrc_3d_stereo_engine import PTRC3DStereoEngine
+    from ptrc_modular_clock_engine import PTRCModularClockEngine
+    print(" -> [ PATH ] Module erfolgreich direkt aus dem lokalen Verzeichnis geladen.")
 except ImportError:
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
-    from src.ptrc_modular_clock_engine import PTRCModularClockEngine
+    try:
+        # 2. Versuch: Import über die übergeordnete src-Struktur
+        from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
+        from src.ptrc_modular_clock_engine import PTRCModularClockEngine
+        print(" -> [ PATH ] Module erfolgreich über src-Präfix geladen.")
+    except ImportError:
+        # 3. Versuch: Pfad-Erweiterung für tief geschachtelte Ordnerstrukturen
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.append(current_dir)
+        sys.path.append(os.path.join(current_dir, '..'))
+        
+        try:
+            from ptrc_3d_stereo_engine import PTRC3DStereoEngine
+            from ptrc_modular_clock_engine import PTRCModularClockEngine
+        except ImportError:
+            from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
+            from src.ptrc_modular_clock_engine import PTRCModularClockEngine
+        print(" -> [ PATH ] Module über dynamische Systempfad-Erweiterung geladen.")
+# ==============================================================================
+# !!! END OF TARGET ZONE !!!
+# ==============================================================================
 
 class PTRC3DAnimationGenerator:
     """
@@ -117,16 +140,12 @@ class PTRC3DAnimationGenerator:
             subprocess.run(ffmpeg_cmd, capture_output=True, text=True, check=True)
             print(f"    + [ SUCCESS ] Flug-Animation erfolgreich kompiliert: '{target_video}'")
             
-            # ==================================================================
-            # !!! TARGET ZONE: AUTOMATISCHE BEREINIGUNG DER EINZELBILDER !!!
-            # ==================================================================
             print(" -> Bereinige temporäre Frame-Sequenzen aus dem Pipeline-Verzeichnis...")
             for frame_idx in range(self.frames_limit):
                 frame_path = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
             
-            # Versuche das leere Verzeichnis ebenfalls zu entfernen
             try:
                 os.rmdir(self.output_directory)
             except OSError:
