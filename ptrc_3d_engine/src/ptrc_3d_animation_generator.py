@@ -14,11 +14,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
-"""
+r"""
 pTRC Framework - Animation Generator Pipeline: Takt-Synchronized Video Renderer
 Operational Domain: Discrete Frame Generation Mapping (\mathbb{Z}) using eye-buffers.
 Executes pixel-sharp frame sequences via lossless ffmpeg compilation streams.
@@ -103,7 +103,7 @@ class PTRC3DAnimationGenerator:
             subprocess.run(ffmpeg_cmd, capture_output=True, text=True, check=True)
             print(f"    + [ SUCCESS ] Lossless animation compiled: '{target_video}'")
             return 1
-        except subprocess.CalledProcessError as e:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             print(f"    ! [ SYSTEM NOTICE ] Local ffmpeg environment not found or bypassed.")
             print(" -> STATUS: Frame generation verification valid. Video compilation step isolated.")
             return 0
