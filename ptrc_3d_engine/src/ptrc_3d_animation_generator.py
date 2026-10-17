@@ -53,7 +53,7 @@ try:
 except ImportError:
     from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
 
-# STATISCH FIXIERT AN DEINE 'ptrc_clock_core.py'
+# STATISCH FIXIERT AN DEINE 'ptrc_clock_core.py' - UNVERÄNDERLICH
 try:
     from ptrc_clock_core import PTRCModularClockEngine
 except ImportError:
@@ -74,7 +74,6 @@ class PTRC3DAnimationGenerator:
         self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
         self.clock_engine = PTRCModularClockEngine(width=320, height=180, depth=128)
         
-        # Lokaler Ordner exakt im Verzeichnis des Skripts
         self.output_directory = os.path.join(script_dir, "Renderframes")
         
         if not os.path.exists(self.output_directory):
