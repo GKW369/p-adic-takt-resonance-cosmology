@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation Pipeline: Hyper-Dignity Voxel Flight Sieve
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Dedicated render directory with sequential file auto-numbering (Anti-Overwrite).
+Optimized: Recursive Repository Root Resolver to prevent nested ModuleNotFoundError.
 """
 
 import os
@@ -31,30 +31,41 @@ import numpy as np
 import cv2
 
 # ==============================================================================
-# !!! TARGET ZONE: ABSOLUTE SYSTEMPFAD-INJEKTION GEGEN IMPORT-FEHLER !!!
-# MARKER: PTRC_ABSOLUTE_PATH_INJECTOR_2026
+# !!! TARGET ZONE: GLOBAL REPOSITORY PATH RESOLVER !!!
+# MARKER: PTRC_GLOBAL_ROOT_INJECTOR_2026
 # ==============================================================================
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
-parent_dir = os.path.dirname(current_dir)
-if parent_dir not in sys.path:
-    sys.path.insert(1, parent_dir)
+# Wir wandern im Verzeichnisbaum so weit nach oben, bis wir das Hauptverzeichnis finden
+# Das stellt sicher, dass sowohl der lokale src-Ordner als auch der globale src-Ordner gefunden werden.
+path_walker = current_dir
+for _ in range(4):
+    if path_walker not in sys.path:
+        sys.path.insert(0, path_walker)
+    # Zusätzliche Absicherung: Wenn ein "src"-Unterordner existiert, füge ihn hinzu
+    potential_src = os.path.join(path_walker, "src")
+    if os.path.exists(potential_src) and potential_src not in sys.path:
+        sys.path.insert(0, potential_src)
+    path_walker = os.path.dirname(path_walker)
 
+# Jetzt importieren wir die Klassen über entkoppelte, reine Modulnamen
 try:
-    import ptrc_3d_stereo_engine
     from ptrc_3d_stereo_engine import PTRC3DStereoEngine
 except ImportError:
-    from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
+    try:
+        from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
+    except ImportError:
+        from ptrc_3d_engine.src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
 
 try:
-    import ptrc_modular_clock_engine
     from ptrc_modular_clock_engine import PTRCModularClockEngine
 except ImportError:
-    from src.ptrc_modular_clock_engine import PTRCModularClockEngine
+    try:
+        from src.ptrc_modular_clock_engine import PTRCModularClockEngine
+    except ImportError:
+        from ptrc_3d_engine.src.ptrc_modular_clock_engine import PTRCModularClockEngine
 
-print(" -> [ PATH ] Alle Sektor-Knoten-Module wurden erfolgreich und fehlerfrei lokalisiert.")
+print(" -> [ PATH ] Globales pTRC-Uhrwerk und Stereo-Retina erfolgreich im Pfad verankert.")
 # ==============================================================================
 # !!! END OF TARGET ZONE !!!
 # ==============================================================================
