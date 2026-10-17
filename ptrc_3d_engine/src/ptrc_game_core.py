@@ -1,4 +1,6 @@
-# ==============================================================================
+import os
+
+code = """# ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
@@ -18,11 +20,11 @@
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
-r"""
+r\"\"\"
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
-Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
+Operational Domain: Live 3D Whole-Number Projections (\\mathbb{Z}) into the Primorial Sieve.
 Optimized: Ultra-High FPS via local coordinate space mapping for the holographic sphere.
-"""
+\"\"\"
 
 import os
 import sys
@@ -30,12 +32,7 @@ import time
 import numpy as np
 import cv2
 
-# ==============================================================================
-# !!! TARGET ZONE: EXPLIZITE UND TAB-FREIE MODUL-KOPPLUNG !!!
-# MARKER: PTRC_HARDCODED_NAMESPACE_RESOLVER_2026
-# ==============================================================================
 script_dir = os.path.dirname(os.path.abspath(__file__))
-
 sys.path.insert(0, script_dir)
 
 parent_1 = os.path.dirname(script_dir)
@@ -59,29 +56,20 @@ except ImportError:
     from src.ptrc_clock_core import PTRCModularClockEngine
 
 print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchronisiert.")
-# ==============================================================================
-# !!! END OF TARGET ZONE !!!
-# ==============================================================================
 
 class PTRC3DGameEngine:
     def __init__(self):
         self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
-        
-        # Performante Triebwerks-Auflösung
         self.width = 320
         self.height = 180
         self.depth = 128
         self.primorial_base = 210
         self.control_base = 24
         self.invariant_limit = 156
-        
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
-        
-        # Interaktive Reiseparameter des Beobachters
         self.pos_x_offset = 0
         self.pos_y_offset = 0
         self.pos_z_offset = 0
-        
         self.last_valid_view = np.zeros((1080, 1920), dtype=np.uint8)
 
     def run_interactive_loop(self):
@@ -92,34 +80,27 @@ class PTRC3DGameEngine:
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         allowed_24_list = [1, 5, 7, 11, 12, 13, 17, 19, 23]
         
-        print("\n[ HOLOGRAMM ] Hochperformante Interferenz-Projektion aktiv!")
-        print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
+        print("\\n[ HOLOGRAMM ] Hochperformante Interferenz-Projektion aktiv!")
+        print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\\n")
         
         while True:
             start_time = time.perf_counter()
-            
-            # Retina-Puffer leeren
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # 1. VEKTORISIERTE EXTRAKTION DES HINTERGRUNDS
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
             total_active_nodes = len(x_indices)
             
             if total_active_nodes > 0:
                 z_flight_offset = self.pos_z_offset % self.depth
-                
                 raw_z = (z_indices - z_flight_offset)
                 raw_z[raw_z <= 0] += self.depth
                 raw_z = np.clip(raw_z, 1, self.depth)
-                
                 raw_x = (x_indices - cx) + self.pos_x_offset
                 raw_y = (y_indices - cy) + self.pos_y_offset
                 
-                # Perspektiv-Transformation des Hintergrunds
                 scaled_depth = (raw_z * 1000) // 1414
                 denominator = scaled_depth + 156
-                
                 proj_x_left = ((raw_x * 8 - 12) * 1000) // denominator
                 proj_x_right = ((raw_x * 8 + 12) * 1000) // denominator
                 proj_y = ((raw_y * 8) * 1000) // denominator
@@ -129,62 +110,41 @@ class PTRC3DGameEngine:
                 out_y = (proj_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                 
                 takt_check = (raw_x * raw_y + raw_z) % self.control_base
-                valid_mask = (takt_check == 1) | (takt_check == 5) | (takt_check == 7) | \
-                             (takt_check == 11) | (takt_check == 12) | (takt_check == 13) | \
+                valid_mask = (takt_check == 1) | (takt_check == 5) | (takt_check == 7) | \\
+                             (takt_check == 11) | (takt_check == 12) | (takt_check == 13) | \\
                              (takt_check == 17) | (takt_check == 19) | (takt_check == 23)
                 
                 if np.any(valid_mask):
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask], out_x_left[valid_mask]] = 1
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask], out_x_right[valid_mask]] = 1
 
-            # ==================================================================
-            # !!! TARGET ZONE: PERFORMANCE-OPTIMIERTE HOCHFREQUENZ-KUGEL !!!
-            # ==================================================================
-            # Wir berechnen das Kugelnetz kompakt im lokalen 320x180 Raum der CPU
-            # statt auf 4K-Ebene – das eliminiert den Rechenstau komplett!
             local_y, local_x = np.indices((180, 320))
             lc_x, lc_y = 160, 90
-            
-            # Lokale Quadrance bezogen auf das Triebwerkszentrum
             dx_local = local_x - lc_x
             dy_local = local_y - lc_y
             quad_local = (dx_local * dx_local) + (dy_local * dy_local)
             
-            # Pure 1-Bit-Spiegelbedingung
             mask_takt = np.isin(quad_local % self.control_base, allowed_24_list)
             mask_prim = (quad_local % self.primorial_base) <= self.invariant_limit
             local_sphere_mask = (quad_local < 350) & (mask_takt | mask_prim)
             
-            # Extrahiere die gültigen lokalen Indizes
             s_y, s_x = np.where(local_sphere_mask)
-            
             if len(s_x) > 0:
-                # Projiziere die lokalen Punkte direkt über das Full-HD Stereofeld
-                # Zentriert bei Z=20 (feste Tiefe direkt vor dem Beobachterauge)
                 z_sphere = 20
                 sc_depth = (z_sphere * 1000) // 1414
                 denom_s = sc_depth + 156
-                
-                # Konvertiere die Indizes relativ auf das Sehzentrum
                 rx = s_x - lc_x
                 ry = s_y - lc_y
-                
                 p_xl = ((rx * 8 - 12) * 1000) // denom_s
                 p_xr = ((rx * 8 + 12) * 1000) // denom_s
                 p_y = ((ry * 8) * 1000) // denom_s
-                
                 o_xl = (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width
                 o_xr = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
                 o_y = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
-                
                 self.stereo_engine.left_eye_buffer[o_y, o_xl] = 1
                 self.stereo_engine.right_eye_buffer[o_y, o_xr] = 1
-            # ==================================================================
 
-            # Uhr-Engine weitertakten
             self.clock_engine.evolve_clock_one_takt()
-            
-            # Flacker-Schutz (Coherence Hold)
             active_nodes = int(np.sum(self.stereo_engine.left_eye_buffer))
             if active_nodes > 2:
                 self.last_valid_view = self.stereo_engine.left_eye_buffer * 255
@@ -192,17 +152,12 @@ class PTRC3DGameEngine:
             else:
                 bw_scene = self.last_valid_view.copy()
             
-            # Diagnostik
             end_time = time.perf_counter()
             dt = end_time - start_time
             fps = 1.0 / dt if dt > 0 else 999.0
             
-            # HUD-Anzeige
-            cv2.putText(bw_scene, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | HOLOGRAPHIC RECONSTRUCTION ACTIVE", 
-                        (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
-            cv2.putText(bw_scene, f"VECTORS: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", 
-                        (30, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 200, 1, cv2.LINE_AA)
-            
+            cv2.putText(bw_scene, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | HOLOGRAPHIC RECONSTRUCTION ACTIVE", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
+            cv2.putText(bw_scene, f"VECTORS: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", (30, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 200, 1, cv2.LINE_AA)
             cv2.imshow(window_name, bw_scene)
             
             key = cv2.waitKey(1) & 0xFF
@@ -214,3 +169,21 @@ class PTRC3DGameEngine:
             elif key == ord('s') or key == ord('S'):
                 self.pos_z_offset = (self.pos_z_offset - 1) % self.depth
             elif key == ord('a') or key == ord('A'):
+                self.pos_x_offset -= 2
+            elif key == ord('d') or key == ord('D'):
+                self.pos_x_offset += 2
+            elif key == ord('q') or key == ord('Q'):
+                self.pos_y_offset -= 2
+            elif key == ord('e') or key == ord('E'):
+                self.pos_y_offset += 2
+        cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    game = PTRC3DGameEngine()
+    game.run_interactive_loop()
+"""
+
+target = "/home/ignatus/Downloads/p-adic-takt-resonance-cosmology_002/p-adic-takt-resonance-cosmology-main(4)/p-adic-takt-resonance-cosmology-main/ptrc_3d_engine/src/ptrc_game_core.py"
+with open(target, "w", encoding="utf-8") as f:
+    f.write(code)
+print("[ AUTO FIXED ] 'ptrc_game_core.py' wurde fehlerfrei auf Bitebene neu geschrieben.")
