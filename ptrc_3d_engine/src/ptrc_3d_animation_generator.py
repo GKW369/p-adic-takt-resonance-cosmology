@@ -22,11 +22,14 @@ r"""
 pTRC Framework - Advanced Animation Pipeline: Hyper-Dignity Voxel Flight Sieve
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
 Optimized: Complete pure-space indentation alignment preventing any compiler block crash.
+Integrated: Hardware CPU detection telemetry metrics for rendering duration and pixel payload.
 """
 
 import os
 import sys
 import subprocess
+import time
+import platform
 import numpy as np
 import cv2
 
@@ -53,7 +56,6 @@ try:
 except ImportError:
     from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
 
-# STATISCH FIXIERT AN DEINE 'ptrc_clock_core.py' - UNVERÄNDERLICH
 try:
     from ptrc_clock_core import PTRCModularClockEngine
 except ImportError:
@@ -79,21 +81,48 @@ class PTRC3DAnimationGenerator:
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
 
+    def _get_cpu_name(self):
+        """
+        Detects the exact hardware processor name across different platforms.
+        """
+        try:
+            if platform.system() == "Linux":
+                command = "cat /proc/cpuinfo | grep 'model name' | uniq"
+                cpu_info = subprocess.check_output(command, shell=True).decode().strip()
+                if cpu_info:
+                    return cpu_info.split(":")[1].strip()
+            elif platform.system() == "Windows":
+                return platform.processor()
+            elif platform.system() == "Darwin":
+                os.environ['PATH'] = os.environ['PATH'] + os.pathsep + '/usr/sbin'
+                command = "sysctl -n machdep.cpu.brand_string"
+                return subprocess.check_output(command, shell=True).decode().strip()
+        except Exception:
+            pass
+        return platform.machine() or "Unbekannter Prozessor"
+
     def generate_lossless_flight_sequence(self):
         """
         Extracts active voxel states from the primorial core matrix and streams them
-        into the stereoscopic retina buffers while changing the Z-depth offset per frame.
+        into the stereoscopic retina buffers while measuring rendering telemetries.
         """
         print(f"[ FLIGHT ] Generiere {self.frames_limit} hochauflösende Gitter-Ebenen im Z-Raum...")
+        
+        cpu_name = self._get_cpu_name()
+        print(f" -> Erkannte Hardware für Berechnung: {cpu_name}")
+        
+        total_pipeline_start = time.perf_counter()
+        accumulated_pixels_written = 0
         
         z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
         total_active_nodes = len(x_indices)
         
         print(f" -> Gefundene aktive Resonanz-Knoten im Speicher-Universum: {total_active_nodes}")
-        
         v_width, v_height = self.clock_engine.width, self.clock_engine.height
         
         for frame_idx in range(self.frames_limit):
+            frame_start_time = time.perf_counter()
+            
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
@@ -120,8 +149,21 @@ class PTRC3DAnimationGenerator:
             frame_filename = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
             cv2.imwrite(frame_filename, pixel_sharp_view)
             
-            if frame_idx % 24 == 0:
-                print(f"    + Frame {frame_idx}/{self.frames_limit} erfolgreich in Matrix gerastert.")
+            frame_end_time = time.perf_counter()
+            frame_duration_ms = (frame_end_time - frame_start_time) * 1000
+            
+            active_pixels_in_frame = int(np.sum(self.stereo_engine.left_eye_buffer))
+            accumulated_pixels_written += active_pixels_in_frame
+            
+            if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
+                print(f"    + Frame {frame_idx:03d}/{self.frames_limit} | Zeit: {frame_duration_ms:.2f} ms | Aktive Datenpunkte: {active_pixels_in_frame:,} Pixel")
+
+        total_pipeline_end = time.perf_counter()
+        total_duration = total_pipeline_end - total_pipeline_start
+        print(f"\n[ TELEMETRIE ] Matrix-Generierung abgeschlossen!")
+        print(f" -> Berechnet auf: {cpu_name}")
+        print(f" -> Gesamtdauer der Bildberechnung: {total_duration:.2f} Sekunden")
+        print(f" -> Gesamte geschriebene Datenmasse: {accumulated_pixels_written:,} Bildpunkte im Cache-Speicher.\n")
 
     def _determine_next_video_path(self):
         """
@@ -179,11 +221,10 @@ if __name__ == "__main__":
     print("[ pTRC-ANIMATION ] Starte Takt-Synchronisierte Flug-Pipeline durch das Gitter...")
     generator = PTRC3DAnimationGenerator(total_frames=144)
     
-    # Bilder erzeugen
+    # Bilder erzeugen und Daten ausgeben
     generator.generate_lossless_flight_sequence()
     
     # Video rendern und aufräumen
     status = generator.compile_lossless_takt_video()
     
     print(f" -> [ VALIDATION ] Flug-Pipeline beendet. Status: {status}")
-    print(" -> STATUS: Zero-Float Takt-Synchronized Animation Suite Successfully Audited.")
