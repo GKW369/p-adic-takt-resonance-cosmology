@@ -14,15 +14,14 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
-
 
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Core Rendering Module: Ultra-High-Definition 4K Genesis Grid
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
-Generates unrounded, pixel-sharp master frames without continuous coordinates.
+Optimized: 100% Vectorized Matrix Computations bypassing heavy Python loops.
 """
 
 import numpy as np
@@ -44,40 +43,60 @@ class PTRC4KGenesisEngine:
         # 1-bit boolean 4K master canvas memory array
         self.canvas_matrix = np.zeros((self.height, self.width), dtype=np.uint8)
 
+    # ==========================================================================
+    # !!! TARGET ZONE: GPU/MATRIX VEKTORISIERUNG FÜR 4K RESOLUTION !!!
+    # MARKER: PTRC_GPU_VECTOR_ACCELERATION_2026
+    # ==========================================================================
     def execute_genesis_raster_takt(self, global_takt_pulse):
         """
         Populates the high-density coordinate grid based on numeric clock interference.
-        Operates without spatial pixel-smoothing or continuous trigonometric interpolation.
+        Vektorisiert über NumPy-Gittermatrizen, um die CPU/GPU-Inferenz maximal zu beschleunigen.
         """
         takt_factor = int(global_takt_pulse) % self.primorial_base
         center_x = self.width // 2
         center_y = self.height // 2
         
-        print(f" -> Mapping high-density 4K integer space nodes...")
+        print(f" -> Mapping high-density 4K integer space nodes via vectorized grids...")
         
-        # Subsampled matrix loop executing discrete coordinate auditing loops
-        for y in range(0, self.height, 2):
-            delta_y = y - center_y
-            dy_squared = delta_y * delta_y
-            
-            for x in range(0, self.width, 2):
-                delta_x = x - center_x
-                dx_squared = delta_x * delta_x
-                
-                # Compute absolute discrete quadrance in Z space
-                discrete_quadrance = dx_squared + dy_squared
-                
-                # Apply the primary Modulo-210 Wirminghaus sieve conditions
-                residue_210 = discrete_quadrance % self.primorial_base
-                
-                if residue_210 <= self.invariant_limit:
-                    # Apply secondary Modulo-24 phase control verification steps
-                    takt_check = (x * y + takt_factor) % self.control_base
-                    if takt_check == 12:
-                        self.canvas_matrix[y, x] = 1
-                        self.canvas_matrix[y + 1, x] = 1
-                        self.canvas_matrix[y, x + 1] = 1
-                        self.canvas_matrix[y + 1, x + 1] = 1
+        # Erzeuge Koordinaten-Gitter für die subsamplichen 2x2-Schritte (Vektor-Metrik)
+        y_indices = np.arange(0, self.height, 2)
+        x_indices = np.arange(0, self.width, 2)
+        
+        # Erzeugt zwei orthogonale 2D-Matrizen im Speicher
+        Y, X = np.meshgrid(y_indices, x_indices, indexing='ij')
+        
+        # Berechne die Abstandsquadrate für alle Pixel gleichzeitig (Z-Raum Transformation)
+        delta_y = Y - center_y
+        delta_x = X - center_x
+        discrete_quadrance = (delta_x * delta_x) + (delta_y * delta_y)
+        
+        # 1. DAS MODULO-210 UHRSIEB (Parallel-Filterung auf der Matrix)
+        residue_210 = discrete_quadrance % self.primorial_base
+        sieve_mask = residue_210 <= self.invariant_limit
+        
+        # 2. DER Z/24Z PHASENKONTROLL-CHECK
+        takt_check = (X * Y + takt_factor) % self.control_base
+        takt_mask = takt_check == 12
+        
+        # Kombiniere beide Filter zu einer finalen Wahrheitsmatrix
+        valid_nodes_mask = sieve_mask & takt_mask
+        
+        # Hole die Indizes aller Punkte, die die physikalischen Bedingungen erfüllen
+        valid_y, valid_x = np.where(valid_nodes_mask)
+        
+        # Multipliziere die Indizes zurück auf die reale Auflösung
+        real_y = valid_y * 2
+        real_x = valid_x * 2
+        
+        # Blitzschnelle 2x2-Block-Zuweisung im Speicher ohne eine einzige Schleife
+        if len(real_y) > 0:
+            self.canvas_matrix[real_y, real_x] = 1
+            self.canvas_matrix[real_y + 1, real_x] = 1
+            self.canvas_matrix[real_y, real_x + 1] = 1
+            self.canvas_matrix[real_y + 1, real_x + 1] = 1
+    # ==========================================================================
+    # !!! END OF TARGET ZONE !!!
+    # ==========================================================================
 
     def export_genesis_bitmap(self, output_path="ptrc_4k_genesis_master.png"):
         """
@@ -100,13 +119,10 @@ if __name__ == "__main__":
     print("[ pTRC-4K-GENESIS ] Initializing high-resolution integer canvas pipelines...")
     engine = PTRC4KGenesisEngine()
     
-    # Process 4K spatial rastering using the system constant invariant limit (1836)
     print(" -> Clocking ultra-hd matrix generation cycles for system Takt 1836...")
     engine.execute_genesis_raster_takt(global_takt_pulse=1836)
     
-    # Run pipeline verification steps
     is_valid = engine.verify_raster_mass_density()
-    
     print(f" -> [ VALIDATION ] 4K image raster pass completed successfully.")
     print(f" -> High-Resolution Field Density Active Status: {is_valid}")
     print(" -> STATUS: Zero-Float 4K Genesis Grid Suite Successfully Audited.")
