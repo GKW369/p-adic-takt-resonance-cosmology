@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
 Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Coherence recovery loops with a localized invariant observer sphere.
+Optimized: RGB Color Space Injection for massive solid invariant observer rendering.
 """
 
 import os
@@ -87,8 +87,9 @@ class PTRC3DGameEngine:
         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
+        allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
         
-        print("\n[ OBSERVER ] Stabile Beobachter-Kugel im fließenden Gitter installiert!")
+        print("\n[ OBSERVER ] Massiver Farbkörper-Beobachter im fließenden Gitter installiert!")
         print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
         
         while True:
@@ -98,9 +99,7 @@ class PTRC3DGameEngine:
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # ==================================================================
             # 1. BERECHNUNG DES HOCHDYNAMISCHEN HINTERGRUNDS
-            # ==================================================================
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
             total_active_nodes = len(x_indices)
             
@@ -134,47 +133,52 @@ class PTRC3DGameEngine:
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask], out_x_left[valid_mask]] = 1
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask], out_x_right[valid_mask]] = 1
 
-            # ==================================================================
-            # 2. !!! TARGET ZONE: GENERIERUNG DER STABILEN BEOBACHTER-KUGEL !!!
-            # ==================================================================
-            # Wir erzeugen mathematisch eine unbewegliche Kugel direkt vor der Linse
-            # Diese Kugel repräsentiert DICH als stabilen Körper im fließenden Strom
-            sphere_resolution = 180
-            angles = np.linspace(0, 2 * np.pi, sphere_resolution)
-            
-            # Berechne die Kreisbahnen für das linke und rechte Auge im Screen-Space
-            # Ein fester Radius von 120 Pixeln zentriert im Full-HD Feld (1920x1080)
-            sphere_x_left = (120 * np.cos(angles) + (self.stereo_engine.width // 2) - 8).astype(np.int32)
-            sphere_x_right = (120 * np.cos(angles) + (self.stereo_engine.width // 2) + 8).astype(np.int32)
-            sphere_y = (120 * np.sin(angles) + (self.stereo_engine.height // 2)).astype(np.int32)
-            
-            # Zeichne die Kugel als stabilen Invarianten-Knoten direkt in die Buffer
-            self.stereo_engine.left_eye_buffer[sphere_y, sphere_x_left] = 1
-            self.stereo_engine.right_eye_buffer[sphere_y, sphere_x_right] = 1
-            # ==================================================================
-
             # Uhr-Engine weitertakten
             self.clock_engine.evolve_clock_one_takt()
             
-            # Flacker-Schutz (Coherence Hold)
+            # Flacker-Schutz (Coherence Hold) für die Hintergrunddaten
             active_nodes = int(np.sum(self.stereo_engine.left_eye_buffer))
             if active_nodes > 2:
                 self.last_valid_view = self.stereo_engine.left_eye_buffer * 255
-                live_view = self.last_valid_view.copy()
+                bw_matrix = self.last_valid_view.copy()
             else:
-                live_view = self.last_valid_view.copy()
+                bw_matrix = self.last_valid_view.copy()
             
-            # Diagnostik
+            # ==================================================================
+            # 2. !!! TARGET ZONE: RGB-FARBINJEKTION & MASSIVE KUGEL-STANZE !!!
+            # ==================================================================
+            # Wandle das Schwarz-Weiß-Bild in ein 3-Kanal RGB-Farbbild um (Bilder werden farbtauglich)
+            color_scene = cv2.cvtColor(bw_matrix, cv2.cvtColor(bw_matrix, cv2.COLOR_GRAY2BGR) if hasattr(cv2, 'COLOR_GRAY2BGR') else cv2.COLOR_GRAY2RGB)
+            if color_scene.ndim == 2 or color_scene.shape[2] != 3:
+                color_scene = cv2.merge([bw_matrix, bw_matrix, bw_matrix])
+            
+            # Definiere das Zentrum und den Radius für deinen Beobachterkörper
+            center_point = (self.stereo_engine.width // 2, self.stereo_engine.height // 2)
+            sphere_radius = 80
+            
+            # Farbdefinition im BGR-Format von OpenCV: (Blau, Grüner Anteil, Roter Anteil)
+            # Hier gewählt: Ein leuchtendes Quanten-Cyan-Blau (Blau=255, Grün=180, Rot=0)
+            sphere_color = (255, 180, 0)
+            
+            # Zeichne eine VOLLFLÄCHIG AUSGEFÜLLTE KUGEL (Thickness = -1 stanzt den Körper massiv)
+            cv2.circle(color_scene, center_point, sphere_radius, sphere_color, thickness=-1)
+            
+            # Setze einen scharfen schwarzen Kern oder eine Konturlinie für plastische Tiefe
+            cv2.circle(color_scene, center_point, sphere_radius, (0, 0, 0), thickness=2)
+            # ==================================================================
+            
+            # Diagnostik-Berechnung
             end_time = time.perf_counter()
             dt = end_time - start_time
             fps = 1.0 / dt if dt > 0 else 999.0
             
-            cv2.putText(live_view, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | OBSERVER MODE: ACTIVE", 
-                        (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
-            cv2.putText(live_view, f"VECTORS: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", 
-                        (30, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 200, 1, cv2.LINE_AA)
+            # HUD-Anzeige (Jetzt in leuchtendem Grün über der Farbmatrix)
+            cv2.putText(color_scene, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | COLOR OBSERVER SPHERE: SOLID", 
+                        (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            cv2.putText(color_scene, f"VECTORS: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", 
+                        (30, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 200, 255), 1, cv2.LINE_AA)
             
-            cv2.imshow(window_name, live_view)
+            cv2.imshow(window_name, color_scene)
             
             key = cv2.waitKey(1) & 0xFF
             if key == 27:
