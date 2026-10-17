@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
 Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Pure Vectorized Holographic Matrix Projection with fixed attribute links.
+Optimized: Ultra-High FPS via local coordinate space mapping for the holographic sphere.
 """
 
 import os
@@ -73,7 +73,7 @@ class PTRC3DGameEngine:
         self.depth = 128
         self.primorial_base = 210
         self.control_base = 24
-        self.invariant_limit = 156  # Als echtes Klassenattribut fixiert
+        self.invariant_limit = 156
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         
@@ -92,7 +92,7 @@ class PTRC3DGameEngine:
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         allowed_24_list = [1, 5, 7, 11, 12, 13, 17, 19, 23]
         
-        print("\n[ HOLOGRAMM ] Reine holografische Spiegel-Interferenz aktiv!")
+        print("\n[ HOLOGRAMM ] Hochperformante Interferenz-Projektion aktiv!")
         print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
         
         while True:
@@ -102,7 +102,7 @@ class PTRC3DGameEngine:
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # VEKTORISIERTE EXTRAKTION DES HINTERGRUNDS
+            # 1. VEKTORISIERTE EXTRAKTION DES HINTERGRUNDS
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
             total_active_nodes = len(x_indices)
             
@@ -138,32 +138,47 @@ class PTRC3DGameEngine:
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask], out_x_right[valid_mask]] = 1
 
             # ==================================================================
-            # !!! TARGET ZONE: HOLOGRAFISCHE MATRIX-SPIEGEL-KUGEL !!!
+            # !!! TARGET ZONE: PERFORMANCE-OPTIMIERTE HOCHFREQUENZ-KUGEL !!!
             # ==================================================================
-            grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
+            # Wir berechnen das Kugelnetz kompakt im lokalen 320x180 Raum der CPU
+            # statt auf 4K-Ebene – das eliminiert den Rechenstau komplett!
+            local_y, local_x = np.indices((180, 320))
+            lc_x, lc_y = 160, 90
             
-            screen_cx = self.stereo_engine.width // 2
-            screen_cy = self.stereo_engine.height // 2
+            # Lokale Quadrance bezogen auf das Triebwerkszentrum
+            dx_local = local_x - lc_x
+            dy_local = local_y - lc_y
+            quad_local = (dx_local * dx_local) + (dy_local * dy_local)
             
-            dx_left = grid_x - (screen_cx - 8)
-            dx_right = grid_x - (screen_cx + 8)
-            dy = grid_y - screen_cy
+            # Pure 1-Bit-Spiegelbedingung
+            mask_takt = np.isin(quad_local % self.control_base, allowed_24_list)
+            mask_prim = (quad_local % self.primorial_base) <= self.invariant_limit
+            local_sphere_mask = (quad_local < 350) & (mask_takt | mask_prim)
             
-            quadrance_left = (dx_left * dx_left) + (dy * dy)
-            quadrance_right = (dx_right * dx_right) + (dy * dy)
+            # Extrahiere die gültigen lokalen Indizes
+            s_y, s_x = np.where(local_sphere_mask)
             
-            # Fehlerkorrektur: Nutzt jetzt self.invariant_limit fehlerfrei
-            mask_takt_left = np.isin(quadrance_left % self.control_base, allowed_24_list)
-            mask_prim_left = (quadrance_left % self.primorial_base) <= self.invariant_limit
-            sphere_mask_left = (quadrance_left < 7000) & (mask_takt_left | mask_prim_left)
-            
-            mask_takt_right = np.isin(quadrance_right % self.control_base, allowed_24_list)
-            mask_prim_right = (quadrance_right % self.primorial_base) <= self.invariant_limit
-            sphere_mask_right = (quadrance_right < 7000) & (mask_takt_right | mask_prim_right)
-            
-            # Zuweisung an die 1-Bit Stereo-Buffer
-            self.stereo_engine.left_eye_buffer[sphere_mask_left] = 1
-            self.stereo_engine.right_eye_buffer[sphere_mask_right] = 1
+            if len(s_x) > 0:
+                # Projiziere die lokalen Punkte direkt über das Full-HD Stereofeld
+                # Zentriert bei Z=20 (feste Tiefe direkt vor dem Beobachterauge)
+                z_sphere = 20
+                sc_depth = (z_sphere * 1000) // 1414
+                denom_s = sc_depth + 156
+                
+                # Konvertiere die Indizes relativ auf das Sehzentrum
+                rx = s_x - lc_x
+                ry = s_y - lc_y
+                
+                p_xl = ((rx * 8 - 12) * 1000) // denom_s
+                p_xr = ((rx * 8 + 12) * 1000) // denom_s
+                p_y = ((ry * 8) * 1000) // denom_s
+                
+                o_xl = (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width
+                o_xr = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
+                o_y = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
+                
+                self.stereo_engine.left_eye_buffer[o_y, o_xl] = 1
+                self.stereo_engine.right_eye_buffer[o_y, o_xr] = 1
             # ==================================================================
 
             # Uhr-Engine weitertakten
@@ -199,16 +214,3 @@ class PTRC3DGameEngine:
             elif key == ord('s') or key == ord('S'):
                 self.pos_z_offset = (self.pos_z_offset - 1) % self.depth
             elif key == ord('a') or key == ord('A'):
-                self.pos_x_offset -= 2
-            elif key == ord('d') or key == ord('D'):
-                self.pos_x_offset += 2
-            elif key == ord('q') or key == ord('Q'):
-                self.pos_y_offset -= 2
-            elif key == ord('e') or key == ord('E'):
-                self.pos_y_offset += 2
-
-        cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    game = PTRC3DGameEngine()
-    game.run_interactive_loop()
