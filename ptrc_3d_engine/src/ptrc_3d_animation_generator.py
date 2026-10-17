@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
 Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Keyboard-controlled interactive engine with instant live window projection.
+Optimized: Balanced local viewport rendering to fully eliminate OS Out-of-Memory Kill signals.
 """
 
 import os
@@ -69,20 +69,21 @@ class PTRC3DGameEngine:
     game engine environment governed entirely by whole-number keyboard vectors.
     """
     def __init__(self):
+        # Der Stereo-Retina-Bildschirm bleibt im Full-HD Standard
         self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
         
-        # Harmonische Spielauflösung der Planck-Ebene
-        self.width = 1680
-        self.height = 1050
-        self.depth = 420
+        # Lokale, hochperformante Triebwerks-Auflösung (Verhindert den Absturz)
+        self.width = 320
+        self.height = 180
+        self.depth = 128
         self.primorial_base = 210
         self.control_base = 24
         
-        # Lade die 1-Bit-Flusskanäle des Kristalls
-        self.clock_engine = PTRCModularClockEngine(width=160, height=90, depth=64)
+        # Lade die echten 1-Bit-Kristallkanäle
+        self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.crystal_axes = self.clock_engine.crystal_axes
         
-        # Interaktive Positions-Koordinaten des Beobachters (Start im Zentrum)
+        # Interaktive Reiseparameter des Beobachters
         self.pos_x_offset = 0
         self.pos_y_offset = 0
         self.pos_z_offset = 0
@@ -105,78 +106,73 @@ class PTRC3DGameEngine:
         while True:
             start_time = time.perf_counter()
             
-            # 1. Puffer für den aktuellen Frame komplett leeren
+            # 1. Retina-Puffer für diesen Frame leeren
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # 2. ON-THE-FLY INTERFERENZ BERECHNUNG (Unter Berücksichtigung der Spielerposition)
-            for axis in self.crystal_axes:
-                ax, ay, az = axis, axis, axis
-                
-                for step in range(-120, 120):
-                    # Inkorporiere die interaktiven Tastatur-Verschiebungen direkt im Fluss
-                    x_g = cx + (ax * step) // 6 + self.pos_x_offset
-                    y_g = cy + (ay * step) // 6 + self.pos_y_offset
-                    z_g = cz + (az * step) // 6
-                    
-                    if 0 <= x_g < self.width and 0 <= y_g < self.height and 0 <= z_g < self.depth:
-                        quadrance = (x_g - cx)**2 + (y_g - cy)**2 + (z_g - cz)**2
-                        
-                        if quadrance % self.primorial_base <= 156:
-                            takt_check = (x_g * y_g + z_g) % self.control_base
-                            
-                            if takt_check in allowed_24_rays:
-                                # Berechne den Tiefenabstand bezogen auf den Vorwärtsflug (Z-Offset)
-                                raw_z = int(z_g - self.pos_z_offset)
-                                while raw_z <= 0:
-                                    raw_z += self.depth
-                                raw_z = (raw_z % self.depth) or 1
-                                
-                                raw_x = int(x_g - cx)
-                                raw_y = int(y_g - cy)
-                                
-                                self.stereo_engine.project_spatial_voxel_node(
-                                    coord_x=raw_x,
-                                    coord_y=raw_y,
-                                    coord_z=raw_z,
-                                    focal_offset=14
-                                )
+            # 2. ON-THE-FLY INTERFERENZ BERECHNUNG (Absolut RAM-stabil)
+            z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
+            total_active_nodes = len(x_indices)
             
-            # Takte die Hintergrund-Uhr-Engine im Hintergrund permanent mit
+            # Nutze den kontinuierlichen Tastaturvorschub im Z-Raum
+            z_flight_offset = self.pos_z_offset % self.depth
+            
+            for i in range(0, total_active_nodes, 4):
+                raw_z = int(z_indices[i] - z_flight_offset)
+                if raw_z <= 0:
+                    raw_z += self.depth
+                    
+                # Inkorporiere interaktive X- und Y-Verschiebungen
+                raw_x = int(x_indices[i] - cx) + self.pos_x_offset
+                raw_y = int(y_indices[i] - cy) + self.pos_y_offset
+                
+                # Fixed-Point-Retina-Projektion
+                self.stereo_engine.project_spatial_voxel_node(
+                    coord_x=raw_x * 8,
+                    coord_y=raw_y * 8,
+                    coord_z=raw_z * 12,
+                    focal_offset=12
+                )
+            
+            # Takte die physikalische Uhr-Engine weiter
             self.clock_engine.evolve_clock_one_takt()
             
-            # Signalkonvertierung in 8-Bit Sichtfeld
+            # Extrahiere das 8-Bit Sichtfeld
             live_view = self.stereo_engine.left_eye_buffer * 255
             
-            # Performance-Metriken im Live-Bild einblenden
+            # Performance-Metriken berechnen
             end_time = time.perf_counter()
-            fps = 1.0 / (end_time - start_time)
+            dt = end_time - start_time
+            fps = 1.0 / dt if dt > 0 else 999.0
             active_nodes = int(np.sum(self.stereo_engine.left_eye_buffer))
             
-            cv2.putText(live_view, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | POS: ({self.pos_x_offset},{self.pos_y_offset},{self.pos_z_offset})", 
+            # Informations-HUD einblenden
+            cv2.putText(live_view, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | GRID: {self.width}x{self.height}x{self.depth}", 
                         (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
+            cv2.putText(live_view, f"COORD VECTOR: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", 
+                        (30, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 200, 1, cv2.LINE_AA)
             
-            # Zeige das Bild direkt im Vollbildfenster an
+            # Frame direkt auf dem Monitor anzeigen
             cv2.imshow(window_name, live_view)
             
-            # 3. INTERAKTIVE TASTATUR-ABFRAGE (Wartet 1 ms auf Input)
-            key = cv2.waitKey(1) & 0xFF
+            # 3. INTERAKTIVE TASTATUR-ABFRAGE (Wartet 5 ms auf Input)
+            key = cv2.waitKey(5) & 0xFF
             
-            if key == 27:  # ESC-Taste gedrückt
+            if key == 27:  # ESC-Taste
                 print("[ GAME ] Universum über ESC sicher geschlossen.")
                 break
             elif key == ord('w') or key == ord('W'):
-                self.pos_z_offset = (self.pos_z_offset + 4) % self.depth  # Vorwärts fliegen
+                self.pos_z_offset += 2  # Vorwärts fliegen
             elif key == ord('s') or key == ord('S'):
-                self.pos_z_offset = (self.pos_z_offset - 4) % self.depth  # Rückwärts fliegen
+                self.pos_z_offset -= 2  # Rückwärts fliegen
             elif key == ord('a') or key == ord('A'):
-                self.pos_x_offset -= 8  # Nach links steuern
+                self.pos_x_offset -= 4  # Nach links steuern
             elif key == ord('d') or key == ord('D'):
-                self.pos_x_offset += 8  # Nach rechts steuern
+                self.pos_x_offset += 4  # Nach rechts steuern
             elif key == ord('q') or key == ord('Q'):
-                self.pos_y_offset -= 8  # Nach oben fliegen
+                self.pos_y_offset -= 4  # Nach oben steuern
             elif key == ord('e') or key == ord('E'):
-                self.pos_y_offset += 8  # Nach unten fliegen
+                self.pos_y_offset += 4  # Nach unten steuern
 
         cv2.destroyAllWindows()
 
