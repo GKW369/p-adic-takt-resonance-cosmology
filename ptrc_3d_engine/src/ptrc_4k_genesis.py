@@ -18,7 +18,7 @@
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
-"""
+r"""
 pTRC Framework - Core Rendering Module: Ultra-High-Definition 4K Genesis Grid
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
 Optimized: 100% Vectorized Matrix Computations bypassing heavy Python loops.
