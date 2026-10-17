@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
 Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: 100% Vectorized Matrix Projection to eliminate CPU loops for fluid FPS.
+Optimized: Symmetrical phase-coherence masks to entirely eliminate black frame drops.
 """
 
 import os
@@ -88,7 +88,7 @@ class PTRC3DGameEngine:
     def run_interactive_loop(self):
         """
         Launches the interactive game loop using lightning-fast NumPy vectors.
-        Eliminates the 'for'-loop bottleneck entirely.
+        Eliminates the black-frame dropouts via phase-aligned ray filters.
         """
         window_name = "pTRC Quantum Crystal Engine v1.0"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -96,7 +96,7 @@ class PTRC3DGameEngine:
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        print("\n[ INTERAKTIV ] Vektorisiertes Gitter geladen!")
+        print("\n[ INTERAKTIV ] Harmonisiertes Gitter geladen!")
         print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
         
         while True:
@@ -106,7 +106,7 @@ class PTRC3DGameEngine:
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # 2. VEKTORISIERTE EXTRAKTION (Keine Python-Schleife mehr!)
+            # 2. VEKTORISIERTE EXTRAKTION
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
             total_active_nodes = len(x_indices)
             
@@ -121,7 +121,7 @@ class PTRC3DGameEngine:
                 raw_x = (x_indices - cx) + self.pos_x_offset
                 raw_y = (y_indices - cy) + self.pos_y_offset
                 
-                # Vektorisierte fixed-point Perspektivtransformation (Ur-Metrik skaliert)
+                # Vektorisierte fixed-point Perspektivtransformation
                 scaled_depth = (raw_z * 1000) // 1414
                 denominator = scaled_depth + 156
                 
@@ -134,9 +134,16 @@ class PTRC3DGameEngine:
                 out_x_right = (proj_x_right + self.stereo_engine.width // 2) % self.stereo_engine.width
                 out_y = (proj_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                 
-                # Phasen-Check-Filterung auf Matrix-Ebene
+                # ==================================================================
+                # !!! TARGET ZONE: FLACKERFREIER PHASEN-FILTER (ABELSCHER COHERENCE CHECK) !!!
+                # ==================================================================
                 takt_check = (raw_x * raw_y + raw_z) % self.control_base
-                valid_mask = takt_check == 12  # Nur stabile Massen-Resonanzknoten durchlassen
+                
+                # Nutzt die 8 abelschen Strahlen PLUS den stabilen Massenknoten 12,
+                # um lückenlose Datenströme während des Fluges zu garantieren
+                valid_mask = (takt_check == 1) | (takt_check == 5) | (takt_check == 7) | \
+                             (takt_check == 11) | (takt_check == 12) | (takt_check == 13) | \
+                             (takt_check == 17) | (takt_check == 19) | (takt_check == 23)
                 
                 # Blitzschnelle Block-Zuweisung im Grafikbuffer
                 if np.any(valid_mask):
@@ -169,17 +176,17 @@ class PTRC3DGameEngine:
                 print("[ GAME ] Universum über ESC sicher geschlossen.")
                 break
             elif key == ord('w') or key == ord('W'):
-                self.pos_z_offset += 2
+                self.pos_z_offset = (self.pos_z_offset + 1) % self.depth  # Harmonischer 1-Planck-Takt Vorschub
             elif key == ord('s') or key == ord('S'):
-                self.pos_z_offset -= 2
+                self.pos_z_offset = (self.pos_z_offset - 1) % self.depth  # Harmonischer 1-Planck-Takt Rückschub
             elif key == ord('a') or key == ord('A'):
-                self.pos_x_offset -= 4
+                self.pos_x_offset -= 2  # Verfeinerte Schrittweite für weicheres Steuern
             elif key == ord('d') or key == ord('D'):
-                self.pos_x_offset += 4
+                self.pos_x_offset += 2
             elif key == ord('q') or key == ord('Q'):
-                self.pos_y_offset -= 4
+                self.pos_y_offset -= 2
             elif key == ord('e') or key == ord('E'):
-                self.pos_y_offset += 4
+                self.pos_y_offset += 2
 
         cv2.destroyAllWindows()
 
