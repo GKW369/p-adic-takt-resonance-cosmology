@@ -1,4 +1,5 @@
-python3 -c '
+import os
+
 code = """# ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
@@ -54,7 +55,7 @@ try:
 except ImportError:
     from src.ptrc_clock_core import PTRCModularClockEngine
 
-print(" -> [ PATH ] Erfolgreich mit der Kern-Engine \x27ptrc_clock_core.py\x27 synchronisiert.")
+print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchronisiert.")
 
 class PTRC3DGameEngine:
     def __init__(self):
@@ -75,8 +76,8 @@ class PTRC3DGameEngine:
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        print("\n[ INTERAKTIV ] Vektorisiertes Gitter geladen!")
-        print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
+        print("\\n[ INTERAKTIV ] Vektorisiertes Gitter geladen!")
+        print(" -> Steuerung: W/S (Vor/Zurück) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\\n")
         
         while True:
             start_time = time.perf_counter()
@@ -101,8 +102,8 @@ class PTRC3DGameEngine:
                 out_x_right = (proj_x_right + self.stereo_engine.width // 2) % self.stereo_engine.width
                 out_y = (proj_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                 takt_check = (raw_x * raw_y + raw_z) % self.control_base
-                valid_mask = (takt_check == 1) | (takt_check == 5) | (takt_check == 7) | \
-                             (takt_check == 11) | (takt_check == 12) | (takt_check == 13) | \
+                valid_mask = (takt_check == 1) | (takt_check == 5) | (takt_check == 7) | \\
+                             (takt_check == 11) | (takt_check == 12) | (takt_check == 13) | \\
                              (takt_check == 17) | (takt_check == 19) | (takt_check == 23)
                 if np.any(valid_mask):
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask], out_x_left[valid_mask]] = 1
@@ -134,17 +135,17 @@ class PTRC3DGameEngine:
             if key == 27:
                 print("[ GAME ] Universum über ESC sicher geschlossen.")
                 break
-            elif key == ord(\x27w\x27) or key == ord(\x27W\x27):
+            elif key == ord('w') or key == ord('W'):
                 self.pos_z_offset = (self.pos_z_offset + 1) % self.depth
-            elif key == ord(\x27s\x27) or key == ord(\x27S\x27):
+            elif key == ord('s') or key == ord('S'):
                 self.pos_z_offset = (self.pos_z_offset - 1) % self.depth
-            elif key == ord(\x27a\x27) or key == ord(\x27A\x27):
+            elif key == ord('a') or key == ord('A'):
                 self.pos_x_offset -= 2
-            elif key == ord(\x27d\x27) or key == ord(\x27D\x27):
+            elif key == ord('d') or key == ord('D'):
                 self.pos_x_offset += 2
-            elif key == ord(\x27q\x27) or key == ord(\x27Q\x27):
+            elif key == ord('q') or key == ord('Q'):
                 self.pos_y_offset -= 2
-            elif key == ord(\x27e\x27) or key == ord(\x27E\x27):
+            elif key == ord('e') or key == ord('E'):
                 self.pos_y_offset += 2
         cv2.destroyAllWindows()
 
@@ -152,8 +153,8 @@ if __name__ == "__main__":
     game = PTRC3DGameEngine()
     game.run_interactive_loop()
 """
-path = "/home/ignatus/Downloads/p-adic-takt-resonance-cosmology_002/p-adic-takt-resonance-cosmology-main(4)/p-adic-takt-resonance-cosmology-main/ptrc_3d_engine/src/ptrc_3d_animation_generator.py"
-with open(path, "w", encoding="utf-8") as f:
+
+target = "/home/ignatus/Downloads/p-adic-takt-resonance-cosmology_002/p-adic-takt-resonance-cosmology-main(4)/p-adic-takt-resonance-cosmology-main/ptrc_3d_engine/src/ptrc_3d_animation_generator.py"
+with open(target, "w", encoding="utf-8") as f:
     f.write(code)
-print("[ LOCAL FIXED ] Die Datei wurde lokal auf Beißebene vollständig repariert.")
-'
+print("[ FINISHED ] Die Datei wurde von außen komplett gereinigt und überschrieben.")
