@@ -121,7 +121,7 @@ if __name__ == "__main__":
     
     print(" -> Clocking ultra-hd matrix generation cycles for system Takt 1836...")
     engine.execute_genesis_raster_takt(global_takt_pulse=1836)
-    
+    engine.export_genesis_bitmap("ptrc_4k_genesis_master.png")
     is_valid = engine.verify_raster_mass_density()
     print(f" -> [ VALIDATION ] 4K image raster pass completed successfully.")
     print(f" -> High-Resolution Field Density Active Status: {is_valid}")
