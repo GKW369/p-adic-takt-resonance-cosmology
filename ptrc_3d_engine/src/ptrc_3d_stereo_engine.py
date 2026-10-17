@@ -14,12 +14,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
 
-
 # -*- coding: utf-8 -*-
-"""
+r"""
 pTRC Framework - Core Simulation Module: 1080p Stereoscopic Retina Engine
 Operational Domain: 3D Whole-Number Projections (\mathbb{Z}) using discrete matrices.
 Generates artifact-free stereoscopic views without float math or continuous trigonometry.
@@ -63,6 +62,7 @@ class PTRC3DStereoEngine:
         
         # Calculate discrete pixel displacement coordinates for left and right viewpoints
         proj_x_left = ((x - iod) * self.SCALE) // (scaled_depth + self.invariant_limit)
+        proj_x_right = ((x + iod) * self.SCALE) // (scaled_depth + self.invariant_limit)
         proj_x_right = ((x + iod) * self.SCALE) // (scaled_depth + self.invariant_limit)
         proj_y = (y * self.SCALE) // (scaled_depth + self.invariant_limit)
         
