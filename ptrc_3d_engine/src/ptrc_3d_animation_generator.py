@@ -122,7 +122,6 @@ class PTRC3DGameEngine:
                 raw_y = (y_indices - cy) + self.pos_y_offset
                 
                 # Vektorisierte fixed-point Perspektivtransformation (Ur-Metrik skaliert)
-                # Entspricht exakt der Logik in project_spatial_voxel_node, aber parallelisiert
                 scaled_depth = (raw_z * 1000) // 1414
                 denominator = scaled_depth + 156
                 
@@ -187,4 +186,3 @@ class PTRC3DGameEngine:
 if __name__ == "__main__":
     game = PTRC3DGameEngine()
     game.run_interactive_loop()
-
