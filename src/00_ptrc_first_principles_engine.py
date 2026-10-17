@@ -14,9 +14,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
+#
+# For commercial licensing, enterprise integration, or proprietary deployment
+# options, please contact the author directly.
 # ==============================================================================
-
 
 # -*- coding: utf-8 -*-
 """
@@ -49,15 +51,31 @@ class PTRCFirstPrinciplesOrchestrator:
         print(f"[ pTRC-ORCHESTRATOR ] Initiating global execution sweep...")
         failed_nodes = 0
         
+        # Bestimme das Verzeichnis, in dem dieses Orchestrator-Skript liegt
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
         for module in self.sub_modules:
-            script_path = os.path.join("src", module)
+            # 1. Option: Suche im Standardordner 'src'
+            script_path = os.path.join(current_dir, "src", module)
+            
             if not os.path.exists(script_path):
-                # Fallback to experimental directory if core node is isolated
-                script_path = os.path.join("experimental", module)
+                # 2. Option: Suche im Ordner 'experimental'
+                script_path = os.path.join(current_dir, "experimental", module)
+                
+            if not os.path.exists(script_path):
+                # 3. Option: Suche direkt im selben Ordner wie der Orchestrator
+                script_path = os.path.join(current_dir, module)
                 
             print(f" -> Clocking sub-node: {module}...")
+            
+            # Letzter Check, bevor das Subprocess-Modul gestartet wird
+            if not os.path.exists(script_path):
+                print(f"    ! [ ERROR ] Datei wurde in keinem Verzeichnis gefunden!")
+                failed_nodes += 1
+                continue
+                
             try:
-                # Execute module as isolated subprocess to prevent environment pollution
+                # Führe das Modul isoliert aus
                 result = subprocess.run(
                     [sys.executable, script_path],
                     capture_output=True, text=True, check=True
@@ -69,7 +87,7 @@ class PTRCFirstPrinciplesOrchestrator:
                     failed_nodes += 1
             except subprocess.CalledProcessError as e:
                 print(f"    ! [ CRITICAL CRASH ] Execution failed for {module}!")
-                print(f"      Log: {e.stderr.strip()}")
+                print(f"      Log: {e.stderr.strip() if e.stderr else e.stdout.strip()}")
                 failed_nodes += 1
             except Exception as ex:
                 print(f"    ! [ UNKNOWN ERROR ] Node mapping failure: {str(ex)}")
