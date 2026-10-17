@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/ignatus/Downloads/p-adic-takt-resonance-cosmology_002/p-adic-takt-resonance-cosmology-main(4)/p-adic-takt-resonance-cosmology-main/ptrc_3d_engine/src/ptrc_3d_animation_generator.py
 # ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
@@ -206,3 +205,11 @@ class PTRC3DGameEngine:
                 self.pos_x_offset += 2
             elif key == ord('q') or key == ord('Q'):
                 self.pos_y_offset -= 2
+            elif key == ord('e') or key == ord('E'):
+                self.pos_y_offset += 2
+
+        cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    game = PTRC3DGameEngine()
+    game.run_interactive_loop()
