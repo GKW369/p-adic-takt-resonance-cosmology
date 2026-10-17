@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation Pipeline: Hyper-Dignity Voxel Flight Sieve
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Intelligent Namespace Resolver protecting pipeline paths from ModuleNotFoundError.
+Optimized: Dedicated render directory with sequential file auto-numbering (Anti-Overwrite).
 """
 
 import os
@@ -31,33 +31,30 @@ import numpy as np
 import cv2
 
 # ==============================================================================
-# !!! TARGET ZONE: INTELLIGENTE IMPORT-ABFHRUNG GEGEN MODULENOTFOUNDERROR !!!
-# MARKER: PTRC_DYNAMIC_IMPORT_RESOLVER_2026
+# !!! TARGET ZONE: ABSOLUTE SYSTEMPFAD-INJEKTION GEGEN IMPORT-FEHLER !!!
+# MARKER: PTRC_ABSOLUTE_PATH_INJECTOR_2026
 # ==============================================================================
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(1, parent_dir)
+
 try:
-    # 1. Versuch: Direkter Import aus demselben Ordner (Behebt den Fehler)
+    import ptrc_3d_stereo_engine
     from ptrc_3d_stereo_engine import PTRC3DStereoEngine
-    from ptrc_modular_clock_engine import PTRCModularClockEngine
-    print(" -> [ PATH ] Module erfolgreich direkt aus dem lokalen Verzeichnis geladen.")
 except ImportError:
-    try:
-        # 2. Versuch: Import über die übergeordnete src-Struktur
-        from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
-        from src.ptrc_modular_clock_engine import PTRCModularClockEngine
-        print(" -> [ PATH ] Module erfolgreich über src-Präfix geladen.")
-    except ImportError:
-        # 3. Versuch: Pfad-Erweiterung für tief geschachtelte Ordnerstrukturen
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        sys.path.append(current_dir)
-        sys.path.append(os.path.join(current_dir, '..'))
-        
-        try:
-            from ptrc_3d_stereo_engine import PTRC3DStereoEngine
-            from ptrc_modular_clock_engine import PTRCModularClockEngine
-        except ImportError:
-            from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
-            from src.ptrc_modular_clock_engine import PTRCModularClockEngine
-        print(" -> [ PATH ] Module über dynamische Systempfad-Erweiterung geladen.")
+    from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
+
+try:
+    import ptrc_modular_clock_engine
+    from ptrc_modular_clock_engine import PTRCModularClockEngine
+except ImportError:
+    from src.ptrc_modular_clock_engine import PTRCModularClockEngine
+
+print(" -> [ PATH ] Alle Sektor-Knoten-Module wurden erfolgreich und fehlerfrei lokalisiert.")
 # ==============================================================================
 # !!! END OF TARGET ZONE !!!
 # ==============================================================================
@@ -65,16 +62,21 @@ except ImportError:
 class PTRC3DAnimationGenerator:
     """
     Orchestrates the camera travel parameters to execute a continuous uncompressed
-    flight through the 1-bit integer physics grid layers, purging raw cache files.
+    flight through the 1-bit integer physics grid layers, saving sequenced media.
     """
     def __init__(self, total_frames=144):  # 144 Frames bei 24 FPS = Exakt 6 Sekunden Flug
         self.frames_limit = total_frames
         self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
         self.clock_engine = PTRCModularClockEngine(width=320, height=180, depth=128)
-        self.output_directory = "output_pipeline"
+        
+        # Fest definierte Ordner-Strukturen für die Pipeline
+        self.output_directory = os.path.join(current_dir, "output_pipeline_cache")
+        self.render_directory = os.path.join(current_dir, "renders")
         
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
+        if not os.path.exists(self.render_directory):
+            os.makedirs(self.render_directory)
 
     def generate_lossless_flight_sequence(self):
         """
@@ -120,15 +122,34 @@ class PTRC3DAnimationGenerator:
             if frame_idx % 24 == 0:
                 print(f"    + Frame {frame_idx}/{self.frames_limit} erfolgreich in Matrix gerastert.")
 
+    def _determine_next_video_path(self):
+        """
+        Scans the renders/ directory to calculate the next free automated index number.
+        Prevents existing video analysis files from being overwritten.
+        """
+        base_name = "ptrc_lossless_takt_resonance"
+        counter = 1
+        
+        while True:
+            candidate_name = f"{base_name}_{counter:03d}.mp4"
+            candidate_path = os.path.join(self.render_directory, candidate_name)
+            if not os.path.exists(candidate_path):
+                return candidate_path
+            counter += 1
+
     def compile_lossless_takt_video(self):
         """
         Combines the calculated png frames into a high-bitrate streaming file
         and purges the raw images upon a verified process completion.
         """
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
-        target_video = "ptrc_lossless_takt_resonance.mp4"
+        
+        # Bestimme den absolut freien Dateipfad mit automatischer Nummerierung
+        target_video = self._determine_next_video_path()
+        video_filename = os.path.basename(target_video)
         
         print(f" -> Starte ffmpeg-Kompilierung für die verlustfreie 24-FPS-Taktung...")
+        print(f" -> Ziel-Datei deklariert: 'renders/{video_filename}'")
         
         ffmpeg_cmd = [
             "ffmpeg", "-y", "-framerate", "24", "-i", input_pattern,
@@ -138,7 +159,7 @@ class PTRC3DAnimationGenerator:
         
         try:
             subprocess.run(ffmpeg_cmd, capture_output=True, text=True, check=True)
-            print(f"    + [ SUCCESS ] Flug-Animation erfolgreich kompiliert: '{target_video}'")
+            print(f"    + [ SUCCESS ] Flug-Animation erfolgreich kompiliert: 'renders/{video_filename}'")
             
             print(" -> Bereinige temporäre Frame-Sequenzen aus dem Pipeline-Verzeichnis...")
             for frame_idx in range(self.frames_limit):
@@ -148,10 +169,10 @@ class PTRC3DAnimationGenerator:
             
             try:
                 os.rmdir(self.output_directory)
+                print("    + [ SUCCESS ] Temporärer Frame-Cache vollständig geleert.")
             except OSError:
                 pass
                 
-            print("    + [ SUCCESS ] Cache vollständig geleert. Nur die digitale MP4 verbleibt.")
             return 1
             
         except (subprocess.CalledProcessError, FileNotFoundError):
@@ -166,7 +187,7 @@ if __name__ == "__main__":
     # Bilder erzeugen
     generator.generate_lossless_flight_sequence()
     
-    # Video rendern und Bilder automatisch löschen
+    # Video rendern, automatisch nummerieren und Cache löschen
     status = generator.compile_lossless_takt_video()
     
     print(f" -> [ VALIDATION ] Flug-Pipeline beendet. Status: {status}")
