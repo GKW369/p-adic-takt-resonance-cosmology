@@ -21,7 +21,7 @@
 r"""
 pTRC Infinite Scale Core - Modular Metric Clock & Sieve Synchronization
 100% Integer Z-Ontology | Module: Crystalline Flow Dynamics
-Eliminates cartesian grid artifacts by generating nodes directly from 144 axes.
+Optimized: Expanded tube-flow matrices to ensure high-density information mapping.
 """
 
 import numpy as np
@@ -33,20 +33,19 @@ class PTRCModularClockEngine:
         self.depth = depth
         
         # The incorruptible p-adic modulo clock system
-        self.PRIMORIAL_RING = 210  # Base ring (2 * 3 * 5 * 7)
-        self.CLOCK_24 = 24         # Symmetrical controller clock
-        self.REFRESH_TAKTE = 137   # Feynman vacuum limit
+        self.PRIMORIAL_RING = 210  
+        self.CLOCK_24 = 24         
+        self.REFRESH_TAKTE = 137   
         
         self.global_master_clock = 0
         
-        # Generate 144-facet crystalline axes (The true data pipelines)
+        # Generate 144-facet crystalline axes
         self.crystal_axes = self._generate_144_facet_axes()
         
-        # Space initialization via the modular existence sieve (Direct Crystal Flow)
+        # Space initialization via Expanded Crystal Flow Tubes
         self.voxels = self._build_sieved_primorial_space()
 
     def _generate_144_facet_axes(self):
-        """Generates 144 discrete directional axes from modular symmetry conditions"""
         flat_nodes = [
             2, 1, 0,   2, -1, 0,  -2, 1, 0,  -2, -1, 0,
             0, 2, 1,   0, 2, -1,   0, -2, 1,  0, -2, -1,
@@ -60,84 +59,64 @@ class PTRCModularClockEngine:
         return np.array(axes, dtype=np.int32)
 
     # ==========================================================================
-    # !!! TARGET ZONE: KRISTALL-FLUSSDYNAMIK (ENTKOPPLUNG VOM KARTESISCHEN RAUM) !!!
-    # MARKER: PTRC_CRYSTAL_FLOW_INTERFERENCE_2026
+    # !!! TARGET ZONE: ERWEITERTE KRISTALL-FLUSSTUBEN !!!
+    # MARKER: PTRC_CRYSTAL_TUBE_FLOW_2026
     # ==========================================================================
     def _build_sieved_primorial_space(self):
         """
-        Errichtet das Interferenzfeld direkt aus den Flussachsen des Kristalls.
-        
-        Befreit das System von der eckigen Quadratbildung. Nur Bahnen, die die
-        abelschen Resonanzbedingungen modulo 24 treffen, übertragen reale Daten.
+        Errichtet das Interferenzfeld über dreidimensionale Kristall-Flussbahnen.
+        Sichert die notwendige Informationsdichte für den Video-Export.
         """
         space = np.zeros((self.depth, self.height, self.width), dtype=np.uint8)
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        # Die 8 erlaubten Hauptstrahlen (nur diese Bahnen übertragen pure Information)
         allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
         
-        # Iteration über die 144 Flussbahnen des Kristalls statt starrer X/Y/Z-Schleifen
         for axis_idx, axis in enumerate(self.crystal_axes):
             ax, ay, az = axis[0], axis[1], axis[2]
             
-            # Überprüfung, ob dieser spezifische Kanal überhaupt Daten übertragen darf
-            # Ein p-adischer Takt-Check filtert die aktiven von den dissipativen Kanälen
             channel_takt = (ax * ay + az + axis_idx) % self.CLOCK_24
             if channel_takt not in allowed_24_rays:
-                continue  # Dieser Pfad ist gesperrt – keine Datenübertragung!
+                continue  # Bahn gesperrt
             
-            # Fließe entlang des aktiven Kanals durch das Medium und setze Interferenzknoten
-            for step in range(-32, 32):
-                # Ganzzahliger Flussfortschritt entlang des Vektors
-                x = cx + (ax * step) // 4
-                y = cy + (ay * step) // 4
-                z = cz + (az * step) // 4
-                
-                # Boundary Check für die Matrixgrenzen
-                if 0 <= x < self.width and 0 <= y < self.height and 0 <= z < self.depth:
-                    # Berechne den Quadrance-Wert rein aus den Fluss-Schritten (Z-Metrik)
-                    quadrance = (x - cx)**2 + (y - cy)**2 + (z - cz)**2
+            # Umgebungs-Spreizung (Tube-Effekt): Jede Achse fließt als Röhre durch den Kristall
+            for offset_y in range(-2, 3):
+                for offset_x in range(-2, 3):
                     
-                    # 1. DAS MODULO-210 UHRSIEB AN DEN KREUZUNGSPUNKTEN
-                    residuum_210 = quadrance % self.PRIMORIAL_RING
-                    
-                    if residuum_210 <= 156:  # Invarianter Grenzknoten getroffen
-                        # Lokaler Takt-Interferenz-Kollaps
-                        takt_check = (x * y + z) % self.CLOCK_24
+                    for step in range(-40, 40):
+                        # Flussfortschritt inklusive Röhren-Dicke
+                        x = cx + (ax * step) // 4 + offset_x
+                        y = cy + (ay * step) // 4 + offset_y
+                        z = cz + (az * step) // 4
                         
-                        if takt_check in allowed_24_rays:
-                            space[z, y, x] = 2  # Aktiver Resonanz-Knoten (Licht-Leitung)
-                        elif takt_check == 12:
-                            space[z, y, x] = 1  # Invarianter Massen-Knoten (Materie)
+                        if 0 <= x < self.width and 0 <= y < self.height and 0 <= z < self.depth:
+                            quadrance = (x - cx)**2 + (y - cy)**2 + (z - cz)**2
+                            residuum_210 = quadrance % self.PRIMORIAL_RING
                             
+                            if residuum_210 <= 156:
+                                takt_check = (x * y + z) % self.CLOCK_24
+                                
+                                if takt_check in allowed_24_rays:
+                                    space[z, y, x] = 2  
+                                elif takt_check == 12:
+                                    space[z, y, x] = 1  
+                                    
         return space
     # ==========================================================================
     # !!! END OF TARGET ZONE !!!
     # ==========================================================================
 
     def evolve_clock_one_takt(self):
-        """Advances the total clock architecture by exactly one Planck-Takt cycle (c = 1 px/takt)"""
         self.global_master_clock += 1
-        
         current_hour = self.global_master_clock % self.CLOCK_24
         axis_to_roll = current_hour % 3
         shift_amount = 1 if (current_hour < 12) else -1
-        
         self.voxels = np.roll(self.voxels, shift_amount, axis=axis_to_roll)
 
     def compute_integrated_density(self):
-        """Aggregates active 3D lattice states to measure total integrated mass"""
         return int(np.sum(self.voxels))
 
 if __name__ == "__main__":
-    print("[ pTRC-MODULAR-CORE ] Initializing 3D crystalline flow matrix...")
     core_engine = PTRCModularClockEngine()
-    
-    print(" -> Advancing global master clock across 24 discrete transformation takts...")
-    for step in range(24):
-        core_engine.evolve_clock_one_takt()
-        
     total_lattice_load = core_engine.compute_integrated_density()
-    print(f" -> [ VALIDATION ] 3D spatial clock updates completed successfully.")
-    print(f" -> Total Integrated Voxel Mass Density: {total_lattice_load}")
-    print(" -> STATUS: Zero-Float Modular Clock Core Successfully Audited.")
+    print(f"[ TEST ] Integrierte Voxel-Masse: {total_lattice_load}")
