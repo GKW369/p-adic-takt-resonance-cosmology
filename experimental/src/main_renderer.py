@@ -14,9 +14,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
-
 
 # -*- coding: utf-8 -*-
 """
@@ -24,6 +23,8 @@ pTRC Infinite Scale Core - Modular Metric Clock & Sieve Synchronization
 100% Integer Z-Ontology | Module: Mathematics & Grid State
 """
 
+import sys
+import time
 import numpy as np
 
 class PTRCModularClockEngine:
@@ -97,26 +98,6 @@ class PTRCModularClockEngine:
         shift_amount = 1 if (current_hour < 12) else -1
         
         self.voxels = np.roll(self.voxels, shift_amount, axis=axis_to_roll)
-# ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics Engine
-# Copyright (c) 2026 Kurt Guido Wirminghaus <g.wirminghaus@gmx.de>
-#
-# DUAL-LICENSING NOTICE:
-# Non-commercial, academic, and open-source usage is strictly governed by 
-# the GNU General Public License version 3 (GPLv3). Any commercial deployment,
-# integration into proprietary, closed-source codebases, or corporate utilization
-# explicitly requires a separate, individually negotiated commercial license.
-# ==============================================================================
-# -*- coding: utf-8 -*-
-"""
-pTRC Infinite Scale Core - 144-Facet Spatial Ray-Marching & Terminal Blitting
-100% Integer Z-Ontology | c = 1 pixel/clock | Refresh on Takt 137
-"""
-
-import sys
-import time
-import numpy as np
-from ptrc_clock_core import PTRCModularClockEngine
 
 def render_144_facet_frame(engine):
     """Projiziert die Voxel entlang der 144 Symmetrieachsen ins flache Vision-Feld"""
@@ -178,4 +159,3 @@ if __name__ == "__main__":
             print(render_output, flush=True)
             
             time.sleep(0.045) # Kinotaktung für das Auge
-
