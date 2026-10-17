@@ -14,9 +14,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
-
 
 # -*- coding: utf-8 -*-
 """
@@ -68,12 +67,14 @@ class PTRCModularClockEngine:
         allowed_24_rays = {1, 5, 7, 11, 13, 17, 19, 23}
         
         for z in range(self.depth):
-            dz2 = (z - cz) * (z - cz)
+            dz2 = (z - cz) * (z - cz)  # Korrigiert: Echtes Delta Z berechnen
             for y in range(self.height):
                 dy2 = (y - cy) * (y - cy)
                 for x in range(self.width):
                     dx2 = (x - cx) * (x - cx)
-                    quadrance = dx2 + dy2 + cz * cz # pure integer tracking step
+                    
+                    # Korrigiert: Vollständige 3D-Ganzzahlmetrik ohne Verzerren der Achsen
+                    quadrance = dx2 + dy2 + dz2
                     
                     # 1. THE MODULO-210 CLOCK SIEVE
                     residuum_210 = quadrance % self.PRIMORIAL_RING
