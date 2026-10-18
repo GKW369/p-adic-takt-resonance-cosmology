@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: 1-Byte Matrix Pipeline decoding up to 256 physical variables per Planck pixel.
+Optimized: Dual-Object Parallax Projection tracking independent 1-byte variable fields.
 """
 
 import os
@@ -88,52 +88,66 @@ class PTRC3DAnimationPipeline:
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed 6-second flight through the spatial crystal sieve.
-        Decodes the 256 physical variables of the Planck matrix on-the-fly.
+        Injects a second stationary reference object to establish clear parallax depth.
         """
         print(f"[ OFFLINE PIPELINE ] Generiere {self.frames_limit} perfekte Frames fuer die Video-Ausgabe...")
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         allowed_24_list = [1, 5, 7, 11, 12, 13, 17, 19, 23]
         
-        # 2D Bildschirm-Gitter-Vektoren für die holografische Kugel vorab im RAM laden
+        # 2D Bildschirm-Gitter-Vektoren für das Full-HD Sichtfeld
         grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
         screen_cx = self.stereo_engine.width // 2
         screen_cy = self.stereo_engine.height // 2
         
-        dx_l = grid_x - (screen_cx - 24)
-        dx_r = grid_x - (screen_cx + 24)
-        dy_s = grid_y - screen_cy
+        # ==================================================================
+        # MATHEMATISCHE VARIABLEN: DIE ZWEI STATISCHEN KUGEL-REFERENZEN
+        # ==================================================================
+        # KUGEL 1 (Zentraler Hauptkörper - Radius 80)
+        dx_l1 = grid_x - (screen_cx - 24)
+        dx_r1 = grid_x - (screen_cx + 24)
+        dy_s1 = grid_y - screen_cy
+        quad_l1 = (dx_l1 * dx_l1) + (dy_s1 * dy_s1)
+        quad_r1 = (dx_r1 * dx_r1) + (dy_s_1 = dy_s1 if 'dy_s1' in locals() else dy_s1)
+        quad_r1 = (dx_r1 * dx_r1) + (dy_s1 * dy_s1)
         
-        quad_l = (dx_l * dx_l) + (dy_s * dy_s)
-        quad_r = (dx_r * dx_r) + (dy_s * dy_s)
+        mask_takt_l1 = np.isin(quad_l1 % self.control_base, allowed_24_list)
+        mask_prim_l1 = (quad_l1 % self.primorial_base) <= self.invariant_limit
+        sphere_l1 = (quad_l1 < 18000) & (mask_takt_l1 | mask_prim_l1)
         
-        # Sieve-Filterung für die feste Kugelstruktur (Hologramm-Ebene)
-        mask_takt_l = np.isin(quad_l % self.control_base, allowed_24_list)
-        mask_prim_l = (quad_l % self.primorial_base) <= self.invariant_limit
-        sphere_l = (quad_l < 18000) & (mask_takt_l | mask_prim_l)
+        mask_takt_r1 = np.isin(quad_r1 % self.control_base, allowed_24_list)
+        mask_prim_r1 = (quad_r1 % self.primorial_base) <= self.invariant_limit
+        sphere_r1 = (quad_r1 < 18000) & (mask_takt_r1 | mask_prim_r1)
         
-        mask_takt_r = np.isin(quad_r % self.control_base, allowed_24_list)
-        mask_prim_r = (quad_r % self.primorial_base) <= self.invariant_limit
-        sphere_r = (quad_r < 18000) & (mask_takt_r | mask_prim_r)
+        # KUGEL 2 (Der versetzte zweite Bezugspunkt - Radius 40, verschoben nach rechts oben)
+        offset_x, offset_y = 350, -220
+        dx_l2 = grid_x - (screen_cx - 24 + offset_x)
+        dx_r2 = grid_x - (screen_cx + 24 + offset_x)
+        dy_s2 = grid_y - (screen_cy + offset_y)
+        quad_l2 = (dx_l2 * dx_l2) + (dy_s2 * dy_s2)
+        quad_r2 = (dx_r2 * dx_r2) + (dy_s2 * dy_s2)
+        
+        mask_takt_l2 = np.isin(quad_l2 % self.control_base, allowed_24_list)
+        mask_prim_l2 = (quad_l2 % self.primorial_base) <= self.invariant_limit
+        sphere_l2 = (quad_l2 < 3500) & (mask_takt_l2 | mask_prim_l2)
+        
+        mask_takt_r2 = np.isin(quad_r2 % self.control_base, allowed_24_list)
+        mask_prim_r2 = (quad_r2 % self.primorial_base) <= self.invariant_limit
+        sphere_r2 = (quad_r2 < 3500) & (mask_takt_r2 | mask_prim_r2)
+        # ==================================================================
 
         for frame_idx in range(self.frames_limit):
-            # 1. Beide Auge-Kanäle für dieses Bild initialisieren
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # ==================================================================
-            # !!! TARGET ZONE: 1-BYTE MATRIX AUSLESUNG (256 VARIABLEN) !!!
-            # ==================================================================
-            # Wir tasten das Gitter nach allen Werten > 0 ab, um die physikalischen 
-            # Zustände (Material, Dichte, Temperatur) direkt zu erfassen.
+            # HINTERGRUND-EXTRAKTION AUS DER 1-BYTE-MATRIX
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels > 0)
             total_nodes = len(x_indices)
             
             if total_nodes > 0:
-                # Extrahiere das 1-Byte-Feld der Planck-Variablen
                 planck_variables = self.clock_engine.voxels[z_indices, y_indices, x_indices]
                 
-                # Vorwärtsbewegung simuliert das Durchfliegen des Kristallgitters
+                # Kontinuierliche Vorwärtsbewegung simuliert den Durchflug
                 z_flight_offset = (frame_idx * 1) % self.depth
                 
                 raw_z = (z_indices - z_flight_offset)
@@ -154,27 +168,27 @@ class PTRC3DAnimationPipeline:
                 out_x_right = (proj_x_right + self.stereo_engine.width // 2) % self.stereo_engine.width
                 out_y = (proj_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                 
-                # Die p-adischen Variablen verändern harmonisch den Takt-Check
                 takt_check = (raw_x * raw_y + raw_z + planck_variables) % self.control_base
                 valid_mask = np.isin(takt_check, allowed_24_list)
                 
-                # INTERAKTIVES RE-SIEVING (TRANSPARENTER VORDER- UND HINTERGRUND)
-                # Das Gitter fliesst transparent im gesamten Raum vor und hinter der Kugel vorbei
+                # TRANSPARENTER RAUM-ÄTHER (Gleitet an beiden Objekten vorbei)
                 if np.any(valid_mask):
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask][::16], out_x_left[valid_mask][::16]] = 1
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask][::16], out_x_right[valid_mask][::16]] = 1
 
-            # 3. DIE MASSIVE KUGEL IM ZENTRUM DAZWISCHENBETTEN
-            self.stereo_engine.left_eye_buffer[sphere_l] = 1
-            self.stereo_engine.right_eye_buffer[sphere_r] = 1
+            # EINSTANZEN BEIDER RESONANZKÖRPER IN DAS GEMEINSAME SIGHTFELD
+            # Hauptkugel
+            self.stereo_engine.left_eye_buffer[sphere_l1] = 1
+            self.stereo_engine.right_eye_buffer[sphere_r1] = 1
             
-            # Uhr-Engine für das nächste mathematische Intervall weitertakten
+            # Zweiter Bezugspunkt (Parallaxe-Kugel)
+            self.stereo_engine.left_eye_buffer[sphere_l2] = 1
+            self.stereo_engine.right_eye_buffer[sphere_r2] = 1
+            
+            # Uhr-Engine weitertakten
             self.clock_engine.evolve_clock_one_takt()
             
-            # Konvertiere das linke Auge-Signal in scharfe 8-Bit Pixel
             bw_frame = self.stereo_engine.left_eye_buffer * 255
-            
-            # Schreibe das verlustfreie Einzelbild starr in den Cache-Ordner
             frame_filename = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
             cv2.imwrite(frame_filename, bw_frame)
             
@@ -182,13 +196,8 @@ class PTRC3DAnimationPipeline:
                 print(f"    + Frame {frame_idx}/{self.frames_limit} verlustfrei berechnet.")
 
     def compile_lossless_output_video(self):
-        """
-        Binds the uncompressed frame cache array into a clean 24 FPS digital MP4 movie.
-        Purges raw file remnants automatically after verified completion.
-        """
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
         
-        # Automatische Namens-Sequenzierung (ptrc_hologram_001.mp4, _002.mp4...)
         counter = 1
         while True:
             target_video = os.path.join(script_dir, f"ptrc_hologram_{counter:03d}.mp4")
@@ -227,11 +236,7 @@ class PTRC3DAnimationPipeline:
 if __name__ == "__main__":
     print("[ pTRC-PIPELINE ] Starte deterministischen Video-Export fuer X (Twitter)...")
     pipeline = PTRC3DAnimationPipeline(total_frames=144)
-    
-    # Führe die ungestörte Offline-Berechnung durch
     pipeline.generate_deterministic_video_sequence()
-    
-    # Kompiliere das finale Video direkt aus den Daten
     status = pipeline.compile_lossless_output_video()
     
     print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
