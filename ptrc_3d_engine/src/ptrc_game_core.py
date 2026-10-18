@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: 1-Byte Architecture tracking up to 256 variables per Planck pixel.
+Optimized: 1-Byte Matrix Pipeline decoding up to 256 physical variables per Planck pixel.
 """
 
 import os
@@ -84,6 +84,7 @@ class PTRC3DAnimationPipeline:
         
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
+
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed 6-second flight through the spatial crystal sieve.
@@ -121,17 +122,18 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # UNTERSUCHUNG DER 1-BYTE MATRIX (256 PHYSRESONANZ VARIABLEN)
+            # !!! TARGET ZONE: 1-BYTE MATRIX AUSLESUNG (256 VARIABLEN) !!!
             # ==================================================================
-            # Wir tasten das gesamte Gitter nach Werten > 0 ab (Unterstützt alle Byte-Zustände)
+            # Wir tasten das Gitter nach allen Werten > 0 ab, um die physikalischen 
+            # Zustände (Material, Dichte, Temperatur) direkt zu erfassen.
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels > 0)
             total_nodes = len(x_indices)
             
             if total_nodes > 0:
-                # Extrahiere die physikalischen Variablen (Material, Dichte, Temperatur, etc.)
-                # Jeder Gitterpunkt trägt einen Wert von 0 bis 255 in seiner 1-Byte-Architektur
+                # Extrahiere das 1-Byte-Feld der Planck-Variablen
                 planck_variables = self.clock_engine.voxels[z_indices, y_indices, x_indices]
                 
+                # Vorwärtsbewegung simuliert das Durchfliegen des Kristallgitters
                 z_flight_offset = (frame_idx * 1) % self.depth
                 
                 raw_z = (z_indices - z_flight_offset)
@@ -152,17 +154,17 @@ class PTRC3DAnimationPipeline:
                 out_x_right = (proj_x_right + self.stereo_engine.width // 2) % self.stereo_engine.width
                 out_y = (proj_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                 
-                # Der Takt-Check moduliert die Variable des Pixels im Restklassenring
+                # Die p-adischen Variablen verändern harmonisch den Takt-Check
                 takt_check = (raw_x * raw_y + raw_z + planck_variables) % self.control_base
                 valid_mask = np.isin(takt_check, allowed_24_list)
                 
-                # INTERAKTIVES RE-SIEVING (TRANSPARENTER VORDER- & HINTERGRUND)
-                # Das 1-Byte Raumgitter fliesst permanent und transparent vor und hinter der Kugel vorbei
+                # INTERAKTIVES RE-SIEVING (TRANSPARENTER VORDER- UND HINTERGRUND)
+                # Das Gitter fliesst transparent im gesamten Raum vor und hinter der Kugel vorbei
                 if np.any(valid_mask):
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask][::16], out_x_left[valid_mask][::16]] = 1
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask][::16], out_x_right[valid_mask][::16]] = 1
 
-            # 3. DIE MASSIVE HOLOGRAFISCHE KUGEL IM GEMEINSAMEN RAUM DAZWISCHENBETTEN
+            # 3. DIE MASSIVE KUGEL IM ZENTRUM DAZWISCHENBETTEN
             self.stereo_engine.left_eye_buffer[sphere_l] = 1
             self.stereo_engine.right_eye_buffer[sphere_r] = 1
             
@@ -186,6 +188,7 @@ class PTRC3DAnimationPipeline:
         """
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
         
+        # Automatische Namens-Sequenzierung (ptrc_hologram_001.mp4, _002.mp4...)
         counter = 1
         while True:
             target_video = os.path.join(script_dir, f"ptrc_hologram_{counter:03d}.mp4")
@@ -232,4 +235,4 @@ if __name__ == "__main__":
     status = pipeline.compile_lossless_output_video()
     
     print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
-    print(" -> STATUS: Zero-Float Cinematic Video Suite Successfully Audited.")
+    print(" -> STATUS: Zero-Float固定 Cinematic Video Suite Successfully Audited.")
