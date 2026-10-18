@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Discrete 1-Byte Planck-Pixel Arrays without geometric length.
-Optimized: Macro-scale light spectrum resonance collapse modulo 137.
+Optimized: 137-Takt Feynman Vacuum Sieve reading static prime lookup maps.
 """
 
 import os
@@ -78,6 +78,7 @@ class PTRC3DAnimationPipeline:
         self.depth = 128
         self.primorial_base = 210
         self.control_base = 24
+        self.invariant_limit = 156
         self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
         self.SCALE = 1000
         
@@ -114,7 +115,7 @@ class PTRC3DAnimationPipeline:
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed flight sequence decoding the 4 core variables.
-        Embeds the 3D target spheres directly via density-inversion filters.
+        All structures are generated purely on-demand through local lattice interferences.
         """
         cpu_name = self._get_cpu_name()
         print(f"[ OFFLINE PIPELINE ] Hardware-Erkennung: {cpu_name}")
@@ -129,60 +130,8 @@ class PTRC3DAnimationPipeline:
         # Lade die Kristallachsen der Kern-Engine
         crystal_axes = self.clock_engine.crystal_axes
         
-        # 2D Bildschirm-Gitter-Vektoren für das Full-HD Sichtfeld
-        grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
-        screen_cx = self.stereo_engine.width // 2
-        screen_cy = self.stereo_engine.height // 2
-        
-        # ==================================================================
-        # MATHEMATISCHE VARIABLEN: DIE ZWEI STATISCHEN KUGEL-REFERENZEN
-        # ==================================================================
-        # KUGEL 1 (Zentraler Hauptkörper - Radius 80)
-        dx_l1 = grid_x - (screen_cx - 24)
-        dx_r1 = grid_x - (screen_cx + 24)
-        dy_s1 = grid_y - screen_cy
-        quad_l1 = (dx_l1 * dx_l1) + (dy_s1 * dy_s1)
-        quad_r1 = (dx_r1 * dx_r1) + (dy_s1 * dy_s1)
-        
-        mask_takt_l1 = np.isin(quad_l1 % self.control_base, allowed_24_list)
-        mask_prim_l1 = (quad_l1 % self.primorial_base) <= self.invariant_limit
-        sphere_l1 = (quad_l1 < 18000) & (mask_takt_l1 | mask_prim_l1)
-        
-        mask_takt_r1 = np.isin(quad_r1 % self.control_base, allowed_24_list)
-        mask_prim_r1 = (quad_r1 % self.primorial_base) <= self.invariant_limit
-        sphere_r1 = (quad_r1 < 18000) & (mask_takt_r1 | mask_prim_r1)
-        
-        # KUGEL 2 (Der versetzte zweite Bezugspunkt - Radius 40, verschoben nach rechts oben)
-        offset_x, offset_y = 350, -220
-        dx_l2 = grid_x - (screen_cx - 24 + offset_x)
-        dx_r2 = grid_x - (screen_cx + 24 + offset_x)
-        dy_s2 = grid_y - (screen_cy + offset_y)
-        quad_l2 = (dx_l2 * dx_l2) + (dy_s2 * dy_s2)
-        quad_r2 = (dx_r2 * grid_x.shape[1] // grid_x.shape[1]) + (dy_s2 * dy_s2)
-        quad_r2 = (dx_r2 * dx_r2) + (dy_s2 * dy_s2)
-        
-        mask_takt_l2 = np.isin(quad_l2 % self.control_base, allowed_24_list)
-        mask_prim_l2 = (quad_l2 % self.primorial_base) <= self.invariant_limit
-        sphere_l2 = (quad_l2 < 3500) & (mask_takt_l2 | mask_prim_l2)
-        
-        mask_takt_r2 = np.isin(quad_r2 % self.control_base, allowed_24_list)
-        mask_prim_r2 = (quad_r2 % self.primorial_base) <= self.invariant_limit
-        sphere_r2 = (quad_r2 < 3500) & (mask_takt_r2 | mask_prim_r2)
-        # ==================================================================
-
-        # Skalierungs-Schritte für das Aufblasen der Planck-Pixel in das menschliche Lichtspektrum
+        # Skalierungs-Schritte für das Weiten der Planck-Pixel in das menschliche Lichtspektrum
         steps = np.arange(-32, 32, dtype=np.int32)
-
-        # Vorab-Berechnung der statischen 3D-Kugelnetze im Raum (Ur-DNA Manifestation)
-        local_z, local_y, local_x = np.indices((self.depth, self.height, self.width))
-        q_s1 = (local_x - cx)**2 + (local_y - cy)**2 + (local_z - 40)**2
-        mask_s1 = (q_s1 < 1000) & (np.isin(q_s1 % self.control_base, allowed_24_list) | ((q_s1 % self.primorial_base) <= self.invariant_limit))
-        
-        q_s2 = (local_x - (cx + 50))**2 + (local_y - (cy + 30))**2 + (local_z - 100)**2
-        mask_s2 = (q_s2 < 350) & (np.isin(q_s2 % self.control_base, allowed_24_list) | ((q_s2 % self.primorial_base) <= self.invariant_limit))
-        
-        sz_n1, sy_n1, sx_n1 = np.where(mask_s1)
-        sz_n2, sy_n2, sx_n2 = np.where(mask_s2)
 
         for frame_idx in range(self.frames_limit):
             frame_start_time = time.perf_counter()
@@ -190,21 +139,25 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # 137-Takt-Schaltung und Adress-Weitung
+            # ==================================================================
+            # !!! TARGET ZONE: FLIESSKOMMAFREIER DEZENTRALER LANDKARTEN-LOOKUP !!!
+            # ==================================================================
+            # Der Flug-Vorschub taktet exakt im 137-Takt-Feynman-Rhythmus vorwärts
             z_flight_offset = (frame_idx * self.clock_engine.REFRESH_TAKTE) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             for axis_idx, axis in enumerate(crystal_axes):
-                # !!! INTERNE REPARATUR-ZONE: EXAKTES EXTRAHIEREN DER MULTIDIMENSIONALEN KOORDINATEN !!!
+                # Extrahiere die echten Richtungskomponenten (X, Y, Z) der Kristallfacetten
                 ax_x = int(axis[0])
                 ax_y = int(axis[1])
                 ax_z = int(axis[2])
                 
-                # Aufblasen der Einzelschritte -> Weitet das Gitter ins sichtbare Auge
+                # Makroskopisches Weiten der Schritte zur Spektral-Harmonisierung (steps * 4)
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
                 y_g = (cy + ax_y * steps * 4) % self.height
                 x_g = (cx + ax_x * steps * 4) % self.width
                 
+                # Direktes Auslesen der 1-Byte Variablen aus dem dezentralen Voxel-Feld
                 pixel_properties = self.clock_engine.voxels[z_g, y_g, x_g]
                 active_mask = pixel_properties > 0
                 
@@ -214,7 +167,10 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
+                    # pTRC-Steuerungsgleichung modulo 137 (Ersetzt klassische XYZ-Koordinaten)
                     feynman_addresses = (axis_idx + raw_x * raw_y + pixel_properties[active_mask] + local_environmental_load) % self.feynman_limit
+                    
+                    # Blitzschneller, unbestechlicher Landkarten-Lookup im Sieb
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
@@ -222,6 +178,7 @@ class PTRC3DAnimationPipeline:
                         f_x = raw_x[valid_nodes]
                         f_y = raw_y[valid_nodes]
                         
+                        # Fließkommafreie Perspektiv-Division über Ganzzahl-Skalierung (//)
                         denom = ((f_z * 1000) // 1414) + 156
                         p_xl = ((f_x * 8 - 12) * 1000) // denom
                         p_xr = ((f_x * 8 + 12) * 1000) // denom
@@ -231,34 +188,20 @@ class PTRC3DAnimationPipeline:
                         out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Reine, isolierte Planck-Pixelpunkte im Lichtspektrum
-                        self.stereo_engine.left_eye_buffer[out_y_s[::2], out_x_l[::2]] = 1
-                        self.stereo_engine.right_eye_buffer[out_y_s[::2], out_x_r[::2]] = 1
-
-            # Inversions-Stanzung mit maximaler Resonanzdichte (Leucht-Kollaps)
-            if len(sx_n1) > 0:
-                raw_sz1 = (sz_n1 - z_flight_offset) % self.depth
-                raw_sz1[raw_sz1 <= 0] = 1
-                s1_valid = (sx_n1 * sy_n1 + raw_sz1) % 2 == 0
-                if np.any(s1_valid):
-                    denom_1 = ((raw_sz1[s1_valid] * 1000) // 1414) + 156
-                    p_xl1 = (((sx_n1[s1_valid] - cx) * 8 - 12) * 1000) // denom_1
-                    p_xr1 = (((sx_n1[s1_valid] - cx) * 8 + 12) * 1000) // denom_1
-                    p_y1  = (((sy_n1[s1_valid] - cy) * 8) * 1000) // denom_1
-                    self.stereo_engine.left_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
-                    self.stereo_engine.right_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
-
-            if len(sx_n2) > 0:
-                raw_sz2 = (sz_n2 - z_flight_offset) % self.depth
-                raw_sz2[raw_sz2 <= 0] = 1
-                s2_valid = (sx_n2 * sy_n2 + raw_sz2) % 2 == 0
-                if np.any(s2_valid):
-                    denom_2 = ((raw_sz2[s2_valid] * 1000) // 1414) + 156
-                    p_xl2 = (((sx_n2[s2_valid] - cx) * 8 - 12) * 1000) // denom_2
-                    p_xr2 = (((sx_n2[s2_valid] - cx) * 8 + 12) * 1000) // denom_2
-                    p_y2  = (((sy_n2[s2_valid] - cy) * 8) * 1000) // denom_2
-                    self.stereo_engine.left_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
-                    self.stereo_engine.right_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                        # Bestimme dichte Cluster (Resonanzkörper) vs. weitmaschigen Äther rein über Modulo-Eigenschaften
+                        dense_cluster = (pixel_properties[active_mask][valid_nodes] == 1) # Lock to core mass node
+                        
+                        if np.any(dense_cluster):
+                            # Das hocheffiziente Quanten-Glühen: Maximale Punktdichte am Ort des Register-Updates
+                            self.stereo_engine.left_eye_buffer[out_y_s[dense_cluster], out_x_l[dense_cluster]] = 1
+                            self.stereo_engine.right_eye_buffer[out_y_s[dense_cluster], out_x_r[dense_cluster]] = 1
+                        
+                        # Der weitmaschige, transparente Raum-Äther
+                        thin_ether = ~dense_cluster
+                        if np.any(thin_ether):
+                            self.stereo_engine.left_eye_buffer[out_y_s[thin_ether][::2], out_x_l[thin_ether][::2]] = 1
+                            self.stereo_engine.right_eye_buffer[out_y_s[thin_ether][::2], out_x_r[thin_ether][::2]] = 1
+            # ==================================================================
 
             self.clock_engine.evolve_clock_one_takt()
             
