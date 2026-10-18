@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Dual-Object Parallax Projection tracking independent 1-byte variable fields.
+Optimized: Pure 3D Spatial Vector Spheres rendering genuine depth-convergence and parallax.
 """
 
 import os
@@ -88,66 +88,44 @@ class PTRC3DAnimationPipeline:
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed 6-second flight through the spatial crystal sieve.
-        Injects a second stationary reference object to establish clear parallax depth.
+        Embeds two true 3D spatial spheres to create realistic convergence movement.
         """
         print(f"[ OFFLINE PIPELINE ] Generiere {self.frames_limit} perfekte Frames fuer die Video-Ausgabe...")
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         allowed_24_list = [1, 5, 7, 11, 12, 13, 17, 19, 23]
         
-        # 2D Bildschirm-Gitter-Vektoren für das Full-HD Sichtfeld
-        grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
-        screen_cx = self.stereo_engine.width // 2
-        screen_cy = self.stereo_engine.height // 2
-        
+        # Wir erzeugen ein mathematisches 3D-Koordinatenfeld für die Kugel-Generierung
+        local_z, local_y, local_x = np.indices((self.depth, self.height, self.width))
+
         # ==================================================================
-        # MATHEMATISCHE VARIABLEN: DIE ZWEI STATISCHEN KUGEL-REFERENZEN
+        # !!! TARGET ZONE: GENERIERUNG DER ZWEI ECHTEN 3D-SPHÄREN IM RAUM !!!
         # ==================================================================
-        # KUGEL 1 (Zentraler Hauptkörper - Radius 80)
-        dx_l1 = grid_x - (screen_cx - 24)
-        dx_r1 = grid_x - (screen_cx + 24)
-        dy_s1 = grid_y - screen_cy
-        quad_l1 = (dx_l1 * dx_l1) + (dy_s1 * dy_s1)
-        quad_r1 = (dx_r1 * dx_r1) + (dy_s1 * dy_s1)
+        # KUGEL 1: Die große Vordergrund-Kugel im mathematischen Zentrum
+        q_s1 = (local_x - cx)**2 + (local_y - cy)**2 + (local_z - 40)**2
+        mask_s1 = (q_s1 < 900) & (np.isin(q_s1 % self.control_base, allowed_24_list) | ((q_s1 % self.primorial_base) <= self.invariant_limit))
         
-        mask_takt_l1 = np.isin(quad_l1 % self.control_base, allowed_24_list)
-        mask_prim_l1 = (quad_l1 % self.primorial_base) <= self.invariant_limit
-        sphere_l1 = (quad_l1 < 18000) & (mask_takt_l1 | mask_prim_l1)
+        # KUGEL 2: Die kleinere Bezugs-Kugel tiefer im Hintergrund und versetzt
+        q_s2 = (local_x - (cx + 50))**2 + (local_y - (cy + 30))**2 + (local_z - 100)**2
+        mask_s2 = (q_s2 < 300) & (np.isin(q_s2 % self.control_base, allowed_24_list) | ((q_s2 % self.primorial_base) <= self.invariant_limit))
         
-        mask_takt_r1 = np.isin(quad_r1 % self.control_base, allowed_24_list)
-        mask_prim_r1 = (quad_r1 % self.primorial_base) <= self.invariant_limit
-        sphere_r1 = (quad_r1 < 18000) & (mask_takt_r1 | mask_prim_r1)
-        
-        # KUGEL 2 (Der versetzte zweite Bezugspunkt - Radius 40, verschoben nach rechts oben)
-        offset_x, offset_y = 350, -220
-        dx_l2 = grid_x - (screen_cx - 24 + offset_x)
-        dx_r2 = grid_x - (screen_cx + 24 + offset_x)
-        dy_s2 = grid_y - (screen_cy + offset_y)
-        quad_l2 = (dx_l2 * dx_l2) + (dy_s2 * dy_s2)
-        quad_r2 = (dx_r2 * dx_r2) + (dy_s2 * dy_s2)
-        
-        mask_takt_l2 = np.isin(quad_l2 % self.control_base, allowed_24_list)
-        mask_prim_l2 = (quad_l2 % self.primorial_base) <= self.invariant_limit
-        sphere_l2 = (quad_l2 < 3500) & (mask_takt_l2 | mask_prim_l2)
-        
-        mask_takt_r2 = np.isin(quad_r2 % self.control_base, allowed_24_list)
-        mask_prim_r2 = (quad_r2 % self.primorial_base) <= self.invariant_limit
-        sphere_r2 = (quad_r2 < 3500) & (mask_takt_r2 | mask_prim_r2)
+        # Verschmelze beide 3D-Objekte zu einem gemeinsamen invarianten Raumkontext
+        invariant_spheres_mask = mask_s1 | mask_s2
+        sz_nodes, sy_nodes, sx_nodes = np.where(invariant_spheres_mask)
         # ==================================================================
 
         for frame_idx in range(self.frames_limit):
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # HINTERGRUND-EXTRAKTION AUS DER 1-BYTE-MATRIX
+            # 1. HINTERGRUND-EXTRAKTION AUS DER DYNAMISCHEN 1-BYTE-MATRIX
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels > 0)
             total_nodes = len(x_indices)
             
+            z_flight_offset = (frame_idx * 1) % self.depth
+            
             if total_nodes > 0:
                 planck_variables = self.clock_engine.voxels[z_indices, y_indices, x_indices]
-                
-                # Kontinuierliche Vorwärtsbewegung simuliert den Durchflug
-                z_flight_offset = (frame_idx * 1) % self.depth
                 
                 raw_z = (z_indices - z_flight_offset)
                 raw_z[raw_z <= 0] += self.depth
@@ -170,21 +148,33 @@ class PTRC3DAnimationPipeline:
                 takt_check = (raw_x * raw_y + raw_z + planck_variables) % self.control_base
                 valid_mask = np.isin(takt_check, allowed_24_list)
                 
-                # TRANSPARENTER RAUM-ÄTHER (Gleitet an beiden Objekten vorbei)
                 if np.any(valid_mask):
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask][::16], out_x_left[valid_mask][::16]] = 1
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask][::16], out_x_right[valid_mask][::16]] = 1
 
-            # EINSTANZEN BEIDER RESONANZKÖRPER IN DAS GEMEINSAME SIGHTFELD
-            # Hauptkugel
-            self.stereo_engine.left_eye_buffer[sphere_l1] = 1
-            self.stereo_engine.right_eye_buffer[sphere_r1] = 1
+            # 2. PROJEKTION DER ECHTEN 3D-KUGELKNOTEN MIT ECHTEM FLUG-KONVERGENZ-EFFEKT
+            if len(sx_nodes) > 0:
+                raw_sz = (sz_nodes - z_flight_offset)
+                raw_sz[raw_sz <= 0] += self.depth
+                raw_sz = np.clip(raw_sz, 1, self.depth)
+                
+                raw_sx = (sx_nodes - cx)
+                raw_sy = (sy_nodes - cy)
+                
+                scaled_depth_s = (raw_sz * 1000) // 1414
+                denom_s = scaled_depth_s + 156
+                
+                p_xl_s = ((raw_sx * 8 - 12) * 1000) // denom_s
+                p_xr_s = ((raw_sx * 8 + 12) * 1000) // denom_s
+                p_y_s = ((raw_sy * 8) * 1000) // denom_s
+                
+                o_xl_s = (p_xl_s + self.stereo_engine.width // 2) % self.stereo_engine.width
+                o_xr_s = (p_xr_s + self.stereo_engine.width // 2) % self.stereo_engine.width
+                o_y_s = (p_y_s + self.stereo_engine.height // 2) % self.stereo_engine.height
+                
+                self.stereo_engine.left_eye_buffer[o_y_s, o_xl_s] = 1
+                self.stereo_engine.right_eye_buffer[o_y_s, o_xr_s] = 1
             
-            # Zweiter Bezugspunkt (Parallaxe-Kugel)
-            self.stereo_engine.left_eye_buffer[sphere_l2] = 1
-            self.stereo_engine.right_eye_buffer[sphere_r2] = 1
-            
-            # Uhr-Engine weitertakten
             self.clock_engine.evolve_clock_one_takt()
             
             bw_frame = self.stereo_engine.left_eye_buffer * 255
