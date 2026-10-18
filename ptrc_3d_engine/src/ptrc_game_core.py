@@ -155,6 +155,8 @@ class PTRC3DAnimationPipeline:
         sphere_r2 = (quad_r2 < 3500) & (mask_takt_r2 | mask_prim_r2)
         # ==================================================================
 
+        steps = np.arange(-64, 64, dtype=np.int32)
+
         for frame_idx in range(self.frames_limit):
             frame_start_time = time.perf_counter()
             
@@ -162,43 +164,55 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: RADIALES 144-ACHSEN CRYSTALLINE RAYCASTING !!!
+            # !!! TARGET ZONE: VEKTORISIERTES 144-ACHSEN CRYSTALLINE RAYCASTING !!!
             # ==================================================================
-            # Wir zwingen die Projektion entlang der 144 Facetten deines Kristalls.
             z_flight_offset = (frame_idx * 1) % self.depth
             
             for axis in crystal_axes:
                 ax, ay, az = axis, axis, axis
                 
-                # Wir fließen entlang des 1-Byte-Strahls durch das Universum
-                for step in range(-64, 64):
-                    z_g = (cz + (az * step) // 12 - z_flight_offset) % self.depth
-                    y_g = (cy + (ay * step) // 12) % self.height
-                    x_g = (cx + (ax * step) // 12) % self.width
+                # Berechne alle Gitterpfade einer Achse gleichzeitig als Vektorfeld
+                z_g = (cz + (az * steps) // 12 - z_flight_offset) % self.depth
+                y_g = (cy + (ay * steps) // 12) % self.height
+                x_g = (cx + (ax * steps) // 12) % self.width
+                
+                # Extrahiere die 1-Byte Variablen der Voxelkette auf einmal
+                planck_vars = self.clock_engine.voxels[z_g, y_g, x_g]
+                
+                # Maskierungsfilter: Nur aktive Knoten verarbeiten
+                active_mask = planck_vars > 0
+                
+                if np.any(active_mask):
+                    raw_z = z_g[active_mask]
+                    raw_z[raw_z <= 0] = 1
+                    raw_x = x_g[active_mask] - cx
+                    raw_y = y_g[active_mask] - cy
                     
-                    planck_var = self.clock_engine.voxels[z_g, y_g, x_g]
+                    # Takt-Resonanz-Check auf Matrixebene
+                    takt_check = (raw_x * raw_y + raw_z + planck_vars[active_mask]) % self.control_base
+                    valid_points = np.isin(takt_check, allowed_24_list)
                     
-                    if planck_var > 0:
-                        raw_z = int(z_g) if z_g > 0 else 1
-                        raw_x = int(x_g - cx)
-                        raw_y = int(y_g - cy)
+                    if np.any(valid_points):
+                        final_z = raw_z[valid_points]
+                        final_x = raw_x[valid_points]
+                        final_y = raw_y[valid_points]
                         
-                        takt_check = (raw_x * raw_y + raw_z + planck_var) % self.control_base
+                        denominator = ((final_z * 1000) // 1414) + 156
                         
-                        if takt_check in allowed_24_list:
-                            scaled_depth = (raw_z * 1000) // 1414
-                            denominator = scaled_depth + 156
-                            
-                            p_xl = ((raw_x * 8 - 12) * 1000) // denominator
-                            p_xr = ((raw_x * 8 + 12) * 1000) // denominator
-                            p_y  = ((raw_y * 8) * 1000) // denominator
-                            
-                            if step % 8 == 0:
-                                self.stereo_engine.left_eye_buffer[(p_y + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
-                                self.stereo_engine.right_eye_buffer[(p_y + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                        p_xl = ((final_x * 8 - 12) * 1000) // denominator
+                        p_xr = ((final_x * 8 + 12) * 1000) // denominator
+                        p_y  = ((final_y * 8) * 1000) // denominator
+                        
+                        out_x_l = (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width
+                        out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
+                        out_y   = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
+                        
+                        # Dünnes Re-Sieving: Nur ausgewählte Strahlpunkte für den Raum-Äther spannen
+                        self.stereo_engine.left_eye_buffer[out_y, out_x_l] = 1
+                        self.stereo_engine.right_eye_buffer[out_y, out_x_r] = 1
             # ==================================================================
 
-            # EINSTANZEN BEIDER RESONANZKÖRPER IN DAS SIGHTFELD
+            # EINSTANZEN BEIDER RESONANZKÖRPER IN DAS GEMEINSAME SIGHTFELD
             self.stereo_engine.left_eye_buffer[sphere_l1] = 1
             self.stereo_engine.right_eye_buffer[sphere_r1] = 1
             self.stereo_engine.left_eye_buffer[sphere_l2] = 1
