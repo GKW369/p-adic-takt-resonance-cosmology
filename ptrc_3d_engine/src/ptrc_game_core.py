@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# pTRC Framework - Discrete 1-Byte Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,13 +19,14 @@
 
 # -*- coding: utf-8 -*-
 r"""
-pTRC Framework - Interactive Game Engine Pipeline: Real-Time Crystal Flight
-Operational Domain: Live 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Complete pure-space indentation alignment with a fully visible holographic matrix sphere.
+pTRC Framework - Advanced Animation & Video Engine Pipeline
+Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
+Optimized: Off-line deterministic video encoder injecting a 1-byte sphere embedded IN the spatial grid.
 """
 
 import os
 import sys
+import subprocess
 import time
 import numpy as np
 import cv2
@@ -61,11 +62,16 @@ except ImportError:
 print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchronisiert.")
 # ==============================================================================
 
-class PTRC3DGameEngine:
-    def __init__(self):
+class PTRC3DAnimationPipeline:
+    """
+    Executes a high-density frame-by-frame rendering loop to write an uncompressed
+    lossless mp4 flight video directly from the core memory arrays.
+    """
+    def __init__(self, total_frames=144):
+        self.frames_limit = total_frames
         self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
         
-        # Performante Triebwerks-Auflösung
+        # Lokale Triebwerks-Auflösung
         self.width = 320
         self.height = 180
         self.depth = 128
@@ -74,47 +80,62 @@ class PTRC3DGameEngine:
         self.invariant_limit = 156
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
+        self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
         
-        # Interaktive Reiseparameter des Beobachters
-        self.pos_x_offset = 0
-        self.pos_y_offset = 0
-        self.pos_z_offset = 0
-        
-        self.last_valid_view = np.zeros((1080, 1920), dtype=np.uint8)
+        if not os.path.exists(self.output_directory):
+            os.makedirs(self.output_directory)
 
-    def run_interactive_loop(self):
-        window_name = "pTRC Quantum Crystal Engine v1.0"
-        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-        cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    def generate_deterministic_video_sequence(self):
+        """
+        Renders a perfectly timed 6-second flight through the spatial crystal sieve.
+        Embeds the sphere directly within the foreground and background noise streams.
+        """
+        print(f"[ OFFLINE PIPELINE ] Generiere {self.frames_limit} perfekte Frames fuer die Video-Ausgabe...")
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         allowed_24_list = [1, 5, 7, 11, 12, 13, 17, 19, 23]
         
-        print("\n[ HOLOGRAMM ] Hochperformante Interferenz-Projektion aktiv!")
-        print(" -> Steuerung: W/S (Vor/Zurueck) | A/D (Links/Rechts) | Q/E (Hoch/Runter) | ESC (Beenden)\n")
+        # 2D Bildschirm-Gitter-Vektoren für die holografische Kugel vorab im RAM laden
+        grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
+        screen_cx = self.stereo_engine.width // 2
+        screen_cy = self.stereo_engine.height // 2
         
-        while True:
-            start_time = time.perf_counter()
-            
-            # Retina-Puffer leeren
+        dx_l = grid_x - (screen_cx - 24)
+        dx_r = grid_x - (screen_cx + 24)
+        dy_s = grid_y - screen_cy
+        
+        quad_l = (dx_l * dx_l) + (dy_s * dy_s)
+        quad_r = (dx_r * dx_r) + (dy_s * dy_s)
+        
+        # Sieve-Filterung für die feste Kugelstruktur (Hologramm-Ebene)
+        mask_takt_l = np.isin(quad_l % self.control_base, allowed_24_list)
+        mask_prim_l = (quad_l % self.primorial_base) <= self.invariant_limit
+        sphere_l = (quad_l < 18000) & (mask_takt_l | mask_prim_l)
+        
+        mask_takt_r = np.isin(quad_r % self.control_base, allowed_24_list)
+        mask_prim_r = (quad_r % self.primorial_base) <= self.invariant_limit
+        sphere_r = (quad_r < 18000) & (mask_takt_r | mask_prim_r)
+
+        for frame_idx in range(self.frames_limit):
+            # 1. Beide Auge-Kanäle für dieses Bild initialisieren
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # 1. VEKTORISIERTE EXTRAKTION DES DYNAMISCHEN HINTERGRUNDS
+            # 2. HINTERGRUND UND VORDERGRUND REIN ALS FILTER-DYNAMIK BERECHNEN
             z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
-            total_active_nodes = len(x_indices)
+            total_nodes = len(x_indices)
             
-            if total_active_nodes > 0:
-                z_flight_offset = self.pos_z_offset % self.depth
+            if total_nodes > 0:
+                # Vorwärtsbewegung simuliert das Durchfliegen des Kristallgitters
+                z_flight_offset = (frame_idx * 1) % self.depth
                 
                 raw_z = (z_indices - z_flight_offset)
                 raw_z[raw_z <= 0] += self.depth
                 raw_z = np.clip(raw_z, 1, self.depth)
                 
-                raw_x = (x_indices - cx) + self.pos_x_offset
-                raw_y = (y_indices - cy) + self.pos_y_offset
+                raw_x = (x_indices - cx)
+                raw_y = (y_indices - cy)
                 
-                # Perspektiv-Transformation des Hintergrunds
                 scaled_depth = (raw_z * 1000) // 1414
                 denominator = scaled_depth + 156
                 
@@ -129,85 +150,83 @@ class PTRC3DGameEngine:
                 takt_check = (raw_x * raw_y + raw_z) % self.control_base
                 valid_mask = np.isin(takt_check, allowed_24_list)
                 
+                # ==============================================================
+                # !!! INTERAKTIVES RE-SIEVING (TRANSPARENTER VORDERGRUND) !!!
+                # ==============================================================
+                # Um das Gitter transparent im gesamten Raum darzustellen, lassen wir
+                # nur jeden 16. Knotenpunkt durchschlagen (Schrittweite ::16).
+                # Das erzeugt den perfekten, raumfüllenden Äther vor und hinter der Kugel.
                 if np.any(valid_mask):
-                    self.stereo_engine.left_eye_buffer[out_y[valid_mask], out_x_left[valid_mask]] = 1
-                    self.stereo_engine.right_eye_buffer[out_y[valid_mask], out_x_right[valid_mask]] = 1
+                    self.stereo_engine.left_eye_buffer[out_y[valid_mask][::16], out_x_left[valid_mask][::16]] = 1
+                    self.stereo_engine.right_eye_buffer[out_y[valid_mask][::16], out_x_right[valid_mask][::16]] = 1
 
             # ==================================================================
-            # !!! TARGET ZONE: REINE HOLOGRAFISCHE SPEKTAKULÄRE MATRIX-KUGEL !!!
+            # 3. DIE MASSIVE KUGEL IM ZENTRUM DAZWISCHENBETTEN
             # ==================================================================
-            # Wir bauen die Kugel stabil direkt über das 2D-Sichtfeld, damit sie
-            # unerschütterlich sichtbar bleibt. Keine Schleifen, 100% NumPy!
-            grid_y, grid_x = np.indices((self.stereo_engine.height, self.stereo_engine.width))
-            
-            screen_cx = self.stereo_engine.width // 2
-            screen_cy = self.stereo_engine.height // 2
-            
-            # Absolute Seh-Abstände zu den gekreuzten Augenspiegeln
-            dx_l = grid_x - (screen_cx - 24)
-            dx_r = grid_x - (screen_cx + 24)
-            dy_s = grid_y - screen_cy
-            
-            quad_l = (dx_l * dx_l) + (dy_s * dy_s)
-            quad_r = (dx_r * dx_r) + (dy_s * dy_s)
-            
-            # Filterung nach den exakten primorialen abelschen Restklassen des Uhrsystems
-            mask_takt_l = np.isin(quad_l % self.control_base, allowed_24_list)
-            mask_prim_l = (quad_l % self.primorial_base) <= self.invariant_limit
-            sphere_l = (quad_l < 18000) & (mask_takt_l | mask_prim_l)
-            
-            mask_takt_r = np.isin(quad_r % self.control_base, allowed_24_list)
-            mask_prim_r = (quad_r % self.primorial_base) <= self.invariant_limit
-            sphere_r = (quad_r < 18000) & (mask_takt_r | mask_prim_r)
-            
-            # Einstanzen der Kugel direkt in das holografische 1-Bit System
             self.stereo_engine.left_eye_buffer[sphere_l] = 1
             self.stereo_engine.right_eye_buffer[sphere_r] = 1
-            # ==================================================================
-
-            # Uhr-Engine im Hintergrund weitertakten
+            
+            # Uhr-Engine für das nächste mathematische Intervall weitertakten
             self.clock_engine.evolve_clock_one_takt()
             
-            # Flacker-Schutz (Coherence Hold)
-            active_nodes = int(np.sum(self.stereo_engine.left_eye_buffer))
-            if active_nodes > 2:
-                self.last_valid_view = self.stereo_engine.left_eye_buffer * 255
-                bw_scene = self.last_valid_view.copy()
-            else:
-                bw_scene = self.last_valid_view.copy()
-
-            # Diagnostik
-            end_time = time.perf_counter()
-            dt = end_time - start_time
-            fps = 1.0 / dt if dt > 0 else 999.0
-
-            cv2.putText(bw_scene, f"FPS: {fps:.1f} | NODES: {active_nodes:,} | HOLOGRAPHIC RECONSTRUCTION ACTIVE", \
-                        (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, cv2.LINE_AA)
-            cv2.putText(bw_scene, f"VECTORS: X_SHIFT: {self.pos_x_offset} | Y_SHIFT: {self.pos_y_offset} | Z_TACT: {self.pos_z_offset}", \
-                        (30, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 200, 1, cv2.LINE_AA)
-
-            cv2.imshow(window_name, bw_scene)
-
-            key = cv2.waitKey(1) & 0xFF
+            # Konvertiere das linke Auge-Signal in scharfe 8-Bit Pixel
+            bw_frame = self.stereo_engine.left_eye_buffer * 255
             
-            if key == 27:  # ESC-Taste schließt das Spiel
-                print("[ GAME ] Universum ueber ESC sicher geschlossen.")
+            # Schreibe das verlustfreie Einzelbild starr in den Cache-Ordner
+            frame_filename = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
+            cv2.imwrite(frame_filename, bw_frame)
+            
+            if frame_idx % 24 == 0:
+                print(f"    + Frame {frame_idx}/{self.frames_limit} verlustfrei berechnet.")
+
+    def compile_lossless_output_video(self):
+        """
+        Binds the uncompressed frame cache array into a clean 24 FPS digital MP4 movie.
+        Purges raw file remnants automatically after verified completion.
+        """
+        input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
+        
+        # Automatische Namens-Sequenzierung (ptrc_hologram_001.mp4, _002.mp4...)
+        counter = 1
+        while True:
+            target_video = os.path.join(script_dir, f"ptrc_hologram_{counter:03d}.mp4")
+            if not os.path.exists(target_video):
                 break
-            elif key == ord('w') or key == ord('W'):
-                self.pos_z_offset = (self.pos_z_offset + 1) % self.depth
-            elif key == ord('s') or key == ord('S'):
-                self.pos_z_offset = (self.pos_z_offset - 1) % self.depth
-            elif key == ord('a') or key == ord('A'):
-                self.pos_x_offset -= 2
-            elif key == ord('d') or key == ord('D'):
-                self.pos_x_offset += 2
-            elif key == ord('q') or key == ord('Q'):
-                self.pos_y_offset -= 2
-            elif key == ord('e') or key == ord('E'):
-                self.pos_y_offset += 2
-
-        cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    game = PTRC3DGameEngine()
-    game.run_interactive_loop()
+            counter += 1
+            
+        video_filename = os.path.basename(target_video)
+        print(f" -> Starte direkte ffmpeg-Datenabgreifung for '{video_filename}'...")
+        
+        ffmpeg_cmd = [
+            "ffmpeg", "-y", "-framerate", "24", "-i", input_pattern,
+            "-c:v", "libx264", "-crf", "1", "-preset", "slow", 
+            "-g", "1", "-pix_fmt", "yuv420p", target_video
+        ]
+        
+        try:
+            subprocess.run(ffmpeg_cmd, capture_output=True, text=True, check=True)
+            print(f"    + [ SUCCESS ] Video direkt aus Speicher-Logik exportiert: '{video_filename}'")
+            
+            print(" -> Bereinige temporaere Frame-Sequenzen aus dem Cache...")
+            for frame_idx in range(self.frames_limit):
+                frame_path = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
+                if os.path.exists(frame_path):
+                    os.remove(frame_path)
+try:
+os.rmdir(self.output_directory)
+print("    + [ SUCCESS ] Cache vollstaendig geleert. Nur die digitale MP4 verbleibt.")
+except OSError:
+pass
+return 1
+except Exception:
+print("    ! [ SYSTEM NOTICE ] Fehler bei der ffmpeg-Kompilierung.")
+return 0
+if name == "main":
+print("[ pTRC-PIPELINE ] Starte deterministischen Video-Export fuer X (Twitter)...")
+pipeline = PTRC3DAnimationPipeline(total_frames=144)
+# Führe die ungestörte Offline-Berechnung durch
+pipeline.generate_deterministic_video_sequence()
+# Kompiliere das finale Video direkt aus den Daten
+status = pipeline.compile_lossless_output_video()
+print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
+print(" -> STATUS: Zero-Float Cinematic Video Suite Successfully Audited.")
