@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: 144-Facet Crystalline Pixel Topologies without cubic boundaries.
-Optimized: Takt-synchronized pixel-slide engine executing higher primorial sifting.
+Operational Domain: Discrete 1-Byte Crystalline Material Invariants (\mathbb{Z}) replacing XYZ.
+Optimized: 137-Takt Feynman Vacuum Sieve reading whole-crystal material variables.
 """
 
 import os
@@ -79,7 +79,7 @@ class PTRC3DAnimationPipeline:
         self.primorial_base = 210
         self.control_base = 24
         self.invariant_limit = 156
-        self.feynman_limit = 137  # 137-Takt Grenze für das Spektral-Lichtlimit
+        self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
         self.SCALE = 1000
         
         # HÖHERER PRIMZAHLENRING (Skalierungsebene x11 für erweiterte Simulationstiefe)
@@ -149,17 +149,17 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: PLANCK-PIXEL-RUTSCH-ENGINE (1 PIXEL / TAKT) !!!
+            # !!! TARGET ZONE: MULTI-AXIALES KRISTALL-SIEB (SPALTEN-REPARATUR) !!!
             # ==================================================================
-            # An jedem Universumstakt rutscht das Datenpaket genau 1 Pixel weiter.
-            # Das Rendersieb bricht diese Flut ganzzahlig auf unsere 24 Frames herunter.
             z_flight_offset = (frame_idx * 1) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             for axis_idx, axis in enumerate(crystal_axes):
-                ax_x = int(axis[0]) if hasattr(axis, '__len__') else int(axis)
-                ax_y = int(axis[1]) if hasattr(axis, '__len__') else int(axis)
-                ax_z = int(axis[2]) if hasattr(axis, '__len__') else int(axis)
+                # ABSOLUTE KORREKTUR: Explizite Spalten-Indizierung des NumPy-Vektors!
+                # Verhindert den Skalar-Kollaps und entfaltet die raumfüllende Symmetrie
+                ax_x = int(axis[0])
+                ax_y = int(axis[1])
+                ax_z = int(axis[2])
                 
                 # Makroskopische Spektralweitung (steps * 4) zur Augensynchronisation
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
@@ -182,7 +182,7 @@ class PTRC3DAnimationPipeline:
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
-                        # Holografische Vorderseiten-Ermittlung
+                        # Holografische Vorderseiten-Ermittlung (Okklusions-Abtastung)
                         first_hit_idx = np.argmax(valid_nodes)
                         
                         f_z = raw_z[valid_nodes][first_hit_idx:first_hit_idx+1]
