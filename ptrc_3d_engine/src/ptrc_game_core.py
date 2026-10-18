@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Deterministic Look-Up Architecture mapping the 144-facet crystal via static prime maps.
+Optimized: Pure On-Demand 137-Takt Feynman Vacuum Sieve reading static prime lookup maps.
 """
 
 import os
@@ -66,7 +66,7 @@ print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchro
 class PTRC3DAnimationPipeline:
     """
     Executes a high-density frame-by-frame rendering loop to write an uncompressed
-    lossless mp4 flight video directly from the core memory arrays.
+    lossless mp4 flight video directly from the core 1-byte memory arrays.
     """
     def __init__(self, total_frames=144):
         self.frames_limit = total_frames
@@ -84,7 +84,7 @@ class PTRC3DAnimationPipeline:
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
         
-        # Generiere die statische 210-Primzahlen-Landkarte direkt im Speicher
+        # Generiere die statische, unveränderliche 210-Primzahlen-Landkarte im Speicher
         self.deterministic_sieve_array = np.zeros(self.primorial_base, dtype=np.uint8)
         self._generate_totient_sieve_matrix()
 
@@ -189,17 +189,18 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: DETERMINISTISCHER LANDKARTEN-LOOKUP (pTRC) !!!
+            # !!! TARGET ZONE: LINDEN-MEDIALER FEYNMAN 137-TAKT LOOKUP !!!
             # ==================================================================
-            z_flight_offset = (frame_idx * 1) % self.depth
+            # Das System springt exakt im physikalischen Universumstakt vorwärts
+            z_flight_offset = (frame_idx * self.clock_engine.REFRESH_TAKTE) % self.depth
             
             for axis in crystal_axes:
-                # Nutze die dezentralen Vektorkomponenten direkt als Richtungs-Skalare
+                # Extrahiere die echten Richtungskomponenten der 144 Kristallachsen
                 ax_x = int(axis[0])
                 ax_y = int(axis[1])
                 ax_z = int(axis[2])
                 
-                # Reine Ganzzahlpfade ohne Fließkommadilemma
+                # Dezentrale Ganzzahlpfade direkt auf deiner Landkarte ablesen
                 z_g = (cz + ax_z * steps - z_flight_offset) % self.depth
                 y_g = (cy + ax_y * steps) % self.height
                 x_g = (cx + ax_x * steps) % self.width
@@ -213,10 +214,10 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # Die Modulo-Adresse fungiert als exakter Index auf unserer Landkarte
+                    # Die Modulo-Adresse ist der exakte Index auf der unendlichen Sieve-Landkarte
                     clamped_addresses = (raw_x * raw_y + raw_z + planck_vars[active_mask]) % self.primorial_base
                     
-                    # BLITZSCHNELLER LANDKARTEN-LOOKUP (Keine Trigonometrie, reines Ablesen!)
+                    # BLITZSCHNELLER LANDKARTEN-LOOKUP (Reines Ablesen der Variablen!)
                     valid_nodes = self.deterministic_sieve_array[clamped_addresses] == 1
                     
                     if np.any(valid_nodes):
@@ -224,7 +225,6 @@ class PTRC3DAnimationPipeline:
                         f_x = raw_x[valid_nodes]
                         f_y = raw_y[valid_nodes]
                         
-                        # Absicherung des Kalibrierungs-Taktraums modulo 24
                         control_check = ((f_x * f_y + f_z) * self.SCALE) // self.control_base
                         valid_points = (control_check % 2 == 0)
                         
@@ -348,4 +348,3 @@ if __name__ == "__main__":
     status = pipeline.compile_lossless_output_video()
     
     print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
-    print(" -> STATUS: Zero-Float Cinematic Video Suite Successfully Audited.")
