@@ -125,7 +125,9 @@ class PTRC3DAnimationPipeline:
         self.accumulated_pixels_written = 0
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        allowed_24_list =
+        
+        # !!! KORREKTUR: REPARIERTE UND ZUGEWIESENE PRIMZAHLEN-TAKTLISTE !!!
+        allowed_24_list = [1, 5, 7, 11, 13, 17, 19, 23]
         
         # Lade die Kristallachsen der Kern-Engine
         crystal_axes = self.clock_engine.crystal_axes
@@ -159,7 +161,7 @@ class PTRC3DAnimationPipeline:
         dx_r2 = grid_x - (screen_cx + 24 + offset_x)
         dy_s2 = grid_y - (screen_cy + offset_y)
         quad_l2 = (dx_l2 * dx_l2) + (dy_s2 * dy_s2)
-        quad_r2 = (dx_r2 * grid_x.shape[1] // grid_x.shape[1]) + (dy_s2 * dy_s2) # Neutral scaled
+        quad_r2 = (dx_r2 * grid_x.shape[1] // grid_x.shape[1]) + (dy_s2 * dy_s2)
         quad_r2 = (dx_r2 * dx_r2) + (dy_s2 * dy_s2)
         
         mask_takt_l2 = np.isin(quad_l2 % self.control_base, allowed_24_list)
@@ -200,7 +202,7 @@ class PTRC3DAnimationPipeline:
                 ax_y = int(axis)
                 ax_z = int(axis)
                 
-                # Aufblasen der Einzelschritte -> Killt die Linienbündelung vollständig
+                # Aufblasen der Einzelschritte -> Weitet das Gitter ins sichtbare Auge
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
                 y_g = (cy + ax_y * steps * 4) % self.height
                 x_g = (cx + ax_x * steps * 4) % self.width
@@ -231,7 +233,7 @@ class PTRC3DAnimationPipeline:
                         out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Diskrete, unverbundene Planck-Pixelpunkte im Äther
+                        # Reine, isolierte Planck-Pixelpunkte im Lichtspektrum
                         self.stereo_engine.left_eye_buffer[out_y_s[::2], out_x_l[::2]] = 1
                         self.stereo_engine.right_eye_buffer[out_y_s[::2], out_x_r[::2]] = 1
 
