@@ -78,7 +78,6 @@ class PTRC3DAnimationPipeline:
         self.depth = 128
         self.primorial_base = 210
         self.control_base = 24
-        self.invariant_limit = 156
         self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
         self.SCALE = 1000
         
@@ -125,8 +124,6 @@ class PTRC3DAnimationPipeline:
         self.accumulated_pixels_written = 0
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        
-        # !!! KORREKTUR: REPARIERTE UND ZUGEWIESENE PRIMZAHLEN-TAKTLISTE !!!
         allowed_24_list = [1, 5, 7, 11, 13, 17, 19, 23]
         
         # Lade die Kristallachsen der Kern-Engine
@@ -198,9 +195,10 @@ class PTRC3DAnimationPipeline:
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             for axis_idx, axis in enumerate(crystal_axes):
-                ax_x = int(axis)
-                ax_y = int(axis)
-                ax_z = int(axis)
+                # !!! INTERNE REPARATUR-ZONE: EXAKTES EXTRAHIEREN DER MULTIDIMENSIONALEN KOORDINATEN !!!
+                ax_x = int(axis[0])
+                ax_y = int(axis[1])
+                ax_z = int(axis[2])
                 
                 # Aufblasen der Einzelschritte -> Weitet das Gitter ins sichtbare Auge
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
