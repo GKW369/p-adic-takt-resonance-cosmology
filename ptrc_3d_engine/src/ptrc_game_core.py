@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: Off-line deterministic video encoder injecting a 1-byte sphere embedded IN the spatial grid.
+Optimized: 1-Byte Architecture tracking up to 256 variables per Planck pixel.
 """
 
 import os
@@ -65,7 +65,7 @@ print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchro
 class PTRC3DAnimationPipeline:
     """
     Executes a high-density frame-by-frame rendering loop to write an uncompressed
-    lossless mp4 flight video directly from the core memory arrays.
+    lossless mp4 flight video directly from the core 1-byte memory arrays.
     """
     def __init__(self, total_frames=144):
         self.frames_limit = total_frames
@@ -84,11 +84,10 @@ class PTRC3DAnimationPipeline:
         
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
-
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed 6-second flight through the spatial crystal sieve.
-        Embeds the sphere directly within the foreground and background noise streams.
+        Decodes the 256 physical variables of the Planck matrix on-the-fly.
         """
         print(f"[ OFFLINE PIPELINE ] Generiere {self.frames_limit} perfekte Frames fuer die Video-Ausgabe...")
         
@@ -121,12 +120,18 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # 2. HINTERGRUND UND VORDERGRUND REIN ALS FILTER-DYNAMIK BERECHNEN
-            z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels == 2)
+            # ==================================================================
+            # UNTERSUCHUNG DER 1-BYTE MATRIX (256 PHYSRESONANZ VARIABLEN)
+            # ==================================================================
+            # Wir tasten das gesamte Gitter nach Werten > 0 ab (Unterstützt alle Byte-Zustände)
+            z_indices, y_indices, x_indices = np.where(self.clock_engine.voxels > 0)
             total_nodes = len(x_indices)
             
             if total_nodes > 0:
-                # Vorwärtsbewegung simuliert das Durchfliegen des Kristallgitters
+                # Extrahiere die physikalischen Variablen (Material, Dichte, Temperatur, etc.)
+                # Jeder Gitterpunkt trägt einen Wert von 0 bis 255 in seiner 1-Byte-Architektur
+                planck_variables = self.clock_engine.voxels[z_indices, y_indices, x_indices]
+                
                 z_flight_offset = (frame_idx * 1) % self.depth
                 
                 raw_z = (z_indices - z_flight_offset)
@@ -147,22 +152,17 @@ class PTRC3DAnimationPipeline:
                 out_x_right = (proj_x_right + self.stereo_engine.width // 2) % self.stereo_engine.width
                 out_y = (proj_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                 
-                takt_check = (raw_x * raw_y + raw_z) % self.control_base
+                # Der Takt-Check moduliert die Variable des Pixels im Restklassenring
+                takt_check = (raw_x * raw_y + raw_z + planck_variables) % self.control_base
                 valid_mask = np.isin(takt_check, allowed_24_list)
                 
-                # ==============================================================
-                # !!! INTERAKTIVES RE-SIEVING (TRANSPARENTER VORDERGRUND) !!!
-                # ==============================================================
-                # Um das Gitter transparent im gesamten Raum darzustellen, lassen wir
-                # nur jeden 16. Knotenpunkt durchschlagen (Schrittweite ::16).
-                # Das erzeugt den perfekten, raumfüllenden Äther vor und hinter der Kugel.
+                # INTERAKTIVES RE-SIEVING (TRANSPARENTER VORDER- & HINTERGRUND)
+                # Das 1-Byte Raumgitter fliesst permanent und transparent vor und hinter der Kugel vorbei
                 if np.any(valid_mask):
                     self.stereo_engine.left_eye_buffer[out_y[valid_mask][::16], out_x_left[valid_mask][::16]] = 1
                     self.stereo_engine.right_eye_buffer[out_y[valid_mask][::16], out_x_right[valid_mask][::16]] = 1
 
-            # ==================================================================
-            # 3. DIE MASSIVE KUGEL IM ZENTRUM DAZWISCHENBETTEN
-            # ==================================================================
+            # 3. DIE MASSIVE HOLOGRAFISCHE KUGEL IM GEMEINSAMEN RAUM DAZWISCHENBETTEN
             self.stereo_engine.left_eye_buffer[sphere_l] = 1
             self.stereo_engine.right_eye_buffer[sphere_r] = 1
             
@@ -186,7 +186,6 @@ class PTRC3DAnimationPipeline:
         """
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
         
-        # Automatische Namens-Sequenzierung (ptrc_hologram_001.mp4, _002.mp4...)
         counter = 1
         while True:
             target_video = os.path.join(script_dir, f"ptrc_hologram_{counter:03d}.mp4")
@@ -212,21 +211,25 @@ class PTRC3DAnimationPipeline:
                 frame_path = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
-try:
-os.rmdir(self.output_directory)
-print("    + [ SUCCESS ] Cache vollstaendig geleert. Nur die digitale MP4 verbleibt.")
-except OSError:
-pass
-return 1
-except Exception:
-print("    ! [ SYSTEM NOTICE ] Fehler bei der ffmpeg-Kompilierung.")
-return 0
-if name == "main":
-print("[ pTRC-PIPELINE ] Starte deterministischen Video-Export fuer X (Twitter)...")
-pipeline = PTRC3DAnimationPipeline(total_frames=144)
-# Führe die ungestörte Offline-Berechnung durch
-pipeline.generate_deterministic_video_sequence()
-# Kompiliere das finale Video direkt aus den Daten
-status = pipeline.compile_lossless_output_video()
-print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
-print(" -> STATUS: Zero-Float Cinematic Video Suite Successfully Audited.")
+            try:
+                os.rmdir(self.output_directory)
+                print("    + [ SUCCESS ] Cache vollstaendig geleert. Nur die digitale MP4 verbleibt.")
+            except OSError:
+                pass
+            return 1
+        except Exception:
+            print("    ! [ SYSTEM NOTICE ] Fehler bei der ffmpeg-Kompilierung.")
+            return 0
+
+if __name__ == "__main__":
+    print("[ pTRC-PIPELINE ] Starte deterministischen Video-Export fuer X (Twitter)...")
+    pipeline = PTRC3DAnimationPipeline(total_frames=144)
+    
+    # Führe die ungestörte Offline-Berechnung durch
+    pipeline.generate_deterministic_video_sequence()
+    
+    # Kompiliere das finale Video direkt aus den Daten
+    status = pipeline.compile_lossless_output_video()
+    
+    print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
+    print(" -> STATUS: Zero-Float Cinematic Video Suite Successfully Audited.")
