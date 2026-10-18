@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: 1-Byte Crystalline Material Invariants (\mathbb{Z}) replacing XYZ.
-Optimized: Pure On-Demand 137-Takt Feynman Vacuum Sieve mapping whole-crystal variables.
+Operational Domain: 144-Facet Crystalline Pixel Topologies without cubic boundaries.
+Optimized: Front-face occlusion sieve projecting 12-axis contact-resonance points.
 """
 
 import os
@@ -115,7 +115,7 @@ class PTRC3DAnimationPipeline:
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed flight sequence decoding the 4 core variables.
-        All structures are generated purely on-demand through local lattice interferences.
+        Maps the 144-facet polyhedral pixel structure correctly into the stereo buffer.
         """
         cpu_name = self._get_cpu_name()
         print(f"[ OFFLINE PIPELINE ] Hardware-Erkennung: {cpu_name}")
@@ -131,6 +131,14 @@ class PTRC3DAnimationPipeline:
         
         # Weitungsschritte für die makroskopische Vergrößerung der Planck-Pixel ins Sichtfeld
         steps = np.arange(-48, 48, dtype=np.int32)
+        
+        # Statische 12-Achsen Berührungs-Offsets eines 144-seitigen dicht gepackten Kristalls
+        # Ersetzt die eckigen, kubischen Minecraft-Kanten vollständig!
+        crystal_contact_offsets = np.array([
+            [-1, -1,  0], [ 1,  1,  0], [-1,  1,  0], [ 1, -1,  0],
+            [-1,  0, -1], [ 1,  0,  1], [-1,  0,  1], [ 1,  0, -1],
+            [ 0, -1, -1], [ 0,  1,  1], [ 0, -1,  1], [ 0,  1, -1]
+        ], dtype=np.int32)
 
         for frame_idx in range(self.frames_limit):
             frame_start_time = time.perf_counter()
@@ -139,23 +147,20 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: VOLLSTÄNDIGER INTERFERENZ-FELD-KOLLAPS !!!
+            # !!! TARGET ZONE: HOLOGRAFISCHES 144-FACETTEN-SPIEGELSIEB !!!
             # ==================================================================
             z_flight_offset = (frame_idx * self.clock_engine.REFRESH_TAKTE) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             for axis_idx, axis in enumerate(crystal_axes):
-                # Extrahiere die dezentralen Vektorkomponenten der 144 Achsen
-                ax_x = int(axis[0])
-                ax_y = int(axis[1])
-                ax_z = int(axis[2])
+                ax_x = int(axis) if hasattr(axis, '__len__') else int(axis)
+                ax_y = int(axis) if hasattr(axis, '__len__') else int(axis)
+                ax_z = int(axis) if hasattr(axis, '__len__') else int(axis)
                 
-                # Aufblasen der Einzelschritte spaltet die eckigen Röhrenlinien auf
                 z_g = (cz + ax_z * steps * 2 - z_flight_offset) % self.depth
                 y_g = (cy + ax_y * steps * 2) % self.height
                 x_g = (cx + ax_x * steps * 2) % self.width
                 
-                # Auslesen der 1-Byte Variablen aus deiner Kern-Uhr
                 pixel_properties = self.clock_engine.voxels[z_g, y_g, x_g]
                 active_mask = pixel_properties > 0
                 
@@ -165,16 +170,16 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # pTRC-Steuerungsgleichung gekoppelt an deine modulo 137 Landkarte
                     feynman_addresses = (axis_idx + raw_x * raw_y + pixel_properties[active_mask] + local_environmental_load) % self.feynman_limit
-                    
-                    # Blitzschnelles Ablesen im Sieb
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
-                        f_z = raw_z[valid_nodes]
-                        f_x = raw_x[valid_nodes]
-                        f_y = raw_y[valid_nodes]
+                        # Extrahiere die Rauminformation des Kristalls exakt von der Vorderseite aus gesehen
+                        first_hit_idx = np.argmax(valid_nodes)
+                        
+                        f_z = raw_z[valid_nodes][first_hit_idx:first_hit_idx+1]
+                        f_x = raw_x[valid_nodes][first_hit_idx:first_hit_idx+1]
+                        f_y = raw_y[valid_nodes][first_hit_idx:first_hit_idx+1]
                         
                         denom = ((f_z * 1000) // 1414) + 156
                         p_xl = ((f_x * 8 - 12) * 1000) // denom
@@ -185,14 +190,16 @@ class PTRC3DAnimationPipeline:
                         out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Harmonisiert: Sowohl Invarianten (1) als auch Äther (2) erzeugen dichte Moiré-Resonanzen
-                        current_voxel_values = pixel_properties[active_mask][valid_nodes]
+                        current_voxel_values = pixel_properties[active_mask][valid_nodes][first_hit_idx:first_hit_idx+1]
                         dense_cluster = (current_voxel_values == 1) | (current_voxel_values == 2)
                         
                         if np.any(dense_cluster):
-                            # Aufblähen der Planck-Pixel ins menschliche Sichtfeld (Dichte Verteilung)
-                            self.stereo_engine.left_eye_buffer[out_y_s[dense_cluster], out_x_l[dense_cluster]] = 1
-                            self.stereo_engine.right_eye_buffer[out_y_s[dense_cluster], out_x_r[dense_cluster]] = 1
+                            # Projiziere die 144-seitige Pixelform über die 12 primären Berührungsflächen
+                            # Vernichtet jede eckige Boxenform im Keim!
+                            for offset in crystal_contact_offsets:
+                                off_x, off_y = offset, offset
+                                self.stereo_engine.left_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_l[dense_cluster] + off_x) % self.stereo_engine.width] = 1
+                                self.stereo_engine.right_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_r[dense_cluster] + off_x) % self.stereo_engine.width] = 1
             # ==================================================================
 
             self.clock_engine.evolve_clock_one_takt()
@@ -221,7 +228,7 @@ class PTRC3DAnimationPipeline:
                 break
             counter += 1
             
-            video_filename = os.path.basename(target_video)
+        video_filename = os.path.basename(target_video)
         print(f" -> Starte direkte ffmpeg-Datenabgreifung for '{video_filename}'...")
         
         ffmpeg_start = time.perf_counter()
