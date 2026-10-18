@@ -96,7 +96,7 @@ class PTRC3DAnimationPipeline:
                     return cpu_info.split(":")[-1].strip()
         except Exception:
             pass
-        return "Acer Desktop CPU"
+        return "Intel(R) Core(TM) i3-3217U CPU @ 1.80GHz"
 
     def generate_deterministic_video_sequence(self):
         """
@@ -158,6 +158,17 @@ class PTRC3DAnimationPipeline:
 
         steps = np.arange(-64, 64, dtype=np.int32)
 
+        # Vorab-Berechnung der statischen 3D-Kugelnetze im Raum (Ur-DNA Manifestation)
+        local_z, local_y, local_x = np.indices((self.depth, self.height, self.width))
+        q_s1 = (local_x - cx)**2 + (local_y - cy)**2 + (local_z - 40)**2
+        mask_s1 = (q_s1 < 1000) & (np.isin(q_s1 % self.control_base, allowed_24_list) | ((q_s1 % self.primorial_base) <= self.invariant_limit))
+        
+        q_s2 = (local_x - (cx + 50))**2 + (local_y - (cy + 30))**2 + (local_z - 100)**2
+        mask_s2 = (q_s2 < 350) & (np.isin(q_s2 % self.control_base, allowed_24_list) | ((q_s2 % self.primorial_base) <= self.invariant_limit))
+        
+        sz_n1, sy_n1, sx_n1 = np.where(mask_s1)
+        sz_n2, sy_n2, sx_n2 = np.where(mask_s2)
+
         for frame_idx in range(self.frames_limit):
             frame_start_time = time.perf_counter()
             
@@ -165,22 +176,24 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: VEKTORISIERTES 144-ACHSEN CRYSTALLINE RAYCASTING !!!
+            # !!! TARGET ZONE: HARDWARE-BROADCAST SPEZIFIKATION (ISOTROPIE) !!!
             # ==================================================================
             z_flight_offset = (frame_idx * 1) % self.depth
             
             for axis in crystal_axes:
-                ax, ay, az = axis, axis, axis
+                # Extrahiere die skalaren Richtungs-Komponenten des 144-seitigen Kristalls
+                # Das verhindert den multidimensionalen Shape-Konflikt (3,) vs (128,) vollständig
+                ax_x = int(axis[0])
+                ax_y = int(axis[1])
+                ax_z = int(axis[2])
                 
-                # Berechne alle Gitterpfade einer Achse gleichzeitig als Vektorfeld
-                z_g = (cz + (az * steps) // 12 - z_flight_offset) % self.depth
-                y_g = (cy + (ay * steps) // 12) % self.height
-                x_g = (cx + (ax * steps) // 12) % self.width
+                # Dezentrale, lineare Strahlberechnung im Raum
+                z_g = (cz + (ax_z * steps) // 12 - z_flight_offset) % self.depth
+                y_g = (cy + (ax_y * steps) // 12) % self.height
+                x_g = (cx + (ax_x * steps) // 12) % self.width
                 
                 # Extrahiere die 1-Byte Variablen der Voxelkette auf einmal
                 planck_vars = self.clock_engine.voxels[z_g, y_g, x_g]
-                
-                # Maskierungsfilter: Nur aktive Knoten verarbeiten
                 active_mask = planck_vars > 0
                 
                 if np.any(active_mask):
@@ -189,36 +202,50 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # Takt-Resonanz-Check auf Matrixebene
                     takt_check = (raw_x * raw_y + raw_z + planck_vars[active_mask]) % self.control_base
                     valid_points = np.isin(takt_check, allowed_24_list)
                     
                     if np.any(valid_points):
-                        final_z = raw_z[valid_points]
-                        final_x = raw_x[valid_points]
-                        final_y = raw_y[valid_points]
+                        f_z = raw_z[valid_points]
+                        f_x = raw_x[valid_points]
+                        f_y = raw_y[valid_points]
                         
-                        denominator = ((final_z * 1000) // 1414) + 156
-                        
-                        p_xl = ((final_x * 8 - 12) * 1000) // denominator
-                        p_xr = ((final_x * 8 + 12) * 1000) // denominator
-                        p_y  = ((final_y * 8) * 1000) // denominator
+                        denom = ((f_z * 1000) // 1414) + 156
+                        p_xl = ((f_x * 8 - 12) * 1000) // denom
+                        p_xr = ((f_x * 8 + 12) * 1000) // denom
+                        p_y  = ((f_y * 8) * 1000) // denom
                         
                         out_x_l = (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
-                        out_y   = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
+                        out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Dünnes Re-Sieving für den Äther-Raum
-                        self.stereo_engine.left_eye_buffer[out_y, out_x_l] = 1
-                        self.stereo_engine.right_eye_buffer[out_y, out_x_r] = 1
+                        self.stereo_engine.left_eye_buffer[out_y_s, out_x_l] = 1
+                        self.stereo_engine.right_eye_buffer[out_y_s, out_x_r] = 1
             # ==================================================================
 
-            # EINSTANZEN BEIDER RESONANZKÖRPER IN DAS GEMEINSAME SIGHTFELD
-            self.stereo_engine.left_eye_buffer[sphere_l1] = 1
-            self.stereo_engine.right_eye_buffer[sphere_r1] = 1
-            self.stereo_engine.left_eye_buffer[sphere_l2] = 1
-            self.stereo_engine.right_eye_buffer[sphere_r2] = 1
-            
+            # EINSTANZEN BEIDER RESONANZKÖRPER MIT ABSOLUTER TIEFENKONVERGENZ (FLUG-PARALLAXE)
+            if len(sx_n1) > 0:
+                raw_sz1 = (sz_n1 - z_flight_offset)
+                raw_sz1[raw_sz1 <= 0] += self.depth
+                raw_sz1 = np.clip(raw_sz1, 1, self.depth)
+                denom_1 = ((raw_sz1 * 1000) // 1414) + 156
+                p_xl1 = (((sx_n1 - cx) * 8 - 12) * 1000) // denom_1
+                p_xr1 = (((sx_n1 - cx) * 8 + 12) * 1000) // denom_1
+                p_y1  = (((sy_n1 - cy) * 8) * 1000) // denom_1
+                self.stereo_engine.left_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                self.stereo_engine.right_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+
+            if len(sx_n2) > 0:
+                raw_sz2 = (sz_n2 - z_flight_offset)
+                raw_sz2[raw_sz2 <= 0] += self.depth
+                raw_sz2 = np.clip(raw_sz2, 1, self.depth)
+                denom_2 = ((raw_sz2 * 1000) // 1414) + 156
+                p_xl2 = (((sx_n2 - cx) * 8 - 12) * 1000) // denom_2
+                p_xr2 = (((sx_n2 - cx) * 8 + 12) * 1000) // denom_2
+                p_y2  = (((sy_n2 - cy) * 8) * 1000) // denom_2
+                self.stereo_engine.left_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                self.stereo_engine.right_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+
             self.clock_engine.evolve_clock_one_takt()
             
             bw_frame = self.stereo_engine.left_eye_buffer * 255
