@@ -235,4 +235,4 @@ if __name__ == "__main__":
     status = pipeline.compile_lossless_output_video()
     
     print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
-    print(" -> STATUS: Zero-Float固定 Cinematic Video Suite Successfully Audited.")
+    print(" -> STATUS: Zero-Float Cinematic Video Suite Successfully Audited.")
