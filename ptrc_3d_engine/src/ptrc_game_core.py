@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: 4-Variable Whole-Number Projections (\mathbb{Z}) replacing XYZ.
-Optimized: Decoupled 137-Takt Feynman load sieve executing local lookup mappings.
+Operational Domain: Discrete 1-Byte Planck-Pixel Arrays without geometric length.
+Optimized: Macro-scale light spectrum resonance collapse modulo 137.
 """
 
 import os
@@ -79,13 +79,13 @@ class PTRC3DAnimationPipeline:
         self.primorial_base = 210
         self.control_base = 24
         self.invariant_limit = 156
-        self.feynman_limit = 137  # Neue Modulo-Errechnungsgrenze für das Last-Sieb
+        self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
         self.SCALE = 1000
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
         
-        # Generiere die statische Modulo-137-Landkarte im Speicher
+        # Generiere die statische Modulo-137-Spektrallandkarte im Speicher
         self.deterministic_sieve_array = np.zeros(self.feynman_limit, dtype=np.uint8)
         self._generate_feynman_sieve_matrix()
 
@@ -125,7 +125,7 @@ class PTRC3DAnimationPipeline:
         self.accumulated_pixels_written = 0
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        allowed_24_list = [1, 5, 7, 11, 12, 13, 17, 19, 23]
+        allowed_24_list =
         
         # Lade die Kristallachsen der Kern-Engine
         crystal_axes = self.clock_engine.crystal_axes
@@ -159,6 +159,7 @@ class PTRC3DAnimationPipeline:
         dx_r2 = grid_x - (screen_cx + 24 + offset_x)
         dy_s2 = grid_y - (screen_cy + offset_y)
         quad_l2 = (dx_l2 * dx_l2) + (dy_s2 * dy_s2)
+        quad_r2 = (dx_r2 * grid_x.shape[1] // grid_x.shape[1]) + (dy_s2 * dy_s2) # Neutral scaled
         quad_r2 = (dx_r2 * dx_r2) + (dy_s2 * dy_s2)
         
         mask_takt_l2 = np.isin(quad_l2 % self.control_base, allowed_24_list)
@@ -170,7 +171,8 @@ class PTRC3DAnimationPipeline:
         sphere_r2 = (quad_r2 < 3500) & (mask_takt_r2 | mask_prim_r2)
         # ==================================================================
 
-        steps = np.arange(-64, 64, dtype=np.int32)
+        # Skalierungs-Schritte für das Aufblasen der Planck-Pixel in das menschliche Lichtspektrum
+        steps = np.arange(-32, 32, dtype=np.int32)
 
         # Vorab-Berechnung der statischen 3D-Kugelnetze im Raum (Ur-DNA Manifestation)
         local_z, local_y, local_x = np.indices((self.depth, self.height, self.width))
@@ -189,25 +191,20 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # ==================================================================
-            # !!! TARGET ZONE: DEZENTRALES MODULO-137 LAST- UND ANSTEUER-SIEB !!!
-            # ==================================================================
+            # 137-Takt-Schaltung und Adress-Weitung
             z_flight_offset = (frame_idx * self.clock_engine.REFRESH_TAKTE) % self.depth
-            
-            # Dynamische, simulierte Umgebungslast (Rechenauslastung des Pixels)
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             for axis_idx, axis in enumerate(crystal_axes):
-                # 1. Variable A (Achsen-Kanal) & Variable G (Gear-Frequenz)
-                ax_x = int(axis[0])
-                ax_y = int(axis[1])
-                ax_z = int(axis[2])
+                ax_x = int(axis)
+                ax_y = int(axis)
+                ax_z = int(axis)
                 
-                z_g = (cz + ax_z * steps - z_flight_offset) % self.depth
-                y_g = (cy + ax_y * steps) % self.height
-                x_g = (cx + ax_x * steps) % self.width
+                # Aufblasen der Einzelschritte -> Killt die Linienbündelung vollständig
+                z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
+                y_g = (cy + ax_y * steps * 4) % self.height
+                x_g = (cx + ax_x * steps * 4) % self.width
                 
-                # 2. Auslesen der Pixel-Eigenschaften aus dem 1-Byte Speicherfeld
                 pixel_properties = self.clock_engine.voxels[z_g, y_g, x_g]
                 active_mask = pixel_properties > 0
                 
@@ -217,11 +214,7 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # DEZENTRALE 4-VARIABLE-STEUERUNGS-FORMEL (Ersetzt XYZ-Koordinaten!)
-                    # Koppelt Achse, Gear, Takt-Phase, Pixel-Eigenschaft und Rechenlast modulo 137
                     feynman_addresses = (axis_idx + raw_x * raw_y + pixel_properties[active_mask] + local_environmental_load) % self.feynman_limit
-                    
-                    # BLITZSCHNELLER LANDKARTEN-LOOKUP
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
@@ -238,33 +231,34 @@ class PTRC3DAnimationPipeline:
                         out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Last-gesteuertes Re-Sieving für den Äther-Raum
-                        self.stereo_engine.left_eye_buffer[out_y_s[::24], out_x_l[::24]] = 1
-                        self.stereo_engine.right_eye_buffer[out_y_s[::24], out_x_r[::24]] = 1
-            # ==================================================================
+                        # Diskrete, unverbundene Planck-Pixelpunkte im Äther
+                        self.stereo_engine.left_eye_buffer[out_y_s[::2], out_x_l[::2]] = 1
+                        self.stereo_engine.right_eye_buffer[out_y_s[::2], out_x_r[::2]] = 1
 
-            # EINSTANZEN BEIDER RESONANZKÖRPER MIT ABSOLUTER TIEFENKONVERGENZ (FLUG-PARALLAXE)
+            # Inversions-Stanzung mit maximaler Resonanzdichte (Leucht-Kollaps)
             if len(sx_n1) > 0:
-                raw_sz1 = (sz_n1 - z_flight_offset)
-                raw_sz1[raw_sz1 <= 0] += self.depth
-                raw_sz1 = np.clip(raw_sz1, 1, self.depth)
-                denom_1 = ((raw_sz1 * 1000) // 1414) + 156
-                p_xl1 = (((sx_n1 - cx) * 8 - 12) * 1000) // denom_1
-                p_xr1 = (((sx_n1 - cx) * 8 + 12) * 1000) // denom_1
-                p_y1  = (((sy_n1 - cy) * 8) * 1000) // denom_1
-                self.stereo_engine.left_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
-                self.stereo_engine.right_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                raw_sz1 = (sz_n1 - z_flight_offset) % self.depth
+                raw_sz1[raw_sz1 <= 0] = 1
+                s1_valid = (sx_n1 * sy_n1 + raw_sz1) % 2 == 0
+                if np.any(s1_valid):
+                    denom_1 = ((raw_sz1[s1_valid] * 1000) // 1414) + 156
+                    p_xl1 = (((sx_n1[s1_valid] - cx) * 8 - 12) * 1000) // denom_1
+                    p_xr1 = (((sx_n1[s1_valid] - cx) * 8 + 12) * 1000) // denom_1
+                    p_y1  = (((sy_n1[s1_valid] - cy) * 8) * 1000) // denom_1
+                    self.stereo_engine.left_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                    self.stereo_engine.right_eye_buffer[(p_y1 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr1 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
 
             if len(sx_n2) > 0:
-                raw_sz2 = (sz_n2 - z_flight_offset)
-                raw_sz2[raw_sz2 <= 0] += self.depth
-                raw_sz2 = np.clip(raw_sz2, 1, self.depth)
-                denom_2 = ((raw_sz2 * 1000) // 1414) + 156
-                p_xl2 = (((sx_n2 - cx) * 8 - 12) * 1000) // denom_2
-                p_xr2 = (((sx_n2 - cx) * 8 + 12) * 1000) // denom_2
-                p_y2  = (((sy_n2 - cy) * 8) * 1000) // denom_2
-                self.stereo_engine.left_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
-                self.stereo_engine.right_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                raw_sz2 = (sz_n2 - z_flight_offset) % self.depth
+                raw_sz2[raw_sz2 <= 0] = 1
+                s2_valid = (sx_n2 * sy_n2 + raw_sz2) % 2 == 0
+                if np.any(s2_valid):
+                    denom_2 = ((raw_sz2[s2_valid] * 1000) // 1414) + 156
+                    p_xl2 = (((sx_n2[s2_valid] - cx) * 8 - 12) * 1000) // denom_2
+                    p_xr2 = (((sx_n2[s2_valid] - cx) * 8 + 12) * 1000) // denom_2
+                    p_y2  = (((sy_n2[s2_valid] - cy) * 8) * 1000) // denom_2
+                    self.stereo_engine.left_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xl2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
+                    self.stereo_engine.right_eye_buffer[(p_y2 + self.stereo_engine.height // 2) % self.stereo_engine.height, (p_xr2 + self.stereo_engine.width // 2) % self.stereo_engine.width] = 1
 
             self.clock_engine.evolve_clock_one_takt()
             
@@ -320,7 +314,6 @@ class PTRC3DAnimationPipeline:
             except OSError:
                 pass
             
-            # Telemetrie-Zusammenfassung ausgeben
             cpu_name = self._get_cpu_name()
             gen_duration = self.total_generation_end - self.total_generation_start
             comp_duration = ffmpeg_end - ffmpeg_start
