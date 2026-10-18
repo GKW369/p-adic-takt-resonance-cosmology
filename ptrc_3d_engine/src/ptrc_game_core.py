@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: 144-Facet Crystalline Pixel Topologies without cubic boundaries.
-Optimized: Front-face occlusion sieve projecting 12-axis contact-resonance points.
+Optimized: Takt-synchronized pixel-slide engine executing higher primorial sifting.
 """
 
 import os
@@ -79,8 +79,11 @@ class PTRC3DAnimationPipeline:
         self.primorial_base = 210
         self.control_base = 24
         self.invariant_limit = 156
-        self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
+        self.feynman_limit = 137  # 137-Takt Grenze für das Spektral-Lichtlimit
         self.SCALE = 1000
+        
+        # HÖHERER PRIMZAHLENRING (Skalierungsebene x11 für erweiterte Simulationstiefe)
+        self.extended_prime_ring = self.primorial_base * 11  # 210 * 11 = 2310
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
@@ -133,11 +136,10 @@ class PTRC3DAnimationPipeline:
         steps = np.arange(-48, 48, dtype=np.int32)
         
         # Statische 12-Achsen Berührungs-Offsets eines 144-seitigen dicht gepackten Kristalls
-        # Ersetzt die eckigen, kubischen Minecraft-Kanten vollständig!
         crystal_contact_offsets = np.array([
-            [-1, -1,  0], [ 1,  1,  0], [-1,  1,  0], [ 1, -1,  0],
-            [-1,  0, -1], [ 1,  0,  1], [-1,  0,  1], [ 1,  0, -1],
-            [ 0, -1, -1], [ 0,  1,  1], [ 0, -1,  1], [ 0,  1, -1]
+            [-1, -1,  0], [-1,  1,  0], [ 1, -1,  0],
+            [-1,  0, -1], [-1,  0,  1], [ 1,  0, -1],
+            [ 0, -1, -1], [ 0, -1,  1], [ 0,  1, -1]
         ], dtype=np.int32)
 
         for frame_idx in range(self.frames_limit):
@@ -147,19 +149,22 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: HOLOGRAFISCHES 144-FACETTEN-SPIEGELSIEB !!!
+            # !!! TARGET ZONE: PLANCK-PIXEL-RUTSCH-ENGINE (1 PIXEL / TAKT) !!!
             # ==================================================================
-            z_flight_offset = (frame_idx * self.clock_engine.REFRESH_TAKTE) % self.depth
+            # An jedem Universumstakt rutscht das Datenpaket genau 1 Pixel weiter.
+            # Das Rendersieb bricht diese Flut ganzzahlig auf unsere 24 Frames herunter.
+            z_flight_offset = (frame_idx * 1) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             for axis_idx, axis in enumerate(crystal_axes):
-                ax_x = int(axis) if hasattr(axis, '__len__') else int(axis)
-                ax_y = int(axis) if hasattr(axis, '__len__') else int(axis)
-                ax_z = int(axis) if hasattr(axis, '__len__') else int(axis)
+                ax_x = int(axis[0]) if hasattr(axis, '__len__') else int(axis)
+                ax_y = int(axis[1]) if hasattr(axis, '__len__') else int(axis)
+                ax_z = int(axis[2]) if hasattr(axis, '__len__') else int(axis)
                 
-                z_g = (cz + ax_z * steps * 2 - z_flight_offset) % self.depth
-                y_g = (cy + ax_y * steps * 2) % self.height
-                x_g = (cx + ax_x * steps * 2) % self.width
+                # Makroskopische Spektralweitung (steps * 4) zur Augensynchronisation
+                z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
+                y_g = (cy + ax_y * steps * 4) % self.height
+                x_g = (cx + ax_x * steps * 4) % self.width
                 
                 pixel_properties = self.clock_engine.voxels[z_g, y_g, x_g]
                 active_mask = pixel_properties > 0
@@ -170,11 +175,14 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    feynman_addresses = (axis_idx + raw_x * raw_y + pixel_properties[active_mask] + local_environmental_load) % self.feynman_limit
+                    # Höherer Primzahlenring (modulo 2310) verknüpft mit dem 137er Licht-Sieb
+                    extended_address = (axis_idx + raw_x * raw_y + pixel_properties[active_mask]) % self.extended_prime_ring
+                    feynman_addresses = (extended_address + local_environmental_load) % self.feynman_limit
+                    
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
-                        # Extrahiere die Rauminformation des Kristalls exakt von der Vorderseite aus gesehen
+                        # Holografische Vorderseiten-Ermittlung
                         first_hit_idx = np.argmax(valid_nodes)
                         
                         f_z = raw_z[valid_nodes][first_hit_idx:first_hit_idx+1]
@@ -194,10 +202,9 @@ class PTRC3DAnimationPipeline:
                         dense_cluster = (current_voxel_values == 1) | (current_voxel_values == 2)
                         
                         if np.any(dense_cluster):
-                            # Projiziere die 144-seitige Pixelform über die 12 primären Berührungsflächen
-                            # Vernichtet jede eckige Boxenform im Keim!
+                            # Projiziere die 144-seitige Form entlang der 12 Kontaktkupplungen
                             for offset in crystal_contact_offsets:
-                                off_x, off_y = offset, offset
+                                off_x, off_y = offset[0], offset[1]
                                 self.stereo_engine.left_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_l[dense_cluster] + off_x) % self.stereo_engine.width] = 1
                                 self.stereo_engine.right_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_r[dense_cluster] + off_x) % self.stereo_engine.width] = 1
             # ==================================================================
