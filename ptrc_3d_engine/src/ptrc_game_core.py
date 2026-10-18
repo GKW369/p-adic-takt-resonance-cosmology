@@ -93,10 +93,11 @@ class PTRC3DAnimationPipeline:
                 command = "cat /proc/cpuinfo | grep 'model name' | uniq"
                 cpu_info = subprocess.check_output(command, shell=True).decode().strip()
                 if cpu_info:
-                    return cpu_info.split(":").strip()
+                    return cpu_info.split(":")[-1].strip()
         except Exception:
             pass
         return "Acer Desktop CPU"
+
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed 6-second flight through the spatial crystal sieve.
@@ -207,7 +208,7 @@ class PTRC3DAnimationPipeline:
                         out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y   = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Dünnes Re-Sieving: Nur ausgewählte Strahlpunkte für den Raum-Äther spannen
+                        # Dünnes Re-Sieving für den Äther-Raum
                         self.stereo_engine.left_eye_buffer[out_y, out_x_l] = 1
                         self.stereo_engine.right_eye_buffer[out_y, out_x_r] = 1
             # ==================================================================
@@ -298,4 +299,3 @@ if __name__ == "__main__":
     
     print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status: {status}")
     print(" -> STATUS: Zero-Float Cinematic Video Suite Successfully Audited.")
-
