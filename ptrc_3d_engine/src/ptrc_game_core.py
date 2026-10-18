@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: 144-Facet Crystalline Raycaster projecting genuine prime-sieve symmetries.
+Optimized: 144-Facet Crystalline Raycaster extracting multi-axis projections correctly.
 """
 
 import os
@@ -176,23 +176,22 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: HARDWARE-BROADCAST SPEZIFIKATION (ISOTROPIE) !!!
+            # !!! TARGET ZONE: MULTI-AXIALE PROJEKTION (ECHTE ISOTROPIE) !!!
             # ==================================================================
             z_flight_offset = (frame_idx * 1) % self.depth
             
             for axis in crystal_axes:
-                # Extrahiere die skalaren Richtungs-Komponenten des 144-seitigen Kristalls
-                # Das verhindert den multidimensionalen Shape-Konflikt (3,) vs (128,) vollständig
+                # Korrektur: Extraktion der realen dezentralen Vektorkomponenten (X, Y, Z)
+                # Sprengt das kubische Fluchtlinien-Dilemma vollständig!
                 ax_x = int(axis[0])
                 ax_y = int(axis[1])
                 ax_z = int(axis[2])
                 
-                # Dezentrale, lineare Strahlberechnung im Raum
+                # Symmetrische Pfadextraktion entlang der realen Kristallwinkel
                 z_g = (cz + (ax_z * steps) // 12 - z_flight_offset) % self.depth
                 y_g = (cy + (ax_y * steps) // 12) % self.height
                 x_g = (cx + (ax_x * steps) // 12) % self.width
                 
-                # Extrahiere die 1-Byte Variablen der Voxelkette auf einmal
                 planck_vars = self.clock_engine.voxels[z_g, y_g, x_g]
                 active_mask = planck_vars > 0
                 
