@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: Discrete 1-Byte Planck-Pixel Arrays without geometric length.
-Optimized: 137-Takt Feynman Vacuum Sieve reading static prime lookup maps.
+Operational Domain: 1-Byte Crystalline Material Invariants (\mathbb{Z}) replacing XYZ.
+Optimized: Pure On-Demand 137-Takt Feynman Vacuum Sieve mapping whole-crystal variables.
 """
 
 import os
@@ -125,13 +125,12 @@ class PTRC3DAnimationPipeline:
         self.accumulated_pixels_written = 0
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
-        allowed_24_list = [1, 5, 7, 11, 13, 17, 19, 23]
         
         # Lade die Kristallachsen der Kern-Engine
         crystal_axes = self.clock_engine.crystal_axes
         
-        # Skalierungs-Schritte für das Weiten der Planck-Pixel in das menschliche Lichtspektrum
-        steps = np.arange(-32, 32, dtype=np.int32)
+        # Weitungsschritte für die makroskopische Vergrößerung der Planck-Pixel ins Sichtfeld
+        steps = np.arange(-48, 48, dtype=np.int32)
 
         for frame_idx in range(self.frames_limit):
             frame_start_time = time.perf_counter()
@@ -140,24 +139,23 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: FLIESSKOMMAFREIER DEZENTRALER LANDKARTEN-LOOKUP !!!
+            # !!! TARGET ZONE: VOLLSTÄNDIGER INTERFERENZ-FELD-KOLLAPS !!!
             # ==================================================================
-            # Der Flug-Vorschub taktet exakt im 137-Takt-Feynman-Rhythmus vorwärts
             z_flight_offset = (frame_idx * self.clock_engine.REFRESH_TAKTE) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             for axis_idx, axis in enumerate(crystal_axes):
-                # Extrahiere die echten Richtungskomponenten (X, Y, Z) der Kristallfacetten
+                # Extrahiere die dezentralen Vektorkomponenten der 144 Achsen
                 ax_x = int(axis[0])
                 ax_y = int(axis[1])
                 ax_z = int(axis[2])
                 
-                # Makroskopisches Weiten der Schritte zur Spektral-Harmonisierung (steps * 4)
-                z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
-                y_g = (cy + ax_y * steps * 4) % self.height
-                x_g = (cx + ax_x * steps * 4) % self.width
+                # Aufblasen der Einzelschritte spaltet die eckigen Röhrenlinien auf
+                z_g = (cz + ax_z * steps * 2 - z_flight_offset) % self.depth
+                y_g = (cy + ax_y * steps * 2) % self.height
+                x_g = (cx + ax_x * steps * 2) % self.width
                 
-                # Direktes Auslesen der 1-Byte Variablen aus dem dezentralen Voxel-Feld
+                # Auslesen der 1-Byte Variablen aus deiner Kern-Uhr
                 pixel_properties = self.clock_engine.voxels[z_g, y_g, x_g]
                 active_mask = pixel_properties > 0
                 
@@ -167,10 +165,10 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # pTRC-Steuerungsgleichung modulo 137 (Ersetzt klassische XYZ-Koordinaten)
+                    # pTRC-Steuerungsgleichung gekoppelt an deine modulo 137 Landkarte
                     feynman_addresses = (axis_idx + raw_x * raw_y + pixel_properties[active_mask] + local_environmental_load) % self.feynman_limit
                     
-                    # Blitzschneller, unbestechlicher Landkarten-Lookup im Sieb
+                    # Blitzschnelles Ablesen im Sieb
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
@@ -178,7 +176,6 @@ class PTRC3DAnimationPipeline:
                         f_x = raw_x[valid_nodes]
                         f_y = raw_y[valid_nodes]
                         
-                        # Fließkommafreie Perspektiv-Division über Ganzzahl-Skalierung (//)
                         denom = ((f_z * 1000) // 1414) + 156
                         p_xl = ((f_x * 8 - 12) * 1000) // denom
                         p_xr = ((f_x * 8 + 12) * 1000) // denom
@@ -188,19 +185,14 @@ class PTRC3DAnimationPipeline:
                         out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Bestimme dichte Cluster (Resonanzkörper) vs. weitmaschigen Äther rein über Modulo-Eigenschaften
-                        dense_cluster = (pixel_properties[active_mask][valid_nodes] == 1) # Lock to core mass node
+                        # Harmonisiert: Sowohl Invarianten (1) als auch Äther (2) erzeugen dichte Moiré-Resonanzen
+                        current_voxel_values = pixel_properties[active_mask][valid_nodes]
+                        dense_cluster = (current_voxel_values == 1) | (current_voxel_values == 2)
                         
                         if np.any(dense_cluster):
-                            # Das hocheffiziente Quanten-Glühen: Maximale Punktdichte am Ort des Register-Updates
+                            # Aufblähen der Planck-Pixel ins menschliche Sichtfeld (Dichte Verteilung)
                             self.stereo_engine.left_eye_buffer[out_y_s[dense_cluster], out_x_l[dense_cluster]] = 1
                             self.stereo_engine.right_eye_buffer[out_y_s[dense_cluster], out_x_r[dense_cluster]] = 1
-                        
-                        # Der weitmaschige, transparente Raum-Äther
-                        thin_ether = ~dense_cluster
-                        if np.any(thin_ether):
-                            self.stereo_engine.left_eye_buffer[out_y_s[thin_ether][::2], out_x_l[thin_ether][::2]] = 1
-                            self.stereo_engine.right_eye_buffer[out_y_s[thin_ether][::2], out_x_r[thin_ether][::2]] = 1
             # ==================================================================
 
             self.clock_engine.evolve_clock_one_takt()
@@ -229,7 +221,7 @@ class PTRC3DAnimationPipeline:
                 break
             counter += 1
             
-        video_filename = os.path.basename(target_video)
+            video_filename = os.path.basename(target_video)
         print(f" -> Starte direkte ffmpeg-Datenabgreifung for '{video_filename}'...")
         
         ffmpeg_start = time.perf_counter()
