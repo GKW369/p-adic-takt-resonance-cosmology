@@ -162,21 +162,22 @@ class PTRC3DGameEngine:
             cv2.imshow(window_name, bw_scene)
 
             key = cv2.waitKey(1) & 0xFF
-            if key == 27:
+            
+            if key == 27:  # ESC-Taste schließt das Spiel
                 print("[ GAME ] Universum ueber ESC sicher geschlossen.")
                 break
             elif key == ord('w') or key == ord('W'):
-                self.pos_z_offset = (self.pos_z_offset + 1) % self.depth
+                self.pos_z_offset = (self.pos_z_offset + 1) % self.depth  # Vorwärts
             elif key == ord('s') or key == ord('S'):
-                self.pos_z_offset = (self.pos_z_offset - 1) % self.depth
+                self.pos_z_offset = (self.pos_z_offset - 1) % self.depth  # Rückwärts
             elif key == ord('a') or key == ord('A'):
-                self.pos_x_offset = (self.pos_x_offset - 1) % self.width
+                self.pos_x_offset -= 2  # Symmetrisch: 2 Einheiten nach links
             elif key == ord('d') or key == ord('D'):
-                self.pos_x_offset = (self.pos_x_offset + 1) % self.width
+                self.pos_x_offset += 2  # Symmetrisch: 2 Einheiten nach rechts
             elif key == ord('q') or key == ord('Q'):
-                self.pos_y_offset = (self.pos_y_offset - 1) % self.height
+                self.pos_y_offset -= 2  # Nach oben steuern
             elif key == ord('e') or key == ord('E'):
-                self.pos_y_offset = (self.pos_y_offset + 1) % self.height
+                self.pos_y_offset += 2  # Nach unten steuern
 
         cv2.destroyAllWindows()
 
