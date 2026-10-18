@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: Discrete 1-Byte Crystalline Material Invariants (\mathbb{Z}) replacing XYZ.
-Optimized: 137-Takt Feynman Vacuum Sieve reading whole-crystal material variables.
+Operational Domain: Pure 1D Integer Memory Chains (\mathbb{Z}) replacing XYZ vectors.
+Optimized: Flat whole-number index streaming with 12-axis contact-resonance updates.
 """
 
 import os
@@ -66,7 +66,7 @@ print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchro
 class PTRC3DAnimationPipeline:
     """
     Executes a high-density frame-by-frame rendering loop to write an uncompressed
-    lossless mp4 flight video directly from the core 4-variable lookup arrays.
+    lossless mp4 flight video directly from flat 1D integer memory arrays.
     """
     def __init__(self, total_frames=144):
         self.frames_limit = total_frames
@@ -117,7 +117,7 @@ class PTRC3DAnimationPipeline:
 
     def generate_deterministic_video_sequence(self):
         """
-        Renders a perfectly timed flight sequence decoding the 4 core variables.
+        Renders a perfectly timed flight sequence decoding flat 1D integer streams.
         Maps the 144-facet polyhedral pixel structure correctly into the stereo buffer.
         """
         cpu_name = self._get_cpu_name()
@@ -135,11 +135,12 @@ class PTRC3DAnimationPipeline:
         # Weitungsschritte für die makroskopische Vergrößerung der Planck-Pixel ins Sichtfeld
         steps = np.arange(-48, 48, dtype=np.int32)
         
-        # Statische 12-Achsen Berührungs-Offsets eines 144-seitigen dicht gepackten Kristalls
+        # Statische Ganzzahl-Offsets für die 12 primären Berührungsflächen des Raumkristalls
+        # Bildet die dichten, formierten Pixel-Körper unkorrumpiert ab!
         crystal_contact_offsets = np.array([
-            [-1, -1,  0], [-1,  1,  0], [ 1, -1,  0],
-            [-1,  0, -1], [-1,  0,  1], [ 1,  0, -1],
-            [ 0, -1, -1], [ 0, -1,  1], [ 0,  1, -1]
+            [-1, -1], [-1,  1], [ 1, -1], [ 1,  1],
+            [-1,  0], [ 1,  0], [ 0, -1], [ 0,  1],
+            [-2,  0], [ 2,  0], [ 0, -2], [ 0,  2]
         ], dtype=np.int32)
 
         for frame_idx in range(self.frames_limit):
@@ -149,24 +150,32 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: MULTI-AXIALES KRISTALL-SIEB (SPALTEN-REPARATUR) !!!
+            # !!! TARGET ZONE: REIN GANZZAHLIGER EINDIMENSIONALER LOOKUP !!!
             # ==================================================================
+            # Eliminierte Raumachsen: Wir operieren direkt auf flachen Zahlenbändern!
             z_flight_offset = (frame_idx * 1) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
+            # Verflache das 3D-Voxelgitter in eine ununterbrochene 1D-Ganzzahlkette (RAM-Flucht)
+            flat_voxels = self.clock_engine.voxels.ravel()
+            
             for axis_idx, axis in enumerate(crystal_axes):
-                # ABSOLUTE KORREKTUR: Explizite Spalten-Indizierung des NumPy-Vektors!
-                # Verhindert den Skalar-Kollaps und entfaltet die raumfüllende Symmetrie
-                ax_x = int(axis[0])
-                ax_y = int(axis[1])
-                ax_z = int(axis[2])
+                # Sicheres Extrahieren der skalaren Richtungskomponenten per Index-Abgriff
+                axis_array = np.atleast_1d(axis)
+                ax_x = int(axis_array[0]) if len(axis_array) > 0 else int(axis)
+                ax_y = int(axis_array[1]) if len(axis_array) > 1 else int(axis)
+                ax_z = int(axis_array[2]) if len(axis_array) > 2 else int(axis)
                 
-                # Makroskopische Spektralweitung (steps * 4) zur Augensynchronisation
+                # Lineare Ganzzahl-Schritte modulo Dimensionen
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
                 y_g = (cy + ax_y * steps * 4) % self.height
                 x_g = (cx + ax_x * steps * 4) % self.width
                 
-                pixel_properties = self.clock_engine.voxels[z_g, y_g, x_g]
+                # Der unbestechliche 1D-Speicher-Index (Verflachtes Koordinaten-Sieve)
+                flat_memory_addresses = (z_g * self.height * self.width) + (y_g * self.width) + x_g
+                
+                # Direktes, blitzschnelles Ablesen der Materialinvarianten aus dem 1D-Band
+                pixel_properties = flat_voxels[flat_memory_addresses]
                 active_mask = pixel_properties > 0
                 
                 if np.any(active_mask):
@@ -175,14 +184,14 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # Höherer Primzahlenring (modulo 2310) verknüpft mit dem 137er Licht-Sieb
+                    # pTRC-Steuerungs-Resonanz modulo 137
                     extended_address = (axis_idx + raw_x * raw_y + pixel_properties[active_mask]) % self.extended_prime_ring
                     feynman_addresses = (extended_address + local_environmental_load) % self.feynman_limit
                     
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
-                        # Holografische Vorderseiten-Ermittlung (Okklusions-Abtastung)
+                        # Holografischer Vorderseiten-Kollaps (Okklusions-Abtastung)
                         first_hit_idx = np.argmax(valid_nodes)
                         
                         f_z = raw_z[valid_nodes][first_hit_idx:first_hit_idx+1]
@@ -202,9 +211,10 @@ class PTRC3DAnimationPipeline:
                         dense_cluster = (current_voxel_values == 1) | (current_voxel_values == 2)
                         
                         if np.any(dense_cluster):
-                            # Projiziere die 144-seitige Form entlang der 12 Kontaktkupplungen
+                            # Projiziere die 144-seitige Form entlang der echten X/Y-Rhombusflächen
                             for offset in crystal_contact_offsets:
-                                off_x, off_y = offset[0], offset[1]
+                                off_x = int(offset[0])
+                                off_y = int(offset[1])
                                 self.stereo_engine.left_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_l[dense_cluster] + off_x) % self.stereo_engine.width] = 1
                                 self.stereo_engine.right_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_r[dense_cluster] + off_x) % self.stereo_engine.width] = 1
             # ==================================================================
