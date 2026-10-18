@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Cinematic 3D Whole-Number Projections (\mathbb{Z}) into the Primorial Sieve.
-Optimized: 144-Facet Crystalline Raycaster extracting multi-axis projections correctly.
+Optimized: Deterministic Look-Up Architecture mapping the 144-facet crystal via static prime maps.
 """
 
 import os
@@ -79,15 +79,28 @@ class PTRC3DAnimationPipeline:
         self.primorial_base = 210
         self.control_base = 24
         self.invariant_limit = 156
+        self.SCALE = 1000
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
         
+        # Generiere die statische 210-Primzahlen-Landkarte direkt im Speicher
+        self.deterministic_sieve_array = np.zeros(self.primorial_base, dtype=np.uint8)
+        self._generate_totient_sieve_matrix()
+
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
 
+    def _generate_totient_sieve_matrix(self):
+        """Populates the static 1-byte lookup-map using Euclidean GCD reduction."""
+        for node in range(self.primorial_base):
+            val_a, val_b = node, self.primorial_base
+            while val_b > 0:
+                val_a, val_b = val_b, val_a % val_b
+            if val_a == 1:
+                self.deterministic_sieve_array[node] = 1
+
     def _get_cpu_name(self):
-        """Detects the exact hardware processor name for the telemetry overview."""
         try:
             if platform.system() == "Linux":
                 command = "cat /proc/cpuinfo | grep 'model name' | uniq"
@@ -101,7 +114,7 @@ class PTRC3DAnimationPipeline:
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed 6-second flight through the spatial crystal sieve.
-        Projects the 1-byte data directly along the 144 crystalline symmetry vectors.
+        Utilizes the static prime map lookup to eliminate coordinate calculations.
         """
         cpu_name = self._get_cpu_name()
         print(f"[ OFFLINE PIPELINE ] Hardware-Erkennung: {cpu_name}")
@@ -176,21 +189,20 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: MULTI-AXIALE PROJEKTION (ECHTE ISOTROPIE) !!!
+            # !!! TARGET ZONE: DETERMINISTISCHER LANDKARTEN-LOOKUP (pTRC) !!!
             # ==================================================================
             z_flight_offset = (frame_idx * 1) % self.depth
             
             for axis in crystal_axes:
-                # Korrektur: Extraktion der realen dezentralen Vektorkomponenten (X, Y, Z)
-                # Sprengt das kubische Fluchtlinien-Dilemma vollständig!
+                # Nutze die dezentralen Vektorkomponenten direkt als Richtungs-Skalare
                 ax_x = int(axis[0])
                 ax_y = int(axis[1])
                 ax_z = int(axis[2])
                 
-                # Symmetrische Pfadextraktion entlang der realen Kristallwinkel
-                z_g = (cz + (ax_z * steps) // 12 - z_flight_offset) % self.depth
-                y_g = (cy + (ax_y * steps) // 12) % self.height
-                x_g = (cx + (ax_x * steps) // 12) % self.width
+                # Reine Ganzzahlpfade ohne Fließkommadilemma
+                z_g = (cz + ax_z * steps - z_flight_offset) % self.depth
+                y_g = (cy + ax_y * steps) % self.height
+                x_g = (cx + ax_x * steps) % self.width
                 
                 planck_vars = self.clock_engine.voxels[z_g, y_g, x_g]
                 active_mask = planck_vars > 0
@@ -201,25 +213,37 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    takt_check = (raw_x * raw_y + raw_z + planck_vars[active_mask]) % self.control_base
-                    valid_points = np.isin(takt_check, allowed_24_list)
+                    # Die Modulo-Adresse fungiert als exakter Index auf unserer Landkarte
+                    clamped_addresses = (raw_x * raw_y + raw_z + planck_vars[active_mask]) % self.primorial_base
                     
-                    if np.any(valid_points):
-                        f_z = raw_z[valid_points]
-                        f_x = raw_x[valid_points]
-                        f_y = raw_y[valid_points]
+                    # BLITZSCHNELLER LANDKARTEN-LOOKUP (Keine Trigonometrie, reines Ablesen!)
+                    valid_nodes = self.deterministic_sieve_array[clamped_addresses] == 1
+                    
+                    if np.any(valid_nodes):
+                        f_z = raw_z[valid_nodes]
+                        f_x = raw_x[valid_nodes]
+                        f_y = raw_y[valid_nodes]
                         
-                        denom = ((f_z * 1000) // 1414) + 156
-                        p_xl = ((f_x * 8 - 12) * 1000) // denom
-                        p_xr = ((f_x * 8 + 12) * 1000) // denom
-                        p_y  = ((f_y * 8) * 1000) // denom
+                        # Absicherung des Kalibrierungs-Taktraums modulo 24
+                        control_check = ((f_x * f_y + f_z) * self.SCALE) // self.control_base
+                        valid_points = (control_check % 2 == 0)
                         
-                        out_x_l = (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width
-                        out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
-                        out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
-                        
-                        self.stereo_engine.left_eye_buffer[out_y_s, out_x_l] = 1
-                        self.stereo_engine.right_eye_buffer[out_y_s, out_x_r] = 1
+                        if np.any(valid_points):
+                            final_z = f_z[valid_points]
+                            final_x = f_x[valid_points]
+                            final_y = f_y[valid_points]
+                            
+                            denom = ((final_z * 1000) // 1414) + 156
+                            p_xl = ((final_x * 8 - 12) * 1000) // denom
+                            p_xr = ((final_x * 8 + 12) * 1000) // denom
+                            p_y  = ((final_y * 8) * 1000) // denom
+                            
+                            out_x_l = (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width
+                            out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
+                            out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
+                            
+                            self.stereo_engine.left_eye_buffer[out_y_s, out_x_l] = 1
+                            self.stereo_engine.right_eye_buffer[out_y_s, out_x_r] = 1
             # ==================================================================
 
             # EINSTANZEN BEIDER RESONANZKÖRPER MIT ABSOLUTER TIEFENKONVERGENZ (FLUG-PARALLAXE)
