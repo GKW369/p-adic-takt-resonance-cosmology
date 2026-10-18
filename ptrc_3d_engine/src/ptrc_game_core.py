@@ -65,7 +65,7 @@ print(" -> [ PATH ] Erfolgreich mit der Kern-Engine 'ptrc_clock_core.py' synchro
 class PTRC3DAnimationPipeline:
     """
     Executes a high-density frame-by-frame rendering loop to write an uncompressed
-    lossless mp4 flight video directly from the core 1-byte memory arrays.
+    lossless mp4 flight video directly from the core memory arrays.
     """
     def __init__(self, total_frames=144):
         self.frames_limit = total_frames
@@ -108,7 +108,6 @@ class PTRC3DAnimationPipeline:
         dx_r1 = grid_x - (screen_cx + 24)
         dy_s1 = grid_y - screen_cy
         quad_l1 = (dx_l1 * dx_l1) + (dy_s1 * dy_s1)
-        quad_r1 = (dx_r1 * dx_r1) + (dy_s_1 = dy_s1 if 'dy_s1' in locals() else dy_s1)
         quad_r1 = (dx_r1 * dx_r1) + (dy_s1 * dy_s1)
         
         mask_takt_l1 = np.isin(quad_l1 % self.control_base, allowed_24_list)
