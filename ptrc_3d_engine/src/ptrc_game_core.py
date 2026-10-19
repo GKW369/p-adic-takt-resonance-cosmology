@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: 144-Facet Crystalline Pixel Topologies (\mathbb{Z}) replacing XYZ.
-Optimized: Holographic front-face boundary layer tracking modeling Plichta-81 invariants.
+Operational Domain: Distributed pTRC-Machines Operating In-Memory on 1D Chains (\mathbb{Z}).
+Optimized: Decentralized axial processing blocks executing shared macro-DNA structures.
 """
 
 import os
@@ -79,16 +79,16 @@ class PTRC3DAnimationPipeline:
         self.primorial_base = 210
         self.control_base = 24
         self.invariant_limit = 156
-        self.feynman_limit = 137  # Cosmic fine-structure constant limit
+        self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
         self.SCALE = 1000
         
-        # Plichta-Resonanzring-Skalierung für atomare Cluster
+        # HÖHERER PRIMZAHLENRING (Skalierungsebene x11 für erweiterte Simulationstiefe)
         self.extended_prime_ring = self.primorial_base * 11  # 210 * 11 = 2310
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
         
-        # Generiere die statische Modulo-137-Zahlenlandkarte im Speicher (Lookup statt FPU)
+        # Generiere die statische Modulo-137-Spektrallandkarte im Speicher
         self.deterministic_sieve_array = np.zeros(self.feynman_limit, dtype=np.uint8)
         self._generate_feynman_sieve_matrix()
 
@@ -118,7 +118,7 @@ class PTRC3DAnimationPipeline:
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed flight sequence decoding flat 1D integer streams.
-        Projects two 120-facet crystalline clusters sliding past each other.
+        Executes distributed pTRC-machines mapping the shared topological DNA.
         """
         cpu_name = self._get_cpu_name()
         print(f"[ OFFLINE PIPELINE ] Hardware-Erkennung: {cpu_name}")
@@ -129,14 +129,14 @@ class PTRC3DAnimationPipeline:
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        # Lade die Kristallachsen der Kern-Engine starr als Ganzzahl-Matrix
+        # Lade die 144 Kristallachsen starr als unzerstörbares Ganzzahl-Array
         crystal_axes = np.array(self.clock_engine.crystal_axes, dtype=np.int32)
         
         # Weitungsschritte für die makroskopische Vergrößerung der Planck-Pixel ins Sichtfeld
         steps = np.arange(-48, 48, dtype=np.int32)
         
-        # !!! CORES ZONE: DIE 12 PRIMÄREN FLÄCHEN-OFFSETS DES RAUMKRISTALLS !!!
-        # Zeichnet die reale Rhombendodekaeder-Geometrie auf deine Netzhaut
+        # !!! CORES ZONE: DER GETEILTE GLOBALE BAUPLAN (DNA-MATRIX) !!!
+        # Statische Ganzzahl-Offsets für die 12 primären Berührungsflächen des Raumkristalls
         crystal_contact_offsets = np.array([
             [-2, -1], [-2,  1], [ 2, -1], [ 2,  1],
             [-1, -2], [-1,  2], [ 1, -2], [ 1,  2],
@@ -149,23 +149,23 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.left_eye_buffer.fill(0)
             self.stereo_engine.right_eye_buffer.fill(0)
             
-            # ==================================================================
-            # !!! TARGET ZONE: REIN GANZZAHLIGER FEYNMAN-VOXEL-LOOKUP !!!
-            # ==================================================================
             # 1-Pixel-Rutschtakt pro Zeitschritt der Lichtgeschwindigkeit
             z_flight_offset = (frame_idx * 1) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
-            # Verflache das 3D-Voxelgitter in eine ununterbrochene 1D-Ganzzahlkette (RAM-Flucht)
+            # Direktes Abgreifen des verflachten In-Memory Speicherbands
             flat_voxels = self.clock_engine.voxels.ravel()
             
+            # ==================================================================
+            # !!! TARGET ZONE: DEZENTRALER PTRC-MASCHINEN-SPLIT (REPARIERT) !!!
+            # ==================================================================
             for axis_idx, axis in enumerate(crystal_axes):
-                # Flieẞkommafreie Spalten-Extraktion des multidimensionalen Achsenvektors
-                axis_array = np.atleast_1d(axis)
-                ax_x = int(axis_array[0]) if len(axis_array) > 0 else 1
-                ax_y = int(axis_array[1]) if len(axis_array) > 1 else  1
-                ax_z = int(axis_array[2]) if len(axis_array) > 2 else 1
+                # Sichere Extraktion der dimensionalen Zeilenkomponenten des 2D-Arrays
+                ax_x = int(axis[0]) if axis.ndim > 0 and len(axis) > 0 else 1
+                ax_y = int(axis[1]) if axis.ndim > 0 and len(axis) > 1 else 1
+                ax_z = int(axis[2]) if axis.ndim > 0 and len(axis) > 2 else 1
                 
+                # Lineare Ganzzahl-Schritte modulo Dimensionen
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
                 y_g = (cy + ax_y * steps * 4) % self.height
                 x_g = (cx + ax_x * steps * 4) % self.width
@@ -181,7 +181,7 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # Höherer Primzahlenring (modulo 2310) verknüpft mit dem 137er Licht-Sieb
+                    # Jedes Achsenregister rechnet autark über das Modulo-137 Lastsieb
                     extended_address = (axis_idx + raw_x * raw_y + pixel_properties[active_mask]) % self.extended_prime_ring
                     feynman_addresses = (extended_address + local_environmental_load) % self.feynman_limit
                     
@@ -189,7 +189,6 @@ class PTRC3DAnimationPipeline:
                     
                     if np.any(valid_nodes):
                         # Holografischer Vorderseiten-Kollaps (Okklusions-Abtastung)
-                        # Erkennt starr nur die Grenzschicht der vorderen Objekthaut!
                         first_hit_idx = np.argmax(valid_nodes)
                         
                         f_z = raw_z[valid_nodes][first_hit_idx:first_hit_idx+1]
@@ -204,21 +203,20 @@ class PTRC3DAnimationPipeline:
                         out_x = (p_x_center + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y = (p_y_center + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Auslesen der 1-Byte-Materialinvariante am Vorderseitenknoten
+                        # Auslesen der Plichta-Variablen am getroffenen Grenzregister
                         current_material_value = pixel_properties[active_mask][valid_nodes][first_hit_idx:first_hit_idx+1]
                         
-                        # !!! TARGET ZONE: PLICHTA-BEFÜLLUNG IM 120-KRISTALL-BALL !!!
                         # Unterscheide die stabilen Resonanzen (Wert 56 = Eisen, Wert 137 = Rost)
-                        # und den transparenten Raum-Äther (Wert 2)
+                        # und den dezentralen Äther (Wert 2)
                         is_glowing_structure = (current_material_value == 1) | (current_material_value == 2)
                         
                         if np.any(is_glowing_structure):
-                            # Projiziere die 144-seitige Form entlang der 12 echten Kontakt-Flächen
+                            # Die autonome pTRC-Anzeigemaschine projiziert die 12 Kacheln der DNA
                             for offset in crystal_contact_offsets:
                                 off_x = int(offset[0])
                                 off_y = int(offset[1])
                                 
-                                # Monokulare Spiegel-Kopplung zentriert das Bild vollstaendig
+                                # Absolut zentrierter Monokular-Kollaps heilt den VR-Schieleffekt
                                 self.stereo_engine.left_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
                                 self.stereo_engine.right_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
             # ==================================================================
