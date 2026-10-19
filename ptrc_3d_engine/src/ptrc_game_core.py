@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: Discrete 1-Byte Crystalline Pixel Topologies (\mathbb{Z}).
-Optimized: Pure whole-crystal value state switching replacing continuous projectile motion.
+Operational Domain: Pure 1D Integer Memory Chains (\mathbb{Z}) replacing XYZ vectors.
+Optimized: Complete 3D index column separation with 12-axis contact-resonance updates.
 """
 
 import os
@@ -197,6 +197,7 @@ class PTRC3DAnimationPipeline:
                         p_x_center = (f_x * 8 * 1000) // denom
                         p_y_center = (f_y * 8 * 1000) // denom
                         
+                        # !!! KORREKTUR: Ausbreitung uebers gesamte Sichtfeld (Befreit das Kreuz) !!!
                         out_x = (p_x_center + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y = (p_y_center + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
@@ -204,13 +205,12 @@ class PTRC3DAnimationPipeline:
                         current_material_value = pixel_properties[active_mask][valid_nodes][first_hit_idx:first_hit_idx+1]
                         
                         # !!! DEZENTRALES BELEUCHTUNGS-SIEB !!!
-                        # Wenn der Kristall den Wert fuer sichtbares blaues Licht traegt, leuchtet er blau!
                         if current_material_value == 1 or current_material_value == 2:
                             for offset in crystal_contact_offsets:
                                 off_x = int(offset[0])
                                 off_y = int(offset[1])
                                 
-                                # Einzeichnen der nahtlosen 144-seitigen Kristall-Formen in reinem BLAU (BGR: 255, 128, 0)
+                                # Einzeichnen der nahtlosen 144-seitigen Kristall-Formen in reinem, leuchtendem BLAU
                                 px_y = (out_y + off_y) % self.stereo_engine.height
                                 px_x = (out_x + off_x) % self.stereo_engine.width
                                 frame_buffer[px_y, px_x] = [255, 128, 0]  # Intensiver, strahlender Blau-Cyan-Aether
@@ -226,11 +226,10 @@ class PTRC3DAnimationPipeline:
             if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
                 print(f"    + Frame {frame_idx:03d}/{self.frames_limit} | Zeit: {frame_duration_ms:.2f} ms")
 
-            # !!! FIX: Korrekte Einrueckung innerhalb des Frame-Loops !!!
+            # !!! FIX: Exakte Einrueckung auf Schleifen-Ebene verankert !!!
             self.clock_engine.evolve_clock_one_takt()
 
         self.total_generation_end = time.perf_counter()
-
     def compile_lossless_output_video(self):
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
         
