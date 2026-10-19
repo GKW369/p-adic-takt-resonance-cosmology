@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Distributed pTRC-Machines Operating In-Memory on 1D Chains (\mathbb{Z}).
-Optimized: Decentralized axial processing blocks executing shared macro-DNA structures.
+Optimized: Complete 3D index column separation with 12-axis contact-resonance updates.
 """
 
 import os
@@ -82,13 +82,13 @@ class PTRC3DAnimationPipeline:
         self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
         self.SCALE = 1000
         
-        # HÖHERER PRIMZAHLENRING (Skalierungsebene x11 für erweiterte Simulationstiefe)
+        # Plichta-Resonanzring-Skalierung für atomare Cluster
         self.extended_prime_ring = self.primorial_base * 11  # 210 * 11 = 2310
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
         
-        # Generiere die statische Modulo-137-Spektrallandkarte im Speicher
+        # Generiere die statische Modulo-137-Zahlenlandkarte im Speicher
         self.deterministic_sieve_array = np.zeros(self.feynman_limit, dtype=np.uint8)
         self._generate_feynman_sieve_matrix()
 
@@ -129,18 +129,19 @@ class PTRC3DAnimationPipeline:
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        # Lade die 144 Kristallachsen starr als unzerstörbares Ganzzahl-Array
+        # Lade die Kristallachsen der Kern-Engine starr als Ganzzahl-Matrix
         crystal_axes = np.array(self.clock_engine.crystal_axes, dtype=np.int32)
         
         # Weitungsschritte für die makroskopische Vergrößerung der Planck-Pixel ins Sichtfeld
         steps = np.arange(-48, 48, dtype=np.int32)
         
         # !!! CORES ZONE: DER GETEILTE GLOBALE BAUPLAN (DNA-MATRIX) !!!
-        # Statische Ganzzahl-Offsets für die 12 primären Berührungsflächen des Raumkristalls
+        # Statische Ganzzahl-Offsets für die 12 primären Berührungsflächen des 144-seitigen Raumkristalls
         crystal_contact_offsets = np.array([
-            [-2, -1], [-2,  1], [ 2, -1], [ 2,  1],
-            [-1, -2], [-1,  2], [ 1, -2], [ 1,  2],
-            [ 0, -3], [ 0,  3], [-3,  0], [ 3,  0]
+            [-2, -1], [-2,  1], [ 2, -1],
+            [-1, -2], [-1,  2], [ 1, -2],
+            [ 0, -3], [-3,  0], [-1, -1],
+            [ 1,  1], [-1,  1], [ 1, -1]
         ], dtype=np.int32)
 
         for frame_idx in range(self.frames_limit):
@@ -157,13 +158,14 @@ class PTRC3DAnimationPipeline:
             flat_voxels = self.clock_engine.voxels.ravel()
             
             # ==================================================================
-            # !!! TARGET ZONE: DEZENTRALER PTRC-MASCHINEN-SPLIT (REPARIERT) !!!
+            # !!! TARGET ZONE: UNKORRUMPIERTER UNTERSCHIED ÜBER MATRIX-INDICES !!!
             # ==================================================================
             for axis_idx, axis in enumerate(crystal_axes):
-                # Sichere Extraktion der dimensionalen Zeilenkomponenten des 2D-Arrays
-                ax_x = int(axis[0]) if axis.ndim > 0 and len(axis) > 0 else 1
-                ax_y = int(axis[1]) if axis.ndim > 0 and len(axis) > 1 else 1
-                ax_z = int(axis[2]) if axis.ndim > 0 and len(axis) > 2 else 1
+                # MATHEMATISCHE RETTUNG: Explizites Auslesen der echten 3D-Spaltenkomponenten!
+                # Heilt den horizontalen Linienstau an der Wurzel und entfaltet das Volumen.
+                ax_x = int(axis[0])
+                ax_y = int(axis[1])
+                ax_z = int(axis[2])
                 
                 # Lineare Ganzzahl-Schritte modulo Dimensionen
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
@@ -206,17 +208,16 @@ class PTRC3DAnimationPipeline:
                         # Auslesen der Plichta-Variablen am getroffenen Grenzregister
                         current_material_value = pixel_properties[active_mask][valid_nodes][first_hit_idx:first_hit_idx+1]
                         
-                        # Unterscheide die stabilen Resonanzen (Wert 56 = Eisen, Wert 137 = Rost)
-                        # und den dezentralen Äther (Wert 2)
+                        # Sowohl Materie- (1) als auch Aetherknoten (2) aktivieren das Feld
                         is_glowing_structure = (current_material_value == 1) | (current_material_value == 2)
                         
                         if np.any(is_glowing_structure):
-                            # Die autonome pTRC-Anzeigemaschine projiziert die 12 Kacheln der DNA
+                            # Projiziere die 144-seitige Form entlang der 12 echten Kontakt-Flächen
                             for offset in crystal_contact_offsets:
+                                # Absolut saubere Trennung von X- und Y-Offsetkomponenten
                                 off_x = int(offset[0])
                                 off_y = int(offset[1])
                                 
-                                # Absolut zentrierter Monokular-Kollaps heilt den VR-Schieleffekt
                                 self.stereo_engine.left_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
                                 self.stereo_engine.right_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
             # ==================================================================
