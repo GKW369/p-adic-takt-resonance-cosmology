@@ -203,14 +203,14 @@ class PTRC3DAnimationPipeline:
                         # Auslesen des Registerwerts (1 = Invariante/Masse, 2 = Aether/Lichtresonanz)
                         current_material_value = pixel_properties[active_mask][valid_nodes][first_hit_idx:first_hit_idx+1]
                         
-                        # !!! DEZENTRALES BLREUCHTUNGS-SIEB !!!
+                        # !!! DEZENTRALES BELEUCHTUNGS-SIEB !!!
                         # Wenn der Kristall den Wert fuer sichtbares blaues Licht traegt, leuchtet er blau!
                         if current_material_value == 1 or current_material_value == 2:
                             for offset in crystal_contact_offsets:
                                 off_x = int(offset[0])
                                 off_y = int(offset[1])
                                 
-                                # Einzeichnen der nahtlosen 144-seitigen Kristall-Formen in reinem BLAU (BGR: 255, 0, 0)
+                                # Einzeichnen der nahtlosen 144-seitigen Kristall-Formen in reinem BLAU (BGR: 255, 128, 0)
                                 px_y = (out_y + off_y) % self.stereo_engine.height
                                 px_x = (out_x + off_x) % self.stereo_engine.width
                                 frame_buffer[px_y, px_x] = [255, 128, 0]  # Intensiver, strahlender Blau-Cyan-Aether
@@ -226,9 +226,10 @@ class PTRC3DAnimationPipeline:
             if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
                 print(f"    + Frame {frame_idx:03d}/{self.frames_limit} | Zeit: {frame_duration_ms:.2f} ms")
 
-        self.total_generation_end = time.perf_counter()
-
+            # !!! FIX: Korrekte Einrueckung innerhalb des Frame-Loops !!!
             self.clock_engine.evolve_clock_one_takt()
+
+        self.total_generation_end = time.perf_counter()
 
     def compile_lossless_output_video(self):
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
