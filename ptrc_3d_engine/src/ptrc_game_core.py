@@ -21,7 +21,7 @@
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
 Operational Domain: Pure 1D Integer Memory Chains (\mathbb{Z}) replacing XYZ vectors.
-Optimized: Flat whole-number index streaming with 12-axis contact-resonance updates.
+Optimized: Monocular holographic 3D projection eliminating VR stereo parallax.
 """
 
 import os
@@ -118,7 +118,7 @@ class PTRC3DAnimationPipeline:
     def generate_deterministic_video_sequence(self):
         """
         Renders a perfectly timed flight sequence decoding flat 1D integer streams.
-        Maps the 144-facet polyhedral pixel structure correctly into the stereo buffer.
+        Maps the 144-facet polyhedral pixel structure correctly into the zentriert buffer.
         """
         cpu_name = self._get_cpu_name()
         print(f"[ OFFLINE PIPELINE ] Hardware-Erkennung: {cpu_name}")
@@ -136,7 +136,6 @@ class PTRC3DAnimationPipeline:
         steps = np.arange(-48, 48, dtype=np.int32)
         
         # Statische Ganzzahl-Offsets für die 12 primären Berührungsflächen des Raumkristalls
-        # Bildet die dichten, formierten Pixel-Körper unkorrumpiert ab!
         crystal_contact_offsets = np.array([
             [-1, -1], [-1,  1], [ 1, -1], [ 1,  1],
             [-1,  0], [ 1,  0], [ 0, -1], [ 0,  1],
@@ -150,31 +149,25 @@ class PTRC3DAnimationPipeline:
             self.stereo_engine.right_eye_buffer.fill(0)
             
             # ==================================================================
-            # !!! TARGET ZONE: REIN GANZZAHLIGER EINDIMENSIONALER LOOKUP !!!
+            # !!! TARGET ZONE: MONOKULARES ZENTRIERTES HOLOGRAMM-SIEBNETZ !!!
             # ==================================================================
-            # Eliminierte Raumachsen: Wir operieren direkt auf flachen Zahlenbändern!
             z_flight_offset = (frame_idx * 1) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
-            # Verflache das 3D-Voxelgitter in eine ununterbrochene 1D-Ganzzahlkette (RAM-Flucht)
             flat_voxels = self.clock_engine.voxels.ravel()
             
             for axis_idx, axis in enumerate(crystal_axes):
-                # Sicheres Extrahieren der skalaren Richtungskomponenten per Index-Abgriff
                 axis_array = np.atleast_1d(axis)
                 ax_x = int(axis_array[0]) if len(axis_array) > 0 else int(axis)
                 ax_y = int(axis_array[1]) if len(axis_array) > 1 else int(axis)
                 ax_z = int(axis_array[2]) if len(axis_array) > 2 else int(axis)
                 
-                # Lineare Ganzzahl-Schritte modulo Dimensionen
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
                 y_g = (cy + ax_y * steps * 4) % self.height
                 x_g = (cx + ax_x * steps * 4) % self.width
                 
-                # Der unbestechliche 1D-Speicher-Index (Verflachtes Koordinaten-Sieve)
                 flat_memory_addresses = (z_g * self.height * self.width) + (y_g * self.width) + x_g
                 
-                # Direktes, blitzschnelles Ablesen der Materialinvarianten aus dem 1D-Band
                 pixel_properties = flat_voxels[flat_memory_addresses]
                 active_mask = pixel_properties > 0
                 
@@ -184,39 +177,39 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # pTRC-Steuerungs-Resonanz modulo 137
                     extended_address = (axis_idx + raw_x * raw_y + pixel_properties[active_mask]) % self.extended_prime_ring
                     feynman_addresses = (extended_address + local_environmental_load) % self.feynman_limit
                     
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
-                        # Holografischer Vorderseiten-Kollaps (Okklusions-Abtastung)
                         first_hit_idx = np.argmax(valid_nodes)
                         
                         f_z = raw_z[valid_nodes][first_hit_idx:first_hit_idx+1]
                         f_x = raw_x[valid_nodes][first_hit_idx:first_hit_idx+1]
                         f_y = raw_y[valid_nodes][first_hit_idx:first_hit_idx+1]
                         
+                        # KORREKTUR: Eliminierung der VR-Diskrepanz (-12 / +12). 
+                        # Reines, absolut zentriertes Monokular-Hologramm fuer flache Displays!
                         denom = ((f_z * 1000) // 1414) + 156
-                        p_xl = ((f_x * 8 - 12) * 1000) // denom
-                        p_xr = ((f_x * 8 + 12) * 1000) // denom
-                        p_y  = ((f_y * 8) * 1000) // denom
+                        p_x_center = (f_x * 8 * 1000) // denom
+                        p_y_center = (f_y * 8 * 1000) // denom
                         
-                        out_x_l = (p_xl + self.stereo_engine.width // 2) % self.stereo_engine.width
-                        out_x_r = (p_xr + self.stereo_engine.width // 2) % self.stereo_engine.width
-                        out_y_s = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
+                        out_x = (p_x_center + self.stereo_engine.width // 2) % self.stereo_engine.width
+                        out_y = (p_y_center + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
                         current_voxel_values = pixel_properties[active_mask][valid_nodes][first_hit_idx:first_hit_idx+1]
                         dense_cluster = (current_voxel_values == 1) | (current_voxel_values == 2)
                         
                         if np.any(dense_cluster):
-                            # Projiziere die 144-seitige Form entlang der echten X/Y-Rhombusflächen
+                            # Projiziere die 144-seitige Kristallform unkorrumpiert auf die Mitte
                             for offset in crystal_contact_offsets:
                                 off_x = int(offset[0])
                                 off_y = int(offset[1])
-                                self.stereo_engine.left_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_l[dense_cluster] + off_x) % self.stereo_engine.width] = 1
-                                self.stereo_engine.right_eye_buffer[(out_y_s[dense_cluster] + off_y) % self.stereo_engine.height, (out_x_r[dense_cluster] + off_x) % self.stereo_engine.width] = 1
+                                
+                                # Beide Augen-Puffer werden identisch beschrieben -> Hebt den VR-Schieleffekt auf!
+                                self.stereo_engine.left_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
+                                self.stereo_engine.right_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
             # ==================================================================
 
             self.clock_engine.evolve_clock_one_takt()
