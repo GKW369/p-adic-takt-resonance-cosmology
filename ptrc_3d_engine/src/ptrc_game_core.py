@@ -20,8 +20,8 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
-Operational Domain: Distributed pTRC-Machines Operating In-Memory on 1D Chains (\mathbb{Z}).
-Optimized: Complete 3D index column separation with 12-axis contact-resonance updates.
+Operational Domain: Discrete 1-Byte Crystalline Pixel Topologies (\mathbb{Z}).
+Optimized: Pure whole-crystal value state switching replacing continuous projectile motion.
 """
 
 import os
@@ -82,13 +82,13 @@ class PTRC3DAnimationPipeline:
         self.feynman_limit = 137  # Feinstrukturkonstante für den Spektralkollaps
         self.SCALE = 1000
         
-        # Plichta-Resonanzring-Skalierung für atomare Cluster
+        # Plichta-Resonanzring-Skalierung für erweiterte Simulationstiefe
         self.extended_prime_ring = self.primorial_base * 11  # 210 * 11 = 2310
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
         
-        # Generiere die statische Modulo-137-Zahlenlandkarte im Speicher
+        # Generiere die statische Modulo-137-Spektrallandkarte im Speicher
         self.deterministic_sieve_array = np.zeros(self.feynman_limit, dtype=np.uint8)
         self._generate_feynman_sieve_matrix()
 
@@ -129,43 +129,39 @@ class PTRC3DAnimationPipeline:
         
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        # Lade die Kristallachsen der Kern-Engine starr als Ganzzahl-Matrix
+        # Lade die Kristallachsen der Kern-Engine starr als Ganzzahl-Matrix (int32)
         crystal_axes = np.array(self.clock_engine.crystal_axes, dtype=np.int32)
         
         # Weitungsschritte für die makroskopische Vergrößerung der Planck-Pixel ins Sichtfeld
         steps = np.arange(-48, 48, dtype=np.int32)
         
-        # !!! CORES ZONE: DER GETEILTE GLOBALE BAUPLAN (DNA-MATRIX) !!!
-        # Statische Ganzzahl-Offsets für die 12 primären Berührungsflächen des 144-seitigen Raumkristalls
+        # !!! CORES ZONE: DIE 12 RAUMFÜLLENDEN KONTAKT-OFFSETS DES KRISTALLS !!!
+        # Zeichnet die reale Rhombendodekaeder-Geometrie nahtlos aneinandergrenzend
         crystal_contact_offsets = np.array([
-            [-2, -1], [-2,  1], [ 2, -1],
-            [-1, -2], [-1,  2], [ 1, -2],
-            [ 0, -3], [-3,  0], [-1, -1],
-            [ 1,  1], [-1,  1], [ 1, -1]
+            [-2, -1], [-2,  1], [ 2, -1], [ 2,  1],
+            [-1, -2], [-1,  2], [ 1, -2], [ 1,  2],
+            [ 0, -3], [ 0,  3], [-3,  0], [ 3,  0]
         ], dtype=np.int32)
 
         for frame_idx in range(self.frames_limit):
             frame_start_time = time.perf_counter()
             
-            self.stereo_engine.left_eye_buffer.fill(0)
-            self.stereo_engine.right_eye_buffer.fill(0)
+            # Initialisiere die Video-Matrix (BGR-Farbraum fuer das blaue Leuchten)
+            frame_buffer = np.zeros((self.stereo_engine.height, self.stereo_engine.width, 3), dtype=np.uint8)
             
-            # 1-Pixel-Rutschtakt pro Zeitschritt der Lichtgeschwindigkeit
+            # 1-Pixel-Rutschtakt pro Zeitschritt der Lichtgeschwindigkeit (Reines Weiterschalten!)
             z_flight_offset = (frame_idx * 1) % self.depth
             local_environmental_load = int(self.accumulated_pixels_written % 256)
             
             # Direktes Abgreifen des verflachten In-Memory Speicherbands
             flat_voxels = self.clock_engine.voxels.ravel()
             
-            # ==================================================================
-            # !!! TARGET ZONE: UNKORRUMPIERTER UNTERSCHIED ÜBER MATRIX-INDICES !!!
-            # ==================================================================
             for axis_idx, axis in enumerate(crystal_axes):
-                # MATHEMATISCHE RETTUNG: Explizites Auslesen der echten 3D-Spaltenkomponenten!
-                # Heilt den horizontalen Linienstau an der Wurzel und entfaltet das Volumen.
-                ax_x = int(axis[0])
-                ax_y = int(axis[1])
-                ax_z = int(axis[2])
+                # Unbestechliche Ganzzahl-Trennung der dimensionalen Richtungsachsen
+                axis_array = np.atleast_1d(axis)
+                ax_x = int(axis_array[0]) if len(axis_array) > 0 else 1
+                ax_y = int(axis_array[1]) if len(axis_array) > 1 else 1
+                ax_z = int(axis_array[2]) if len(axis_array) > 2 else 1
                 
                 # Lineare Ganzzahl-Schritte modulo Dimensionen
                 z_g = (cz + ax_z * steps * 4 - z_flight_offset) % self.depth
@@ -183,21 +179,20 @@ class PTRC3DAnimationPipeline:
                     raw_x = x_g[active_mask] - cx
                     raw_y = y_g[active_mask] - cy
                     
-                    # Jedes Achsenregister rechnet autark über das Modulo-137 Lastsieb
+                    # Jede pTRC-Maschine rechnet autark im Modulo-137 Sieve
                     extended_address = (axis_idx + raw_x * raw_y + pixel_properties[active_mask]) % self.extended_prime_ring
                     feynman_addresses = (extended_address + local_environmental_load) % self.feynman_limit
                     
                     valid_nodes = self.deterministic_sieve_array[feynman_addresses] == 1
                     
                     if np.any(valid_nodes):
-                        # Holografischer Vorderseiten-Kollaps (Okklusions-Abtastung)
+                        # Holografischer Vorderseiten-Kollaps (Keine fliegenden Teilchen!)
                         first_hit_idx = np.argmax(valid_nodes)
                         
                         f_z = raw_z[valid_nodes][first_hit_idx:first_hit_idx+1]
                         f_x = raw_x[valid_nodes][first_hit_idx:first_hit_idx+1]
                         f_y = raw_y[valid_nodes][first_hit_idx:first_hit_idx+1]
                         
-                        # Flieẞkommafreie Perspektiv-Division (//) fuer flache Displays
                         denom = ((f_z * 1000) // 1414) + 156
                         p_x_center = (f_x * 8 * 1000) // denom
                         p_y_center = (f_y * 8 * 1000) // denom
@@ -205,38 +200,35 @@ class PTRC3DAnimationPipeline:
                         out_x = (p_x_center + self.stereo_engine.width // 2) % self.stereo_engine.width
                         out_y = (p_y_center + self.stereo_engine.height // 2) % self.stereo_engine.height
                         
-                        # Auslesen der Plichta-Variablen am getroffenen Grenzregister
+                        # Auslesen des Registerwerts (1 = Invariante/Masse, 2 = Aether/Lichtresonanz)
                         current_material_value = pixel_properties[active_mask][valid_nodes][first_hit_idx:first_hit_idx+1]
                         
-                        # Sowohl Materie- (1) als auch Aetherknoten (2) aktivieren das Feld
-                        is_glowing_structure = (current_material_value == 1) | (current_material_value == 2)
-                        
-                        if np.any(is_glowing_structure):
-                            # Projiziere die 144-seitige Form entlang der 12 echten Kontakt-Flächen
+                        # !!! DEZENTRALES BLREUCHTUNGS-SIEB !!!
+                        # Wenn der Kristall den Wert fuer sichtbares blaues Licht traegt, leuchtet er blau!
+                        if current_material_value == 1 or current_material_value == 2:
                             for offset in crystal_contact_offsets:
-                                # Absolut saubere Trennung von X- und Y-Offsetkomponenten
                                 off_x = int(offset[0])
                                 off_y = int(offset[1])
                                 
-                                self.stereo_engine.left_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
-                                self.stereo_engine.right_eye_buffer[(out_y + off_y) % self.stereo_engine.height, (out_x + off_x) % self.stereo_engine.width] = 1
-            # ==================================================================
-
-            self.clock_engine.evolve_clock_one_takt()
+                                # Einzeichnen der nahtlosen 144-seitigen Kristall-Formen in reinem BLAU (BGR: 255, 0, 0)
+                                px_y = (out_y + off_y) % self.stereo_engine.height
+                                px_x = (out_x + off_x) % self.stereo_engine.width
+                                frame_buffer[px_y, px_x] = [255, 128, 0]  # Intensiver, strahlender Blau-Cyan-Aether
             
-            bw_frame = self.stereo_engine.left_eye_buffer * 255
+            # Schreibe den fertig getakteten Frame direkt in den Cache
             frame_filename = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
-            cv2.imwrite(frame_filename, bw_frame)
+            cv2.imwrite(frame_filename, frame_buffer)
             
             frame_end_time = time.perf_counter()
             frame_duration_ms = (frame_end_time - frame_start_time) * 1000
-            active_pixels_in_frame = int(np.sum(self.stereo_engine.left_eye_buffer))
-            self.accumulated_pixels_written += active_pixels_in_frame
+            self.accumulated_pixels_written += int(np.sum(frame_buffer > 0))
             
             if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
-                print(f"    + Frame {frame_idx:03d}/{self.frames_limit} | Zeit: {frame_duration_ms:.2f} ms | Aktive Datenpunkte: {active_pixels_in_frame:,} Pixel")
+                print(f"    + Frame {frame_idx:03d}/{self.frames_limit} | Zeit: {frame_duration_ms:.2f} ms")
 
         self.total_generation_end = time.perf_counter()
+
+            self.clock_engine.evolve_clock_one_takt()
 
     def compile_lossless_output_video(self):
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
@@ -285,8 +277,7 @@ class PTRC3DAnimationPipeline:
             print(f" -> Berechnet auf: {cpu_name}")
             print(f" -> Zeit fuer 3D-Bilderzeugung: {gen_duration:.2f} Sekunden")
             print(f" -> Zeit fuer ffmpeg-Kompilierung: {comp_duration:.2f} Sekunden")
-            print(f" -> Gesamtdauer der Pipeline: {total_time:.2f} Sekunden")
-            print(f" -> Gesamte geschriebene Datenmasse: {self.accumulated_pixels_written:,} Bildpunkte im Cache-Speicher.\n")
+            print(f" -> Gesamtdauer der Pipeline: {total_time:.2f} Sekunden\n")
             return 1
         except Exception:
             print("    ! [ SYSTEM NOTICE ] Fehler bei der ffmpeg-Kompilierung.")
