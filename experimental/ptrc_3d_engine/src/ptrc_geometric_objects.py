@@ -19,33 +19,50 @@
 
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Discrete Geometric Objects Storage
-Operational Domain: Pure Discrete Matrix Nodes (\mathbb{Z}^3) for Kugel and Pyramide.
+pTRC Framework - Static Crystal Geometry Sieve
+Operational Domain: Pure Discrete Memory Chains (\mathbb{Z}^3) for zero-space formclosure.
 """
 
-class PTRCGeometricObjects:
+class PTRCGeometrySieve:
     """
-    Stellt die fixierten Ganzzahl-Zentren für die lückenlosen Raumobjekte bereit.
+    Berechnet die statischen Raumpixel-Zentren für das 13-Sphären-Gitter
+    und die raumzentrierte Pyramide im unmanifestierten Ganzzahlfeld.
     """
-    @staticmethod
-    def get_wirminghaus_sphere_nodes():
-        """Liefert die 13 Zentren des Vektor-Gleichgewichts (FCC-Ur-Zelle)."""
-        return [
-            (0, 0, 0),  (2, 2, 0),  (2, -2, 0),  (-2, 2, 0),  (-2, -2, 0),
-            (2, 0, 2),  (2, 0, -2), (-2, 0, 2),  (-2, 0, -2),
-            (0, 2, 2),  (0, 2, -2), (0, -2, 2),  (0, -2, -2)
-        ]
+    def __init__(self, cx, cy, cz, v_scale=14):
+        self.cx = int(cx)
+        self.cy = int(cy)
+        self.cz = int(cz)
+        self.v_scale = int(v_scale)
 
-    @staticmethod
-    def get_massive_pyramid_nodes():
-        """Stapelt die 144-seitigen Kristallbausteine etagenweise zu einer Pyramide."""
-        nodes = []
-        for level in range(3):
-            z_layer = level * 2
-            y_layer = -level * 4
-            for row in range(3 - level):
-                for col in range(3 - level):
-                    x_offset = (col * 16) - ((3 - level) * 8) + 8
-                    y_offset = (row * 16) - ((3 - level) * 8) + 8 + y_layer
-                    nodes.append((x_offset, y_offset, z_layer))
-        return nodes
+    def generate_monolith_nodes(self, frame_idx):
+        """Gibt ortsfeste, ruhig im Raum stehende Kristallstrukturen zurück."""
+        kristall_zentren = []
+        
+        # Frames 0 bis 71: Die vollkommen ruhige Wirminghaus-Kugel-Ur-Zelle
+        if frame_idx < 72:
+            fcc_sphere = [
+                (0, 0, 0),
+                (2, 2, 0), (-2, 2, 0), (2, -2, 0), (-2, -2, 0),
+                (2, 0, 2), (2, 0, -2), (-2, 0, 2), (-2, 0, -2),
+                (0, 2, 2), (0, 2, -2), (0, -2, 2), (0, -2, -2)
+            ]
+            for k_x, k_y, k_z in fcc_sphere:
+                kx = self.cx + (k_x * self.v_scale)
+                ky = self.cy + (k_y * self.v_scale)
+                kz = self.cz + (k_z * self.v_scale)
+                kristall_zentren.append((kx, ky, kz))
+                
+        # Frames 72 bis 143: Die unbewegliche, massive Pyramide aus Raumkristallen
+        else:
+            pyramid_nodes = [
+                (-2, 2, -2), (2, 2, -2), (2, -2, -2), (-2, -2, -2), # Fundament
+                (-1, 1, 0), (1, 1, 0), (1, -1, 0), (-1, -1, 0),     # Mittelstufe
+                (0, 0, 2)                                           # Kristallspitze
+            ]
+            for k_x, k_y, k_z in pyramid_nodes:
+                kx = self.cx + (k_x * self.v_scale)
+                ky = self.cy + (k_y * self.v_scale) + 12            # Zentrierungskompensation
+                kz = self.cz + (k_z * self.v_scale)
+                kristall_zentren.append((kx, ky, kz))
+                
+        return kristall_zentren
