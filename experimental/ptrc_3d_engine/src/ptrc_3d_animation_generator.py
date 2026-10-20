@@ -20,8 +20,9 @@
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Animation & Video Engine Pipeline
+Filename: ptrc_3d_animation_generator.py
 Operational Domain: Pure Discrete Memory Chains (\mathbb{Z}^3) representing 144-facet crystals.
-Optimized: Lochfreie Ganzzahl-Visualisierung des 13-Sphären-Wirminghaus-Raumgitters im Raum.
+Optimized: 137-Takt Handshake-Belichtung mit dezentralem Routing-Kollaps.
 """
 
 import os
@@ -32,10 +33,17 @@ import platform
 import numpy as np
 import cv2
 
-# Namespace-Resolver für die lokale Repository-Struktur
+# ==============================================================================
+# !!! TARGET ZONE: EXPLIZITE UND TAB-FREIE MODUL-KOPPLUNG !!!
+# MARKER: PTRC_HARDCODED_NAMESPACE_RESOLVER_2026
+# ==============================================================================
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
-for p in [os.path.dirname(script_dir), os.path.dirname(os.path.dirname(script_dir))]:
+
+parent_1 = os.path.dirname(script_dir)
+parent_2 = os.path.dirname(parent_1)
+
+for p in [parent_1, parent_2]:
     if p:
         sys.path.insert(0, p)
         src_dir = os.path.join(p, "src")
@@ -52,21 +60,24 @@ try:
 except ImportError:
     from src.ptrc_clock_core import PTRCModularClockEngine
 
+print(" -> [ PATH ] Synchronisation für 'ptrc_3d_animation_generator.py' erfolgreich etabliert.")
+# ==============================================================================
 
 class PTRC3DAnimationPipeline:
     """
-    Rendert ein rotierendes und fliegendes physikalisches Objekt (Wirminghaus-Matrix)
-    aus dichtgepackten Sphärenkristallen unter strikter Einhaltung der Zero-Float-Rule.
+    Rendert die dichte Packung der Raumkristalle exakt getaktet auf das Feynman-Limit.
+    Simuliert den dezentralen Handshake der Pixel vor dem Beobachter-Kollaps.
     """
     def __init__(self, total_frames=144):
         self.frames_limit = total_frames
         self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
         
-        # Dimensionen des diskreten Arbeitsraums
+        # Lokale Geometrie-Auflösung
         self.width = 320
         self.height = 180
         self.depth = 128
         self.invariant_limit = 156
+        self.FEYNMAN_LIMIT = 137  # Die fundamentale Belichtungszeit (Handshake-Dauer)
         self.SCALE = 1000
         
         self.clock_engine = PTRCModularClockEngine(width=self.width, height=self.height, depth=self.depth)
@@ -78,109 +89,113 @@ class PTRC3DAnimationPipeline:
     def _get_cpu_name(self):
         try:
             if platform.system() == "Linux":
-                cmd = "cat /proc/cpuinfo | grep 'model name' | uniq"
-                return subprocess.check_output(cmd, shell=True).decode().strip().split(":")[-1].strip()
+                command = "cat /proc/cpuinfo | grep 'model name' | uniq"
+                cpu_info = subprocess.check_output(command, shell=True).decode().strip()
+                if cpu_info:
+                    return cpu_info.split(":")[-1].strip()
         except Exception:
             pass
         return "Intel(R) Core(TM) i3-3217U CPU @ 1.80GHz"
 
     def generate_deterministic_video_sequence(self):
-        """Erzeugt ein zusammenhängendes, plastisches 3D-Objekt aus Ganzzahl-Sphären."""
+        """
+        Generiert die lückenlose Kristall-Matrix. Schaltet im Hintergrund dezentrale 
+        Handshakes, bevor das Bild alle 137 Takte für den Beobachter manifestiert wird.
+        """
         cpu_name = self._get_cpu_name()
-        print(f"[ PIPELINE ] Hardware: {cpu_name}")
-        print(f" -> Generiere {self.frames_limit} Frames des 13-Sphären-Raumobjekts...")
+        print(f"[ PIPELINE ] Verwende Hardware-Profil: {cpu_name}")
+        print(f" -> Initieere dezentrale Handshakes über {self.FEYNMAN_LIMIT} Schwingungs-Takte...")
         
         self.total_generation_start = time.perf_counter()
         cx, cy, cz = self.width // 2, self.height // 2, self.depth // 2
         
-        # Die 12 mechanischen Kontakt-Offsets des Kristalls zur lochfreien Oberflächen-Füllung
-        crystal_contact_offsets = np.array([
-            [-2, -1], [-2,  1], [ 2, -1], [ 2,  1],
-            [-1, -2], [-1,  2], [ 1, -2], [ 1,  2],
-            [ 0, -3], [ 0,  3], [-3,  0], [ 3,  0]
-        ], dtype=np.int32)
-
-        # Die 13 mathematischen Zentren des Vektor-Gleichgewichts (FCC-Basis)
-        # 1 Zentralkugel + 12 perfekt umschließende Koordinatenknoten
-        fcc_spheres_nodes = [
-            (0, 0, 0),  (2, 2, 0),  (2, -2, 0),  (-2, 2, 0),  (-2, -2, 0),
-            (2, 0, 2),  (2, 0, -2), (-2, 0, 2),  (-2, 0, -2),
-            (0, 2, 2),  (0, 2, -2), (0, -2, 2),  (0, -2, -2)
+        # Dichteste Packung: Schrittweite 14 schließt bei R^2 = 196 jede Gitterlücke
+        kristall_zentren = [
+            (0, 0, 0),
+            (2, 2, 0), (-2, 2, 0), (2, -2, 0), (-2, -2, 0),
+            (2, 0, 2), (2, 0, -2), (-2, 0, 2), (-2, 0, -2),
+            (0, 2, 2), (0, 2, -2), (0, -2, 2), (0, -2, -2)
         ]
 
+        v_scale = 14
+        target_quadrance = 196
+        sieve_tolerance = 12
+
+        global_takt_counter = 0
+
         for frame_idx in range(self.frames_limit):
-            frame_start = time.perf_counter()
+            frame_start_time = time.perf_counter()
             frame_buffer = np.zeros((self.stereo_engine.height, self.stereo_engine.width, 3), dtype=np.uint8)
             
-            # Bewegungskopplung: Vorwärtsflug und leichte Rotation im Taktraum
-            z_flight_offset = (frame_idx * 1) % self.depth
-            rot_takt = frame_idx % 24
+            # --- DEZENTRALE HANDSHAKE-PHASE ---
+            # Wir simulieren den Informationsfluss durch die Kanäle des Gitters für 137 Takte.
+            # Falls die Datenmenge lokal kippt, simuliert der Code die Verlangsamung.
+            local_data_density = (frame_idx * 7) % 256
+            exceeded_load_bias = 0
+            if local_data_density > 200:
+                # Lokaler Überlastungs-Dilemma: Das Gitter braucht länger für das Routing
+                exceeded_load_bias = (local_data_density - 200) // 10
             
-            # Iteriere über alle 13 Sphären, um das zusammenhängende Objekt zu formen
-            for sx, sy, sz in fcc_spheres_nodes:
-                # Dynamischer Rotations-Shift im Ganzzahlraum modulo 24
-                rx = sx + (rot_takt // 8 if sx != 0 else 0)
-                ry = sy - (rot_takt // 12 if sy != 0 else 0)
+            # Schalte die Hintergrunduhr starr durch die Belichtungszeit
+            for internal_takt in range(self.FEYNMAN_LIMIT + exceeded_load_bias):
+                self.clock_engine.evolve_clock_one_takt()
+                global_takt_counter += 1
+            
+            # --- DER BEOBACHTER-KOLLAPS (RENDERING) ---
+            # Erst jetzt, nach dem vollendeten Handshake, manifestiert sich die Position
+            z_flight_offset = (global_takt_counter // 24) % self.depth
+            
+            for k_x, k_y, k_z in kristall_zentren:
+                kx_obj = cx + (k_x * v_scale)
+                ky_obj = cy + (k_y * v_scale)
+                kz_obj = cz + (k_z * v_scale)
                 
-                # Globale Platzierung des Sphärenzentrums im Sichtfeld
-                kx = cx + rx * 14
-                ky = cy + ry * 14
-                kz = cz + sz * 10
-                
-                adjusted_z = (kz - z_flight_offset) % self.depth
+                adjusted_z = (kz_obj - z_flight_offset) % self.depth
                 if adjusted_z <= 0:
                     adjusted_z = 1
                 
-                # Lokaler Voxel-Scan der einzelnen Kugeloberfläche (Quadrance-Sieve)
-                for dx in range(-10, 11, 2):
-                    for dy in range(-10, 11, 2):
+                for dx in range(-16, 17):
+                    for dy in range(-16, 17):
                         q_dist = (dx * dx) + (dy * dy)
                         
-                        # Definiert die unteilbare Hülle des einzelnen Sphärenkristalls
-                        if 24 <= q_dist <= 100:
+                        # Pi-Sieve Außenkontur-Filter
+                        if abs(q_dist - target_quadrance) <= sieve_tolerance:
                             denom = ((adjusted_z * self.SCALE) // 1414) + self.invariant_limit
                             
-                            p_x = (int(kx - cx + dx) * 8 * self.SCALE) // denom
-                            p_y = (int(ky - cy + dy) * 8 * self.SCALE) // denom
+                            p_x = ((int(kx_obj - cx + dx) * 8) * self.SCALE) // denom
+                            p_y = ((int(ky_obj - cy + dy) * 8) * self.SCALE) // denom
                             
                             out_x = (p_x + self.stereo_engine.width // 2) % self.stereo_engine.width
                             out_y = (p_y + self.stereo_engine.height // 2) % self.stereo_engine.height
                             
-                            # Pseudostereoskopische Tiefen-Beleuchtung (1-Byte Variable)
-                            # Je weiter hinten das Pixel liegt (großes Z), desto dunkler das Glimmen
-                            depth_glow = 255 - (adjusted_z * 1)
-                            if depth_glow < 50:
-                                depth_glow = 50
+                            # Die 1-Byte Linsenkanal-Variable steuert die Farbe des Quantenflusses
+                            # Simuliert die Lichtablenkung jenseits großer Informationscluster
+                            lens_channel = (128 + adjusted_z + exceeded_load_bias) % 256
                             
-                            # Einstanzen der mechanischen Facetten-Offsets in intensivem Blau-Cyan
-                            for offset in crystal_contact_offsets:
-                                px_y = (out_y + int(offset[1])) % self.stereo_engine.height
-                                px_x = (out_x + int(offset[0])) % self.stereo_engine.width
-                                
-                                # BGR: [Blau, Grün, Rot] -> Volles Blau, modulierter Grünkanal für den Äther-Farbton
-                                frame_buffer[px_y, px_x] = [255, int(depth_glow // 2), 0]
+                            frame_buffer[out_y, out_x] = [255, lens_channel, 0]
             
             cv2.imwrite(os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png"), frame_buffer)
-            if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
-                print(f"    + Frame {frame_idx:03d}/{self.frames_limit} | {(time.perf_counter() - frame_start)*1000:.2f} ms")
             
-            self.clock_engine.evolve_clock_one_takt()
+            if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
+                duration_ms = (time.perf_counter() - frame_start_time) * 1000
+                load_msg = f" (+{exceeded_load_bias} Takt Load)" if exceeded_load_bias > 0 else ""
+                print(f"    + Frame {frame_idx:03d}/{self.frames_limit} | Takt: {global_takt_counter} | Zeit: {duration_ms:.2f} ms{load_msg}")
 
         self.total_generation_end = time.perf_counter()
 
     def compile_lossless_output_video(self):
-        """Kompiliert die Bildersequenz mittels FFMPEG zu einem stabilen Videostream."""
+        """Kompiliert die Einzelbilder mittels FFMPEG zu einem stabilen Videostream."""
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
-        target_video = os.path.join(script_dir, "ptrc_wirminghaus_object.mp4")
+        target_video = os.path.join(script_dir, "ptrc_hologram_output.mp4")
         
-        print(" -> Starte ffmpeg-Videokompilierung...")
+        print(" -> Starte ffmpeg-Kompilierung für das 137-Takt-Belichtungsmodell...")
         ffmpeg_cmd = [
             "ffmpeg", "-y", "-framerate", "24", "-i", input_pattern,
             "-c:v", "libx264", "-crf", "1", "-preset", "slow", "-pix_fmt", "yuv420p", target_video
         ]
         try:
             subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
-            print(f"    + [ SUCCESS ] Raumobjekt-Video erstellt: '{os.path.basename(target_video)}'")
+            print(f"    + [ SUCCESS ] Video mit dezentralem Routing exportiert: '{os.path.basename(target_video)}'")
             
             # Cache bereinigen
             for frame_idx in range(self.frames_limit):
@@ -189,12 +204,11 @@ class PTRC3DAnimationPipeline:
             os.rmdir(self.output_directory)
             return 1
         except Exception:
-            print("    ! [ SYSTEM NOTICE ] Fehler bei der ffmpeg-Kompilierung.")
+            print("    ! [ SYSTEM NOTICE ] Fehler bei der FFMPEG-Kompilierung.")
             return 0
-
 
 if __name__ == "__main__":
     pipeline = PTRC3DAnimationPipeline(total_frames=144)
     pipeline.generate_deterministic_video_sequence()
     status = pipeline.compile_lossless_output_video()
-    print(f" -> [ VALIDATION ] Pipeline beendet mit Status: {status}")
+    print(f" -> [ VALIDATION ] Video-Pipeline beendet. Status-Code: {status}")
