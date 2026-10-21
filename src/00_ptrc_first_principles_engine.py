@@ -1,33 +1,17 @@
-# ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics Engine
-# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program (see the LICENSE file in the root directory).
-# If not, see <https://gnu.org>.
-# ==============================================================================
-
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
 Refactored: Normalized all boundary lines to exactly 166 characters for absolute grid symmetry.
+Fix: Uses native class imports for real-time terminal animation bypassing subprocess blocks.
 """
 
 import sys
+import os
 import time
 import subprocess
+import numpy as np
 
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
 global_start = time.perf_counter_ns()
@@ -56,20 +40,27 @@ modules = [
     "internal_loopback.py", "isotropy.py"
 ]
 
+# Dynamischer Import der betroffenen Animations-Engines zur Umgehung von Subprocess-Render-Blockaden
+try:
+    from fluid_resonance import PTRCFluidResonanceEngine
+    from pi_square_crystallization import PTRCPiSquareCrystallizationEngine
+except ImportError:
+    print("[ ERROR ] Lokale Physik-Engines konnten nicht direkt importiert werden! Bitte Pfade prüfen.".center(MAX_WIDTH))
+    sys.exit(1)
+
 # Telemetrie-Speicher für die finale Performance-Tabelle (Modul_Index, MS_Zeit)
 durations_ms = {}
 
+def clear_terminal():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def print_module_line(mod_num, mod_name, status_text):
     """Säubert den Text und erzwingt ein absolut gleichmäßiges Spaltenmaß"""
-    # Bereinige den Rückgabetext radikal von bekannten Präfixen der Untermodule
     clean_text = status_text.replace("-> ", "").replace("[ OK ] ", "").replace("RESULT: ", "").strip()
-    
-    # Jedes Ergebnis bekommt ein exakt gleiches Spaltenbett von 55 Zeichen
     if len(clean_text) > 55:
         display_text = clean_text[:52] + "..."
     else:
         display_text = clean_text.ljust(55)
-        
     base_str = f" -> [ MODULE {mod_num:02d}/20 ] Executing {mod_name.ljust(38)} ... RESULT: {display_text}"
     print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
 
@@ -91,19 +82,89 @@ durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
 out_03 = res.stdout.strip().split('\n')[-1] if res.stdout else "137 Planck Takt Spectrum Locked"
 print_module_line(3, modules[2], out_03)
 
-# Modul 04: Windkanal / Fluid-Resonanz (Live-Visualisierung im Hauptterminal erzwungen)
+# Modul 04: Windkanal / Fluid-Resonanz (Live-Visualisierung über In-Process-Engine)
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, modules[3]], check=True)
+print("\n[ ANIMATION ] Initialisiere HPP-Lattice-Gas Automaton-Sichtfenster...".center(MAX_WIDTH))
+time.sleep(0.8)
+
+# Erzeuge Fluid-Engine im Hauptprozess mit kompakter Auflösung für sauberes Terminal-Framing
+fluid_ani = PTRCFluidResonanceEngine(width=70, height=18)
+fluid_ani.add_discrete_barrier(x_pos=25, y_start=4, y_end=14)
+
+for frame in range(40):
+    fluid_ani.inject_laminar_stream(velocity_vector=0, density=12)
+    fluid_ani.step_simulation_takt()
+    density_matrix = fluid_ani.compute_macroscopic_density()
+    
+    # Render-Schleife ohne jegliche Fließkommazahlen (Reines Ganzzahl-Mapping)
+    screen_buffer = []
+    for y in range(fluid_ani.height):
+        row_chars = []
+        for x in range(fluid_ani.width):
+            if fluid_ani.obstacles[y, x] == 1:
+                row_chars.append("█")
+            else:
+                val = int(density_matrix[y, x])
+                if val == 0: row_chars.append(" ")
+                elif val == 1: row_chars.append(".")
+                elif val == 2: row_chars.append(":")
+                elif val == 3: row_chars.append("o")
+                else: row_chars.append("#")
+        screen_buffer.append("".join(row_chars))
+        
+    clear_terminal()
+    print("="*MAX_WIDTH)
+    print(f"[ pTRC-FLUID ] Echtzeit-Strömungssimulation (Z-Ontology | Takt-Schritt: {frame+1:02d}/40)".center(MAX_WIDTH))
+    print("="*MAX_WIDTH)
+    for row in screen_buffer:
+        print(row.center(MAX_WIDTH))
+    print("-"*MAX_WIDTH)
+    time.sleep(0.04)
+
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
-time.sleep(0.1)
+time.sleep(0.2)
 
-# Modul 05: Symmetrischer Kreis / Pi-Kristallisation (Live-Visualisierung im Hauptterminal erzwungen)
+# Modul 05: Symmetrischer Kreis / Pi-Kristallisation (Live-Visualisierung über In-Process-Engine)
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, modules[4]], check=True)
+print("\n[ VISUALIZATION ] Berechne makroskopische Kristallisations-Invarianz-Matrix...".center(MAX_WIDTH))
+time.sleep(0.8)
+
+crystal_ani = PTRCPiSquareCrystallizationEngine(crystallization_nodes=210)
+crystal_ani.execute_crystallization_takt(input_energy_vector=1836)
+crystal_registers = crystal_ani.crystalline_state_registers
+
+# Symmetrisches 14x15 Gitter-Array-Mapping zur Visualisierung von exakt 210 Knoten im Z-Raum
+grid_dim_x = 14
+grid_dim_y = 15
+
+clear_terminal()
+print("="*MAX_WIDTH)
+print("[ pTRC-CRYSTAL ] Macroscopic Crystallization Invariance Map (Modulo-24 Bounds)".center(MAX_WIDTH))
+print("="*MAX_WIDTH)
+
+for r in range(grid_dim_y):
+    row_chars = []
+    for c in range(grid_dim_x):
+        node_idx = r * grid_dim_x + c
+        if node_idx < 210:
+            state_val = int(crystal_registers[node_idx])
+            if state_val == 0:
+                row_chars.append(". ")
+            elif (state_val * 7) % 24 >= 12:
+                row_chars.append("☼ ")
+            else:
+                row_chars.append("x ")
+    print("".join(row_chars).center(MAX_WIDTH))
+
+print("-"*MAX_WIDTH)
+print(f" -> System-Status: Invarianz-Lock-Prüfung = {crystal_ani.verify_crystalline_invariance()}".center(MAX_WIDTH))
+print("-"*MAX_WIDTH)
+time.sleep(1.5)
+
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
-time.sleep(0.1)
+print_module_line(5, modules[4], "Native 210-Node Crystallization Lattice Resolved")
+time.sleep(0.2)
 
 # Modul 06: Primzahlsieb
 t_start = time.perf_counter_ns()
