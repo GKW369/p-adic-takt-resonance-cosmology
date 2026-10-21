@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Removed print filters in Popen stream to unblock native fluid animation lines.
+Refactored: Bypassed Popen pipes for Module 04 to restore real-time terminal buffering.
 """
 
 import sys
@@ -76,50 +76,42 @@ def print_module_line(mod_num, mod_name, status_text):
     print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
 
 # Modul 01: Core Integration Engine Selbsttest
-durations_ms[1] = 1
-print_module_line(1, modules[0], "Engine Core Invariance Initialized")
+durations_ms = 1
+print_module_line(1, modules, "Engine Core Invariance Initialized")
 
 # Modul 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(2, modules[1], "Base Resonance Alignment Completed")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(2, modules, "Base Resonance Alignment Completed")
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(3, modules, "Planck Takt Spectrum Locked")
 
 # ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (153-TAKT UNGEFILTERTER STREAM)
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (DIREKTE TERMINAL-ÜBERGABE)
 # ==============================================================================
-# RESTAURIERT: Reicht jede Zeile deiner originalen Datei ungefiltert an das Terminal weiter!
+# RESTAURIERT: Keine Pipes, keine Filter! Übergibt das Terminal direkt an dein Skript.
 t_start = time.perf_counter_ns()
 
-fluid_script = os.path.join(src_context, modules[3])
-process = subprocess.Popen([sys.executable, fluid_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=src_context)
+fluid_script = os.path.join(src_context, modules)
+# Führt das Skript im ungepufferten Original-Modus direkt in der Konsole aus
+subprocess.run([sys.executable, "-u", fluid_script], check=True, cwd=src_context)
 
-# Liest und druckt JEDE Zeile aus der Standardausgabe deines Skripts in Echtzeit
-while True:
-    line = process.stdout.readline()
-    if not line:
-        break
-    sys.stdout.write(line)
-    sys.stdout.flush()
-
-process.communicate() # Wartet sauber auf den Abschluss des Subprozesses
-durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
+durations_ms = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(4, modules, "Fluid Dynamic Matrix Realized")
 time.sleep(0.1)
 
 # ==============================================================================
 # MODULE 05: Symmetrical Whole-Number Pi Crystallization (44x44 Square Viewport)
 # ==============================================================================
-print(f" -> [ LAUNCHING LIVE STREAM ] Streaming spatial crystal growth for {modules[4]}...")
+print(f" -> [ LAUNCHING LIVE STREAM ] Streaming spatial crystal growth for {modules}...")
 t_start = time.perf_counter_ns()
 
-subprocess.run([sys.executable, os.path.join(src_context, modules[4])], capture_output=True, check=False, cwd=src_context)
+subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, check=False, cwd=src_context)
 
 c_size = 44
 c_center = c_size // 2
@@ -127,7 +119,7 @@ c_center = c_size // 2
 for radius in range(1, 23):
     os.system('clear' if os.name == 'posix' else 'cls')
     print("=" * MAX_WIDTH)
-    print(f" pTRC SQUARE VIEWPORT: {modules[4]} | Radius Step {radius:02d}/22 | Quadratic Invariance Field".center(MAX_WIDTH))
+    print(f" pTRC SQUARE VIEWPORT: {modules} | Radius Step {radius:02d}/22 | Quadratic Invariance Field".center(MAX_WIDTH))
     print("=" * MAX_WIDTH)
     
     for y in range(c_size):
@@ -143,8 +135,8 @@ for radius in range(1, 23):
         print("                                                         " + "".join(row_chars))
     time.sleep(0.06)
 
-durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
+durations_ms = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(5, modules, "Native 90x44 Spatial Lattice Resolved")
 
 # ==============================================================================
 
