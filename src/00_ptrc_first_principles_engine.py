@@ -22,14 +22,13 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Implemented physical 140-takt transit stream animation for Module 04.
+Refactored: Aligned Module 04 stream reader to exactly 153 tactical pTRC frames.
 """
 
 import sys
 import time
 import subprocess
 import os
-import numpy as np
 
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
 global_start = time.perf_counter_ns()
@@ -47,10 +46,10 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
-# Bestimmung des aktuellen Verzeichnisses für absolute Funktionssicherheit
+# Bestimmung des absoluten Ordner-Kontexts dieser Integrationsdatei safely
 src_context = os.path.dirname(os.path.abspath(__file__))
 
-# Definition der 20 ausführbaren Skripte in der flachen Ordnerstruktur
+# Definition der 20 ausführbaren Skripte in der flachen Ordnerkonstellation
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
     "fluid_resonance.py", "pi_square_crystallization.py", "hubble_tension.py",
@@ -77,68 +76,46 @@ def print_module_line(mod_num, mod_name, status_text):
     print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
 
 # Modul 01: Core Integration Engine Selbsttest
-durations_ms[1] = 1
-print_module_line(1, modules[0], "Engine Core Invariance Initialized")
+durations_ms = 1
+print_module_line(1, modules, "Engine Core Invariance Initialized")
 
 # Modul 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(2, modules[1], "Base Resonance Alignment Completed")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(2, modules, "Base Resonance Alignment Completed")
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(3, modules, "Planck Takt Spectrum Locked")
 
 # ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (140er-Takt Kino-Ausgabe)
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (153-TAKT ORIGINAL STREAMS)
 # ==============================================================================
-print(f" -> [ LAUNCHING LIVE STREAM ] Streaming discrete matrix automaton for {modules[3]}...")
+# RESTAURIERT: Liest die echten, schönen ASCII-Muster (>, <, X, -, 0) aus deiner originalen Datei!
 t_start = time.perf_counter_ns()
 
-# Original-Validierungsregister im Hintergrund befriedigen
-subprocess.run([sys.executable, os.path.join(src_context, modules[3])], capture_output=True, check=False, cwd=src_context)
+fluid_script = os.path.join(src_context, modules[3])
+process = subprocess.Popen([sys.executable, fluid_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=src_context)
 
-# 140 Zeichen Breite x 22 Zeilen Höhe | Reiner Vorzeichensprung von 1 zu -1 ohne Null!
-f_width, f_height = 140, 22
-fluid_grid = np.zeros((f_height, f_width), dtype=np.int8)
-fluid_grid[5:17, 35:38] = -2  # Das originale, physikalisch korrekte Hindernis weiter vorne
+# Liest die Ausgabe deiner originalen fluid_resonance.py in Echtzeit, um das Verblassen zu verhindern
+takt_counter = 0
+while takt_counter < 153:
+    line = process.stdout.readline()
+    if not line:
+        break
+    if "pTRC PLANCK LATTICE" in line or "LATTICE TIME" in line or line.startswith("#") or line.startswith(" -"):
+        sys.stdout.write(line)
+        sys.stdout.flush()
+        if "LATTICE TIME" in line:
+            takt_counter += 1
 
-# !!! ABSOLUTE INNER TAKT-DEHNUNG: Läuft exakt so viele Frames wie Zeichen breit !!!
-for frame in range(140):
-    os.system('clear' if os.name == 'posix' else 'cls')
-    print("=" * MAX_WIDTH)
-    print(f" pTRC CINEMATIC LIVE STREAM: {modules[3]} | Takt-Frame {frame+1:03d}/140 | Trajektorie: [1 -> -1] (Nullfrei)".center(MAX_WIDTH))
-    print("=" * MAX_WIDTH)
-    
-    # Laminare Impulseinspeisung an der linken Gitterwand
-    for y in range(1, f_height - 1):
-        if (y + frame) % 3 == 0: fluid_grid[y, 1] = 1
-            
-    # Mathematisch exakte Partikel-Interaktion und elastischer Prall
-    for y in range(1, f_height - 1):
-        for x in range(f_width - 2, 0, -1):
-            if fluid_grid[y, x] == -2:
-                if fluid_grid[y, x-1] == 1: fluid_grid[y, x-1] = -1  # Direkt-Inversion
-                continue
-            if fluid_grid[y, x] != -2 and fluid_grid[y, x-1] != -2:
-                fluid_grid[y, x] = fluid_grid[y, x-1]
-                
-    # Ausgabe auf den unbestechlichen Terminal-Bildschirm
-    for y in range(f_height):
-        row_chars = []
-        for x in range(f_width):
-            if fluid_grid[y, x] == -2: row_chars.append("█")   # Unyielding Barriere
-            elif fluid_grid[y, x] == 1: row_chars.append("•")  # Positiver Impuls
-            elif fluid_grid[y, x] == -1: row_chars.append("°") # Negativer Impuls (Rückprall)
-            else: row_chars.append(" ")                         # Diskretes Vakuum
-        print("    " + "".join(row_chars))
-    time.sleep(0.02)  # Perfekt getaktete Frequenz für den i3-Prozessor
-
+process.communicate() # Schließe den verbleibenden Puffer sauber im Hintergrund ab
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
+time.sleep(0.1)
 
 # ==============================================================================
 # MODULE 05: Symmetrical Whole-Number Pi Crystallization (44x44 Square Viewport)
@@ -177,26 +154,26 @@ print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
 
 # Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf (Module 06 bis 20)
 static_results = [
-    "STATUS: Zero-Float Hubble Tension Resolution Matrix ...", "STATUS: Zero-Float Internal Loopback Engine Successf...", 
-    "STATUS: Zero-Float Rotational Isotropy Matrix Succes...", "STATUS: Zero-Float Sieve Determinism Engine Successf...", 
-    "STATUS: Zero-Float Entanglement Protocol Successfull...", "STATUS: Zero-Float Quantum Measurement Matrix Succes...", 
-    "STATUS: Zero-Float Quantum Neural Network Block Veri...", "STATUS: Zero-Float Thermodynamic Clock Engine Succes...", 
-    "STATUS: Zero-Float Information Preservation Matrix V...", "STATUS: Zero-Float Volumetric Saturation Engine Succ...", 
-    "STATUS: Zero-Float Solid-State Ion Pipeline Secured.",    "STATUS: Zero-Float Casimir Attenuation Matrix Succes...", 
-    "STATUS: Zero-Float Molecular Orientation Sieve Verif...", "STATUS: Zero-Float Symmetrical Cryptography Block Ve...", 
-    "STATUS: Zero-Float Edge-Sharing Field Engine Success..."
+    "Hubble Tension Resolution Matrix", "Zero-Float Internal Loopback Engine", 
+    "Zero-Float Rotational Isotropy Matrix", "STATUS: Zero-Float Sieve Determinism Engine Successfully Audited.", 
+    "Zero-Float Entanglement Protocol Successfully Secured", "Zero-Float Quantum Measurement Matrix", 
+    "Zero-Float Quantum Neural Network Block Verified", "Zero-Float Thermodynamic Clock Engine", 
+    "Zero-Float Information Preservation Matrix Verified", "Zero-Float Volumetric Saturation Engine", 
+    "Zero-Float Solid-State Ion Pipeline Secured", "Zero-Float Casimir Attenuation Matrix", 
+    "Zero-Float Molecular Orientation Sieve Verified", "Zero-Float Symmetrical Cryptography Block", 
+    "Zero-Float Edge-Sharing Field Engine Successfully Audited"
 ]
 
 # Automatisierte Hintergrund-Abarbeitung der restlichen Module 06 bis 20
 for i in range(5, len(modules)):
     t_start = time.perf_counter_ns()
-    res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=False, cwd=src_context)
+    res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=True, cwd=src_context)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
     clean_output = res.stdout.strip().split('\n')[-1] if (res and res.stdout) else static_results[i-5]
     print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT REPORT (Perfekt fluchtende Spaltengeometrie)
+# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
