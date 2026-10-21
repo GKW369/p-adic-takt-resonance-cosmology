@@ -22,7 +22,7 @@
 pTRC Framework - Module 04: fluid_resonance.py
 1-Bit Planck-Lattice Information Propagation Simulator.
 Refactored: 100% Pure pTRC Architecture. Fluid Memory State Tracking.
-PIMPED: Radical pre-flooding of the entire viewport with ambient laminar air particles (>).
+PIMPED: Balanced 50% ambient air density pre-filling to preserve continuous flow.
 """
 
 import sys
@@ -64,13 +64,14 @@ class PTRCEternalLatticeEngine:
         self.lattice[self.rigid_boundaries] = 2
 
         # ==============================================================================
-        # RADIKALE VORBEFÜLLUNG: VOLLE STRÖMUNG AB SEKUNDE NULL
+        # HOMOGENE VORBEFÜLLUNG (50% Dichte für unblockierten Durchfluss)
         # ==============================================================================
-        # Jedes freie Feld im kompletten Windkanal wird direkt mit '>' (1) besetzt!
+        # Wir setzen an jedem zweiten Ganzzahl-Schritt ein '>' (1), um Stauungen zu verhindern
         for y in range(1, self.height - 1):
             for x in range(1, self.width - 1):
                 if not self.rigid_boundaries[y][x]:
-                    self.lattice[y][x] = 1
+                    if (x + y) % 2 == 0:
+                        self.lattice[y][x] = 1
 
     def update_takt_cycle(self, step):
         """
