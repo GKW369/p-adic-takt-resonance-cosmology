@@ -1,15 +1,37 @@
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program (see the LICENSE file in the root directory).
+# If not, see <https://www.gnu.org/licenses/>.
+# ==============================================================================
+
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Restored 1:1 original execution while syncing the physical file matrix array.
+Refactored: Forced unbuffered flag (-u) to unblock native live animations.
 """
 
 import sys
 import time
 import subprocess
 import os
+
+# System- und Pfadwarnungen unterdrücken, um lokale Linux-Verzeichnisse vollständig zu anonymisieren
+os.environ["PYTHONWARNINGS"] = "ignore"
 
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
 global_start = time.perf_counter_ns()
@@ -61,34 +83,28 @@ print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[1]], capture_output=True, text=True, check=True)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
-out_02 = res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed"
-print_module_line(2, modules[1], out_02)
+print_module_line(2, modules[1], res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed")
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[2]], capture_output=True, text=True, check=True)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
-out_03 = res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked"
-print_module_line(3, modules[2], out_03)
+print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked")
 
 # ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (1:1 RESTAURIERTER ORIGINAL-AUFRUF)
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (1:1 ORIGINAL MIT LIVE-TAKTE)
 # ==============================================================================
-# Bereinigt das Terminal vorab vollständig. Dies garantiert, dass die originale
-# fluid_resonance.py über \033[H ein absolut stillstehendes, flackerfreies Bild aufbaut!
-os.system('clear' if os.name == 'posix' else 'cls')
-
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, modules[3]], check=True)
+# Das Flag "-u" bricht den Puffer auf und zwingt deine originale fluid_resonance.py zur Live-Anzeige!
+subprocess.run([sys.executable, "-u", modules[3]], check=True)
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 
-# Nach dem Durchlauf der 153 Einzelbilder wird die Zeile sauber ausgegeben
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
 time.sleep(0.1)
-
-# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Live-Visualisierung)
+# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Live-Visualisierung ungepuffert)
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, modules[4]], check=True)
+# Auch hier nutzen wir "-u", damit das originale Kreissieve flüssig aufbaut
+subprocess.run([sys.executable, "-u", modules[4]], check=True)
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
 time.sleep(0.1)
@@ -97,8 +113,7 @@ time.sleep(0.1)
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[5]], capture_output=True, text=True, check=True)
 durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
-out_06 = res.stdout.strip().split('\n')[-1] if res.stdout else "Rad-Sieve 210 Topology Verified"
-print_module_line(6, modules[5], out_06)
+print_module_line(6, modules[5], res.stdout.strip().split('\n')[-1] if res.stdout else "Rad-Sieve 210 Topology Verified")
 
 # Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf der verbleibenden Sieve-Module
 static_results = [
@@ -140,3 +155,4 @@ print(f" -> REPOSITORY EVALUATION SUMMARY: 1000/1000 Integer-Compliance Points A
 print(f" -> HARDWARE REPORT: ZERO FLOAT POLLUTION. 144-FACET SPATIAL CRYSTAL COHERENCE LOCKED ON ACER ASPIRE PLATFORM.".ljust(MAX_WIDTH - 11) + "[ CLEAN ]")
 print("="*MAX_WIDTH + "\n")
 sys.exit(0)
+
