@@ -21,8 +21,7 @@
 """
 pTRC Framework - Module 04: fluid_resonance.py
 1-Bit Planck-Lattice Information Propagation Simulator.
-Refactored: 100% Pure pTRC Architecture. Fluid Memory State Tracking.
-PIMPED: Pre-filled the entire windtunnel chamber with an initial ambient laminar air stream.
+Refactored: Fixed render visibility logic for pre-filled ambient space particles.
 """
 
 import sys
@@ -61,20 +60,18 @@ class PTRCEternalLatticeEngine:
             self.wall_mask[self.height - 1, x] = True
             
         self.rigid_boundaries = self.obstacle_mask | self.wall_mask
-        self.lattice[self.rigid_boundaries] = 2
-
-        # ==============================================================================
-        # PIMP-SEKTION: ATMOSPHÄRISCHE VORBEFÜLLUNG (Takt 0 Sättigung)
-        # ==============================================================================
-        # Wir fluten den Raum vorab mit realen Luftteilchen (>), sparen aber das Hindernis
-        # und die Wände präzise aus, damit die Invarianz nicht verletzt wird.
+        
+        # !!! PIMP MY WINDTUNNEL: ATMOSPHÄRISCHE VORBEFÜLLUNG !!!
+        # Wir bevölkern den Kanal vorab homogen mit stehenden Luftteilchen
         for y in range(1, self.height - 1):
-            dist_from_center = abs(y - self.cy) if y < self.cy else abs((self.height - 1 - y) - self.cy)
             for x in range(1, self.width - 1):
                 if not self.rigid_boundaries[y][x]:
-                    # Harmonische pTRC-Gitterfrequenz simuliert stehende Luftmassen im Strom
-                    if (dist_from_center + x) % 3 == 0:
-                        self.lattice[y][x] = 1
+                    # Erzeugt ein deterministisches, raumtreues 33%-Teilchenfeld
+                    if (self.crystal_field[y][x] + x) % 3 == 0:
+                        self.lattice[y][x] = 1 
+                        
+        # Barrieren sicher einbrennen
+        self.lattice[self.rigid_boundaries] = 2
 
     def update_takt_cycle(self, step):
         """
@@ -92,7 +89,7 @@ class PTRCEternalLatticeEngine:
                 if current_info == 0:
                     continue
                 
-                # Lokalen Nachbarschaftstensor der 144 Kristallfacetten auslesen
+                # Lokalen Nachbarschaftstensor auslesen
                 y_up = (y - 1) % self.height
                 y_down = (y + 1) % self.height
                 x_left = (x - 1) % self.width
@@ -101,10 +98,8 @@ class PTRCEternalLatticeEngine:
                 crystal_phase = self.crystal_field[y][x]
                 takt_phase = (step + crystal_phase + current_info) % self.modulo_24_clock
                 
-                # Symmetrische Herleitung der 144 Ausweichachsen
+                # Symmetrische Herleitung der Ausweichachsen
                 dx = 1 if (takt_phase % 2 == 0) else (2 if takt_phase % 3 == 0 else 0)
-                
-                # Unbestechliche Spiegel-Symmetrie über die Achse cy
                 base_dy = (takt_phase % 3) - 1
                 dy = base_dy if y < self.cy else -base_dy
 
@@ -113,13 +108,14 @@ class PTRCEternalLatticeEngine:
                     nx = (x + 1) % self.width
                     if not self.rigid_boundaries[y][nx] and next_lattice[y][nx] == 0:
                         next_lattice[y][nx] = 1
-                        next_lattice[y][x] = 0 
+                        next_lattice[y][x] = 0
                     else:
                         ny_alt = (y + dy) % self.height
                         if not self.rigid_boundaries[ny_alt][x] and next_lattice[ny_alt][x] == 0:
                             next_lattice[ny_alt][x] = 3
                             next_lattice[y][x] = 0
-                # 2. Fließender Resonanz-Wirbel (x) -> Rechnet die totale Interaktion im Heck
+                            
+                # 2. Fließender Resonanz-Wirbel (x)
                 elif current_info == 3:
                     if 25 < x < 145:
                         dy_sog = 1 if y < self.cy else (-1 if y > self.cy else 0)
@@ -130,7 +126,6 @@ class PTRCEternalLatticeEngine:
                         nx = (x + dx) % self.width
                         ny = (y + dy) % self.height
 
-                    # Wand-Reflektion an Decke und Boden
                     if ny <= 0 or ny >= self.height - 1:
                         ny = (y - dy) % self.height
 
@@ -144,9 +139,9 @@ class PTRCEternalLatticeEngine:
                                 next_lattice[ny_cascade][nx] = 3
                                 next_lattice[y][x] = 0
 
-        # Kontinuierlicher Nachschub an der linken Gitterwand im Taktlauf
+        # Kontinuierlicher Impulseinstrom an der linken Schleusenwand
         for y in range(1, self.height - 1):
-            dist_from_center = abs(y - self.cy) if y < self.cy else abs((self.height - 1 - y) - self.cy)
+            dist_from_center = abs(y - self.cy)
             if (dist_from_center + step) % 3 == 0:
                 next_lattice[y, 1] = 1
 
@@ -157,11 +152,16 @@ class PTRCEternalLatticeEngine:
         for y in range(self.height):
             row_chars = []
             for x in range(self.width):
-                if self.wall_mask[y][x]: row_chars.append("#")
-                elif self.obstacle_mask[y][x]: row_chars.append("O")
-                elif self.lattice[y][x] == 1: row_chars.append(">")
-                elif self.lattice[y][x] == 3: row_chars.append("x")
-                else: row_chars.append("-")
+                if self.wall_mask[y][x]: 
+                    row_chars.append("#")
+                elif self.obstacle_mask[y][x]: 
+                    row_chars.append("O")
+                elif self.lattice[y][x] == 1: 
+                    row_chars.append(">")
+                elif self.lattice[y][x] == 3: 
+                    row_chars.append("x")
+                else: 
+                    row_chars.append("-")
             output.append("".join(row_chars))
         return "\n".join(output)
 
@@ -178,6 +178,6 @@ if __name__ == "__main__":
         print("="*150)
         print(engine.render_fluid_frame())
         print("="*150)
-        time.sleep(0.015) 
+        time.sleep(0.015)
         
     sys.exit(0)
