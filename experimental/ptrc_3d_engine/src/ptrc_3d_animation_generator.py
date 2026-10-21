@@ -112,12 +112,10 @@ class PTRC3DAnimationPipeline:
             frame_buffer = np.zeros((self.stereo_engine.height, self.stereo_engine.width, 3), dtype=np.uint8)
             
             # --- DECENTRALIZED 137-TAKT COUNTER-STREAMING HANDSHAKE ---
-            # Information stays perfectly persistent across all 137 background takts
             for _ in range(self.FEYNMAN_LIMIT):
                 self.clock_engine.evolve_clock_one_takt()
                 
             # Kinetic Leap Multiplier for Object 2 (The moving Pyramid)
-            # Moves smoothly forward by exactly 1 pixel per background takt = 137px leap per frame
             pyramid_move_offset = (frame_idx * 1) % self.width
             pyramid_z_approach = (frame_idx * 1) % 32
 
@@ -126,7 +124,6 @@ class PTRC3DAnimationPipeline:
             # ==================================================================
             cx_sphere = self.width // 4
             for ox, oy, oz in fcc_offsets:
-                # Level 1 compact downscaling to optimize render speed
                 kx = cx_sphere + (ox * 6)
                 ky = cy + (oy * 6)
                 kz = static_z + (oz * 4)
@@ -138,11 +135,11 @@ class PTRC3DAnimationPipeline:
                 voxel_size = 8
                 self.accumulated_voxels_processed += 1
                 
-                # Render fully filled whole-number voxel block
+                # Render fully filled whole-number voxel block with correct color tuple
                 cv2.rectangle(frame_buffer, 
                               (int(out_x - voxel_size // 2), int(out_y - voxel_size // 2)), 
                               (int(out_x + voxel_size // 2), int(out_y + voxel_size // 2)), 
-                              (255, 140, 0), -1)  # Vivid Cyan-Blue Aether
+                              (255, 255, 0), -1)  # Vivid Cyan-Blue Aether
 
             # ==================================================================
             # OBJECT 2: THE PASSING LEGO PYRAMID (MOVING RIGHT-TO-LEFT)
@@ -153,14 +150,12 @@ class PTRC3DAnimationPipeline:
                 y_layer = -level * 4
                 for row in range(3 - level):
                     for col in range(3 - level):
-                        # Injecting the dynamic tactical movement directly onto coordinates
                         px = cx_pyramid_start + (col * 14) - ((3 - level) * 7) - pyramid_move_offset
                         py = cy + (row * 14) - ((3 - level) * 7) + 10 + y_layer
                         
                         for ox, oy, oz in fcc_offsets:
                             kx = px + (ox * 2)
                             ky = py + (oy * 2)
-                            # Approaching observer mesh on depth axis
                             kz = (static_z + 24) - pyramid_z_approach + (z_layer + oz) * 3
                             
                             denom = ((kz * self.SCALE) // 1414) + self.invariant_limit
@@ -174,9 +169,8 @@ class PTRC3DAnimationPipeline:
                             cv2.rectangle(frame_buffer, 
                                           (int(out_x - voxel_size // 2), int(out_y - voxel_size // 2)), 
                                           (int(out_x + voxel_size // 2), int(out_y + voxel_size // 2)), 
-                                          [40, int(depth_glow), 160], -1)  # Distinct Emerald Resonance
+                                          (40, int(depth_glow), 160), -1)  # Distinct Emerald Resonance
 
-            # Caching and monitoring IO execution speeds
             self.time_rendering_done += (time.perf_counter() - frame_render_start)
             
             io_start = time.perf_counter()
@@ -189,8 +183,6 @@ class PTRC3DAnimationPipeline:
                 
             if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
                 print(f"    + Synced Frame {frame_idx:03d}/{self.frames_limit} | Buffer written | Leap Offset: -{pyramid_move_offset}px")
-
-        self.total_generation_end = time.perf_counter()
 
     def compile_lossless_output_video(self):
         """Compiles binary raw cache assets losslessly into an H.264 mp4 container."""
@@ -207,17 +199,12 @@ class PTRC3DAnimationPipeline:
         try:
             subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
             self.time_ffmpeg_done = time.perf_counter() - ffmpeg_start
-            print("[ ffmpeg ] Lossless container compilation completed successfully.")
             
-            # Restless cache cleanup
             for frame_idx in range(self.frames_limit):
                 p = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.png")
                 if os.path.exists(p): os.remove(p)
             os.rmdir(self.output_directory)
             
-            # ==================================================================
-            # !!! FINALIZED ENG-TELEMETRY REPORT !!!
-            # ==================================================================
             total_execution_time = self.time_rendering_done + self.time_io_write_accumulated + self.time_ffmpeg_done
             mb_throughput = self.accumulated_bytes_written / (1024 * 1024)
             
