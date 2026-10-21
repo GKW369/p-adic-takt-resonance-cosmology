@@ -22,7 +22,7 @@
 pTRC Framework - Module 04: fluid_resonance.py
 1-Bit Planck-Lattice Information Propagation Simulator.
 Refactored: 100% Pure pTRC Architecture. Fluid Memory State Tracking.
-Strictly Symmetrical 144-Facet Crystal Cascade via Invariant Residuum 153.
+PIMPED: Pre-filled the entire windtunnel chamber with an initial ambient laminar air stream.
 """
 
 import sys
@@ -62,6 +62,19 @@ class PTRCEternalLatticeEngine:
             
         self.rigid_boundaries = self.obstacle_mask | self.wall_mask
         self.lattice[self.rigid_boundaries] = 2
+
+        # ==============================================================================
+        # PIMP-SEKTION: ATMOSPHÄRISCHE VORBEFÜLLUNG (Takt 0 Sättigung)
+        # ==============================================================================
+        # Wir fluten den Raum vorab mit realen Luftteilchen (>), sparen aber das Hindernis
+        # und die Wände präzise aus, damit die Invarianz nicht verletzt wird.
+        for y in range(1, self.height - 1):
+            dist_from_center = abs(y - self.cy) if y < self.cy else abs((self.height - 1 - y) - self.cy)
+            for x in range(1, self.width - 1):
+                if not self.rigid_boundaries[y][x]:
+                    # Harmonische pTRC-Gitterfrequenz simuliert stehende Luftmassen im Strom
+                    if (dist_from_center + x) % 3 == 0:
+                        self.lattice[y][x] = 1
 
     def update_takt_cycle(self, step):
         """
@@ -131,8 +144,7 @@ class PTRCEternalLatticeEngine:
                                 next_lattice[ny_cascade][nx] = 3
                                 next_lattice[y][x] = 0
 
-        # KORREKTUR FÜR PERFEKTE SYMMETRIE:
-        # Berechnet den Takt-Einstrom basierend auf dem Abstand zur Mitte (cy=20).
+        # Kontinuierlicher Nachschub an der linken Gitterwand im Taktlauf
         for y in range(1, self.height - 1):
             dist_from_center = abs(y - self.cy) if y < self.cy else abs((self.height - 1 - y) - self.cy)
             if (dist_from_center + step) % 3 == 0:
@@ -155,8 +167,6 @@ class PTRCEternalLatticeEngine:
 
 if __name__ == "__main__":
     engine = PTRCEternalLatticeEngine()
-    
-    # LAUFZEIT: Auf exakt 153 Takte eingestellt
     total_ticks = 153
     
     for takt in range(total_ticks):
@@ -168,8 +178,6 @@ if __name__ == "__main__":
         print("="*150)
         print(engine.render_fluid_frame())
         print("="*150)
-        
-        # GESCHWINDIGKEIT: Ganzzahlig beschleunigt auf 15 Millisekunden Taktzeit
         time.sleep(0.015) 
         
     sys.exit(0)
