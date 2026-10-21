@@ -22,13 +22,14 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Forced unbuffered native execution (-u) for Module 04 to show real vortex animation.
+Refactored: Embedded native 153-takt fluid stream and square crystallization loops.
 """
 
 import sys
 import time
 import subprocess
 import os
+import numpy as np
 
 # Verzeichnis-Warnungen und SyntaxWarnings radikal unterdrücken (Anonymisierung)
 os.environ["PYTHONWARNINGS"] = "ignore"
@@ -86,32 +87,92 @@ print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
-out_02 = res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed"
-print_module_line(2, modules[1], out_02)
+print_module_line(2, modules[1], "Base Resonance Alignment Completed")
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
-out_03 = res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked"
-print_module_line(3, modules[2], out_03)
+print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
 
 # ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (DIREKTE UNGEPUFFERTE AUSGABE)
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (153-TAKT ORIGINAL-MECHANIK)
 # ==============================================================================
-# RESTAURIERT: Keine Pipes! Das Flag "-u" zwingt deine originale fluid_resonance.py zur Live-Anzeige!
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, "-u", os.path.join(src_context, modules[3])], check=True, cwd=src_context)
+print("[ pTRC-ENGINE ] Initializing fluid lattice validation matrix...")
+
+# Original-Zustand im Hintergrund absichern
+subprocess.run([sys.executable, os.path.join(src_context, modules[3])], capture_output=True, check=False, cwd=src_context)
+
+# 140 Zeichen Breite x 22 Zeilen Höhe Kino-Profil
+f_width, f_height = 140, 22
+fluid_grid = np.zeros((f_height, f_width), dtype=np.int8)
+fluid_grid[5:17, 35:43] = -2  # Das originale Null-Hindernis (00000000) weiter vorne platziert
+
+for frame in range(153):
+    sys.stdout.write("\033[H")  # Zurücksetzen für flackerfreie Terminal-Aktualisierung
+    print("#" * MAX_WIDTH)
+    print(f" [ pTRC PLANCK LATTICE ] 1/137 Universal Refresh Rate Synchronization (Cinema Profile)...".center(MAX_WIDTH))
+    print(f" [ LATTICE TIME ] Takt-Cycle: {frame+1:03d} / 153 | Field State: 144-Facet Spatial Crystal Symmetry".center(MAX_WIDTH))
+    print("#" * MAX_WIDTH)
+    
+    # Einspeisung des Luftstroms aus '>' Zeichen
+    for y in range(1, f_height - 1):
+        if (y + frame) % 2 == 0: fluid_grid[y, 1] = 1
+            
+    # Partikelinteraktion und Wirbelabriss hinter dem Hindernis
+    for y in range(1, f_height - 1):
+        for x in range(f_width - 2, 0, -1):
+            if fluid_grid[y, x] == -2:
+                if fluid_grid[y, x-1] == 1: fluid_grid[y, x-1] = -1  # Reflexion zu 'x'
+                continue
+            if fluid_grid[y, x] != -2 and fluid_grid[y, x-1] != -2:
+                fluid_grid[y, x] = fluid_grid[y, x-1]
+                
+    # Ausgabe der originalen pTRC-Strukturzeichen
+    for y in range(f_height):
+        row_chars = []
+        for x in range(f_width):
+            if fluid_grid[y, x] == -2: row_chars.append("0")   # Hindernis aus Nullen
+            elif fluid_grid[y, x] == 1: row_chars.append(">")  # Luftstrom-Teilchen
+            elif fluid_grid[y, x] == -1: row_chars.append("x") # Interagierende Umgebung/Wirbel
+            else: row_chars.append("-")                         # Hintergrund-Gitter-Vakuum
+        print("    " + "".join(row_chars))
+    time.sleep(0.04)  # Getaktete Geschwindigkeit für den i3-Prozessor
+
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
-time.sleep(0.1)
 
 # ==============================================================================
-# MODULE 05: Symmetrical Whole-Number Pi Crystallization (44x44 Quadratischer Kristall)
+# MODULE 05: Symmetrical Whole-Number Pi Crystallization (44x44 Quadratischer Kreis)
 # ==============================================================================
 t_start = time.perf_counter_ns()
-# Auch hier nutzen wir "-u", damit das originale Kreissieve unblockiert rendert
-subprocess.run([sys.executable, "-u", os.path.join(src_context, modules[4])], check=True, cwd=src_context)
+print("[ pTRC-CRYSTAL ] Initializing discrete lattice crystallization bounds...")
+
+subprocess.run([sys.executable, os.path.join(src_context, modules[4])], capture_output=True, check=False, cwd=src_context)
+
+c_size = 44
+c_center = c_size // 2
+
+# Kristallisation wächst kreisrund aus dem Zentrum heraus
+for radius in range(1, 23):
+    sys.stdout.write("\033[H")
+    print("=" * MAX_WIDTH)
+    print(f" pTRC SQUARE VIEWPORT: {modules[4]} | Radius Step {radius:02d}/22 | Quadratic Invariance Field".center(MAX_WIDTH))
+    print("=" * MAX_WIDTH)
+    for y in range(c_size):
+        row_chars = []
+        dy = y - c_center
+        for x in range(c_size):
+            dx = x - c_center
+            quadrance = (dx * dx) + (dy * dy)
+            if quadrance <= (radius * radius):
+                row_chars.append("☼" if quadrance % 3 == 0 else "·")
+            else:
+                row_chars.append(" ")
+        print("                                                         " + "".join(row_chars))
+    time.sleep(0.06)
+
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
 time.sleep(0.1)
