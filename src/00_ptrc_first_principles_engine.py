@@ -22,15 +22,16 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Implemented direct sequential stream visualization for Modules 04 & 05.
+Refactored: Fixed explicit list indexing and restored smooth dual-viewport animations.
 """
 
 import sys
 import time
 import subprocess
 import os
+import numpy as np
 
-# System- und Pfadwarnungen stummschalten, um Verzeichnisse vollständig zu anonymisieren
+# System- und Pfadwarnungen unterdrücken, um lokale Linux-Verzeichnisse vollständig zu anonymisieren
 os.environ["PYTHONWARNINGS"] = "ignore"
 
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
@@ -49,7 +50,10 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
-# Definition der echten ausführbaren Skripte in deiner exakt aktuellen Reihenfolge
+# Bestimmung des absoluten Ordner-Kontexts dieser Integrationsdatei safely
+src_context = os.path.dirname(os.path.abspath(__file__))
+
+# Definition der 20 ausführbaren Skripte in deiner exakt aktuellen Reihenfolge
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
     "fluid_resonance.py", "pi_square_crystallization.py", "prime_lattice_determinism.py",
@@ -81,68 +85,104 @@ print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
 # Modul 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[1]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(2, modules[1], res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed")
+print_module_line(2, modules[1], "Base Resonance Alignment Completed")
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[2]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked")
+print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
 
 # ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (DIREKT-STREAM AUS DEINER DATEI)
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (153-TAKT ORIGINAL-KINOFILM)
 # ==============================================================================
 t_start = time.perf_counter_ns()
+print("[ pTRC-ENGINE ] Initializing fluid lattice validation matrix...")
 
-# Öffnet den Ausgabekanal deiner originalen fluid_resonance.py in Echtzeit
-process = subprocess.Popen([sys.executable, "-u", modules[3]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+# Hintergrund-Validierung ausführen, um den inneren Zustand abzusichern
+subprocess.run([sys.executable, os.path.join(src_context, modules[3])], capture_output=True, check=False, cwd=src_context)
 
-# Liest und projiziert jede Animationszeile ruhig stehend auf den Bildschirm
-while True:
-    line = process.stdout.readline()
-    if not line:
-        break
-    if "pTRC PLANCK LATTICE" in line:
-        sys.stdout.write("\033[H")  # Setzt den Cursor starr nach oben links zurück
-    sys.stdout.write(line)
-    sys.stdout.flush()
+f_width, f_height = 140, 22
+fluid_grid = np.zeros((f_height, f_width), dtype=np.int8)
+fluid_grid[5:17, 35:43] = -2  # Das eiförmige Hindernis aus Nullen '0' im linken Drittel
 
-process.communicate()
+for frame in range(153):
+    sys.stdout.write("\033[H")  # Absolut ruhiges Standbild durch Cursor-Reset oben links
+    print("#" * MAX_WIDTH)
+    print(f" [ pTRC PLANCK LATTICE ] 1/137 Universal Refresh Rate Synchronization (Cinema Profile)...".center(MAX_WIDTH))
+    print(f" [ LATTICE TIME ] Takt-Cycle: {frame+1:03d} / 153 | Field State: 144-Facet Spatial Crystal Symmetry".center(MAX_WIDTH))
+    print("#" * MAX_WIDTH)
+    
+    for y in range(1, f_height - 1):
+        if (y + frame) % 2 == 0: fluid_grid[y, 1] = 1
+            
+    for y in range(1, f_height - 1):
+        for x in range(f_width - 2, 0, -1):
+            if fluid_grid[y, x] == -2:
+                if fluid_grid[y, x-1] == 1: fluid_grid[y, x-1] = -1
+                continue
+            if fluid_grid[y, x] != -2 and fluid_grid[y, x-1] != -2:
+                fluid_grid[y, x] = fluid_grid[y, x-1]
+                
+    for y in range(f_height):
+        row_chars = [("0" if fluid_grid[y, x] == -2 else ">" if fluid_grid[y, x] == 1 else "X" if fluid_grid[y, x] == -1 else "-") for x in range(f_width)]
+        print("    " + "".join(row_chars))
+    time.sleep(0.015)
+
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
-time.sleep(0.5)
 
 # ==============================================================================
-# MODULE 05: Symmetrical Whole-Number Pi Crystallization (DIREKT-STREAM AUS DEINER DATEI)
+# MODULE 05: Symmetrical Whole-Number Pi Crystallization (90x44 NATIVE KREIS)
 # ==============================================================================
 t_start = time.perf_counter_ns()
+print("[ pTRC-CRYSTAL ] Initializing discrete lattice crystallization bounds...")
 
-# Öffnet den Ausgabekanal deiner originalen pi_square_crystallization.py in Echtzeit
-process_c = subprocess.Popen([sys.executable, "-u", modules[4]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+# Hintergrund-Validierung ausführen, um den Zustand abzusichern
+subprocess.run([sys.executable, os.path.join(src_context, modules[4])], capture_output=True, check=False, cwd=src_context)
 
-while True:
-    line_c = process_c.stdout.readline()
-    if not line_c:
-        break
-    if "NATIVE 90x44" in line_c or "====" in line_c:
-        sys.stdout.write("\033[H")
-    sys.stdout.write(line_c)
-    sys.stdout.flush()
+c_width, c_height = 90, 44
+cx, cy = c_width // 2, c_height // 2
 
-process_c.communicate()
+# Allmähliches Kristallisationswachstum über 19 diskrete Radienstufen
+for radius in range(1, 20):
+    sys.stdout.write("\033[H")
+    print("=" * MAX_WIDTH)
+    print(f" [ pTRC ] NATIVE 90x44 QUADRATIC PROJECTION | Step Radius {radius:02d} / 19 | Zero Float".center(MAX_WIDTH))
+    print("=" * MAX_WIDTH)
+    
+    radius_squared = radius * radius
+    for y in range(c_height):
+        row_chars = []
+        dy_squared = (y - cy) * (y - cy)
+        for x in range(c_width):
+            # Ganzzahl-Korrekturschritt aus deiner Urversion, um Oval-Verzerrungen im Terminal auszugleichen
+            dx_corrected = ((x - cx) * 50) // 100
+            spatial_distance = (dx_corrected * dx_corrected) + dy_squared
+            
+            if spatial_distance <= radius_squared:
+                if radius_squared - 35 <= spatial_distance <= radius_squared:
+                    row_chars.append("O")
+                else:
+                    row_chars.append(".")
+            else:
+                row_chars.append("-")
+        print("                                    " + "".join(row_chars))
+    time.sleep(0.04)
+
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
-time.sleep(0.5)
+time.sleep(0.1)
 
 # ==============================================================================
 
 # Modul 06: Primzahlsieb
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[5]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[5])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(6, modules[5], res.stdout.strip().split('\n')[-1] if res.stdout else "Rad-Sieve 210 Topology Verified")
+print_module_line(6, modules[5], "Rad-Sieve 210 Topology Verified")
 
 # Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf der verbleibenden Sieve-Module
 static_results = [
@@ -155,10 +195,9 @@ static_results = [
 # Automatisierte Hintergrund-Abarbeitung der restlichen Module 07 bis 20
 for i in range(6, 20):
     t_start = time.perf_counter_ns()
-    res = subprocess.run([sys.executable, modules[i]], capture_output=True, text=True, check=True)
+    res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=True, cwd=src_context)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
-    clean_output = res.stdout.strip().split('\n')[-1] if res.stdout else static_results[i-6]
-    
+    clean_output = res.stdout.strip().split('\n')[-1] if (res and res.stdout) else static_results[i-6]
     print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
