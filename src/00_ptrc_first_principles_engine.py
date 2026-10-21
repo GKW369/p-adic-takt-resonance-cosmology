@@ -22,14 +22,13 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Embedded native loop synchronization to force visible terminal viewport frames.
+Refactored: Forced unbuffered native execution (-u) for Module 04 to show real vortex animation.
 """
 
 import sys
 import time
 import subprocess
 import os
-import numpy as np
 
 # Verzeichnis-Warnungen und SyntaxWarnings radikal unterdrücken (Anonymisierung)
 os.environ["PYTHONWARNINGS"] = "ignore"
@@ -50,7 +49,7 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
-# Bestimmung des absoluten Ordner-Kontexts dieser Integrationsdatei
+# Bestimmung des absoluten Ordner-Kontexts dieser Integrationsdatei safely
 src_context = os.path.dirname(os.path.abspath(__file__))
 
 # Definition der 20 ausführbaren Skripte in der flachen Ordnerstruktur
@@ -98,71 +97,21 @@ out_03 = res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spec
 print_module_line(3, modules[2], out_03)
 
 # ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (140-Takt Integrierte Animation)
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (DIREKTE UNGEPUFFERTE AUSGABE)
 # ==============================================================================
+# RESTAURIERT: Keine Pipes! Das Flag "-u" zwingt deine originale fluid_resonance.py zur Live-Anzeige!
 t_start = time.perf_counter_ns()
-print("[ pTRC-ENGINE ] Initializing fluid lattice validation matrix...")
-
-# Hintergrund-Validierung ausführen, um den Zustand abzusichern
-subprocess.run([sys.executable, os.path.join(src_context, modules[3])], capture_output=True, check=False, cwd=src_context)
-
-# Sichtbares Gitter: Kino-Format 140 Spalten mal 22 Zeilen
-f_width, f_height = 140, 22
-fluid_grid = np.zeros((f_height, f_width), dtype=np.int8)
-fluid_grid[5:17, 45:48] = -2  # Wirminghaus-Hindernis im linken Drittel platziert
-
-for frame in range(140):
-    sys.stdout.write("\033[H")  # Cursor oben links ansetzen für flackerfreie Animation
-    # Laminare Impulseinspeisung an der linken Gitterwand
-    for y in range(1, f_height - 1):
-        if (y + frame) % 3 == 0: fluid_grid[y, 1] = 1
-            
-    # Partikel-Transport-Verschiebung (Sprung ohne Null von 1 auf -1 bei Rückprall)
-    for y in range(1, f_height - 1):
-        for x in range(f_width - 2, 0, -1):
-            if fluid_grid[y, x] == -2:
-                if fluid_grid[y, x-1] == 1: fluid_grid[y, x-1] = -1
-                continue
-            if fluid_grid[y, x] != -2 and fluid_grid[y, x-1] != -2:
-                fluid_grid[y, x] = fluid_grid[y, x-1]
-                
-    # Rendern des Frames auf die Konsole
-    for y in range(f_height):
-        row_chars = [("█" if fluid_grid[y, x] == -2 else "•" if fluid_grid[y, x] == 1 else "°" if fluid_grid[y, x] == -1 else " ") for x in range(f_width)]
-        print("    " + "".join(row_chars))
-    time.sleep(0.02)  # Sichtbare Taktverzögerung
-
+subprocess.run([sys.executable, "-u", os.path.join(src_context, modules[3])], check=True, cwd=src_context)
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
+time.sleep(0.1)
 
 # ==============================================================================
 # MODULE 05: Symmetrical Whole-Number Pi Crystallization (44x44 Quadratischer Kristall)
 # ==============================================================================
 t_start = time.perf_counter_ns()
-print("[ pTRC-CRYSTAL ] Initializing discrete lattice crystallization bounds...")
-
-# Hintergrund-Validierung ausführen, um den Zustand abzusichern
-subprocess.run([sys.executable, os.path.join(src_context, modules[4])], capture_output=True, check=False, cwd=src_context)
-
-c_size = 44
-c_center = c_size // 2
-
-# Symmetrisches Kreiswachstum ohne Fließkomma-Pi über 22 Radienstufen
-for radius in range(1, 23):
-    sys.stdout.write("\033[H")
-    for y in range(c_size):
-        row_chars = []
-        dy = y - c_center
-        for x in range(c_size):
-            dx = x - c_center
-            quadrance = (dx * dx) + (dy * dy)
-            if quadrance <= (radius * radius):
-                row_chars.append("☼" if quadrance % 3 == 0 else "·")
-            else:
-                row_chars.append(" ")
-        print("                                                         " + "".join(row_chars))
-    time.sleep(0.05)
-
+# Auch hier nutzen wir "-u", damit das originale Kreissieve unblockiert rendert
+subprocess.run([sys.executable, "-u", os.path.join(src_context, modules[4])], check=True, cwd=src_context)
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
 time.sleep(0.1)
