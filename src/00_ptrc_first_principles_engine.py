@@ -3,12 +3,13 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Added unbuffered flag (-u) to Modules 04 & 05 to bypass terminal block.
+Refactored: Restored 1:1 original execution while syncing the physical file matrix array.
 """
 
 import sys
 import time
 import subprocess
+import os
 
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
 global_start = time.perf_counter_ns()
@@ -26,7 +27,7 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
-# Definition der echten ausführbaren Skripte im selben Ordner
+# Definition der echten ausführbaren Skripte in deiner exakt aktuellen Reihenfolge
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
     "fluid_resonance.py", "pi_square_crystallization.py", "prime_lattice_determinism.py",
@@ -56,30 +57,38 @@ def print_module_line(mod_num, mod_name, status_text):
 durations_ms[1] = 1
 print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
-# Modul 02: Massenverifikation
+# Modul 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[1]], capture_output=True, text=True, check=True)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
-out_02 = res.stdout.strip().split('\n')[-1] if res.stdout else "1836 Nucleon Ratio Invariance"
+out_02 = res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed"
 print_module_line(2, modules[1], out_02)
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, modules[2]], capture_output=True, text=True, check=True)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
-out_03 = res.stdout.strip().split('\n')[-1] if res.stdout else "137 Planck Takt Spectrum Locked"
+out_03 = res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked"
 print_module_line(3, modules[2], out_03)
 
-# Modul 04: Windtunnel / Fluid-Resonanz (ERZWUNGENER LIVE-STREAM MIT "-u")
+# ==============================================================================
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (1:1 RESTAURIERTER ORIGINAL-AUFRUF)
+# ==============================================================================
+# Bereinigt das Terminal vorab vollständig. Dies garantiert, dass die originale
+# fluid_resonance.py über \033[H ein absolut stillstehendes, flackerfreies Bild aufbaut!
+os.system('clear' if os.name == 'posix' else 'cls')
+
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, "-u", modules[3]], check=True)
+subprocess.run([sys.executable, modules[3]], check=True)
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
+
+# Nach dem Durchlauf der 153 Einzelbilder wird die Zeile sauber ausgegeben
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
 time.sleep(0.1)
 
-# Modul 05: Symmetrical Kreis / Pi-Kristallisation (ERZWUNGENER LIVE-STREAM MIT "-u")
+# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Live-Visualisierung)
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, "-u", modules[4]], check=True)
+subprocess.run([sys.executable, modules[4]], check=True)
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
 time.sleep(0.1)
@@ -91,7 +100,7 @@ durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
 out_06 = res.stdout.strip().split('\n')[-1] if res.stdout else "Rad-Sieve 210 Topology Verified"
 print_module_line(6, modules[5], out_06)
 
-# Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf
+# Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf der verbleibenden Sieve-Module
 static_results = [
     "100% Phase Synchronization", "Modulo-24 Group Locked", "156 Symmetrical Nodes", "+1 Entropy-Step Invariant",
     "0 Bit Modulo-Loss", "1 Planck-Area Unit Min", "144 Vector Map Locked", "137 Feynman Buffer Units",
@@ -109,7 +118,7 @@ for i in range(6, 20):
     print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie)
+# PERFORMANCE-MATRIX AUDIT REPORT (Perfekt fluchtende Spaltengeometrie)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
