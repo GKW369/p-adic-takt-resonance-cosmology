@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Forced unbuffered flag (-u) to unblock native live animations.
+Refactored: Implemented direct sequential stream visualization for Modules 04 & 05.
 """
 
 import sys
@@ -30,7 +30,7 @@ import time
 import subprocess
 import os
 
-# System- und Pfadwarnungen unterdrücken, um lokale Linux-Verzeichnisse vollständig zu anonymisieren
+# System- und Pfadwarnungen stummschalten, um Verzeichnisse vollständig zu anonymisieren
 os.environ["PYTHONWARNINGS"] = "ignore"
 
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
@@ -92,22 +92,51 @@ durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked")
 
 # ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (1:1 ORIGINAL MIT LIVE-TAKTE)
+# MODULE 04: Windtunnel Fluid Dynamics Resonance (DIREKT-STREAM AUS DEINER DATEI)
 # ==============================================================================
 t_start = time.perf_counter_ns()
-# Das Flag "-u" bricht den Puffer auf und zwingt deine originale fluid_resonance.py zur Live-Anzeige!
-subprocess.run([sys.executable, "-u", modules[3]], check=True)
-durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 
+# Öffnet den Ausgabekanal deiner originalen fluid_resonance.py in Echtzeit
+process = subprocess.Popen([sys.executable, "-u", modules[3]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+# Liest und projiziert jede Animationszeile ruhig stehend auf den Bildschirm
+while True:
+    line = process.stdout.readline()
+    if not line:
+        break
+    if "pTRC PLANCK LATTICE" in line:
+        sys.stdout.write("\033[H")  # Setzt den Cursor starr nach oben links zurück
+    sys.stdout.write(line)
+    sys.stdout.flush()
+
+process.communicate()
+durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
-time.sleep(0.1)
-# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Live-Visualisierung ungepuffert)
+time.sleep(0.5)
+
+# ==============================================================================
+# MODULE 05: Symmetrical Whole-Number Pi Crystallization (DIREKT-STREAM AUS DEINER DATEI)
+# ==============================================================================
 t_start = time.perf_counter_ns()
-# Auch hier nutzen wir "-u", damit das originale Kreissieve flüssig aufbaut
-subprocess.run([sys.executable, "-u", modules[4]], check=True)
+
+# Öffnet den Ausgabekanal deiner originalen pi_square_crystallization.py in Echtzeit
+process_c = subprocess.Popen([sys.executable, "-u", modules[4]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+while True:
+    line_c = process_c.stdout.readline()
+    if not line_c:
+        break
+    if "NATIVE 90x44" in line_c or "====" in line_c:
+        sys.stdout.write("\033[H")
+    sys.stdout.write(line_c)
+    sys.stdout.flush()
+
+process_c.communicate()
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
-time.sleep(0.1)
+time.sleep(0.5)
+
+# ==============================================================================
 
 # Modul 06: Primzahlsieb
 t_start = time.perf_counter_ns()
@@ -155,4 +184,3 @@ print(f" -> REPOSITORY EVALUATION SUMMARY: 1000/1000 Integer-Compliance Points A
 print(f" -> HARDWARE REPORT: ZERO FLOAT POLLUTION. 144-FACET SPATIAL CRYSTAL COHERENCE LOCKED ON ACER ASPIRE PLATFORM.".ljust(MAX_WIDTH - 11) + "[ CLEAN ]")
 print("="*MAX_WIDTH + "\n")
 sys.exit(0)
-
