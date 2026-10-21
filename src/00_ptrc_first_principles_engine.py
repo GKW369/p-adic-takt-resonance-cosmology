@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Fixed chronological array sequence to unblock Modules 04 and 05.
+Refactored: Fixed explicit list indexing inside print logging to prevent AttributeError.
 """
 
 import sys
@@ -76,38 +76,38 @@ def print_module_line(mod_num, mod_name, status_text):
     print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
 
 # Module 01: Core Integration Engine self-test validation loop
-durations_ms = 1
-print_module_line(1, modules, "Engine Core Invariance Initialized")
+durations_ms[1] = 1
+print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
 # Module 02: Nucleon Mass Verification Sieve
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(2, modules, "Base Resonance Alignment Completed")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(2, modules[1], "Base Resonance Alignment Completed")
 
 # Module 03: Alpha Emitter Fine Structure Constant Tracking
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(3, modules, "Planck Takt Spectrum Locked")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
 
 # ==============================================================================
 # !!! ANIMATION CORES UNBLOCKED: DIRECT TERMINAL STREAMS !!!
 # ==============================================================================
 
 # Module 04: Windtunnel Fluid Dynamics Resonance (Live-Terminal Animation)
-print(f" -> [ LAUNCHING LIVE STREAM ] Streaming discrete matrix automaton for {modules}...")
+print(f" -> [ LAUNCHING LIVE STREAM ] Streaming discrete matrix automaton for {modules[3]}...")
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, os.path.join(src_context, modules)], check=False, cwd=src_context)
-durations_ms = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(4, modules, "Fluid Dynamic Matrix Realized")
+subprocess.run([sys.executable, os.path.join(src_context, modules[3])], check=False, cwd=src_context)
+durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
 
 # Module 05: Symmetrical Whole-Number Pi Crystallization (Live-Terminal Animation)
-print(f" -> [ LAUNCHING LIVE STREAM ] Streaming spatial crystal growth for {modules}...")
+print(f" -> [ LAUNCHING LIVE STREAM ] Streaming spatial crystal growth for {modules[4]}...")
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, os.path.join(src_context, modules)], check=False, cwd=src_context)
-durations_ms = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(5, modules, "Native 90x44 Spatial Lattice Rendered")
+subprocess.run([sys.executable, os.path.join(src_context, modules[4])], check=False, cwd=src_context)
+durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Rendered")
 
 # ==============================================================================
 
