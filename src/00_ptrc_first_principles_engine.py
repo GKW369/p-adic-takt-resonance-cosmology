@@ -28,6 +28,7 @@ Refactored: Restored original unsuppressed execution logic for fluid_resonance g
 import sys
 import time
 import subprocess
+import os
 
 # Start der globalen Zeitmessung auf Nanosekunden-Ebene
 global_start = time.perf_counter_ns()
@@ -45,6 +46,9 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
+# Bestimmung des aktuellen Verzeichnisses für absolute Funktionssicherheit
+src_context = os.path.dirname(os.path.abspath(__file__))
+
 # Definition der 20 ausführbaren Skripte in der flachen Ordnerkonstellation
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
@@ -60,7 +64,7 @@ modules = [
 durations_ms = {}
 
 def print_module_line(mod_num, mod_name, status_text):
-    """Formats and aligns terminal layout blocks to exactly 166 columns."""
+    """Säubert den Text und erzwingt ein absolut gleichmäßiges Spaltenmaß"""
     clean_text = status_text.replace("-> ", "").replace("[ OK ] ", "").replace("RESULT: ", "").strip()
     
     if len(clean_text) > 55:
@@ -77,35 +81,33 @@ print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
 # Modul 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[1]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(2, modules[1], res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed")
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[2]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked")
 
-# Modul 04: Windtunnel / Fluid-Resonanz (Originale, unblockierte Live-Visualisierung aus deiner Datei)
-print(f" -> [ LAUNCHING LIVE STREAM ] Streaming discrete matrix automaton for {modules[3]}...")
+# Modul 04: Windtunnel / Fluid-Resonanz (Originale, schöne Live-Visualisierung aus deiner Datei)
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, modules[3]], check=True)
+subprocess.run([sys.executable, os.path.join(src_context, modules[3])], check=True, cwd=src_context)
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
 time.sleep(0.1)
 
-# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Originale, unblockierte Live-Visualisierung aus deiner Datei)
-print(f" -> [ LAUNCHING LIVE STREAM ] Streaming spatial crystal growth for {modules[4]}...")
+# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Originale, schöne Live-Visualisierung aus deiner Datei)
 t_start = time.perf_counter_ns()
-subprocess.run([sys.executable, modules[4]], check=True)
+subprocess.run([sys.executable, os.path.join(src_context, modules[4])], check=True, cwd=src_context)
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
 time.sleep(0.1)
 
 # Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf (Module 06 bis 20)
 static_results = [
-    "Zero-Float Hubble Tension Resolution Matrix", "Zero-Float Internal Loopback Engine", 
+    "Hubble Tension Resolution Matrix", "Zero-Float Internal Loopback Engine", 
     "Zero-Float Rotational Isotropy Matrix", "STATUS: Zero-Float Sieve Determinism Engine Successfully Audited.", 
     "Zero-Float Entanglement Protocol Successfully Secured", "Zero-Float Quantum Measurement Matrix", 
     "Zero-Float Quantum Neural Network Block Verified", "Zero-Float Thermodynamic Clock Engine", 
@@ -119,7 +121,7 @@ static_results = [
 # Startet exakt bei Index 5, um jegliche Verschiebungen im 20-Skripte-Array vollständig auszuschließen
 for i in range(5, len(modules)):
     t_start = time.perf_counter_ns()
-    res = subprocess.run([sys.executable, modules[i]], capture_output=True, text=True, check=True)
+    res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=True, cwd=src_context)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
     
     # Extrahiere die letzte valide Textzeile aus dem echten Subprocess-Kanal
