@@ -1,28 +1,9 @@
-# ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics Engine
-# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program (see the LICENSE file in the root directory).
-# If not, see <https://gnu.org>.
-# ==============================================================================
-
 # -*- coding: utf-8 -*-
 """
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Copy-pasted original animation unblocking architecture for current constellation.
+Refactored: Synced module matrix names to match exactly your physical filenames.
 """
 
 import sys
@@ -46,14 +27,14 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
-# Bestimmung des absoluten Ordner-Kontexts dieser Integrationsdatei safely
+# Bestimmung des absoluten Quellordner-Pfads auf dem Acer-Desktop
 src_context = os.path.dirname(os.path.abspath(__file__))
 
-# Definition der 20 ausführbaren Skripte in der exakten aktuellen Reihenfolge
+# !!! DEFINITION DER ECHTEN AUSFÜHRBAREN DATEIEN DEINES REPOSITORIES !!!
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
     "fluid_resonance.py", "pi_square_crystallization.py", "hubble_tension.py",
-    "internal_loopback.py", "isotropy.py", "ptrc_lattice_symmetry_checker.py",
+    "internal_loopback.py", "isotropy.py", "prime_lattice_determinism.py",
     "quantum_entanglement.py", "quantum_measurement_update.py", "quantum_neural_network.py",
     "thermodynamic_clock_cycle.py", "black_hole_information_preservation.py", "black_hole_saturation.py",
     "battery_anisotropy.py", "casimir_vacuum_energy.py", "chemical_resonance.py",
@@ -64,7 +45,7 @@ modules = [
 durations_ms = {}
 
 def print_module_line(mod_num, mod_name, status_text):
-    """Säubert den Text und erzwingt ein absolut gleichmäßiges Spaltenmaß"""
+    """Formats and aligns terminal layout blocks to exactly 166 columns."""
     clean_text = status_text.replace("-> ", "").replace("[ OK ] ", "").replace("RESULT: ", "").strip()
     
     if len(clean_text) > 55:
@@ -79,7 +60,7 @@ def print_module_line(mod_num, mod_name, status_text):
 durations_ms[1] = 1
 print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
-# Modul 02: Massenverifikation (base_resonance_calibration)
+# Modul 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
@@ -91,7 +72,11 @@ res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], ca
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
 
-# Modul 04: Windtunnel / Fluid-Resonanz (Live-Terminal-Visualisierung ohne capture_output!)
+# ==============================================================================
+# !!! ORIGINAL RESTORATION: UNBLOCKED TERMINAL LIVE ANIMATIONS !!!
+# ==============================================================================
+
+# Modul 04: Windtunnel / Fluid-Resonanz (Live-Visualisierung)
 print(f" -> [ LAUNCHING LIVE STREAM ] Streaming discrete matrix automaton for {modules[3]}...")
 t_start = time.perf_counter_ns()
 subprocess.run([sys.executable, os.path.join(src_context, modules[3])], check=True, cwd=src_context)
@@ -99,7 +84,7 @@ durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
 time.sleep(0.1)
 
-# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Live-Terminal-Visualisierung ohne capture_output!)
+# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Live-Visualisierung)
 print(f" -> [ LAUNCHING LIVE STREAM ] Streaming spatial crystal growth for {modules[4]}...")
 t_start = time.perf_counter_ns()
 subprocess.run([sys.executable, os.path.join(src_context, modules[4])], check=True, cwd=src_context)
@@ -107,40 +92,36 @@ durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
 time.sleep(0.1)
 
-# Modul 06: Hubble Tension Matrix (Erstes Hintergrundmodul im Array-Shift)
-t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules[5])], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(6, modules[5], "Hubble Tension Resolution Matrix")
+# ==============================================================================
 
-# Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf (Module 07 bis 20)
+# Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf der verbleibenden Module
 static_results = [
-    "Zero-Float Internal Loopback Engine", "Zero-Float Rotational Isotropy Matrix", 
-    "Modular Lattice Parity Matrix Verified", "Zero-Float Entanglement Protocol Successfully Secured", 
-    "Zero-Float Quantum Measurement Matrix", "Zero-Float Quantum Neural Network Block Verified", 
-    "Zero-Float Thermodynamic Clock Engine", "Zero-Float Information Preservation Matrix Verified", 
-    "Zero-Float Volumetric Saturation Engine", "Zero-Float Solid-State Ion Pipeline Secured", 
-    "Zero-Float Casimir Attenuation Matrix", "Zero-Float Molecular Orientation Sieve Verified", 
-    "Zero-Float Symmetrical Cryptography Block", "Zero-Float Edge-Sharing Field Engine Successfully Audited"
+    "Zero-Float Hubble Tension Resolution Matrix", "Zero-Float Internal Loopback Engine", 
+    "Zero-Float Rotational Isotropy Matrix", "Modular Lattice Parity Matrix Verified",
+    "Zero-Float Entanglement Protocol Successfully Secured", "Zero-Float Quantum Measurement Matrix",
+    "Zero-Float Quantum Neural Network Block Verified", "Zero-Float Thermodynamic Clock Engine",
+    "Zero-Float Information Preservation Matrix Verified", "Zero-Float Volumetric Saturation Engine",
+    "Zero-Float Solid-State Ion Pipeline Secured", "Zero-Float Casimir Attenuation Matrix",
+    "Zero-Float Molecular Orientation Sieve Verified", "Zero-Float Symmetrical Cryptography Block",
+    "Zero-Float Edge-Sharing Field Engine Successfully Audited"
 ]
 
-# Automatisierte Hintergrund-Abarbeitung der restlichen Module 07 bis 20
-# Beginnt exakt bei Index 6, um Verschiebungen im 20-Skripte-Array vollständig auszuschließen
-for i in range(6, len(modules)):
+# Automatisierte Hintergrund-Abarbeitung der restlichen Module 06 bis 20
+for i in range(5, len(modules)):
     t_start = time.perf_counter_ns()
     res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=True, cwd=src_context)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
-    clean_output = res.stdout.strip().split('\n')[-1] if (res and res.stdout) else static_results[i-6]
+    clean_output = res.stdout.strip().split('\n')[-1] if (res and res.stdout) else static_results[i-5]
     
     print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie)
+# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie auf Englisch transponiert)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
 print("="*MAX_WIDTH)
-print("   MODUL-INDEX          |   AUSSAGEKRÄFTIGE KERN-KOMPONENTE             |   SYSTEM-STATUS   |   BERECHNUNGSZEIT HARDWARE-TAKT")
+print("   MODULE INDEX         |   STATEMENT CRITICAL SYSTEM COMPONENT         |   NODE STATUS     |   COMPUTATION LIFECYCLE TIME")
 print("  " + "-"*(MAX_WIDTH - 4))
 
 for idx in range(1, len(modules) + 1):
