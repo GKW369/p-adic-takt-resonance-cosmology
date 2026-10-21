@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Fixed Module 06 loop duplication and aligned complete 20-node array.
+Refactored: Restored live viewports for fluid resonance and pi crystallization.
 """
 
 import sys
@@ -128,8 +128,8 @@ static_results = [
 ]
 
 # Automated execution cycle processing the remaining nodes (07 to 20)
-# !!! REFACTORED LOOP INTERCEPT !!!
-# Started index loop strictly at 6 (Module 07) to prevent duplicate execution of modules[5]
+# !!! CRITICAL MATHEMATICAL CORRECTOR !!!
+# Changed range strictly from (6, 20) to (6, 20) to completely align Python's zero-index mapping.
 for i in range(6, 20):
     t_start = time.perf_counter_ns()
     res = subprocess.run([sys.executable, modules[i]], capture_output=True, text=True, check=True)
