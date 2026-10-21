@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Aligned Module 04 stream reader to exactly 153 tactical pTRC frames.
+Refactored: Fixed index call for Modules 01, 02, and 03 to prevent AttributeError.
 """
 
 import sys
@@ -52,7 +52,7 @@ src_context = os.path.dirname(os.path.abspath(__file__))
 # Definition der 20 ausführbaren Skripte in der flachen Ordnerkonstellation
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
-    "fluid_resonance.py", "pi_square_crystallization.py", "hubble_tension.py",
+    "fluid_resonance.py", "pi_square_crystall_operations.py", "hubble_tension.py",
     "internal_loopback.py", "isotropy.py", "prime_lattice_determinism.py",
     "quantum_entanglement.py", "quantum_measurement_update.py", "quantum_neural_network.py",
     "thermodynamic_clock_cycle.py", "black_hole_information_preservation.py", "black_hole_saturation.py",
@@ -76,25 +76,24 @@ def print_module_line(mod_num, mod_name, status_text):
     print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
 
 # Modul 01: Core Integration Engine Selbsttest
-durations_ms = 1
-print_module_line(1, modules, "Engine Core Invariance Initialized")
+durations_ms[1] = 1
+print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
 # Modul 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(2, modules, "Base Resonance Alignment Completed")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(2, modules[1], "Base Resonance Alignment Completed")
 
 # Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, os.path.join(src_context, modules)], capture_output=True, text=True, check=True, cwd=src_context)
-durations_ms = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(3, modules, "Planck Takt Spectrum Locked")
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
 
 # ==============================================================================
 # MODULE 04: Windtunnel Fluid Dynamics Resonance (153-TAKT ORIGINAL STREAMS)
 # ==============================================================================
-# RESTAURIERT: Liest die echten, schönen ASCII-Muster (>, <, X, -, 0) aus deiner originalen Datei!
 t_start = time.perf_counter_ns()
 
 fluid_script = os.path.join(src_context, modules[3])
@@ -173,7 +172,7 @@ for i in range(5, len(modules)):
     print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie)
+# PERFORMANCE-MATRIX AUDIT REPORT (Perfekt fluchtende Spaltengeometrie)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
