@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Fixed index call for Modules 01, 02, and 03 to prevent AttributeError.
+Refactored: Fixed explicit list indexing bugs to prevent AttributeError on ljust.
 """
 
 import sys
@@ -52,7 +52,7 @@ src_context = os.path.dirname(os.path.abspath(__file__))
 # Definition der 20 ausführbaren Skripte in der flachen Ordnerkonstellation
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
-    "fluid_resonance.py", "pi_square_crystall_operations.py", "hubble_tension.py",
+    "fluid_resonance.py", "pi_square_crystallization.py", "hubble_tension.py",
     "internal_loopback.py", "isotropy.py", "prime_lattice_determinism.py",
     "quantum_entanglement.py", "quantum_measurement_update.py", "quantum_neural_network.py",
     "thermodynamic_clock_cycle.py", "black_hole_information_preservation.py", "black_hole_saturation.py",
@@ -94,6 +94,7 @@ print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
 # ==============================================================================
 # MODULE 04: Windtunnel Fluid Dynamics Resonance (153-TAKT ORIGINAL STREAMS)
 # ==============================================================================
+# RESTAURIERT: Liest die echten, schönen ASCII-Muster (>, <, X, -, 0) aus deiner originalen Datei!
 t_start = time.perf_counter_ns()
 
 fluid_script = os.path.join(src_context, modules[3])
@@ -115,7 +116,6 @@ process.communicate() # Schließe den verbleibenden Puffer sauber im Hintergrund
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
 time.sleep(0.1)
-
 # ==============================================================================
 # MODULE 05: Symmetrical Whole-Number Pi Crystallization (44x44 Square Viewport)
 # ==============================================================================
@@ -172,7 +172,7 @@ for i in range(5, len(modules)):
     print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT REPORT (Perfekt fluchtende Spaltengeometrie)
+# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
@@ -194,3 +194,4 @@ print(f" -> REPOSITORY EVALUATION SUMMARY: 1000/1000 Integer-Compliance Points A
 print(f" -> HARDWARE REPORT: ZERO FLOAT POLLUTION. 144-FACET SPATIAL CRYSTAL COHERENCE LOCKED ON ACER ASPIRE PLATFORM.".ljust(MAX_WIDTH - 11) + "[ CLEAN ]")
 print("="*MAX_WIDTH + "\n")
 sys.exit(0)
+
