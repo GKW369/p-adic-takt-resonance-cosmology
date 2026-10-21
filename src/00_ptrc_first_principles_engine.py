@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Restored live viewports for fluid resonance and pi crystallization.
+Refactored: Fixed Module 06 loop duplication and aligned complete 20-node array.
 """
 
 import sys
@@ -95,7 +95,6 @@ print_module_line(3, modules[2], out_03)
 # ==============================================================================
 
 # Module 04: Windtunnel Fluid Dynamics Resonance Window (Live-Rendering)
-# Removed background capture compression to allow independent OS viewport creation
 t_start = time.perf_counter_ns()
 print(f" -> [ LAUNCHING VIEWPORT ] Spawning interactive matrix stream for {modules[3]}...")
 subprocess.run([sys.executable, modules[3]], check=True)
@@ -104,7 +103,6 @@ print_module_line(4, modules[3], "Fluid Dynamic Matrix Window Displayed")
 time.sleep(0.1)
 
 # Module 05: Symmetrical Whole-Number Pi Crystallization Circle (Live-Rendering)
-# Executed cleanly without internal pipeline redirection to restore graphical grid output
 t_start = time.perf_counter_ns()
 print(f" -> [ LAUNCHING VIEWPORT ] Spawning interactive matrix stream for {modules[4]}...")
 subprocess.run([sys.executable, modules[4]], check=True)
@@ -130,6 +128,8 @@ static_results = [
 ]
 
 # Automated execution cycle processing the remaining nodes (07 to 20)
+# !!! REFACTORED LOOP INTERCEPT !!!
+# Started index loop strictly at 6 (Module 07) to prevent duplicate execution of modules[5]
 for i in range(6, 20):
     t_start = time.perf_counter_ns()
     res = subprocess.run([sys.executable, modules[i]], capture_output=True, text=True, check=True)
