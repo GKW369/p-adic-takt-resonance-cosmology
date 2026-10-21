@@ -22,19 +22,18 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Extended Fluid Resonance execution loop to exactly 140 tactical frames.
+Refactored: Copy-pasted original animation unblocking architecture for current constellation.
 """
 
 import sys
 import time
 import subprocess
 import os
-import numpy as np
 
-# Start of global telemetry clock tracking on nanosecond register layer
+# Start der globalen Zeitmessung auf Nanosekunden-Ebene
 global_start = time.perf_counter_ns()
 
-# Symmetrical viewport matrix width constraint for terminal formatting
+# Die maximale Breite der Darstellung im Terminal für perfekte Symmetrie
 MAX_WIDTH = 166
 
 print("="*MAX_WIDTH)
@@ -47,10 +46,10 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
-# Determine the absolute directory context of this integration script safely
+# Bestimmung des absoluten Ordner-Kontexts dieser Integrationsdatei safely
 src_context = os.path.dirname(os.path.abspath(__file__))
 
-# Structural sequential array containing all 20 mathematical master modules
+# Definition der 20 ausführbaren Skripte in der exakten aktuellen Reihenfolge
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
     "fluid_resonance.py", "pi_square_crystallization.py", "hubble_tension.py",
@@ -61,11 +60,11 @@ modules = [
     "crypt_resonance.py", "gravity_edge_sharing.py"
 ]
 
-# Realtime logging dictionary tracking computational cost in whole milliseconds
+# Telemetrie-Speicher für die finale Performance-Tabelle (Modul_Index, MS_Zeit)
 durations_ms = {}
 
 def print_module_line(mod_num, mod_name, status_text):
-    """Formats and aligns terminal layout blocks to exactly 166 columns."""
+    """Säubert den Text und erzwingt ein absolut gleichmäßiges Spaltenmaß"""
     clean_text = status_text.replace("-> ", "").replace("[ OK ] ", "").replace("RESULT: ", "").strip()
     
     if len(clean_text) > 55:
@@ -76,142 +75,72 @@ def print_module_line(mod_num, mod_name, status_text):
     base_str = f" -> [ MODULE {mod_num:02d}/20 ] Executing {mod_name.ljust(38)} ... RESULT: {display_text}"
     print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
 
-# Module 01: Core Integration Engine self-test validation loop
+# Modul 01: Core Integration Engine Selbsttest
 durations_ms[1] = 1
 print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
-# Module 02: Nucleon Mass Verification Sieve
+# Modul 02: Massenverifikation (base_resonance_calibration)
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, os.path.join(src_context, modules[1])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(2, modules[1], "Base Resonance Alignment Completed")
 
-# Module 03: Alpha Emitter Fine Structure Constant Tracking
+# Modul 03: Alpha Emitter
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, os.path.join(src_context, modules[2])], capture_output=True, text=True, check=True, cwd=src_context)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(3, modules[2], "Planck Takt Spectrum Locked")
 
-# ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (140x22 Cinematic Viewport)
-# ==============================================================================
+# Modul 04: Windtunnel / Fluid-Resonanz (Live-Terminal-Visualisierung ohne capture_output!)
 print(f" -> [ LAUNCHING LIVE STREAM ] Streaming discrete matrix automaton for {modules[3]}...")
 t_start = time.perf_counter_ns()
-
-# Execute ground script to fulfill its validation register lifecycle
-subprocess.run([sys.executable, os.path.join(src_context, modules[3])], capture_output=True, check=False, cwd=src_context)
-
-# Orchestrator-side pure integer HPP cellular simulation injection
-f_width, f_height = 140, 22
-fluid_grid = np.zeros((f_height, f_width), dtype=np.int8)
-# Barrier block placement matching your discrete physics bounds
-fluid_grid[6:16, 65:68] = -2  
-
-# !!! CRITICAL QUANTUM EXTENSION: 140 TAKTS FOR 140 CHANNELS WIDTH !!!
-for frame in range(140):
-    # Clear terminal space natively for smooth cinematic playback
-    os.system('clear' if os.name == 'posix' else 'cls')
-    print("=" * MAX_WIDTH)
-    print(f" pTRC CINEMATIC LIVE STREAM: {modules[3]} | Frame {frame+1:03d}/140 | Operational Domain: \mathbb{{Z}} (Zero Boundless Leap)".center(MAX_WIDTH))
-    print("=" * MAX_WIDTH)
-    
-    # Inject discrete stream packets on the left boundary
-    for y in range(1, f_height - 1):
-        if (y + frame) % 3 == 0:
-            fluid_grid[y, 1] = 1  # State 1
-            
-    # Move lattice columns forward. Space passes directly from 1 to -1 (Zero-Leap)
-    for y in range(1, f_height - 1):
-        for x in range(f_width - 2, 0, -1):
-            if fluid_grid[y, x] == -2: # Invariant wall bounce-back trigger
-                if fluid_grid[y, x-1] == 1:
-                    fluid_grid[y, x-1] = -1 # Sign inversion leap
-                continue
-            if fluid_grid[y, x] != -2 and fluid_grid[y, x-1] != -2:
-                fluid_grid[y, x] = fluid_grid[y, x-1]
-                
-    # Direct frame rendering array generation
-    for y in range(f_height):
-        row_chars = []
-        for x in range(f_width):
-            if fluid_grid[y, x] == -2: row_chars.append("█") # Rigid barrier cell
-            elif fluid_grid[y, x] == 1: row_chars.append("•") # Pos-Takt state
-            elif fluid_grid[y, x] == -1: row_chars.append("°") # Neg-Takt state (Inverted)
-            else: row_chars.append(" ") # Vacuum space
-        print("    " + "".join(row_chars))
-    time.sleep(0.02) # Faster clock speed for fluid 140-step transit
-
+subprocess.run([sys.executable, os.path.join(src_context, modules[3])], check=True, cwd=src_context)
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
+time.sleep(0.1)
 
-# ==============================================================================
-# MODULE 05: Symmetrical Whole-Number Pi Crystallization (44x44 Square Viewport)
-# ==============================================================================
+# Modul 05: Symmetrical Kreis / Pi-Kristallisation (Live-Terminal-Visualisierung ohne capture_output!)
 print(f" -> [ LAUNCHING LIVE STREAM ] Streaming spatial crystal growth for {modules[4]}...")
 t_start = time.perf_counter_ns()
-
-# Execute ground script to fulfill its validation register lifecycle
-subprocess.run([sys.executable, os.path.join(src_context, modules[4])], capture_output=True, check=False, cwd=src_context)
-
-# Orchestrator-side whole-number quadratic radius sweep expansion
-c_size = 44
-c_center = c_size // 2
-
-for radius in range(1, 23):
-    os.system('clear' if os.name == 'posix' else 'cls')
-    print("=" * MAX_WIDTH)
-    print(f" pTRC SQUARE VIEWPORT: {modules[4]} | Radius Step {radius:02d}/22 | Pure Quadrance: dx² + dy² <= r²".center(MAX_WIDTH))
-    print("=" * MAX_WIDTH)
-    
-    for y in range(c_size):
-        row_chars = []
-        dy = y - c_center
-        for x in range(c_size):
-            dx = x - c_center
-            # Non-linear discrete distance calculator matching Nassim Harameins coordinates
-            quadrance = (dx * dx) + (dy * dy)
-            if quadrance <= (radius * radius):
-                if quadrance % 3 == 0:
-                    row_chars.append("☼") # Interlocking crystallization node
-                else:
-                    row_chars.append("·") # Harmonic structural residue matrix
-            else:
-                row_chars.append(" ") # Unmanifested integer spatial vacuum
-        print("                                                         " + "".join(row_chars))
-    time.sleep(0.06)
-
+subprocess.run([sys.executable, os.path.join(src_context, modules[4])], check=True, cwd=src_context)
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Rendered")
+print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
+time.sleep(0.1)
 
-# ==============================================================================
+# Modul 06: Hubble Tension Matrix (Erstes Hintergrundmodul im Array-Shift)
+t_start = time.perf_counter_ns()
+res = subprocess.run([sys.executable, os.path.join(src_context, modules[5])], capture_output=True, text=True, check=True, cwd=src_context)
+durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
+print_module_line(6, modules[5], "Hubble Tension Resolution Matrix")
 
-# Secure fallback telemetry messages for background node validation execution
+# Vordefinierte Fallback-Texte für den ungestörten Hintergrundlauf (Module 07 bis 20)
 static_results = [
-    "Zero-Float Hubble Tension Resolution Matrix", "Zero-Float Internal Loopback Engine", 
-    "Zero-Float Rotational Isotropy Matrix", "Modular Lattice Parity Matrix Verified",
-    "Zero-Float Entanglement Protocol Successfully Secured", "Zero-Float Quantum Measurement Matrix",
-    "Zero-Float Quantum Neural Network Block Verified", "Zero-Float Thermodynamic Clock Engine",
-    "Zero-Float Information Preservation Matrix Verified", "Zero-Float Volumetric Saturation Engine",
-    "Zero-Float Solid-State Ion Pipeline Secured", "Zero-Float Casimir Attenuation Matrix",
-    "Zero-Float Molecular Orientation Sieve Verified", "Zero-Float Symmetrical Cryptography Block",
-    "Zero-Float Edge-Sharing Field Engine Successfully Audited"
+    "Zero-Float Internal Loopback Engine", "Zero-Float Rotational Isotropy Matrix", 
+    "Modular Lattice Parity Matrix Verified", "Zero-Float Entanglement Protocol Successfully Secured", 
+    "Zero-Float Quantum Measurement Matrix", "Zero-Float Quantum Neural Network Block Verified", 
+    "Zero-Float Thermodynamic Clock Engine", "Zero-Float Information Preservation Matrix Verified", 
+    "Zero-Float Volumetric Saturation Engine", "Zero-Float Solid-State Ion Pipeline Secured", 
+    "Zero-Float Casimir Attenuation Matrix", "Zero-Float Molecular Orientation Sieve Verified", 
+    "Zero-Float Symmetrical Cryptography Block", "Zero-Float Edge-Sharing Field Engine Successfully Audited"
 ]
 
-# Automated execution cycle processing the remaining mathematical nodes (06 to 20)
-for i in range(5, len(modules)):
+# Automatisierte Hintergrund-Abarbeitung der restlichen Module 07 bis 20
+# Beginnt exakt bei Index 6, um Verschiebungen im 20-Skripte-Array vollständig auszuschließen
+for i in range(6, len(modules)):
     t_start = time.perf_counter_ns()
-    res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=False, cwd=src_context)
+    res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=True, cwd=src_context)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
-    clean_output = res.stdout.strip().split('\n')[-1] if (res and res.stdout) else static_results[i-5]
+    clean_output = res.stdout.strip().split('\n')[-1] if (res and res.stdout) else static_results[i-6]
+    
     print_module_line(i+1, modules[i], clean_output)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT REPORT (English Telemetry Output Geometry)
+# PERFORMANCE-MATRIX AUDIT (Perfekt fluchtende Spaltengeometrie)
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
 print("="*MAX_WIDTH)
-print("   MODULE INDEX         |   STATEMENT CRITICAL SYSTEM COMPONENT         |   NODE STATUS     |   COMPUTATION LIFECYCLE TIME")
+print("   MODUL-INDEX          |   AUSSAGEKRÄFTIGE KERN-KOMPONENTE             |   SYSTEM-STATUS   |   BERECHNUNGSZEIT HARDWARE-TAKT")
 print("  " + "-"*(MAX_WIDTH - 4))
 
 for idx in range(1, len(modules) + 1):
@@ -219,7 +148,7 @@ for idx in range(1, len(modules) + 1):
     duration = durations_ms.get(idx, 0)
     print(f"   MODULE {idx:02d}/20         |   {name_clean.ljust(43)} |     [ VALID ]     |    {str(duration).rjust(5)} ms (Pure Z-Operations)  ")
 
-# Global clock evaluation summary
+# Berechnung der globalen Gesamtlaufzeit des Systems in Millisekunden
 global_end = time.perf_counter_ns()
 total_ms = (global_end - global_start) // 1000000
 
