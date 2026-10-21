@@ -22,7 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock)
-Refactored: Operational absolute context mapping for subsystem nodes.
+Refactored: Aligned exact verified filename repository matrix mapping.
 """
 
 import sys
@@ -49,15 +49,15 @@ print("-"*MAX_WIDTH)
 # Determine the absolute directory context of this integration script safely
 src_context = os.path.dirname(os.path.abspath(__file__))
 
-# Structural sequential array containing all 20 mathematical master modules
+# Structural sequential array mapped directly to your verified GitHub filenames
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
-    "fluid_resonance.py", "pi_square_crystallization.py", "prime_lattice_determinism.py",
-    "quantum_entanglement.py", "quantum_measurement_update.py", "quantum_neural_network.py",
-    "thermodynamic_clock_cycle.py", "black_hole_information_preservation.py", "black_hole_saturation.py",
-    "battery_anisotropy.py", "casimir_vacuum_energy.py", "chemical_resonance.py",
-    "crypt_resonance.py", "gravity_edge_sharing.py", "hubble_tension.py",
-    "internal_loopback.py", "isotropy.py"
+    "fluid_resonance.py", "pi_square_crystallization.py", "quantum_entanglement.py",
+    "quantum_measurement_update.py", "quantum_neural_network.py", "thermodynamic_clock_cycle.py",
+    "black_hole_information_preservation.py", "black_hole_saturation.py", "battery_anisotropy.py",
+    "casimir_vacuum_energy.py", "chemical_resonance.py", "crypt_resonance.py",
+    "gravity_edge_sharing.py", "hubble_tension.py", "internal_loopback.py",
+    "isotropy.py"
 ]
 
 # Realtime logging dictionary tracking computational cost in whole milliseconds
@@ -131,9 +131,8 @@ static_results = [
 ]
 
 # Automated execution cycle processing the remaining nodes (07 to 20)
-# !!! CRITICAL MATHEMATICAL CORRECTOR !!!
-# Starts the automated loop safely at index 6 (Module 07) to avoid duplicate execution
-for i in range(6, 20):
+# Enforces exact directory mapping via cwd context argument injection
+for i in range(6, len(modules)):
     t_start = time.perf_counter_ns()
     res = subprocess.run([sys.executable, os.path.join(src_context, modules[i])], capture_output=True, text=True, check=True, cwd=src_context)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
@@ -149,7 +148,7 @@ print("="*MAX_WIDTH)
 print("   MODULE INDEX         |   STATEMENT CRITICAL SYSTEM COMPONENT         |   NODE STATUS     |   COMPUTATION LIFECYCLE TIME")
 print("  " + "-"*(MAX_WIDTH - 4))
 
-for idx in range(1, 21):
+for idx in range(1, len(modules) + 1):
     name_clean = modules[idx-1].replace(".py", "")
     duration = durations_ms[idx]
     print(f"   MODULE {idx:02d}/20         |   {name_clean.ljust(43)} |     [ VALID ]     |    {str(duration).rjust(5)} ms (Pure Z-Operations)  ")
