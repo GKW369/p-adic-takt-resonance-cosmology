@@ -141,7 +141,8 @@ class PTRC3DAnimationPipeline:
                 # Render fully filled whole-number voxel block
                 cv2.rectangle(frame_buffer, 
                               (int(out_x - voxel_size // 2), int(out_y - voxel_size // 2)), 
-                              (int(out_x + voxel_size // 2), int(out_y + voxel_size // 2)), , -1)  # Vivid Cyan-Blue Aether
+                              (int(out_x + voxel_size // 2), int(out_y + voxel_size // 2)), 
+                              (255, 140, 0), -1)  # Vivid Cyan-Blue Aether
 
             # ==================================================================
             # OBJECT 2: THE PASSING LEGO PYRAMID (MOVING RIGHT-TO-LEFT)
@@ -189,6 +190,8 @@ class PTRC3DAnimationPipeline:
             if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
                 print(f"    + Synced Frame {frame_idx:03d}/{self.frames_limit} | Buffer written | Leap Offset: -{pyramid_move_offset}px")
 
+        self.total_generation_end = time.perf_counter()
+
     def compile_lossless_output_video(self):
         """Compiles binary raw cache assets losslessly into an H.264 mp4 container."""
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.png")
@@ -204,6 +207,7 @@ class PTRC3DAnimationPipeline:
         try:
             subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
             self.time_ffmpeg_done = time.perf_counter() - ffmpeg_start
+            print("[ ffmpeg ] Lossless container compilation completed successfully.")
             
             # Restless cache cleanup
             for frame_idx in range(self.frames_limit):
