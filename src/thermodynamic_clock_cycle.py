@@ -91,11 +91,11 @@ if __name__ == "__main__":
     print("[ pTRC-THERMODYNAMICS ] Initializing discrete thermal state matrix...")
     engine = PTRCThermodynamicClockEngine()
     
-    # Process feedback loop iterations using the core calibration limit constant 1836
+    # Sicherer 64-Bit-Aufruf zur Eliminierung des Termux-Overflows
+    excitation_value = np.int64(1836)
     print(" -> Clocking non-linear entropy steps for system Takt 1836...")
-    engine.inject_thermal_pulse(whole_number_excitation=1836)
+    engine.inject_thermal_pulse(whole_number_excitation=excitation_value)
     
-    # Run pipeline verification steps
     is_valid = engine.verify_thermodynamic_invariance()
     
     print(f" -> [ VALIDATION ] Integer thermal balance audit finished.")
