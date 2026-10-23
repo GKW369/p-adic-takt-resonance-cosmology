@@ -92,11 +92,11 @@ if __name__ == "__main__":
     print("[ pTRC-LOOPBACK ] Initializing symmetrical internal feedback matrix...")
     engine = PTRCInternalLoopbackEngine()
     
-    # Process feedback loop iterations using the core calibration limit constant
+    # Sicherer 64-Bit Loopback-Aufruf
+    loopback_value = np.int64(1836)
     print(" -> Clocking nested loopback iterations for system Takt 1836...")
-    engine.process_feedback_takt(raw_excitation_vector=1836)
+    engine.process_feedback_takt(raw_excitation_vector=loopback_value)
     
-    # Run pipeline verification steps
     is_valid = engine.verify_loopback_invariance()
     
     print(f" -> [ VALIDATION ] Internal self-interaction audit finished.")
