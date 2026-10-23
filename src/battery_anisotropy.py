@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
 
 
@@ -68,7 +68,9 @@ class PTRCBatteryAnisotropyEngine:
             gating_factor = self.channel_resistance_matrix[facet]
             if gating_factor == 0:
                 gating_factor = 1
-            channeled_flux = (scaled_input * self.SCALE // gating_factor) % self.primorial_gear
+            
+            # Fixed-Point 64-Bit widening to safely prevent ARM architecture bounds overflows
+            channeled_flux = (np.int64(scaled_input) * np.int64(self.SCALE) // gating_factor) % self.primorial_gear
             
             # Update the exact internal density counter
             self.ion_density_registers[facet] += channeled_flux
