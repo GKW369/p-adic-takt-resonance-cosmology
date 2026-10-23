@@ -104,9 +104,9 @@ class PTRC3DAnimationPipeline:
                 self.accumulated_voxels_processed += 1
                 
                 self.draw_integer_rectangle(frame_buffer, 
-                                            out_x - voxel_size // 2, out_y - voxel_size // 2,
-                                            out_x + voxel_size // 2, out_y + voxel_size // 2,
-)  # RGB: Cyan
+                            out_x - voxel_size // 2, out_y - voxel_size // 2,
+                            out_x + voxel_size // 2, out_y + voxel_size // 2,
+)  # RGB: Cyan-Blau-Aether
 
             # OBJECT 2: DIE BEWEGTE PYRAMIDE (Emerald-Smaragd)
             cx_pyramid_start = (self.width * 3) // 4
