@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
 
 
@@ -67,7 +67,8 @@ class PTRCInternalLoopbackEngine:
                 continue
                 
             # Execute precise scaled floor division to transform state metrics
-            scaled_echo = (pulse_amplitude * self.SCALE) // (node * filter_factor + self.invariant_limit)
+            # Fixed-Point 64-Bit widening to safely prevent ARM architecture bounds overflows
+            scaled_echo = (np.int64(pulse_amplitude) * np.int64(self.SCALE)) // (node * filter_factor + self.invariant_limit)
             discrete_phase_shift = scaled_echo % self.primorial_base
             
             # Commit the exact integer update back to the feedback register array
