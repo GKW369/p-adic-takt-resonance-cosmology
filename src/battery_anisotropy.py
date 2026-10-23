@@ -96,12 +96,14 @@ if __name__ == "__main__":
     print("[ pTRC-BATTERY ] Initializing anisotropic solid-state tracking system...")
     engine = PTRCBatteryAnisotropyEngine(channels=144)
     
-    # Inject a sequence of integer charge values matching the system limit (1836)
-    print(" -> Processing continuous charging pulses via 1836 calibration takt vectors...")
-    engine.inject_charge_pulse(injection_vector=1836)
-    engine.inject_charge_pulse(injection_vector=1680)
+    # Explizite 64-Bit-Typisierung für die Injektions-Vektoren
+    pulse_1 = np.int64(1836)
+    pulse_2 = np.int64(1680)
     
-    # Audit tracking parity states
+    print(" -> Processing continuous charging pulses via 1836 calibration takt vectors...")
+    engine.inject_charge_pulse(injection_vector=pulse_1)
+    engine.inject_charge_pulse(injection_vector=pulse_2)
+    
     parity_locked = engine.evaluate_charge_distribution_parity()
     
     print(f" -> [ VALIDATION ] Crystalline transport audit completed.")
