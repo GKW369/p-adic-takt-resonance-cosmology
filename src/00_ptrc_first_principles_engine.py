@@ -22,8 +22,7 @@
 pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py)
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock / 2 Pentium Cores Architecture)
-Refactored: Fully internationalized strings and updated hardware diagnostic signatures.
-Fix: Robust absolute path resolution for seamless Termux/Android and Ubuntu cross-compatibility.
+Fix: Enhanced fault-tolerant subprocess auditing to capture and display granular stderr logs.
 """
 
 import sys
@@ -64,10 +63,11 @@ modules = [
     "internal_loopback.py", "isotropy.py"
 ]
 
-# Telemetry register map for final performance audit matrix (Module_Index -> Duration_MS)
+# Telemetry register map for final performance audit matrix (Module_Index -> Duration_MS / Status)
 durations_ms = {}
+module_status = {}
 
-def print_module_line(mod_num, mod_name, status_text):
+def print_module_line(mod_num, mod_name, status_text, success=True):
     """Sanitizes output strings and enforces strict horizontal layout alignment."""
     clean_text = status_text.replace("-> ", "").replace("[ OK ] ", "").replace("RESULT: ", "").strip()
     
@@ -76,58 +76,63 @@ def print_module_line(mod_num, mod_name, status_text):
     else:
         display_text = clean_text.ljust(55)
         
+    tag = "[ SUCCESS ]" if success else "[ FAILED  ]"
     base_str = f" -> [ MODULE {mod_num:02d}/20 ] Executing {mod_name.ljust(38)} ... RESULT: {display_text}"
-    print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
+    print(base_str.ljust(MAX_WIDTH - 13) + tag, flush=True)
 
-# Helper function to compute absolute module path ensuring fail-safe subprocess calls
 def get_mod_path(mod_filename):
     return os.path.join(SCRIPT_DIR, mod_filename)
 
 # Module 01: Core Integration Engine Self-Test
 durations_ms[1] = 1
+module_status[1] = True
 print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
 # Module 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, get_mod_path(modules[1])], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, get_mod_path(modules[1])], capture_output=True, text=True)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(2, modules[1], res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed")
+module_status[2] = (res.returncode == 0)
+if res.returncode == 0:
+    print_module_line(2, modules[1], res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed")
+else:
+    print_module_line(2, modules[1], f"ERR: {res.stderr.strip().split('\n')[0]}", success=False)
 
 # Module 03: Alpha Emitter
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, get_mod_path(modules[2])], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, get_mod_path(modules[2])], capture_output=True, text=True)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked")
+module_status[3] = (res.returncode == 0)
+if res.returncode == 0:
+    print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked")
+else:
+    print_module_line(3, modules[2], f"ERR: {res.stderr.strip().split('\n')[0]}", success=False)
 
 # ==============================================================================
 # MODULE 04: Windtunnel Fluid Dynamics Resonance (UNBUFFERED NATIVE STREAM)
 # ==============================================================================
 t_start = time.perf_counter_ns()
-
-# Launch original fluid module using unbuffered flag (-u) and absolute path destination
 process = subprocess.Popen([sys.executable, "-u", get_mod_path(modules[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-# Capture and project each frame smoothly using stationary cursor tracking
 while True:
     line = process.stdout.readline()
     if not line:
         break
     if "pTRC PLANCK LATTICE" in line:
-        sys.stdout.write("\033[H")  # Teleport cursor back to upper-left origin point
+        sys.stdout.write("\033[H")
     sys.stdout.write(line)
     sys.stdout.flush()
 
 process.communicate()
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized")
+module_status[4] = (process.returncode == 0)
+print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized" if process.returncode == 0 else "Fluid Engine Stream Interrupted", success=(process.returncode == 0))
 time.sleep(0.5)
 
 # ==============================================================================
 # MODULE 05: Symmetrical Whole-Number Pi Crystallization (UNBUFFERED NATIVE STREAM)
 # ==============================================================================
 t_start = time.perf_counter_ns()
-
-# Launch original crystallization module using unbuffered flag (-u) and absolute path destination
 process_c = subprocess.Popen([sys.executable, "-u", get_mod_path(modules[4])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 while True:
@@ -135,24 +140,19 @@ while True:
     if not line_c:
         break
     if "NATIVE 90x44" in line_c or "====" in line_c:
-        sys.stdout.write("\033[H")  # Enforce stationary viewport alignment
+        sys.stdout.write("\033[H")
     sys.stdout.write(line_c)
     sys.stdout.flush()
 
 process_c.communicate()
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved")
+module_status[5] = (process_c.returncode == 0)
+print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved" if process_c.returncode == 0 else "Crystallization Interrupted", success=(process_c.returncode == 0))
 time.sleep(0.5)
 
 # ==============================================================================
 
-# Module 06: Prime Lattice Determinism
-t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, get_mod_path(modules[5])], capture_output=True, text=True, check=True)
-durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
-print_module_line(6, modules[5], res.stdout.strip().split('\n')[-1] if res.stdout else "Rad-Sieve 210 Topology Verified")
-
-# Deterministic international fallback logs for silent background execution pipelines (Modules 07 to 20)
+# Background execution loops with advanced error containment
 static_results = [
     "100% Phase Synchronization", "Modulo-24 Group Locked", "156 Symmetrical Nodes", "+1 Entropy-Step Invariant",
     "0 Bit Modulo-Loss", "1 Planck-Area Unit Min", "144 Vector Map Locked", "137 Feynman Buffer Units",
@@ -160,17 +160,22 @@ static_results = [
     "950 Attenuation Limit", "100% Invariant Group"
 ]
 
-# Automated fast background execution loops for remaining physical modules
-for i in range(6, 20):
+for i in range(5, 20):
     t_start = time.perf_counter_ns()
-    res = subprocess.run([sys.executable, get_mod_path(modules[i])], capture_output=True, text=True, check=True)
+    res = subprocess.run([sys.executable, get_mod_path(modules[i])], capture_output=True, text=True)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
-    clean_output = res.stdout.strip().split('\n')[-1] if res.stdout else static_results[i-6]
+    module_status[i+1] = (res.returncode == 0)
     
-    print_module_line(i+1, modules[i], clean_output)
+    if res.returncode == 0:
+        clean_output = res.stdout.strip().split('\n')[-1] if res.stdout else static_results[i-5]
+        print_module_line(i+1, modules[i], clean_output, success=True)
+    else:
+        # Extrahiere die genaue Fehlerursache aus stderr für das Inferenzprotokoll
+        err_msg = res.stderr.strip().split('\n')[-1] if res.stderr else "Non-zero exit status"
+        print_module_line(i+1, modules[i], f"ERR: {err_msg}", success=False)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT REPORT (Strictly aligned columns geometry layout)
+# PERFORMANCE-MATRIX AUDIT REPORT
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
@@ -181,14 +186,14 @@ print("  " + "-"*(MAX_WIDTH - 4))
 for idx in range(1, 21):
     name_clean = modules[idx-1].replace(".py", "")
     duration = durations_ms[idx]
-    print(f"   MODULE {idx:02d}/20         |   {name_clean.ljust(43)} |     [ VALID ]     |    {str(duration).rjust(5)} ms (Pure Z-Operations)  ")
+    status_tag = "[ VALID ]" if module_status[idx] else "[ERROR  ]"
+    print(f"   MODULE {idx:02d}/20         |   {name_clean.ljust(43)} |     {status_tag}     |    {str(duration).rjust(5)} ms (Pure Z-Operations)  ")
 
-# Compute final integrated application runtime metrics
 global_end = time.perf_counter_ns()
 total_ms = (global_end - global_start) // 1000000
 
 print("="*MAX_WIDTH)
-print(f" -> REPOSITORY EVALUATION SUMMARY: 1000/1000 Integer-Compliance Points Achieved".ljust(MAX_WIDTH - 42) + f"[ INFINITELY SCALABLE PRIMORIAL MATRIX ]")
+print(f" -> REPOSITORY EVALUATION SUMMARY: Audit completed under hardware constraints.".ljust(MAX_WIDTH - 42) + f"[ INFINITELY SCALABLE PRIMORIAL MATRIX ]")
 print(f" -> HARDWARE DIAGNOSTIC: [ pTRC CORE INTEGRATION ENGINE ] ACTIVE ON ACER ASPIRE E1-570 PLATFORM | 2 PENTIUM CORES ARCHITECTURE LOCKED.".ljust(MAX_WIDTH - 11) + "[ CLEAN ]")
 print("="*MAX_WIDTH + "\n")
 sys.exit(0)
