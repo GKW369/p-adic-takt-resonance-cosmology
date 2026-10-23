@@ -101,7 +101,7 @@ Combined with an uncompressed, lossless rendering profile (`-crf 0 -g 1`), the s
 python src/fluid_resonance.py
 
 # Execute the 1080p takt-synchronized stereoscopic retina generator:
-python experimental/ptrc_3d_animation_generator.py
+python experimental/ptrc_3d_engine/src/ptrc_3d_animation_generator.py
 ```
 
 ---
