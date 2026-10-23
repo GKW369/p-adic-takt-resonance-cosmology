@@ -3,103 +3,172 @@
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
+# it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
+# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with this program (see the LICENSE file in the root directory).
-# If not, see <https://gnu.org>.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://gnu.org>.
 # ==============================================================================
 
-
 # -*- coding: utf-8 -*-
-"""
-pTRC Framework - Core Simulation Module: Symmetrical Internal Feedback Loopback
-Operational Domain: Discrete Register Echo Permutations (\mathbb{Z}) inside the group ring.
-Maintains absolute state conservation laws across cascaded loop steps without data decay.
+r"""
+pTRC Framework - Advanced Volumetric Transposition Suite (Relativistic Passing Engine)
+Operational Domain: Pure Integer Viewports (\mathbb{Z}^3). Zero Analog Leakage.
+Beschreibung: Generiert eine dichte, prä-physikalische Kristallmatrix basierend auf 
+              dem Modulo-210-Sieb und der Radius-9-Symmetrie der Ur-Zelle.
 """
 
+import os
+import sys
+import subprocess
+import time
 import numpy as np
 
-class PTRCInternalLoopbackEngine:
-    """
-    Manages self-interacting discrete matrix feedback channels utilizing 
-    nested residue rings Modulo-210 and Modulo-24 control clocks.
-    """
-    def __init__(self, register_nodes=210):
-        self.primorial_base = register_nodes
-        self.control_base = 24
-        self.calibration_constant = 1836
+# Dynamische Pfad-Ermittlung fuer Termux/Android Umgebung
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, script_dir)
+
+for depth in [script_dir, os.path.dirname(script_dir), os.path.dirname(os.path.dirname(script_dir))]:
+    if depth:
+        sys.path.insert(0, depth)
+        src_path = os.path.join(depth, "src")
+        if os.path.exists(src_path):
+            sys.path.insert(0, src_path)
+
+try:
+    from ptrc_3d_stereo_engine import PTRC3DStereoEngine
+except ImportError:
+    class PTRC3DStereoEngine:
+        def __init__(self, viewport_width=1920, viewport_height=1080):
+            self.width = viewport_width
+            self.height = viewport_height
+
+class PTRC3DAnimationPipeline:
+    def __init__(self, total_frames=144):
+        self.frames_limit = total_frames
+        self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
+        
+        self.width = self.stereo_engine.width
+        self.height = self.stereo_engine.height
         self.invariant_limit = 156
         self.SCALE = 1000
         
-        # Symmetrical matrix buffers initialized as pure whole-number layers
-        self.loopback_state_buffer = np.zeros(self.primorial_base, dtype=np.int32)
-        self.echo_attenuation_matrix = np.zeros(self.primorial_base, dtype=np.uint8)
-        self._initialize_echo_filters()
+        self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
+        if not os.path.exists(self.output_directory):
+            os.makedirs(self.output_directory)
 
-    def _initialize_echo_filters(self):
-        """
-        Populates transmission nodes via deterministic whole-number modulo step sieves.
-        """
-        for node in range(self.primorial_base):
-            if (node * 13) % self.control_base == 12:
-                self.echo_attenuation_matrix[node] = 2  # Active phase-inversion junction
-            else:
-                self.echo_attenuation_matrix[node] = 1  # Standard forwarding state
+    def write_ppm_image(self, filename, buffer_matrix):
+        """Schreibt ein unkomprimiertes Ganzzahl-PPM-Bild (P6-Binär)."""
+        h, w, _ = buffer_matrix.shape
+        header = f"P6\n{w} {h}\n255\n".encode('ascii')
+        with open(filename, 'wb') as f:
+            f.write(header)
+            f.write(buffer_matrix.tobytes())
 
-    def process_feedback_takt(self, raw_excitation_vector):
-        """
-        Drives a discrete data pulse through the internal loopback registers.
-        Guarantees zero rounding leakage through fixed-point scaling partitions.
-        """
-        pulse_amplitude = int(raw_excitation_vector)
+    def draw_integer_rectangle(self, buffer, x1, y1, x2, y2, color):
+        """Sicheres Ganzzahl-Pixel-Clipping im Matrixraster."""
+        x1 = max(0, min(int(x1), self.width - 1))
+        x2 = max(0, min(int(x2), self.width - 1))
+        y1 = max(0, min(int(y1), self.height - 1))
+        y2 = max(0, min(int(y2), self.height - 1))
+        if x1 > x2: x1, x2 = x2, x1
+        if y1 > y2: y1, y2 = y2, y1
+        buffer[y1:y2+1, x1:x2+1] = color
+
+    def generate_deterministic_video_sequence(self):
+        print(f"[ pTRC CORE ] Starte dichte FullHD-Volumensynthese (1920x1080)...")
+        cx = self.width // 2
+        cy = self.height // 2
+        z_offset = 65 
+
+        for frame_idx in range(self.frames_limit):
+            frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+            phase_shift = (frame_idx * 1) % 24
+
+            # ABTASTUNG DES REINEN GANZZAHL-RAUMS
+            for dx in range(-18, 19):
+                for dy in range(-18, 19):
+                    for dz in range(-18, 19):
+                        
+                        Q = dx**2 + dy**2 + dz**2
+                        if Q == 0:
+                            continue
+                            
+                        # Modulo-210 Primorial-Raumsieb
+                        if (Q % 210) > self.invariant_limit:
+                            continue
+                            
+                        rx = dx
+                        ry = dy
+                        rz = dz + z_offset
+                        
+                        if (Q + phase_shift) % 2 == 0:
+                            ry += 1
+                        
+                        # Perspektivische Integer-Projektion
+                        denom = ((rz * self.SCALE) // 1414) + self.invariant_limit
+                        if denom <= 0:
+                            continue
+                            
+                        out_x = (((int(rx) * 45 * self.SCALE) // denom) + cx) % self.width
+                        out_y = (((int(ry) * 45 * self.SCALE) // denom) + cy) % self.height
+                        
+                        # Geometrische Farb- und Symmetrie-Klassifizierung
+                        if Q == 9 or Q == 18 or Q == 36:
+                            r_c, g_c, b_c = 0, 255, 255
+                            voxel_size = 5
+                        elif Q == 144:
+                            r_c, g_c, b_c = 255, 255, 255
+                            voxel_size = 4
+                        else:
+                            depth_glow = max(40, 255 - ((rz * 120) // 128))
+                            r_c, g_c, b_c = 40, int(depth_glow), 160
+                            voxel_size = 3
+                            
+                        color_vector = [r_c, g_c, b_c]
+                        
+                        self.draw_integer_rectangle(
+                            frame_buffer, 
+                            out_x - voxel_size // 2, out_y - voxel_size // 2, 
+                            out_x + voxel_size // 2, out_y + voxel_size // 2, 
+                            color_vector
+                        )
+
+            frame_filename = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.ppm")
+            self.write_ppm_image(frame_filename, frame_buffer)
+            
+            if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
+                print(f"    + Synced Takt-Frame {frame_idx:03d}/{self.frames_limit} | Matrix-Cluster written.")
+
+    def compile_lossless_output_video(self):
+        input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.ppm")
+        android_download_path = "/storage/emulated/0/Download/ptrc_wirminghaus_dual_passing.mp4"
         
-        for node in range(self.primorial_base):
-            filter_factor = self.echo_attenuation_matrix[node]
-            if filter_factor == 0:
-                continue
-                
-            # Execute precise scaled floor division to transform state metrics
-            # Fixed-Point 64-Bit widening to safely prevent ARM architecture bounds overflows
-            scaled_echo = (np.int64(pulse_amplitude) * np.int64(self.SCALE)) // (node * filter_factor + self.invariant_limit)
-            discrete_phase_shift = scaled_echo % self.primorial_base
+        print(" -> Starte FFMPEG Kompression...")
+        ffmpeg_cmd = [
+            "ffmpeg", "-y", "-framerate", "24", "-i", input_pattern,
+            "-c:v", "libx264", "-crf", "0", "-preset", "slow", "-pix_fmt", "yuv420p", android_download_path
+        ]
+        try:
+            subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
+            print(f"\n[ SYSTEM CHECK OK ] Kristall-Video im Download-Ordner verankert!")
+            print(f" -> Datei: {android_download_path}\n")
             
-            # Commit the exact integer update back to the feedback register array
-            self.loopback_state_buffer[node] = (self.loopback_state_buffer[node] + discrete_phase_shift) % self.primorial_base
-
-    def verify_loopback_invariance(self):
-        """
-        Audits accumulated matrix echoes against the 156 calibration limit.
-        Returns 1 if the closed feedback cycle holds stable drift-free, else 0.
-        """
-        total_integrated_echo = int(np.sum(self.loopback_state_buffer))
-        if total_integrated_echo == 0:
-            return 1
-            
-        matrix_residue = total_integrated_echo % self.primorial_base
-        if matrix_residue <= self.invariant_limit:
-            return 1  # Loopback feedback pipeline verified stable and balanced
-        return 0
+            for frame_idx in range(self.frames_limit):
+                p = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.ppm")
+                if os.path.exists(p): os.remove(p)
+            os.rmdir(self.output_directory)
+        except Exception as e:
+            print(f"\n[ ACHTUNG ] FFmpeg-Kompression fehlgeschlagen: {e}")
+            print(f" -> Die PPM-Bilder verbleiben im Cache-Ordner: {self.output_directory}")
 
 if __name__ == "__main__":
-    print("[ pTRC-LOOPBACK ] Initializing symmetrical internal feedback matrix...")
-    engine = PTRCInternalLoopbackEngine()
-    
-    # Sicherer 64-Bit Loopback-Aufruf
-    loopback_value = np.int64(1836)
-    print(" -> Clocking nested loopback iterations for system Takt 1836...")
-    engine.process_feedback_takt(raw_excitation_vector=loopback_value)
-    
-    is_valid = engine.verify_loopback_invariance()
-    
-    print(f" -> [ VALIDATION ] Internal self-interaction audit finished.")
-    print(f" -> Symmetrical Echo Invariance Status: {is_valid}")
-    print(f" -> Echo Buffer Vector Slice (Index 80-88): {engine.loopback_state_buffer[80:88]}")
-    print(" -> STATUS: Zero-Float Internal Loopback Engine Successfully Audited.")
+    pipeline = PTRC3DAnimationPipeline(total_frames=144)
+    pipeline.generate_deterministic_video_sequence()
+    pipeline.compile_lossless_output_video()
