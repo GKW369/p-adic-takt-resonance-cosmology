@@ -1,3 +1,22 @@
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program (see the LICENSE file in the root directory).
+# If not, see <https://gnu.org>.
+# ==============================================================================
+
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Volumetric Transposition Suite (Relativistic Passing Engine)
@@ -15,6 +34,12 @@ import numpy as np  # Direkt im Header verankert fuer stabilen Import
 # Modul-Kopplung
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
+
+for p in [os.path.dirname(script_dir), os.path.dirname(os.path.dirname(script_dir))]:
+    if p:
+        sys.path.insert(0, p)
+        src_dir = os.path.join(p, "src")
+        if os.path.exists(src_dir): sys.path.insert(0, src_dir)
 
 try:
     from ptrc_3d_stereo_engine import PTRC3DStereoEngine
@@ -103,9 +128,10 @@ class PTRC3DAnimationPipeline:
                 voxel_size = 4
                 self.accumulated_voxels_processed += 1
                 
+                # Farb-Argument korrekt uebergeben
                 self.draw_integer_rectangle(frame_buffer, 
-                            out_x - voxel_size // 2, out_y - voxel_size // 2,
-                            out_x + voxel_size // 2, out_y + voxel_size // 2,
+                                            out_x - voxel_size // 2, out_y - voxel_size // 2,
+                                            out_x + voxel_size // 2, out_y + voxel_size // 2,
 )  # RGB: Cyan-Blau-Aether
 
             # OBJECT 2: DIE BEWEGTE PYRAMIDE (Emerald-Smaragd)
