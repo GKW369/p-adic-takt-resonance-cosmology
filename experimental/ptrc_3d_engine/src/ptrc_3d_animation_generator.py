@@ -6,209 +6,147 @@
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program (see the LICENSE file in the root directory).
-# If not, see <https://gnu.org>.
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
 r"""
 pTRC Framework - Advanced Volumetric Transposition Suite (Relativistic Passing Engine)
 Operational Domain: Pure Integer Viewports (\mathbb{Z}^3). Zero Analog Leakage.
-Filename: ptrc_3d_animation_generator.py
-100% Dependency-Free: Erzeugt Bilder nativ ueber reines Ganzzahl-PPM-Streaming.
 """
 
 import os
 import sys
 import subprocess
 import time
-import numpy as np  # Direkt im Header verankert fuer stabilen Import
+import numpy as np
 
-# Modul-Kopplung
+# Dynamische Pfad-Ermittlung fuer Termux/Android Umgebung
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
 
-for p in [os.path.dirname(script_dir), os.path.dirname(os.path.dirname(script_dir))]:
-    if p:
-        sys.path.insert(0, p)
-        src_dir = os.path.join(p, "src")
-        if os.path.exists(src_dir): sys.path.insert(0, src_dir)
+# Durchsuche alle hierarchischen Ebenen nach der ptrc_3d_stereo_engine.py
+for depth in [script_dir, os.path.dirname(script_dir), os.path.dirname(os.path.dirname(script_dir))]:
+    if depth:
+        sys.path.insert(0, depth)
+        src_path = os.path.join(depth, "src")
+        if os.path.exists(src_path):
+            sys.path.insert(0, src_path)
 
 try:
     from ptrc_3d_stereo_engine import PTRC3DStereoEngine
 except ImportError:
-    from src.ptrc_3d_stereo_engine import PTRC3DStereoEngine
+    # Fallback-Dummy-Klasse, falls die Datei in der Termux-Struktur verschoben wurde
+    class PTRC3DStereoEngine:
+        def __init__(self, viewport_width=1920, viewport_height=1080):
+            self.width = viewport_width
+            self.height = viewport_height
 
 class PTRC3DAnimationPipeline:
     def __init__(self, total_frames=144):
         self.frames_limit = total_frames
-        # Nutzt die korrekte StereoEngine aus Source 3 mit Viewport-Uebergabe
-        self.stereo_engine = PTRC3DStereoEngine(viewport_width=320, viewport_height=180)
+        self.stereo_engine = PTRC3DStereoEngine(viewport_width=1920, viewport_height=1080)
         
         self.width = self.stereo_engine.width
         self.height = self.stereo_engine.height
         self.invariant_limit = 156
-        self.FEYNMAN_LIMIT = 137  
         self.SCALE = 1000
         
         self.output_directory = os.path.join(script_dir, "Renderframes_Cache")
-        
-        self.time_pipeline_start = 0
-        self.time_rendering_done = 0
-        self.time_io_write_accumulated = 0
-        self.time_ffmpeg_done = 0
-        self.accumulated_voxels_processed = 0
-        self.accumulated_bytes_written = 0
-        
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
 
     def write_ppm_image(self, filename, buffer_matrix):
-        """Schreibt eine reine Ganzzahl-PPM-Bilddatei (P6-Binär) ohne externe Bibliotheken."""
+        """Schreibt ein unkomprimiertes Ganzzahl-PPM."""
         h, w, _ = buffer_matrix.shape
         header = f"P6\n{w} {h}\n255\n".encode('ascii')
-        
         with open(filename, 'wb') as f:
             f.write(header)
             f.write(buffer_matrix.tobytes())
 
     def draw_integer_rectangle(self, buffer, x1, y1, x2, y2, color):
-        """Zeichnet ein Rechteck direkt auf die Byte-Matrix mittels Ganzzahl-Slicing."""
-        # Begrenzung gegen Gitter-Ueberlaeufe (Sicheres Voxel-Clipping)
+        """Sicheres Ganzzahl-Pixel-Clipping im Matrixraster."""
         x1 = max(0, min(int(x1), self.width - 1))
         x2 = max(0, min(int(x2), self.width - 1))
         y1 = max(0, min(int(y1), self.height - 1))
         y2 = max(0, min(int(y2), self.height - 1))
-        
         if x1 > x2: x1, x2 = x2, x1
         if y1 > y2: y1, y2 = y2, y1
-        
         buffer[y1:y2+1, x1:x2+1] = color
 
     def generate_deterministic_video_sequence(self):
-        print(f"[ pTRC CORE ] Reines Integer-PPM-Streaming aktiv (Kein OpenCV erforderlich).")
-        self.time_pipeline_start = time.perf_counter()
-        
-        static_z = 58 
+        print(f"[ pTRC CORE ] Starte FullHD-Integer-Bildsynthese...")
         cy = self.height // 2
+        static_z = 58
 
         fcc_offsets = [
-            (0, 0, 0),  
-            (2, 2, 0),  (2, -2, 0),  (-2, 2, 0),  (-2, -2, 0),
-            (2, 0, 2),  (2, 0, -2), (-2, 0, 2),  (-2, 0, -2),
-            (0, 2, 2),  (0, 2, -2), (0, -2, 2),  (0, -2, -2)
+            (0, 0, 0), (2, 2, 0), (2, -2, 0), (-2, 2, 0), (-2, -2, 0),
+            (2, 0, 2), (2, 0, -2), (-2, 0, 2), (-2, 0, -2), (0, 2, 2),
+            (0, 2, -2), (0, -2, 2), (0, -2, -2)
         ]
 
         for frame_idx in range(self.frames_limit):
-            frame_render_start = time.perf_counter()
-            # Erzeuge leeren Frame-Buffer (RGB-Kanäle)
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
-            
-            pyramid_move_offset = (frame_idx * 1) % self.width
-            pyramid_z_approach = (frame_idx * 1) % 32
+            pyramid_move = (frame_idx * 4) % self.width
+            pyramid_z = (frame_idx * 1) % 32
 
-            # OBJECT 1: DIE STATISCHE WIRMINGHAUS KUGEL (Spektral-Blau/Cyan)
+            # 1. KUGELSTREUUNG (Cyan)
             cx_sphere = self.width // 4
             for ox, oy, oz in fcc_offsets:
-                kx = cx_sphere + (ox * 6)
-                ky = cy + (oy * 6)
-                kz = static_z + (oz * 4)
-                
+                kx, ky, kz = cx_sphere + (ox * 24), cy + (oy * 24), static_z + (oz * 4)
                 denom = ((kz * self.SCALE) // 1414) + self.invariant_limit
                 out_x = (((int(kx - (self.width // 2)) * 8 * self.SCALE) // denom) + self.width // 2) % self.width
                 out_y = (((int(ky - (self.height // 2)) * 8 * self.SCALE) // denom) + self.height // 2) % self.height
                 
-                voxel_size = 4
-                self.accumulated_voxels_processed += 1
-                
-                # Definition der RGB-Ganzzahlwerte fuer Cyan (Rot=0, Gruen=255, Blau=255)
-                r_wert = 0
-                g_wert = 255
-                b_wert = 255
-                cyan_vektor = [r_wert, g_wert, b_wert]
-                
-                self.draw_integer_rectangle(frame_buffer, 
-                                            out_x - voxel_size // 2, out_y - voxel_size // 2,
-                                            out_x + voxel_size // 2, out_y + voxel_size // 2,
-                                            cyan_vektor)
+                # Farbvektor explizit deklariert und uebergeben
+                r_c, g_c, b_c = 0, 255, 255
+                cyan_color = [r_c, g_c, b_c]
+                self.draw_integer_rectangle(frame_buffer, out_x - 8, out_y - 8, out_x + 8, out_y + 8, cyan_color)
 
-
-            # OBJECT 2: DIE BEWEGTE PYRAMIDE (Emerald-Smaragd)
-            cx_pyramid_start = (self.width * 3) // 4
+            # 2. BEWEGTE PYRAMIDE (Smaragd)
+            cx_pyramid = (self.width * 3) // 4
             for level in range(3):
-                z_layer = level * 2
-                y_layer = -level * 4
+                y_layer = -level * 16
                 for row in range(3 - level):
                     for col in range(3 - level):
-                        px = cx_pyramid_start + (col * 14) - ((3 - level) * 7) - pyramid_move_offset
-                        py = cy + (row * 14) - ((3 - level) * 7) + 10 + y_layer
-                        
+                        px = cx_pyramid + (col * 56) - ((3 - level) * 28) - pyramid_move
+                        py = cy + (row * 56) - ((3 - level) * 28) + 40 + y_layer
                         for ox, oy, oz in fcc_offsets:
-                            kx = px + (ox * 2)
-                            ky = py + (oy * 2)
-                            kz = (static_z + 24) - pyramid_z_approach + (z_layer + oz) * 3
-                            
+                            kx, ky, kz = px + (ox * 8), py + (oy * 8), (static_z + 24) - pyramid_z + (level * 2 + oz) * 3
                             denom = ((kz * self.SCALE) // 1414) + self.invariant_limit
                             out_x = (((int(kx - (self.width // 2)) * 8 * self.SCALE) // denom) + self.width // 2) % self.width
                             out_y = (((int(ky - (self.height // 2)) * 8 * self.SCALE) // denom) + self.height // 2) % self.height
                             
-                            voxel_size = max(2, (6 * self.SCALE) // denom)
-                            self.accumulated_voxels_processed += 1
-                            
                             depth_glow = max(40, 255 - ((kz * 150) // 128))
-                            self.draw_integer_rectangle(frame_buffer, 
-                                                        out_x - voxel_size // 2, out_y - voxel_size // 2,
-                                                        out_x + voxel_size // 2, out_y + voxel_size // 2,
-                                                        [40, int(depth_glow), 160])
+                            self.draw_integer_rectangle(frame_buffer, out_x - 4, out_y - 4, out_x + 4, out_y + 4, [40, int(depth_glow), 160])
 
-            self.time_rendering_done += (time.perf_counter() - frame_render_start)
-            
-            io_start = time.perf_counter()
             frame_filename = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.ppm")
             self.write_ppm_image(frame_filename, frame_buffer)
-            self.time_io_write_accumulated += (time.perf_counter() - io_start)
-            
-            if os.path.exists(frame_filename):
-                self.accumulated_bytes_written += os.path.getsize(frame_filename)
-                
             if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
-                print(f"    + Synced Takt-Frame {frame_idx:03d}/{self.frames_limit} | PPM Buffer written")
+                print(f"    + Frame {frame_idx:03d}/{self.frames_limit} im Cache gesichert.")
 
     def compile_lossless_output_video(self):
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.ppm")
-        target_video = os.path.join(script_dir, "ptrc_wirminghaus_dual_passing.mp4")
+        # Primärer Pfad im Android-Download-Verzeichnis (Globaler Zugriff)
+        android_download_path = "/storage/emulated/0/Download/ptrc_wirminghaus_dual_passing.mp4"
         
-        print(" -> Starte FFMPEG Kompression aus PPM-Bildkette...")
-        ffmpeg_start = time.perf_counter()
-        
+        print(" -> Starte FFMPEG Kompression...")
         ffmpeg_cmd = [
             "ffmpeg", "-y", "-framerate", "24", "-i", input_pattern,
-            "-c:v", "libx264", "-crf", "0", "-preset", "slow", "-pix_fmt", "yuv420p", target_video
+            "-c:v", "libx264", "-crf", "0", "-preset", "slow", "-pix_fmt", "yuv420p", android_download_path
         ]
         try:
             subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
-            self.time_ffmpeg_done = time.perf_counter() - ffmpeg_start
+            print(f"\n[ SYSTEM CHECK OK ] Video erfolgreich in den Hauptspeicher geschrieben!")
+            print(f" -> Datei liegt unter: {android_download_path}\n")
             
-            # Temporaeren PPM-Cache bereinigen
+            # Cache bereinigen
             for frame_idx in range(self.frames_limit):
                 p = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.ppm")
                 if os.path.exists(p): os.remove(p)
             os.rmdir(self.output_directory)
-            
-            print(f"\n[ pTRC INTEGRITY AUDIT ] Master-Videodatei verlustfrei generiert!")
-            print(f" -> Pfad: {target_video}\n")
-            return 1
-        except Exception as e:
-            print(f" -> [ HINWEIS ] FFMPEG Subprozess blockiert. Die unkomprimierten")
-            print(f"    PPM-Rohdaten verbleiben fehlerfrei im Ordner: {self.output_directory}")
-            return 0
+        except Exception:
+            print(f"\n[ ACHTUNG ] FFmpeg fehlt oder hat keine Schreibrechte!")
+            print(f" -> Die unkomprimierten Bilder liegen im Ordner: {self.output_directory}")
 
 if __name__ == "__main__":
     pipeline = PTRC3DAnimationPipeline(total_frames=144)
