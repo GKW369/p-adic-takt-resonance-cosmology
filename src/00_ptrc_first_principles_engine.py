@@ -23,6 +23,7 @@ pTRC Framework - Core Integration Engine (src/00_ptrc_first_principles_engine.py
 Motto: "Wir rechnen zu klein!" | Signature: Ignatus @Iwahn
 Hardware Target: ACER Aspire E1-570 (Intel Core i3 Pure Z-Clock / 2 Pentium Cores Architecture)
 Refactored: Fully internationalized strings and updated hardware diagnostic signatures.
+Fix: Robust absolute path resolution for seamless Termux/Android and Ubuntu cross-compatibility.
 """
 
 import sys
@@ -38,6 +39,9 @@ global_start = time.perf_counter_ns()
 
 # Maximum viewport terminal column width for perfect alignment geometry
 MAX_WIDTH = 166
+
+# Dynamically resolve the absolute directory where this master script resides
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 print("="*MAX_WIDTH)
 print(f"[ pTRC CORE INTEGRATION ENGINE ] OPERATIONAL CHANNELS ACTIVATED | HARDWARE BASE: ACER ASPIRE E1-570 | TARGET: PITCH-LAUNCH".center(MAX_WIDTH))
@@ -75,19 +79,23 @@ def print_module_line(mod_num, mod_name, status_text):
     base_str = f" -> [ MODULE {mod_num:02d}/20 ] Executing {mod_name.ljust(38)} ... RESULT: {display_text}"
     print(base_str.ljust(MAX_WIDTH - 13) + "[ SUCCESS ]", flush=True)
 
+# Helper function to compute absolute module path ensuring fail-safe subprocess calls
+def get_mod_path(mod_filename):
+    return os.path.join(SCRIPT_DIR, mod_filename)
+
 # Module 01: Core Integration Engine Self-Test
 durations_ms[1] = 1
 print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
 # Module 02: Base Resonance Calibration
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[1]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, get_mod_path(modules[1])], capture_output=True, text=True, check=True)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(2, modules[1], res.stdout.strip().split('\n')[-1] if res.stdout else "Base Resonance Alignment Completed")
 
 # Module 03: Alpha Emitter
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[2]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, get_mod_path(modules[2])], capture_output=True, text=True, check=True)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdout else "Planck Takt Spectrum Locked")
 
@@ -96,8 +104,8 @@ print_module_line(3, modules[2], res.stdout.strip().split('\n')[-1] if res.stdou
 # ==============================================================================
 t_start = time.perf_counter_ns()
 
-# Launch original fluid module using unbuffered flag (-u) to tap live terminal output
-process = subprocess.Popen([sys.executable, "-u", modules[3]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+# Launch original fluid module using unbuffered flag (-u) and absolute path destination
+process = subprocess.Popen([sys.executable, "-u", get_mod_path(modules[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 # Capture and project each frame smoothly using stationary cursor tracking
 while True:
@@ -119,8 +127,8 @@ time.sleep(0.5)
 # ==============================================================================
 t_start = time.perf_counter_ns()
 
-# Launch original crystallization module using unbuffered flag (-u) to tap live terminal output
-process_c = subprocess.Popen([sys.executable, "-u", modules[4]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+# Launch original crystallization module using unbuffered flag (-u) and absolute path destination
+process_c = subprocess.Popen([sys.executable, "-u", get_mod_path(modules[4])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 while True:
     line_c = process_c.stdout.readline()
@@ -140,7 +148,7 @@ time.sleep(0.5)
 
 # Module 06: Prime Lattice Determinism
 t_start = time.perf_counter_ns()
-res = subprocess.run([sys.executable, modules[5]], capture_output=True, text=True, check=True)
+res = subprocess.run([sys.executable, get_mod_path(modules[5])], capture_output=True, text=True, check=True)
 durations_ms[6] = (time.perf_counter_ns() - t_start) // 1000000
 print_module_line(6, modules[5], res.stdout.strip().split('\n')[-1] if res.stdout else "Rad-Sieve 210 Topology Verified")
 
@@ -155,7 +163,7 @@ static_results = [
 # Automated fast background execution loops for remaining physical modules
 for i in range(6, 20):
     t_start = time.perf_counter_ns()
-    res = subprocess.run([sys.executable, modules[i]], capture_output=True, text=True, check=True)
+    res = subprocess.run([sys.executable, get_mod_path(modules[i])], capture_output=True, text=True, check=True)
     durations_ms[i+1] = (time.perf_counter_ns() - t_start) // 1000000
     clean_output = res.stdout.strip().split('\n')[-1] if res.stdout else static_results[i-6]
     
