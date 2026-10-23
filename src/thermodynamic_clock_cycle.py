@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
 
 
@@ -66,7 +66,8 @@ class PTRCThermodynamicClockEngine:
                 continue
                 
             # Execute precise scaled floor division to transform state metrics
-            scaled_dissipation = (pulse_amplitude * self.SCALE) // (node * sieve_factor + self.invariant_limit)
+            # Fixed-Point 64-Bit widening to safely prevent ARM architecture bounds overflows
+            scaled_dissipation = (np.int64(pulse_amplitude) * np.int64(self.SCALE)) // (node * sieve_factor + self.invariant_limit)
             discrete_entropy_shift = scaled_dissipation % self.primorial_base
             
             # Commit the exact integer update back to the state buffer
