@@ -10,6 +10,7 @@ import os
 import sys
 import subprocess
 import time
+import numpy as np  # Direkt im Header verankert fuer stabilen Import
 
 # Modul-Kopplung
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -45,9 +46,8 @@ class PTRC3DAnimationPipeline:
             os.makedirs(self.output_directory)
 
     def write_ppm_image(self, filename, buffer_matrix):
-        """Schreibt eine reine Ganzzahl-PPM-Bilddatei ohne externe Bibliotheken."""
+        """Schreibt eine reine Ganzzahl-PPM-Bilddatei (P6-Binär) ohne externe Bibliotheken."""
         h, w, _ = buffer_matrix.shape
-        # PPM Header: P6 bedeutet Binaer-RGB, danach Breite, Hoehe und Max-Farbwert
         header = f"P6\n{w} {h}\n255\n".encode('ascii')
         
         with open(filename, 'wb') as f:
@@ -56,11 +56,11 @@ class PTRC3DAnimationPipeline:
 
     def draw_integer_rectangle(self, buffer, x1, y1, x2, y2, color):
         """Zeichnet ein Rechteck direkt auf die Byte-Matrix mittels Ganzzahl-Slicing."""
-        # Begrenzung gegen Matrix-Ueberlaeufe (Clipping)
-        x1 = max(0, min(x1, self.width - 1))
-        x2 = max(0, min(x2, self.width - 1))
-        y1 = max(0, min(y1, self.height - 1))
-        y2 = max(0, min(y2, self.height - 1))
+        # Begrenzung gegen Gitter-Ueberlaeufe (Sicheres Voxel-Clipping)
+        x1 = max(0, min(int(x1), self.width - 1))
+        x2 = max(0, min(int(x2), self.width - 1))
+        y1 = max(0, min(int(y1), self.height - 1))
+        y2 = max(0, min(int(y2), self.height - 1))
         
         if x1 > x2: x1, x2 = x2, x1
         if y1 > y2: y1, y2 = y2, y1
@@ -68,7 +68,7 @@ class PTRC3DAnimationPipeline:
         buffer[y1:y2+1, x1:x2+1] = color
 
     def generate_deterministic_video_sequence(self):
-        print(f"[ pTRC CORE ] Reines Integer-PPM-Streaming aktiv.")
+        print(f"[ pTRC CORE ] Reines Integer-PPM-Streaming aktiv (Kein OpenCV erforderlich).")
         self.time_pipeline_start = time.perf_counter()
         
         static_z = 58 
@@ -81,17 +81,15 @@ class PTRC3DAnimationPipeline:
             (0, 2, 2),  (0, 2, -2), (0, -2, 2),  (0, -2, -2)
         ]
 
-        import numpy as np
-
         for frame_idx in range(self.frames_limit):
             frame_render_start = time.perf_counter()
-            # Erzeuge leeren Frame-Buffer (RGB)
+            # Erzeuge leeren Frame-Buffer (RGB-Kanäle)
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
             
             pyramid_move_offset = (frame_idx * 1) % self.width
             pyramid_z_approach = (frame_idx * 1) % 32
 
-            # OBJECT 1: DIE STATISCHE WIRMINGHAUS KUGEL (Cyan-Blau)
+            # OBJECT 1: DIE STATISCHE WIRMINGHAUS KUGEL (Spektral-Blau/Cyan)
             cx_sphere = self.width // 4
             for ox, oy, oz in fcc_offsets:
                 kx = cx_sphere + (ox * 6)
@@ -110,7 +108,7 @@ class PTRC3DAnimationPipeline:
                                             out_x + voxel_size // 2, out_y + voxel_size // 2,
 )  # RGB: Cyan
 
-            # OBJECT 2: DIE BEWEGTE PYRAMIDE (Emerald-Gruen-Smaragd)
+            # OBJECT 2: DIE BEWEGTE PYRAMIDE (Emerald-Smaragd)
             cx_pyramid_start = (self.width * 3) // 4
             for level in range(3):
                 z_layer = level * 2
@@ -149,13 +147,13 @@ class PTRC3DAnimationPipeline:
                 self.accumulated_bytes_written += os.path.getsize(frame_filename)
                 
             if frame_idx % 24 == 0 or frame_idx == self.frames_limit - 1:
-                print(f"    + Synced Frame {frame_idx:03d}/{self.frames_limit} | PPM Cache written")
+                print(f"    + Synced Takt-Frame {frame_idx:03d}/{self.frames_limit} | PPM Buffer written")
 
     def compile_lossless_output_video(self):
         input_pattern = os.path.join(self.output_directory, "takt_frame_%04d.ppm")
         target_video = os.path.join(script_dir, "ptrc_wirminghaus_dual_passing.mp4")
         
-        print(" -> Starte FFMPEG Kompression...")
+        print(" -> Starte FFMPEG Kompression aus PPM-Bildkette...")
         ffmpeg_start = time.perf_counter()
         
         ffmpeg_cmd = [
@@ -166,17 +164,18 @@ class PTRC3DAnimationPipeline:
             subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
             self.time_ffmpeg_done = time.perf_counter() - ffmpeg_start
             
+            # Temporaeren PPM-Cache bereinigen
             for frame_idx in range(self.frames_limit):
                 p = os.path.join(self.output_directory, f"takt_frame_{frame_idx:04d}.ppm")
                 if os.path.exists(p): os.remove(p)
             os.rmdir(self.output_directory)
             
-            print(f"\n[ pTRC INTEGRITY AUDIT ] Pipeline erfolgreich abgeschlossen!")
-            print(f" -> Output-Video generiert: {target_video}\n")
+            print(f"\n[ pTRC INTEGRITY AUDIT ] Master-Videodatei verlustfrei generiert!")
+            print(f" -> Pfad: {target_video}\n")
             return 1
         except Exception as e:
-            print(f" -> [ FFMPEG ERROR ] FFMPEG fehlt oder ist fehlerhaft: {e}")
-            print(f" -> Die unkomprimierten PPM-Rohdaten verbleiben im Cache-Ordner.")
+            print(f" -> [ HINWEIS ] FFMPEG Subprozess blockiert. Die unkomprimierten")
+            print(f"    PPM-Rohdaten verbleiben fehlerfrei im Ordner: {self.output_directory}")
             return 0
 
 if __name__ == "__main__":
