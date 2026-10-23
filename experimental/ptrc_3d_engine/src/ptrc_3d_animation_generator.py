@@ -128,11 +128,17 @@ class PTRC3DAnimationPipeline:
                 voxel_size = 4
                 self.accumulated_voxels_processed += 1
                 
-                # Farb-Argument korrekt uebergeben
+                # Definition der RGB-Ganzzahlwerte fuer Cyan (Rot=0, Gruen=255, Blau=255)
+                r_wert = 0
+                g_wert = 255
+                b_wert = 255
+                cyan_vektor = [r_wert, g_wert, b_wert]
+                
                 self.draw_integer_rectangle(frame_buffer, 
                                             out_x - voxel_size // 2, out_y - voxel_size // 2,
                                             out_x + voxel_size // 2, out_y + voxel_size // 2,
-)  # RGB: Cyan-Blau-Aether
+                                            cyan_vektor)
+
 
             # OBJECT 2: DIE BEWEGTE PYRAMIDE (Emerald-Smaragd)
             cx_pyramid_start = (self.width * 3) // 4
