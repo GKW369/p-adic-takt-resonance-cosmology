@@ -2,7 +2,7 @@
 # pTRC Framework - Experimental Module: Invariant Kaleidoscope Rotator & Compiler
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
-# This program is free software: you can redistribute it and/or modify
+# This program free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -18,7 +18,7 @@
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
-"""
+r"""
 pTRC Framework - Experimental Core: Holographic Voxel Projection Stabilizer
 Operational Domain: Symmetrical Integer Translation Matrices (\mathbb{Z}^3).
 Fixes coordinate jittering during clock-cycled multi-axis crystal transitions.
@@ -60,6 +60,7 @@ class PTRCStabilizedRotator:
     def project_stabilized_frame(self, frame_idx, output_dir):
         """
         Rendert ein rauschfreies und ungezacktes FullHD-Frame.
+        Sichert die Array-Werte sauber ab, um Mehrdeutigkeiten zu verhindern.
         """
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         cx, cy = self.width // 2, self.height // 2
@@ -71,6 +72,11 @@ class PTRCStabilizedRotator:
         
         # Duale Polaritäts-Oszillation (Plus/Minus Takt aus Modul 41)
         dual_polarity = 1 if (frame_idx % 2 == 0) else -1
+        
+        # FIX: Aufteilung der Achsen-Vektoren in explizite Skalare, um ValueError-Arrays zu verhindern
+        ax_x = int(current_axis[0])
+        ax_y = int(current_axis[1])
+        ax_z = int(current_axis[2])
         
         # Iteration durch den lokalen Planck-Raumblock
         for dx in range(-15, 16):
@@ -86,9 +92,10 @@ class PTRCStabilizedRotator:
                         continue
                         
                     # Algebraische Achsen-Rotation ohne ungenaue Trigonometrie
-                    rx = dx + (current_axis * dual_polarity) // 12
-                    ry = dy + (current_axis * dual_polarity) // 12
-                    rz = dz + z_offset + (current_axis * dual_polarity) // 12
+                    # Fixiert über die skalarischt isolierten Achsen-Komponenten
+                    rx = dx + (ax_x * dual_polarity) // 12
+                    ry = dy + (ax_y * dual_polarity) // 12
+                    rz = dz + z_offset + (ax_z * dual_polarity) // 12
                     
                     # Perspektivischer Teiler im reinen Ganzzahlraum
                     denom = ((rz * self.SCALE) // 1414) + self.invariant_limit
@@ -126,10 +133,7 @@ class PTRCStabilizedRotator:
             f.write(frame_buffer.tobytes())
 
 def resolve_progressive_video_path(target_dir):
-    """
-    Ermittelt einen fortlaufenden, nummerierten Dateinamen, um Überschreiben zu verhindern.
-    Erzeugt Dateinamen im Format: ptrc_interference_v001.mp4, ptrc_interference_v002.mp4 usw.
-    """
+    """ Ermittelt einen fortlaufenden, nummerierten Dateinamen. """
     version = 1
     while True:
         filename = f"ptrc_interference_v{version:03d}.mp4"
@@ -141,17 +145,17 @@ def resolve_progressive_video_path(target_dir):
 if __name__ == "__main__":
     print("[pTRC-ROTATOR] Initialisiere unbestechliche 3D-Rotations-Inferenz...")
     
-    # Basispfäde deklarieren (Termux / Desktop-agnostisch)
+    # Basispfäde deklarieren
     base_dir = os.path.dirname(os.path.abspath(__file__))
     cache_dir = os.path.join(base_dir, "Stabilized_Cache")
     os.makedirs(cache_dir, exist_ok=True)
     
-    # Zielverzeichnis für Videos ermitteln (Nutzt Standard-Download-Pfad für Mobilgeräte/Termux)
+    # Zielverzeichnis für Videos ermitteln (Nutzt Standard-Download-Pfad für Termux)
     android_download_dir = "/storage/emulated/0/Download"
     if os.path.exists(android_download_dir):
         video_output_dir = android_download_dir
     else:
-        video_output_dir = base_dir  # Fallback aufs aktuelle Skriptverzeichnis
+        video_output_dir = base_dir
         
     os.makedirs(video_output_dir, exist_ok=True)
     
