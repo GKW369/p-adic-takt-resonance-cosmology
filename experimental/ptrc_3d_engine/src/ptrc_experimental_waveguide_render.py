@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Experimental Module: Invariant Kaleidoscope Rotator
+# pTRC Framework - Experimental Module: Invariant Kaleidoscope Rotator & Compiler
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -22,10 +22,13 @@
 pTRC Framework - Experimental Core: Holographic Voxel Projection Stabilizer
 Operational Domain: Symmetrical Integer Translation Matrices (\mathbb{Z}^3).
 Fixes coordinate jittering during clock-cycled multi-axis crystal transitions.
+Automated with progressive MP4 sequence execution and localized cache purge.
 """
 
 import os
 import sys
+import subprocess
+import time
 import numpy as np
 
 class PTRCStabilizedRotator:
@@ -56,8 +59,7 @@ class PTRCStabilizedRotator:
 
     def project_stabilized_frame(self, frame_idx, output_dir):
         """
-        Rendert ein rauschfreies FullHD-Frame. Nutzt die Takt-Phase als 
-        diskreten Achsen-Schalter, um Rotations-Jitter komplett zu eliminieren.
+        Rendert ein rauschfreies und ungezacktes FullHD-Frame.
         """
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         cx, cy = self.width // 2, self.height // 2
@@ -84,10 +86,9 @@ class PTRCStabilizedRotator:
                         continue
                         
                     # Algebraische Achsen-Rotation ohne ungenaue Trigonometrie
-                    # Wir projizieren die Raumpunkte entlang der invarianten Kristallachse
-                    rx = dx + (current_axis[0] * dual_polarity) // 12
-                    ry = dy + (current_axis[1] * dual_polarity) // 12
-                    rz = dz + z_offset + (current_axis[2] * dual_polarity) // 12
+                    rx = dx + (current_axis * dual_polarity) // 12
+                    ry = dy + (current_axis * dual_polarity) // 12
+                    rz = dz + z_offset + (current_axis * dual_polarity) // 12
                     
                     # Perspektivischer Teiler im reinen Ganzzahlraum
                     denom = ((rz * self.SCALE) // 1414) + self.invariant_limit
@@ -124,17 +125,76 @@ class PTRCStabilizedRotator:
             f.write(header)
             f.write(frame_buffer.tobytes())
 
+def resolve_progressive_video_path(target_dir):
+    """
+    Ermittelt einen fortlaufenden, nummerierten Dateinamen, um Überschreiben zu verhindern.
+    Erzeugt Dateinamen im Format: ptrc_interference_v001.mp4, ptrc_interference_v002.mp4 usw.
+    """
+    version = 1
+    while True:
+        filename = f"ptrc_interference_v{version:03d}.mp4"
+        full_path = os.path.join(target_dir, filename)
+        if not os.path.exists(full_path):
+            return full_path
+        version += 1
+
 if __name__ == "__main__":
     print("[pTRC-ROTATOR] Initialisiere unbestechliche 3D-Rotations-Inferenz...")
-    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Stabilized_Cache")
-    os.makedirs(output_path, exist_ok=True)
     
+    # Basispfäde deklarieren (Termux / Desktop-agnostisch)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    cache_dir = os.path.join(base_dir, "Stabilized_Cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    # Zielverzeichnis für Videos ermitteln (Nutzt Standard-Download-Pfad für Mobilgeräte/Termux)
+    android_download_dir = "/storage/emulated/0/Download"
+    if os.path.exists(android_download_dir):
+        video_output_dir = android_download_dir
+    else:
+        video_output_dir = base_dir  # Fallback aufs aktuelle Skriptverzeichnis
+        
+    os.makedirs(video_output_dir, exist_ok=True)
+    
+    # 144 Frames decken das volle Spektrum deines Raumkristall-Uhrsystems ab
+    total_frames = 144
     rotator = PTRCStabilizedRotator()
     
-    # Rendere eine Testsequenz von 48 Frames zum Abgleich des Interferenzmusters
-    for frame in range(48):
-        rotator.project_stabilized_frame(frame, output_path)
-        if frame % 12 == 0:
-            print(f"    + Invarianter Takt-Frame {frame:02d}/48 erfolgreich im Cache verankert.")
+    # 1. SCHRITT: BERECHNUNG DER DETEKTIONS-MATRIZEN
+    print(f" -> Starte dichte FullHD-Volumensynthese ({total_frames} Frames)...")
+    for frame in range(total_frames):
+        rotator.project_stabilized_frame(frame, cache_dir)
+        if frame % 24 == 0 or frame == total_frames - 1:
+            print(f"    + Invarianter Takt-Frame {frame:03d}/{total_frames} im Cache verankert.")
             
-    print(f"\n[ OK ] 48 rauschfreie Interferenz-Frames in '{output_path}' abgelegt.")
+    # 2. SCHRITT: DETERMINISTISCHE FFMPEG-KOMPRESSION
+    input_pattern = os.path.join(cache_dir, "stabilized_frame_%04d.ppm")
+    video_target_path = resolve_progressive_video_path(video_output_dir)
+    
+    print("\n -> Starte unbeschädigte MP4-Videokompilierung via FFmpeg...")
+    ffmpeg_cmd = [
+        "ffmpeg", "-y", "-framerate", "24", "-i", input_pattern,
+        "-c:v", "libx264", "-crf", "0", "-preset", "slow", "-pix_fmt", "yuv420p", video_target_path
+    ]
+    
+    try:
+        subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
+        print(f"\n[ SYSTEM CHECK OK ] Kristall-Video erfolgreich generiert und gesichert!")
+        print(f" -> Ausgabedatei: {video_target_path}")
+        
+        # 3. SCHRITT: STRIKTE REGISTERBEREINIGUNG (Löschen der PPM-Massen)
+        print("\n -> Starte atomare Bereinigung des lokalen Festplatten-Caches...")
+        for frame in range(total_frames):
+            ppm_file = os.path.join(cache_dir, f"stabilized_frame_{frame:04d}.ppm")
+            if os.path.exists(ppm_file):
+                os.remove(ppm_file)
+        os.rmdir(cache_dir)
+        print("    + Cache-Ordner rückstandslos entfernt. Speicherplatz freigegeben.")
+        print("=" * 90)
+        print(" -> STATUS: Zero-Float Pipeline-Lauf erfolgreich abgeschlossen. Synchronisation sauber.")
+        print("=" * 90)
+        sys.exit(0)
+        
+    except Exception as e:
+        print(f"\n[ ACHTUNG ] FFmpeg-Kompression fehlgeschlagen: {e}")
+        print(f" -> Die PPM-Bilder verbleiben im Sicherheits-Puffer: {cache_dir}")
+        sys.exit(1)
