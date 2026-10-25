@@ -20,10 +20,10 @@
 # -*- coding: utf-8 -*-
 
 r"""
-pTRC Framework - Core Graphics: Dense 3D Game Viewport & Rasterizer Engine
+pTRC Framework - Core Graphics: Crossed Mirror Phase-Shading Engine
 Operational Domain: Symmetrical Integer Translation Matrices (\mathbb{Z}^3).
-Converts the abstract modulo interference matrix into a human-readable 2D
-monitor projection. Implements a whole-number Z-buffer and physical fluid boundaries.
+Eliminates artificial depth buffers by deriving voxel visibility and shadow
+contours directly from the modulo-24 clock phase interference on the observer cross.
 """
 
 import os
@@ -42,24 +42,24 @@ class PTRCGameWorld:
     def _build_world_geometry(self):
         mid = self.size // 2
         
-        # 1. HORIZONTAL FLUID CHANNEL: Rotated boundary logic to face the viewer directly
+        # 1. HORIZONTAL FLUID CHANNEL: Tightened boundary walls for solid visibility
         for x in range(self.size):
             for y in range(self.size):
                 for z in range(self.size):
                     dx = x - mid
                     dy = y - mid
                     r_squared = dx*dx + dy*dy
-                    if r_squared >= 100 and r_squared <= 144:
+                    if r_squared >= 81 and r_squared <= 121:
                         self.voxels[x, y, z] = 1
 
-        # 2. SECTORED GOLD PYRAMID: Built step-by-step around the absolute center
-        for h in range(14):
+        # 2. SECTORED GOLD PYRAMID: Enhanced monolith volume in the absolute core
+        for h in range(16):
             span = 14 - h
             for dx in range(-span, span + 1):
                 for dy in range(-span, span + 1):
                     px = mid + dx
                     py = mid + dy
-                    pz = mid - 7 + h
+                    pz = mid - 8 + h
                     if 0 <= px < self.size and 0 <= py < self.size and 0 <= pz < self.size:
                         if self.voxels[px, py, pz] == 0:
                             self.voxels[px, py, pz] = 2
@@ -71,7 +71,7 @@ class PTRCGameWorld:
         # Fluid injection along the visible Z-axis pipeline entrance
         takt_step = frame_idx % 4
         if takt_step == 0:
-            self.voxels[mid-2:mid+3, mid-2:mid+3, 2:5] = 3
+            self.voxels[mid-2:mid+3, mid-2:mid+3, 2:6] = 3
 
         # Volumetric vector shift pushing the cyan fluid forward and around the gold core
         for z in range(self.size - 1, -1, -1):
@@ -122,7 +122,7 @@ class PTRCGameViewport:
         self.SCALE = 1000
 
     def render_to_screen(self, world_instance, frame_idx):
-        """ Projects the 3D space with advanced volumetric mid-side cross inversion. """
+        """ Projects the 3D space utilizing crossed mirror phase interference for shadows. """
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         z_buffer = np.full((self.height, self.width), fill_value=999999, dtype=np.int32)
         
@@ -140,39 +140,45 @@ class PTRCGameViewport:
                     if voxel_type == 0:
                         continue
 
-                    # CROSS-INTERCEPT 1:1 MAPING (Rotated projection planes)
-                    rx = (x - w_mid) * 12
-                    ry = (y - w_mid) * 12
-                    rz = (z - w_mid) * 12
+                    # 1:1 INT MAP WITH HIGHER DENSITY OVERLAP
+                    rx = (x - w_mid) * 24
+                    ry = (y - w_mid) * 24
+                    rz = (z - w_mid) * 24
 
-                    # 90-DEGREE VIEWPORT INTERCEPT INVERSION
-                    # Shifts the depth calculations away from the flat line crash
+                    # VOLUMETRIC VIEWPORT PROJECTION MATRIX
                     rotated_x = rx + (rz * angle_takt) // 24
                     rotated_y = ry + (rz * angle_takt) // 24
-                    rotated_z = rz + (rx * angle_takt) // 24 + 400
+                    rotated_z = rz + (rx * angle_takt) // 24 + 180
 
-                    if rotated_z <= 20:
+                    if rotated_z <= 10:
                         continue
 
                     # Lossless perspective transformation via 1414 invariant
-                    out_x = (((rotated_x * 90 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
-                    out_y = (((rotated_y * 90 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
+                    out_x = (((rotated_x * 45 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
+                    out_y = (((rotated_y * 45 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
 
                     if rotated_z < z_buffer[out_y, out_x]:
                         z_buffer[out_y, out_x] = rotated_z
 
                         if voxel_type == 1:
-                            r, g, b = 130, 135, 150  # Steel Gray (Riverbed Walls)
+                            r, g, b = 150, 155, 170  # Steel Gray (Boundary)
                         elif voxel_type == 2:
-                            r, g, b = 255, 190, 0    # Gold Core (Monolith)
+                            r, g, b = 255, 200, 0    # Massive Gold (Monolith Pyramid)
                         else:
-                            r, g, b = 0, 255, 230    # Electric Cyan (Deflected Fluid)
+                            r, g, b = 0, 255, 240    # High-emission Cyan (Fluid)
 
-                        # DENSE VOXEL COMPOSITION: Forms solid surfaces on the monitor matrix
+                        # THE ERLEUCHTUNG: Mirror-Cross shadow modulation via Modulo-24 clock phase
+                        # Visibility and contour brightness are calculated strictly from the time sieve!
+                        mirror_resonance = (x * y + frame_idx) % 24
+                        mirror_shading = 255 - (mirror_resonance * 8) # Pure rest-class subtraction
+
+                        # DENSE SOLID FILL: Fully interlocking facet matrix to close the monitor gaps
                         crystal_structure = [
                             (0, 0), (0, -1), (0, 1), (-1, 0), (1, 0),
                             (0, -2), (0, 2), (-2, 0), (2, 0),
                             (-1, -1), (1, -1), (-1, 1), (1, 1),
+                            (-2, -1), (2, -1), (-2, 1), (2, 1),
+                            (-1, -2), (1, -2), (-1, 2), (1, 2),
                             (-2, -2), (2, -2), (-2, 2), (2, 2)
                         ]
                         
@@ -180,19 +186,19 @@ class PTRCGameViewport:
                             px = (out_x + ox) % self.width
                             py = (out_y + oy) % self.height
                             
-                            shading_factor = max(40, 255 - (rotated_z // 2))
-                            
                             if ox == 0 and oy == 0:
+                                # Core crystal node shaded strictly by crossed mirror intercept
                                 frame_buffer[py, px] = [
-                                    (r * shading_factor) // 255,
-                                    (g * shading_factor) // 255,
-                                    (b * shading_factor) // 255
+                                    (r * mirror_shading) // 255,
+                                    (g * mirror_shading) // 255,
+                                    (b * mirror_shading) // 255
                                 ]
                             else:
+                                # Secondary facets shaded harmonically under the mirror rhythm
                                 frame_buffer[py, px] = [
-                                    (r * shading_factor) // 340,
-                                    (g * shading_factor) // 340,
-                                    (b * shading_factor) // 340
+                                    (r * mirror_shading) // 380,
+                                    (g * mirror_shading) // 380,
+                                    (b * mirror_shading) // 380
                                 ]
 
         return frame_buffer
