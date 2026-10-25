@@ -42,11 +42,17 @@ class PTRCFluidLattice:
         self.grid[cx-4:cx+5, cy-4:cy+5] = 156
 
     def step_fluid_resonance(self, frame_idx):
-        """ Taktet das Fluid via ganzzahligem Index-Shift. """
+        """ 
+        Taktet das Fluid via ganzzahligem Index-Shift.
+        AFI-OPTIMIERUG: Konvertiert das uint8-Feld direkt an der Wurzel in
+        vorzeichenbehaftete int32-Ganzzahlen, um künftige Overflows zu verhindern.
+        """
         shift = (frame_idx % 3) - 1
         if shift != 0:
             self.grid = np.roll(self.grid, shift=shift, axis=(0, 1))
-        return self.grid
+        
+        # Sicherer Datentyp-Export für Folgemodule
+        return self.grid.astype(np.int32)
 
 class PTRCTrueCrystalSieve:
     def __init__(self, v_scale=9):
@@ -91,6 +97,7 @@ class PTRCCrystalFluidEngine:
         ax_y = int(current_axis[1])
         ax_z = int(current_axis[2])
 
+        # Holt die an der Wurzel geschützte int32-Matrix
         active_fluid_grid = self.fluid_source.step_fluid_resonance(frame_idx)
         f_height, f_width = active_fluid_grid.shape
 
@@ -102,8 +109,8 @@ class PTRCCrystalFluidEngine:
                     fluid_x = (dx + f_width // 2) % f_width
                     fluid_y = (dy + f_height // 2) % f_height
                     
-                    # FIX: Isolierung des uint8-Zustands als nacktes Python-Integer zur Verhinderung von Overflows
-                    fluid_state = int(active_fluid_grid[fluid_y, fluid_x])
+                    # Absolut überlaufsicherer Zustand
+                    fluid_state = active_fluid_grid[fluid_y, fluid_x]
 
                     quadrance = dx*dx + dy*dy + dz*dz
                     if quadrance == 0:
@@ -118,7 +125,7 @@ class PTRCCrystalFluidEngine:
                     rx_minus = dx - (ax_x * dual_polarity) // 12
                     mono_signal_x = rx_plus - rx_minus
 
-                    # Durch die Typ-Erhöhung auf 'int' zieht das Modulo die 1024 jetzt fehlerfrei ab!
+                    # Dank int32 an der Wurzel bricht das Register bei 1024 nicht mehr zusammen!
                     takt_phase = (dx * dy + frame_idx + fluid_state) % self.control_base
 
                     # Mid-Side Stereo Fanning fächert die Symmetrien auf (Divisor // 6)
@@ -143,7 +150,7 @@ class PTRCCrystalFluidEngine:
                     else:
                         r_c, g_c, b_c = 0, int(residuum // 2), 200  # Freier Speicher-Slot (Blau)
 
-                    # FUNDAMENTALE WANDLUNG: Zeichne das Planck-Pixel als 144-seitige Kristallstruktur!
+                    # 144-seitige Kristallstruktur-Zuweisung
                     crystal_offsets = [
                         (0, 0),                                # Das Kristallzentrum (9 Schritte starr)
                         (0, -2), (0, 2), (-2, 0), (2, 0),      # Die orthogonalen Hauptachsen des Kristalls
