@@ -107,7 +107,9 @@ class PTRCGameViewport:
     def render_to_screen(self, world_instance, frame_idx):
         """ Projects the 3D space onto the 2D monitor using an integer Z-buffer. """
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
-        z_buffer = np.full((self.height, self.width), fillvalue=999999, dtype=np.int32)
+        
+        # FIXED: Corrected parameter name from fillvalue to fill_value for NumPy compatibility
+        z_buffer = np.full((self.height, self.width), fill_value=999999, dtype=np.int32)
         
         cx, cy = self.width // 2, self.height // 2
         w_size = world_instance.size
