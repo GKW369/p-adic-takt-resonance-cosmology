@@ -101,7 +101,9 @@ class PTRCCrystalFluidEngine:
 
                     fluid_x = (dx + f_width // 2) % f_width
                     fluid_y = (dy + f_height // 2) % f_height
-                    fluid_state = active_fluid_grid[fluid_y, fluid_x]
+                    
+                    # FIX: Isolierung des uint8-Zustands als nacktes Python-Integer zur Verhinderung von Overflows
+                    fluid_state = int(active_fluid_grid[fluid_y, fluid_x])
 
                     quadrance = dx*dx + dy*dy + dz*dz
                     if quadrance == 0:
@@ -116,6 +118,7 @@ class PTRCCrystalFluidEngine:
                     rx_minus = dx - (ax_x * dual_polarity) // 12
                     mono_signal_x = rx_plus - rx_minus
 
+                    # Durch die Typ-Erhöhung auf 'int' zieht das Modulo die 1024 jetzt fehlerfrei ab!
                     takt_phase = (dx * dy + frame_idx + fluid_state) % self.control_base
 
                     # Mid-Side Stereo Fanning fächert die Symmetrien auf (Divisor // 6)
@@ -141,8 +144,6 @@ class PTRCCrystalFluidEngine:
                         r_c, g_c, b_c = 0, int(residuum // 2), 200  # Freier Speicher-Slot (Blau)
 
                     # FUNDAMENTALE WANDLUNG: Zeichne das Planck-Pixel als 144-seitige Kristallstruktur!
-                    # Wir bilden das Vektorgleichgewicht (12 umhüllen 1) über die 24 Berührungspunkte ab.
-                    # Dies erzeugt diamantförmige, unbestechliche Mikromuster direkt auf dem Raster.
                     crystal_offsets = [
                         (0, 0),                                # Das Kristallzentrum (9 Schritte starr)
                         (0, -2), (0, 2), (-2, 0), (2, 0),      # Die orthogonalen Hauptachsen des Kristalls
@@ -153,11 +154,9 @@ class PTRCCrystalFluidEngine:
                         px = (out_x + ox) % self.width
                         py = (out_y + oy) % self.height
                         
-                        # Harmonische Helligkeits-Dämpfung basierend auf den 9 Schritten vom Zentrum
                         if ox == 0 and oy == 0:
                             frame_buffer[py, px] = [r_c, g_c, b_c]
                         else:
-                            # Die Facetten glühen leicht abgeschwächt im Vakuum-Feld
                             frame_buffer[py, px] = [r_c // 2, g_c // 2, b_c // 2]
 
         filename = os.path.join(output_dir, f"stabilized_frame_{frame_idx:04d}.ppm")
