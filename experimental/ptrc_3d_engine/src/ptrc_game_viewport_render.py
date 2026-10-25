@@ -137,7 +137,6 @@ class PTRCGameViewport:
                         continue
 
                     # Perspective integer division utilizing Wirminghaus Invariant 1414
-                    # Increased projection factor (700) to make the small 1:1 crystal cluster visible
                     out_x = (((rotated_x * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
                     out_y = (((rotated_y * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
 
@@ -173,7 +172,6 @@ class PTRCGameViewport:
                                     (b * shading_factor) // 240
                                 ]
                             else:
-                                # Edge shielding of the 144 facets reflecting the 9-step boundaries
                                 frame_buffer[py, px] = [
                                     (r * shading_factor) // 450,
                                     (g * shading_factor) // 450,
@@ -202,7 +200,7 @@ if __name__ == "__main__":
         frame_matrix = viewport.render_to_screen(world, frame)
         
         filename = os.path.join(cache_dir, f"game_frame_{frame:04d}.ppm")
-        header = f"P6\n{viewport.width} {viewport.height}\n255\n".encode('ascii')
+        header = f"P6\n{viewport.width} {viewport.height}\n240\n".encode('ascii')
         with open(filename, 'wb') as f:
             f.write(header)
             f.write(frame_matrix.tobytes())
