@@ -20,7 +20,7 @@
 # -*- coding: utf-8 -*-
 
 r"""
-pTRC Framework - Core Graphics: Unified 3D Game Viewport & Rasterizer Engine
+pTRC Framework - Core Graphics: Dense 3D Game Viewport & Rasterizer Engine
 Operational Domain: Symmetrical Integer Translation Matrices (\mathbb{Z}^3).
 Converts the abstract modulo interference matrix into a human-readable 2D
 monitor projection. Implements a whole-number Z-buffer and physical fluid boundaries.
@@ -42,62 +42,60 @@ class PTRCGameWorld:
     def _build_world_geometry(self):
         mid = self.size // 2
         
-        # 1. HARMONIC PIPE RADIUS: Bounded tightly to fit the unscalable 64-grid window
+        # 1. HORIZONTAL FLUID CHANNEL: Rotated boundary logic to face the viewer directly
         for x in range(self.size):
             for y in range(self.size):
                 for z in range(self.size):
+                    dx = x - mid
                     dy = y - mid
-                    dz = z - mid
-                    r_squared = dy*dy + dz*dz
-                    if r_squared >= 144 and r_squared <= 196:
+                    r_squared = dx*dx + dy*dy
+                    if r_squared >= 100 and r_squared <= 144:
                         self.voxels[x, y, z] = 1
 
-        # 2. BUILDING THE MASSIVE PYRAMID (Perfect center-alignment at mid-point)
-        for h in range(12):
-            span = 12 - h
-            for dy in range(-span, span + 1):
-                for dx in range(-span, span + 1):
-                    px = mid + dx 
+        # 2. SECTORED GOLD PYRAMID: Built step-by-step around the absolute center
+        for h in range(14):
+            span = 14 - h
+            for dx in range(-span, span + 1):
+                for dy in range(-span, span + 1):
+                    px = mid + dx
                     py = mid + dy
-                    pz = (mid - 6) + h
+                    pz = mid - 7 + h
                     if 0 <= px < self.size and 0 <= py < self.size and 0 <= pz < self.size:
                         if self.voxels[px, py, pz] == 0:
                             self.voxels[px, py, pz] = 2
 
     def update_fluid_flow(self, frame_idx):
-        """ Clocks the fluid resonance with smart obstacle deflection matrix. """
+        """ Clocks the fluid resonance with orthogonal velocity vector translation. """
         mid = self.size // 2
         
-        # Fluid injection directly into the visible pipe entrance
+        # Fluid injection along the visible Z-axis pipeline entrance
         takt_step = frame_idx % 4
         if takt_step == 0:
-            self.voxels[5:8, mid-2:mid+3, mid-2:mid+3] = 3
+            self.voxels[mid-2:mid+3, mid-2:mid+3, 2:5] = 3
 
-        # Advanced multi-axis deflection routine for form-closure umpassing
-        for x in range(self.size - 1, -1, -1):
+        # Volumetric vector shift pushing the cyan fluid forward and around the gold core
+        for z in range(self.size - 1, -1, -1):
             for y in range(self.size):
-                for z in range(self.size):
+                for x in range(self.size):
                     if self.voxels[x, y, z] == 3:
-                        # Scan next step along longitudinal axis
-                        if x + 1 < self.size:
-                            next_voxel = self.voxels[x + 1, y, z]
+                        if z + 1 < self.size:
+                            next_voxel = self.voxels[x, y, z + 1]
                             if next_voxel == 0:
-                                self.voxels[x + 1, y, z] = 3
+                                self.voxels[x, y, z + 1] = 3
                                 self.voxels[x, y, z] = 0
-                            elif next_voxel in (1, 2): # Obstacle encountered (Wall or Pyramid)
-                                # Deflect fluid laterally into free vacuum registers
+                            elif next_voxel in (1, 2):  # Collision deflection
                                 deflected = False
-                                for dy in (-1, 1):
-                                    for dz in (-1, 1):
-                                        if 0 <= y+dy < self.size and 0 <= z+dz < self.size:
-                                            if self.voxels[x, y+dy, z+dz] == 0:
-                                                self.voxels[x, y+dy, z+dz] = 3
+                                for dx in (-1, 1):
+                                    for dy in (-1, 1):
+                                        if 0 <= x+dx < self.size and 0 <= y+dy < self.size:
+                                            if self.voxels[x+dx, y+dy, z] == 0:
+                                                self.voxels[x+dx, y+dy, z] = 3
                                                 self.voxels[x, y, z] = 0
                                                 deflected = True
                                                 break
                                     if deflected: break
                                 if not deflected:
-                                    self.voxels[x, y, z] = 0 # Dissipate if fully trapped
+                                    self.voxels[x, y, z] = 0
 
 class PTRCTrueCrystalSieve:
     def __init__(self, v_scale=9):
@@ -124,7 +122,7 @@ class PTRCGameViewport:
         self.SCALE = 1000
 
     def render_to_screen(self, world_instance, frame_idx):
-        """ Projects the 3D space with high-contrast color mapping for human vision. """
+        """ Projects the 3D space with advanced volumetric mid-side cross inversion. """
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         z_buffer = np.full((self.height, self.width), fill_value=999999, dtype=np.int32)
         
@@ -132,7 +130,7 @@ class PTRCGameViewport:
         w_size = world_instance.size
         w_mid = w_size // 2
 
-        # Camera rotation remains anchored to the control clock counter
+        # Controlled camera sweep matching the 144-facet vector routing
         angle_takt = int((frame_idx % 24) - 12)
 
         for x in range(w_size):
@@ -142,52 +140,47 @@ class PTRCGameViewport:
                     if voxel_type == 0:
                         continue
 
-                    # STRICT NO-SCALE MAPPING (1:1 Planck Steps)
-                    rx = (x - w_mid)
-                    ry = (y - w_mid)
-                    rz = (z - w_mid)
+                    # CROSS-INTERCEPT 1:1 MAPING (Rotated projection planes)
+                    rx = (x - w_mid) * 12
+                    ry = (y - w_mid) * 12
+                    rz = (z - w_mid) * 12
 
-                    # RIGID MATRIX INTERCEPT
-                    rotated_x = rx + (ry * angle_takt) // 24
-                    rotated_y = ry - (rx * angle_takt) // 24
-                    rotated_z = rz + 120
+                    # 90-DEGREE VIEWPORT INTERCEPT INVERSION
+                    # Shifts the depth calculations away from the flat line crash
+                    rotated_x = rx + (rz * angle_takt) // 24
+                    rotated_y = ry + (rz * angle_takt) // 24
+                    rotated_z = rz + (rx * angle_takt) // 24 + 400
 
-                    if rotated_z <= 10:
+                    if rotated_z <= 20:
                         continue
 
-                    # Perspective whole-number division centered for the 64-grid frame
-                    out_x = (((rotated_x * 850 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
-                    out_y = (((rotated_y * 850 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
+                    # Lossless perspective transformation via 1414 invariant
+                    out_x = (((rotated_x * 90 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
+                    out_y = (((rotated_y * 90 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
 
                     if rotated_z < z_buffer[out_y, out_x]:
                         z_buffer[out_y, out_x] = rotated_z
 
-                        # HIGH-CONTRAST COLOR ASSIGNMENT FOR OPTIMIZED VISUAL DIFFERENTIATION
                         if voxel_type == 1:
-                            # Bound walls: Dense Industrial Metallic Gray
-                            r, g, b = 140, 145, 160     
+                            r, g, b = 130, 135, 150  # Steel Gray (Riverbed Walls)
                         elif voxel_type == 2:
-                            # Monolithic Pyramid: Pure Radiant Gold (Invariant Core)
-                            r, g, b = 255, 200, 0      
+                            r, g, b = 255, 190, 0    # Gold Core (Monolith)
                         else:
-                            # Flowing Fluid: Ultra-Luminous Electric Cyan (Hydrodynamics)
-                            r, g, b = 0, 255, 220      
+                            r, g, b = 0, 255, 230    # Electric Cyan (Deflected Fluid)
 
-                        # CRYSTAL-STRUCTURE COMPOSITION (Formclosure pixel arrangement)
+                        # DENSE VOXEL COMPOSITION: Forms solid surfaces on the monitor matrix
                         crystal_structure = [
                             (0, 0), (0, -1), (0, 1), (-1, 0), (1, 0),
                             (0, -2), (0, 2), (-2, 0), (2, 0),
                             (-1, -1), (1, -1), (-1, 1), (1, 1),
-                            (-2, -1), (2, -1), (-2, 1), (2, 1),
-                            (-1, -2), (1, -2), (-1, 2), (1, 2)
+                            (-2, -2), (2, -2), (-2, 2), (2, 2)
                         ]
                         
                         for ox, oy in crystal_structure:
                             px = (out_x + ox) % self.width
                             py = (out_y + oy) % self.height
                             
-                            # Fixed-point shading logic mapping depth to brightness
-                            shading_factor = max(50, 255 - (rotated_z * 2))
+                            shading_factor = max(40, 255 - (rotated_z // 2))
                             
                             if ox == 0 and oy == 0:
                                 frame_buffer[py, px] = [
@@ -197,9 +190,9 @@ class PTRCGameViewport:
                                 ]
                             else:
                                 frame_buffer[py, px] = [
-                                    (r * shading_factor) // 380,
-                                    (g * shading_factor) // 380,
-                                    (b * shading_factor) // 380
+                                    (r * shading_factor) // 340,
+                                    (g * shading_factor) // 340,
+                                    (b * shading_factor) // 340
                                 ]
 
         return frame_buffer
