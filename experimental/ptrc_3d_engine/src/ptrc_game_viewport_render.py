@@ -105,7 +105,7 @@ class PTRCGameViewport:
         self.SCALE = 1000
 
     def render_to_screen(self, world_instance, frame_idx):
-        """ Projects the unscalable space by mapping grid coordinates 1:1 to crystal densities. """
+        """ Projects the 3D space with high-contrast color mapping for human vision. """
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         z_buffer = np.full((self.height, self.width), fill_value=999999, dtype=np.int32)
         
@@ -113,7 +113,7 @@ class PTRCGameViewport:
         w_size = world_instance.size
         w_mid = w_size // 2
 
-        # Camera clock remains strictly tied to the modulo-24 control clock
+        # Camera rotation remains anchored to the control clock counter
         angle_takt = int((frame_idx % 24) - 12)
 
         for x in range(w_size):
@@ -123,34 +123,38 @@ class PTRCGameViewport:
                     if voxel_type == 0:
                         continue
 
-                    # STRICT NO-SCALE MAPPING: Coordinates represent raw integer grid steps (1:1)
+                    # STRICT NO-SCALE MAPPING (1:1 Planck Steps)
                     rx = (x - w_mid)
                     ry = (y - w_mid)
                     rz = (z - w_mid)
 
-                    # RIGID MULTI-AXIS ROTATION INTERCEPT
+                    # RIGID MATRIX INTERCEPT
                     rotated_x = rx + (ry * angle_takt) // 24
                     rotated_y = ry - (rx * angle_takt) // 24
-                    rotated_z = rz + 120  # Adjusted distance to match the dense 1:1 grid frame
+                    rotated_z = rz + 120
 
                     if rotated_z <= 10:
                         continue
 
-                    # Perspective integer division utilizing Wirminghaus Invariant 1414
+                    # Perspective whole-number division
                     out_x = (((rotated_x * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
                     out_y = (((rotated_y * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
 
                     if rotated_z < z_buffer[out_y, out_x]:
                         z_buffer[out_y, out_x] = rotated_z
 
+                        # HIGH-CONTRAST COLOR ASSIGNMENT FOR OPTIMIZED VISUAL DIFFERENTIATION
                         if voxel_type == 1:
-                            r, g, b = 90, 90, 100     # Pipe wall (Steel Gray)
+                            # Bound walls: Dense Industrial Metallic Gray
+                            r, g, b = 140, 145, 160     
                         elif voxel_type == 2:
-                            r, g, b = 255, 210, 24    # Monolithic Pyramid (Massive Gold)
+                            # Monolithic Pyramid: Pure Radiant Gold (Invariant Core)
+                            r, g, b = 255, 200, 0      
                         else:
-                            r, g, b = 0, 255, 180     # Flowing Fluid (Luminous Cyan)
+                            # Flowing Fluid: Ultra-Luminous Electric Cyan (Hydrodynamics)
+                            r, g, b = 0, 255, 220      
 
-                        # FORM-CLOSURE VOXEL PACKING: The 144-facet micro-structure of the Planck pixel
+                        # CRYSTAL-STRUCTURE COMPOSITION (Formclosure pixel arrangement)
                         crystal_structure = [
                             (0, 0), (0, -1), (0, 1), (-1, 0), (1, 0),
                             (0, -2), (0, 2), (-2, 0), (2, 0),
@@ -163,19 +167,22 @@ class PTRCGameViewport:
                             px = (out_x + ox) % self.width
                             py = (out_y + oy) % self.height
                             
-                            shading_factor = max(40, 240 - (rotated_z * 2))
+                            # Fixed-point shading logic mapping depth to brightness
+                            shading_factor = max(50, 255 - (rotated_z * 2))
                             
                             if ox == 0 and oy == 0:
+                                # Core crystal node (Full emission)
                                 frame_buffer[py, px] = [
-                                    (r * shading_factor) // 240,
-                                    (g * shading_factor) // 240,
-                                    (b * shading_factor) // 240
+                                    (r * shading_factor) // 255,
+                                    (g * shading_factor) // 255,
+                                    (b * shading_factor) // 255
                                 ]
                             else:
+                                # Phase-shifted secondary facets (Emphasizes 3D volume depths)
                                 frame_buffer[py, px] = [
-                                    (r * shading_factor) // 450,
-                                    (g * shading_factor) // 450,
-                                    (b * shading_factor) // 450
+                                    (r * shading_factor) // 380,
+                                    (g * shading_factor) // 380,
+                                    (b * shading_factor) // 380
                                 ]
 
         return frame_buffer
@@ -200,7 +207,7 @@ if __name__ == "__main__":
         frame_matrix = viewport.render_to_screen(world, frame)
         
         filename = os.path.join(cache_dir, f"game_frame_{frame:04d}.ppm")
-        header = f"P6\n{viewport.width} {viewport.height}\n240\n".encode('ascii')
+        header = f"P6\n{viewport.width} {viewport.height}\n255\n".encode('ascii')
         with open(filename, 'wb') as f:
             f.write(header)
             f.write(frame_matrix.tobytes())
