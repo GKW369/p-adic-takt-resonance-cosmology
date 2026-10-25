@@ -1,3 +1,6 @@
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,6 +18,7 @@
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
+
 r"""
 pTRC Framework - Core Graphics: Fluid-Resonance to 144-Facet Waveguide Pipeline
 Operational Domain: Symmetrical Integer Translation Matrices (\mathbb{Z}^3).
