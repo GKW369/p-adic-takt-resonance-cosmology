@@ -1,10 +1,17 @@
 ==============================================================================
-pTRC Framework - Core Module: Fluid Resonance Waveguide Render Engine
+pTRC Framework - Core Simulation Module: Fluid Resonance Waveguide Render Engine
 Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+You should have received a copy of the GNU Affero General Public License
+along with this program (see the LICENSE file in the root directory).
+If not, see <https://gnu.org>.
 ==============================================================================
 
 # -*- coding: utf-8 -*-
@@ -21,21 +28,20 @@ import subprocess
 import numpy as np
 
 class PTRCFluidLattice:
-    """ Simuliert das dichte Modulo-Uhr-Fluid ohne eine einzige Fließkommazahl. """
+    """ Simuliert das dichte Modulo-Uhr-Fluid auf dem 2D-Äquator des Raums. """
     def __init__(self, size=32):
         self.size = size
         self.primorial_base = 210
         # Startzustand: Ein hochsymmetrischer, zentraler Energieimpuls (Wirminghaus Invariant 156)
-        self.grid = np.zeros((size, size, size), dtype=np.uint8)
-        cx, cy, cz = size // 2, size // 2, size // 2
-        self.grid[cx-2:cx+3, cy-2:cy+3, cz-2:cz+3] = 156
+        self.grid = np.zeros((size, size), dtype=np.uint8)
+        cx, cy = size // 2, size // 2
+        self.grid[cx-2:cx+3, cy-2:cy+3] = 156
 
     def step_fluid_resonance(self, frame_idx):
-        """ Taktet das Fluid via ganzzahligem Index-Shift (np.roll Ersatz im Ganzzahlraum). """
-        # Symmetrische Oszillation simuliert die hydrodynamische Wellenausbreitung (c=1)
+        """ Taktet das Fluid via ganzzahligem Index-Shift (np.roll im Ganzzahlraum). """
         shift = (frame_idx % 3) - 1
         if shift != 0:
-            self.grid = np.roll(self.grid, shift=shift, axis=(0, 1, 2))
+            self.grid = np.roll(self.grid, shift=shift, axis=(0, 1))
         return self.grid
 
 class PTRCTrueCrystalSieve:
@@ -64,10 +70,10 @@ class PTRCFluidRenderEngine:
         self.control_base = 24
         self.invariant_limit = 156
         self.SCALE = 1000
-        self.fluid_source = PTRCFluidLattice(size=24)
+        self.fluid_source = PTRCFluidLattice(size=32)
         self.sieve = PTRCTrueCrystalSieve(v_scale=9)
 
-    def project_fluid_frame(self, frame_idx, output_dir):
+    def project_crystal_frame(self, frame_idx, output_dir):
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         cx, cy = self.width // 2, self.height // 2
         z_offset = 75
@@ -76,64 +82,64 @@ class PTRCFluidRenderEngine:
         current_axis = self.sieve.crystal_axes[axis_index]
         dual_polarity = 1 if (frame_idx % 2 == 0) else -1
 
+        # FIX: Saubere Skalar-Isolierung zur Vermeidung von NumPy-Array-Mehrdeutigkeiten
         ax_x = int(current_axis[0])
         ax_y = int(current_axis[1])
         ax_z = int(current_axis[2])
 
-        # 1. AKTUELLE FLUID-RESONANZ-MATRIX HOLEN
+        # 1. AKTUELLE 2D-FLUID-RESONANZ-MATRIX HOLEN
         active_fluid_grid = self.fluid_source.step_fluid_resonance(frame_idx)
-        f_depth, f_height, f_width = active_fluid_grid.shape
+        f_height, f_width = active_fluid_grid.shape
 
-        # 2. ITERATION DURCH DIE STRÖMUNGSZELLEN
-        for z in range(f_depth):
-            for y in range(f_height):
-                for x in range(f_width):
-                    fluid_state = active_fluid_grid[z, y, x]
-                    if fluid_state == 0:
+        # 2. ITERATION DURCH DIE STRÖMUNGSZELLEN DES ÄQUATORS
+        for y in range(f_height):
+            for x in range(f_width):
+                fluid_state = active_fluid_grid[y, x]
+                if fluid_state == 0:
                         continue
 
-                    # Transformation der Gitterkoordinaten bezogen auf das Kristall-Sieve
-                    mx = (x - f_width // 2) * 16
-                    my = (y - f_height // 2) * 16
-                    mz = (z - f_depth // 2) * 16
+                # Einbettung des flachen Fluids auf den Äquator des 3D-Kristallraums (mz = 0)
+                mx = (x - f_width // 2) * 16
+                my = (y - f_height // 2) * 16
+                mz = 0 
 
-                    quadrance = mx*mx + my*my + mz*mz
-                    if quadrance == 0:
-                        continue
+                quadrance = mx*mx + my*my + mz*mz
+                if quadrance == 0:
+                    continue
 
-                    # Modulo-210 Existenzsieb
-                    if (quadrance % self.primorial_base) > self.invariant_limit:
-                        continue
+                # Modulo-210 Existenzsieb
+                if (quadrance % self.primorial_base) > self.invariant_limit:
+                    continue
 
-                    # MITTEN-SEITEN AUSLÖSCHUNG (Isoliert die reine Fluid-Symmetrie)
-                    rx_plus = mx + (ax_x * dual_polarity) // 12
-                    rx_minus = mx - (ax_x * dual_polarity) // 12
-                    mono_signal_x = rx_plus - rx_minus
+                # MITTEN-SEITEN AUSLÖSCHUNG (Isoliert die pure Fluid-Symmetrie)
+                rx_plus = mx + (ax_x * dual_polarity) // 12
+                rx_minus = mx - (ax_x * dual_polarity) // 12
+                mono_signal_x = rx_plus - rx_minus
 
-                    takt_phase = (mx * my + frame_idx) % self.control_base
+                takt_phase = (mx * my + frame_idx) % self.control_base
 
-                    # Stereo-Fanning treibt die Fluid-Wirbel auseinander
-                    holographic_x = mx + (mono_signal_x * (takt_phase - 12)) // 6
-                    holographic_y = my + (ax_y * dual_polarity) // 12
-                    rz = mz + z_offset + (ax_z * dual_polarity) // 12
+                # Stereo-Fanning fächert die flache Hydrodynamik in die 3D-Retina auf
+                holographic_x = mx + (mono_signal_x * (takt_phase - 12)) // 6
+                holographic_y = my + (ax_y * dual_polarity) // 12
+                rz = mz + z_offset + (ax_z * dual_polarity) // 12
 
-                    denom = ((rz * self.SCALE) // 1414) + self.invariant_limit
-                    if denom <= 0:
-                        continue
+                denom = ((rz * self.SCALE) // 1414) + self.invariant_limit
+                if denom <= 0:
+                    continue
 
-                    out_x = (((int(holographic_x) * 45 * self.SCALE) // denom) + cx) % self.width
-                    out_y = (((int(holographic_y) * 45 * self.SCALE) // denom) + cy) % self.height
+                # Nadelscharfer 1-Pixel-Rasterpunkt
+                out_x = (((int(holographic_x) * 45 * self.SCALE) // denom) + cx) % self.width
+                out_y = (((int(holographic_y) * 45 * self.SCALE) // denom) + cy) % self.height
 
-                    # Farbspektrum trennt strömende Energie von freien Speicher-Registern
-                    if takt_phase == 12:
-                        r_c, g_c, b_c = 255, 210, 24  # Manifestierte Fluid-Masse (Gold)
-                    elif takt_phase in {1, 5, 7, 11, 13, 17, 19, 23}:
-                        r_c, g_c, b_c = 0, 255, 180  # Resonanz-Adern (Cyan)
-                    else:
-                        r_c, g_c, b_c = 0, 80, 255   # Dynamische Speicher-Facetten (Vakuum-Blau)
+                # Farbspektrum trennt strömende Energie von freien Speicher-Registern
+                if takt_phase == 12:
+                    r_c, g_c, b_c = 255, 210, 24  # Manifestierte Fluid-Masse (Gold)
+                elif takt_phase in {1, 5, 7, 11, 13, 17, 19, 23}:
+                    r_c, g_c, b_c = 0, 255, 180  # Resonanz-Adern (Cyan)
+                else:
+                    r_c, g_c, b_c = 0, 80, 255   # Dynamische Speicher-Facetten (Vakuum-Blau)
 
-                    # Atomares 1-Pixel-Rastermapping
-                    frame_buffer[out_y, out_x] = [r_c, g_c, b_c]
+                frame_buffer[out_y, out_x] = [r_c, g_c, b_c]
 
         filename = os.path.join(output_dir, f"stabilized_frame_{frame_idx:04d}.ppm")
         header = f"P6\n{self.width} {self.height}\n255\n".encode('ascii')
