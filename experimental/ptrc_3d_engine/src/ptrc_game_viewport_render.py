@@ -42,43 +42,62 @@ class PTRCGameWorld:
     def _build_world_geometry(self):
         mid = self.size // 2
         
-        # 1. BUILDING THE PIPE / RIVERBED (Physical boundary along the X-axis)
+        # 1. HARMONIC PIPE RADIUS: Bounded tightly to fit the unscalable 64-grid window
         for x in range(self.size):
             for y in range(self.size):
                 for z in range(self.size):
                     dy = y - mid
                     dz = z - mid
-                    if (dy*dy + dz*dz) >= 256 and (dy*dy + dz*dz) <= 289:
+                    r_squared = dy*dy + dz*dz
+                    if r_squared >= 144 and r_squared <= 196:
                         self.voxels[x, y, z] = 1
 
-        # 2. BUILDING THE MASSIVE PYRAMID (Anchored within the riverbed using space crystals)
+        # 2. BUILDING THE MASSIVE PYRAMID (Perfect center-alignment at mid-point)
         for h in range(12):
             span = 12 - h
             for dy in range(-span, span + 1):
                 for dx in range(-span, span + 1):
-                    px = mid + dx - 10
+                    px = mid + dx 
                     py = mid + dy
-                    pz = (mid - 12) + h
+                    pz = (mid - 6) + h
                     if 0 <= px < self.size and 0 <= py < self.size and 0 <= pz < self.size:
                         if self.voxels[px, py, pz] == 0:
                             self.voxels[px, py, pz] = 2
 
     def update_fluid_flow(self, frame_idx):
-        """ Clocks the fluid resonance strictly within the pipe boundaries. """
+        """ Clocks the fluid resonance with smart obstacle deflection matrix. """
         mid = self.size // 2
         
-        # Fluid injection at the pipe start (x = 0) in the center of the riverbed
+        # Fluid injection directly into the visible pipe entrance
         takt_step = frame_idx % 4
         if takt_step == 0:
-            self.voxels[2:5, mid-3:mid+4, mid-3:mid+4] = 3
+            self.voxels[5:8, mid-2:mid+3, mid-2:mid+3] = 3
 
-        # Conservation of momentum via index shift along the pipe longitudinal axis (X-axis)
-        fluid_mask = (self.voxels == 3)
-        if np.any(fluid_mask):
-            moved_fluid = np.roll(fluid_mask, shift=1, axis=0)
-            allowed_move = moved_fluid & (self.voxels != 1) & (self.voxels != 2)
-            self.voxels[fluid_mask] = 0
-            self.voxels[allowed_move] = 3
+        # Advanced multi-axis deflection routine for form-closure umpassing
+        for x in range(self.size - 1, -1, -1):
+            for y in range(self.size):
+                for z in range(self.size):
+                    if self.voxels[x, y, z] == 3:
+                        # Scan next step along longitudinal axis
+                        if x + 1 < self.size:
+                            next_voxel = self.voxels[x + 1, y, z]
+                            if next_voxel == 0:
+                                self.voxels[x + 1, y, z] = 3
+                                self.voxels[x, y, z] = 0
+                            elif next_voxel in (1, 2): # Obstacle encountered (Wall or Pyramid)
+                                # Deflect fluid laterally into free vacuum registers
+                                deflected = False
+                                for dy in (-1, 1):
+                                    for dz in (-1, 1):
+                                        if 0 <= y+dy < self.size and 0 <= z+dz < self.size:
+                                            if self.voxels[x, y+dy, z+dz] == 0:
+                                                self.voxels[x, y+dy, z+dz] = 3
+                                                self.voxels[x, y, z] = 0
+                                                deflected = True
+                                                break
+                                    if deflected: break
+                                if not deflected:
+                                    self.voxels[x, y, z] = 0 # Dissipate if fully trapped
 
 class PTRCTrueCrystalSieve:
     def __init__(self, v_scale=9):
@@ -136,9 +155,9 @@ class PTRCGameViewport:
                     if rotated_z <= 10:
                         continue
 
-                    # Perspective whole-number division
-                    out_x = (((rotated_x * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
-                    out_y = (((rotated_y * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
+                    # Perspective whole-number division centered for the 64-grid frame
+                    out_x = (((rotated_x * 850 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
+                    out_y = (((rotated_y * 850 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
 
                     if rotated_z < z_buffer[out_y, out_x]:
                         z_buffer[out_y, out_x] = rotated_z
@@ -171,14 +190,12 @@ class PTRCGameViewport:
                             shading_factor = max(50, 255 - (rotated_z * 2))
                             
                             if ox == 0 and oy == 0:
-                                # Core crystal node (Full emission)
                                 frame_buffer[py, px] = [
                                     (r * shading_factor) // 255,
                                     (g * shading_factor) // 255,
                                     (b * shading_factor) // 255
                                 ]
                             else:
-                                # Phase-shifted secondary facets (Emphasizes 3D volume depths)
                                 frame_buffer[py, px] = [
                                     (r * shading_factor) // 380,
                                     (g * shading_factor) // 380,
