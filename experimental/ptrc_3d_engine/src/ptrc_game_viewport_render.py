@@ -105,17 +105,15 @@ class PTRCGameViewport:
         self.SCALE = 1000
 
     def render_to_screen(self, world_instance, frame_idx):
-        """ Projects the 3D space onto the 2D monitor using an integer Z-buffer. """
+        """ Projects the unscalable space by mapping grid coordinates 1:1 to crystal densities. """
         frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
-        
-        # FIXED: Corrected parameter name from fillvalue to fill_value for NumPy compatibility
         z_buffer = np.full((self.height, self.width), fill_value=999999, dtype=np.int32)
         
         cx, cy = self.width // 2, self.height // 2
         w_size = world_instance.size
         w_mid = w_size // 2
 
-        # Rigid rotation of the camera within the modulo-24 clock
+        # Camera clock remains strictly tied to the modulo-24 control clock
         angle_takt = int((frame_idx % 24) - 12)
 
         for x in range(w_size):
@@ -125,56 +123,61 @@ class PTRCGameViewport:
                     if voxel_type == 0:
                         continue
 
-                    rx = (x - w_mid) * 20
-                    ry = (y - w_mid) * 20
-                    rz = (z - w_mid) * 20
+                    # STRICT NO-SCALE MAPPING: Coordinates represent raw integer grid steps (1:1)
+                    rx = (x - w_mid)
+                    ry = (y - w_mid)
+                    rz = (z - w_mid)
 
-                    # INTEGER ROTATION INTERCELL
+                    # RIGID MULTI-AXIS ROTATION INTERCEPT
                     rotated_x = rx + (ry * angle_takt) // 24
                     rotated_y = ry - (rx * angle_takt) // 24
-                    rotated_z = rz + 350  # Viewing distance
+                    rotated_z = rz + 120  # Adjusted distance to match the dense 1:1 grid frame
 
-                    if rotated_z <= 50:
+                    if rotated_z <= 10:
                         continue
 
-                    # Perspective division via 1414 invariant
-                    out_x = (((rotated_x * 45 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
-                    out_y = (((rotated_y * 45 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
+                    # Perspective integer division utilizing Wirminghaus Invariant 1414
+                    # Increased projection factor (700) to make the small 1:1 crystal cluster visible
+                    out_x = (((rotated_x * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cx) % self.width
+                    out_y = (((rotated_y * 700 * self.SCALE) // ((rotated_z * self.SCALE) // 1414)) + cy) % self.height
 
-                    # Z-BUFFER INTERLOCKING
                     if rotated_z < z_buffer[out_y, out_x]:
                         z_buffer[out_y, out_x] = rotated_z
 
                         if voxel_type == 1:
-                            r, g, b = 80, 80, 90     # Pipe wall (Steel Gray)
+                            r, g, b = 90, 90, 100     # Pipe wall (Steel Gray)
                         elif voxel_type == 2:
-                            r, g, b = 255, 210, 24   # Pyramid (Massive Gold)
+                            r, g, b = 255, 210, 24    # Monolithic Pyramid (Massive Gold)
                         else:
-                            r, g, b = 0, 255, 180    # Fluid (Luminous Cyan)
+                            r, g, b = 0, 255, 180     # Flowing Fluid (Luminous Cyan)
 
-                        # Plastic 3D voxel mapping (The shape of the space crystal)
-                        crystal_facets = [
-                            (0, 0), (0, -2), (0, 2), (-2, 0), (2, 0),
-                            (-1, -1), (1, -1), (-1, 1), (1, 1)
+                        # FORM-CLOSURE VOXEL PACKING: The 144-facet micro-structure of the Planck pixel
+                        crystal_structure = [
+                            (0, 0), (0, -1), (0, 1), (-1, 0), (1, 0),
+                            (0, -2), (0, 2), (-2, 0), (2, 0),
+                            (-1, -1), (1, -1), (-1, 1), (1, 1),
+                            (-2, -1), (2, -1), (-2, 1), (2, 1),
+                            (-1, -2), (1, -2), (-1, 2), (1, 2)
                         ]
                         
-                        for ox, oy in crystal_facets:
+                        for ox, oy in crystal_structure:
                             px = (out_x + ox) % self.width
                             py = (out_y + oy) % self.height
                             
-                            shading_factor = max(20, 200 - (rotated_z // 3))
+                            shading_factor = max(40, 240 - (rotated_z * 2))
                             
                             if ox == 0 and oy == 0:
                                 frame_buffer[py, px] = [
-                                    (r * shading_factor) // 200,
-                                    (g * shading_factor) // 200,
-                                    (b * shading_factor) // 200
+                                    (r * shading_factor) // 240,
+                                    (g * shading_factor) // 240,
+                                    (b * shading_factor) // 240
                                 ]
                             else:
+                                # Edge shielding of the 144 facets reflecting the 9-step boundaries
                                 frame_buffer[py, px] = [
-                                    (r * shading_factor) // 400,
-                                    (g * shading_factor) // 400,
-                                    (b * shading_factor) // 400
+                                    (r * shading_factor) // 450,
+                                    (g * shading_factor) // 450,
+                                    (b * shading_factor) // 450
                                 ]
 
         return frame_buffer
