@@ -68,16 +68,28 @@ class PTRC3DMINTOrchestrator:
             shutil.rmtree(self.tmp_dir)
         os.makedirs(self.tmp_dir)
 
-        # 300 Agenten über ein mathematisch weit gestreutes Feld instanziieren
+ # --- pTRC Ganzzahl-Fibonacci-Spiralengenerator (Null Fließkomma-Trigonometrie!) ---
         base_indices = np.arange(1, 301, dtype=np.int64)
-        agents_x = ((base_indices * 137) % 3200) - 1600
-        agents_y = ((base_indices * 143) % 1800) - 900
-        agents_z = np.ones(300, dtype=np.int64) * 100
-        agents = np.column_stack((agents_x, agents_y, agents_z))
-
-        # Weit entfernte, entgegengesetzte Zielkoordinaten für epische Kreuzungen compact generiert
-        targets = np.column_stack((-agents_x + ((base_indices * 17) % 200) - 100, -agents_y + ((base_indices * 19) % 200) - 100, agents_z))
         
+        # Der Goldene Schnitt im Ganzzahlfeld (Annäherung des Goldenen Winkels)
+        # Über zyklische Modulo-Ringe simulieren wir den Rotations-Vorschub
+        theta_steps = (base_indices * 144)  # 144 ist eine echte Fibonacci-Zahl!
+        
+        # Ganzzahlige Approximation von Richtungs-Vektoren ohne sin/cos
+        # Wir nutzen die Modulo-Phasen deines Modulo-24-Takts zur Richtungszuweisung
+        dir_x = ((theta_steps % 24) - 12)
+        dir_y = (((theta_steps + 6) % 24) - 12)  # Um 90 Grad phasenverschoben
+        
+        # Radiales Wachstum: Der Radius wächst proportional zum Index (Archimedisch/Fibonacci)
+        radius = base_indices * 3
+        
+        # Finale Ziel-Koordinaten im Breitbild verankern
+        targets_x = (dir_x * radius) // 4
+        targets_y = (dir_y * radius) // 4
+        targets_z = np.ones(300, dtype=np.int64) * 100
+        
+        targets = np.column_stack((targets_x, targets_y, targets_z))
+       
         for step in range(iterations):
             # Frame-Buffer initialisieren (Schwarz)
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
