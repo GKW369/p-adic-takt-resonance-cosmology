@@ -3677,7 +3677,6 @@ class PTRC3DStereoEngine:
         # Calculate discrete pixel displacement coordinates for left and right viewpoints
         proj_x_left = ((x - iod) * self.SCALE) // (scaled_depth + self.invariant_limit)
         proj_x_right = ((x + iod) * self.SCALE) // (scaled_depth + self.invariant_limit)
-        proj_x_right = ((x + iod) * self.SCALE) // (scaled_depth + self.invariant_limit)
         proj_y = (y * self.SCALE) // (scaled_depth + self.invariant_limit)
         
         # Center alignment and bounding check transformations
