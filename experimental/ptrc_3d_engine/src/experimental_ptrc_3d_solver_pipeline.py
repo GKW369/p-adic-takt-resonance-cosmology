@@ -79,7 +79,8 @@ class PTRC3DMINTOrchestrator:
         targets_x = -agents_x + ((base_indices * 17) % 200) - 100
         targets_y = -agents_y + ((base_indices * 19) % 200) - 100
         targets_z = agents_z
-
+        targets = np.column_stack((targets_x, targets_y, targets_z))
+        
         for step in range(iterations):
             # Frame-Buffer initialisieren (Schwarz)
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
