@@ -69,7 +69,7 @@ class PTRC3DMINTOrchestrator:
         os.makedirs(self.tmp_dir)
 
         # 300 Agenten über ein mathematisch weit gestreutes Feld instanziieren
-        base_indices = np.arange(1, 301, dtype=np.int64)
+        base_indices = np.arange(1, 300, dtype=np.int64)
         agents_x = ((base_indices * 137) % 3200) - 1600
         agents_y = ((base_indices * 143) % 1800) - 900
         agents_z = np.ones(301, dtype=np.int64) * 100
