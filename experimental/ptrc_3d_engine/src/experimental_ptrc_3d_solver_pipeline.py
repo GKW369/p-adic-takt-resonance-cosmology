@@ -72,22 +72,23 @@ class PTRC3DMINTOrchestrator:
             shutil.rmtree(self.tmp_dir)
         os.makedirs(self.tmp_dir)
 
-        # Startkoordinaten (X, Y, Z) der Agenten im Ganzzahlraum
-        agents = np.array([
-            [-300, -200, 50],
-            [-100, 450, 80],
-            [250, -350, 160],
-            [50, -50, 90]
-        ], dtype=np.int64)
+        # --- pTRC Schwarm-Generator (Erzeugt 200 mathematische Knoten) ---
+        # Wir nutzen rein ganzzahlige Schritte, um Floats zu blockieren!
+        base_indices = np.arange(1, 201, dtype=np.int64)
+        
+        # Startpositionen: Ein explodierender mathematischer Ring
+        agents_x = ((base_indices * 7) % 600) - 300
+        agents_y = ((base_indices * 11) % 400) - 200
+        agents_z = ((base_indices * 13) % 150) + 30
+        agents = np.column_stack((agents_x, agents_y, agents_z))
 
-        # Zielkoordinaten im Vakuumgitter
-        targets = np.array([
-            [-600, -500, 10],
-            [200, -200, 180],
-            [-400, 300, 60],
-            [100, -100, 110]
-        ], dtype=np.int64)
+        # Zielkoordinaten: Kollaps in die Invarianten-Zentren (Grenzknoten 156)
+        targets_x = ((base_indices * 17) % 210) - 105
+        targets_y = ((base_indices * 19) % 210) - 105
+        targets_z = ((base_indices * 23) % 100) + 50
+        targets = np.column_stack((targets_x, targets_y, targets_z))
 
+        
         # Simulierter Frame-Loop
         for step in range(iterations):
             # Frame-Buffer im RAM initialisieren
