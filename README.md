@@ -4,7 +4,7 @@
 ---
 
 > ### 📥 Quick Context Download Note
-> You can download the **entire repository** (including the core engine, all mathematical papers, experimental modules, and the 3D graphics pipeline) compiled into a single, comprehensive, and structured context file. Simply execute the integrated script `src/00_ptrc_repo_bundler.py` locally to automatically generate your unified `ptrc_complete_context_bundle.txt` for local evaluation or AI-assisted code reviews.
+> For your convenience, a pre-compiled and **always up-to-date** `ptrc_complete_context_bundle.txt` is maintained directly in the repository's **root directory**. You can download this single, comprehensive file to instantly analyze the entire framework (including the core engine, all mathematical papers, experimental modules, and the 3D graphics pipeline) for local evaluation or AI-assisted code reviews. Alternatively, you can always re-generate this unified context file locally at any time by executing the integrated script `src/00_ptrc_repo_bundler.py`.
 
 ---
 
