@@ -3,6 +3,11 @@
 
 ---
 
+> ### 📥 Quick Context Download Note
+> You can download the **entire repository** (including the core engine, all mathematical papers, experimental modules, and the 3D graphics pipeline) compiled into a single, comprehensive, and structured context file. Simply execute the integrated script `src/00_ptrc_repo_bundler.py` locally to automatically generate your unified `ptrc_complete_context_bundle.txt` for local evaluation or AI-assisted code reviews.
+
+---
+
 ![pTRC Genesis Matrix](ptrc_4k_genesis.png)
 
 *Figure 1: The unmanifested integer field "Genesis" – generated via pure modular arithmetic entirely devoid of floating-point noise.*
@@ -33,6 +38,7 @@ By translating dynamic floating-point partial differential equations into static
 *   **Isotropic Non-Archimedean Fluid Dynamics:** Realized via a Lattice-Gas Cellular Automaton (LGCA) inside the `fluid_resonance.py` module. Boundaries and vector interactions execute through discrete bitwise memory shifts (`np.roll`), guaranteeing 100% exact mass and momentum conservation without Navier-Stokes numerical blow-ups.
 *   **Shared-Memory Quantum Entanglement Prototyping:** Resolves EPR locality constraints without relying on spatial analog signaling variables. Entangled lattice nodes map directly to a unified pointer slot in kernel memory, compressing the quantum state collapse down to absolute $O(1)$ temporal complexity.
 *   **Anisotropic Crystalline Waveguide Trajectories:** Optimized for multi-layered solid-state ion transport paths (e.g., solid-state battery electrolytes). Spatial filtering runs lossless through the 144 open outer triangular facets of a center-locked vector equilibrium lattice.
+*   **1080p Stereoscopic & Ultra-HD 4K Graphics:** Implemented within the experimental `ptrc_3d_engine` layer. Computes real-time 3D perspective transformations, retinal depth curvature, and cross-mirror phase-shading contours strictly within the integer domain ($\mathbb{Z}^3$), completely skipping standard floating-point depth buffers and polygon vertex bottlenecks.
 
 ## 📊 Industrial pTRC Application Matrix (Hardware & Software Bypass Vectors)
 
@@ -69,7 +75,7 @@ A strictly copyleft framework for non-commercial research and open-source evalua
 ### B. Commercial Infrastructure License & Individual Agreements
 Corporate entities wishing to embed the pTRC framework into closed-source commercial architectures without disclosing their internal source code cannot operate under the AGPLv3. 
 
-For these scenarios, individual agreements or evaluation exemptions can be requested. These are administered directly by the author as part of independent scientific research to cover ongoing research costs, strictly in accordance with German freelance regulations (§ 18 EStG).
+For these scenarios, individual evaluation exemptions or collaborative research agreements can be requested. These are administered directly by the author as part of independent scientific and freelance research to cover ongoing material costs, strictly in accordance with German freelance regulations (§ 18 EStG).
 
 *   **Author / Freelance Researcher:** Kurt Guido Wirminghaus
 *   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de
