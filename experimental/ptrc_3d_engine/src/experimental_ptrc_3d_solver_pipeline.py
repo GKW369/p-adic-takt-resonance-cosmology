@@ -25,32 +25,27 @@ import shutil
 import subprocess
 import numpy as np
 
-try:
-    from experimental.ptrc_3d_engine.src.ptrc_3d_animation_generator import PTRC3DStereoEngine
-except ImportError:
-    class PTRC3DStereoEngine:
-        def __init__(self, width=1920, height=1080):
-            self.width = width
-            self.height = height
-            self.SCALE = 1000
-            self.invariant_limit = 156
-            self.state_flag_core = 1
-            self.state_flag_wave = 2
+class PTRC3DStereoEngine:
+    def __init__(self, width=1920, height=1080):
+        self.width = width
+        self.height = height
+        self.SCALE = 1000
+        self.invariant_limit = 156
+        self.state_flag_core = 1
+        self.state_flag_wave = 2
 
-        def project_coordinate_stereo(self, x, y, z, iod=120):
-            # Tiefenkompression angepasst für extreme Expansion auf 1080p
-            scaled_depth = z // 8
-            if scaled_depth + self.invariant_limit <= 0:
-                scaled_depth = 1
-            
-            # Faktor 5x Vergrößerung: Multiplikator von 4 auf 20 angehoben!
-            proj_x_left = ((x - iod) * 20) // (scaled_depth + self.invariant_limit)
-            proj_x_right = ((x + iod) * 20) // (scaled_depth + self.invariant_limit)
-            proj_y = (y * 20) // (scaled_depth + self.invariant_limit)
-            
-            return proj_x_left + (self.width // 2), \
-                   proj_x_right + (self.width // 2), \
-                   proj_y + (self.height // 2)
+    def project_coordinate_stereo(self, x, y, z, iod=140):
+        # Tiefe konstant halten, um den Absturz in den Fluchtpunkt zu stoppen!
+        scaled_depth = 40
+        
+        # Gigantischer Hebel für maximale Breitbild-Explosion auf der Leinwand
+        proj_x_left = ((x - iod) * 160) // (scaled_depth + self.invariant_limit)
+        proj_x_right = ((x + iod) * 160) // (scaled_depth + self.invariant_limit)
+        proj_y = (y * 160) // (scaled_depth + self.invariant_limit)
+        
+        return proj_x_left + (self.width // 2), \
+               proj_x_right + (self.width // 2), \
+               proj_y + (self.height // 2)
 
 class PTRC3DMINTOrchestrator:
     def __init__(self):
@@ -66,66 +61,66 @@ class PTRC3DMINTOrchestrator:
         self.tmp_dir = os.path.join(self.base_dir, "ptrc_rendering_tmp")
         self.output_video = os.path.join(self.base_dir, "ptrc_mint_solver_demo.mp4")
 
-    def run_realtime_solver_pipeline(self, iterations=90):
-        print("[ START ] Initialisiere High-Velocity MINT-Solver...")
+    def run_realtime_solver_pipeline(self, iterations=180): # DOPPELTE LÄNGE!
+        print("[ START ] Initialisiere pTRC IMAX-Schwarm-Projektor...")
         
         if os.path.exists(self.tmp_dir):
             shutil.rmtree(self.tmp_dir)
         os.makedirs(self.tmp_dir)
 
-        # 200 Agenten im Raum instanziieren
-        base_indices = np.arange(1, 201, dtype=np.int64)
-        agents_x = ((base_indices * 37) % 1600) - 800
-        agents_y = ((base_indices * 43) % 1000) - 500
-        agents_z = ((base_indices * 53) % 800) + 100
+        # 300 Agenten über ein mathematisch weit gestreutes Feld instanziieren
+        base_indices = np.arange(1, 301, dtype=np.int64)
+        agents_x = ((base_indices * 137) % 3200) - 1600
+        agents_y = ((base_indices * 143) % 1800) - 900
+        agents_z = np.ones(301, dtype=np.int64) * 100
         agents = np.column_stack((agents_x, agents_y, agents_z))
 
-        # Weit entfernte Zielkoordinaten für maximale Flugbahnen
-        targets_x = ((base_indices * 61) % 1600) - 800
-        targets_y = ((base_indices * 67) % 1000) - 500
-        targets_z = ((base_indices * 73) % 800) + 100
-        targets = np.column_stack((targets_x, targets_y, targets_z))
+        # Weit entfernte, entgegengesetzte Zielkoordinaten für epische Kreuzungen
+        targets_x = -agents_x + ((base_indices * 17) % 200) - 100
+        targets_y = -agents_y + ((base_indices * 19) % 200) - 100
+        targets_z = agents_z
 
         for step in range(iterations):
+            # Frame-Buffer initialisieren (Schwarz)
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
+            # --- 1. MINT-Ganzzahl-Routing (O(1)) ---
             dx = (targets[:, 0] - agents[:, 0]) * self.SCALE
             dy = (targets[:, 1] - agents[:, 1]) * self.SCALE
-            dz = (targets[:, 2] - agents[:, 2]) * self.SCALE
 
             allowed_x = np.where((dx // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
             allowed_y = np.where((dy // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
-            allowed_z = np.where((dz // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
 
-                      # Maximale kinetische Dynamik im Ganzzahlraum (Geschwindigkeit massiv erhöht)
-            agents[:, 0] += np.sign(dx) * allowed_x * 45
-            agents[:, 1] += np.sign(dy) * allowed_y * 35
-            agents[:, 2] += np.sign(dz) * allowed_z * 15
+            # Ultraschnelle Oszillation über den Bildschirm
+            agents[:, 0] += np.sign(dx) * allowed_x * 18
+            agents[:, 1] += np.sign(dy) * allowed_y * 11
 
+            # --- 2. Vektorisierte Stereo-Projektions-Berechnung ---
+            xl, xr, yd = self.engine_3d.project_coordinate_stereo(agents[:, 0], agents[:, 1], agents[:, 2], iod=70)
+
+            # Mathematisches Sieb für alle Farben gleichzeitig
+            state_registry = (agents[:, 0] * agents[:, 1]) % self.PRIMORIAL_MOD
+            is_core = (state_registry == (self.INVARIANT_LIMIT % self.PRIMORIAL_MOD))
+
+            # Zeichne die vergrößerten Voxel-Knoten in den Buffer
             for i in range(len(agents)):
-                ax, ay, az = agents[i, 0], agents[i, 1], agents[i, 2]
-                xl, xr, yd = self.engine_3d.project_coordinate_stereo(ax, ay, az, iod=60)
+                color = [218, 165, 32] if is_core[i] else [0, 255, 255] # Gold oder Cyan
                 
-                state_registry = (ax * ay * az) % self.PRIMORIAL_MOD
-                if state_registry == (self.INVARIANT_LIMIT % self.PRIMORIAL_MOD):
-                    color = [218, 165, 32]   # Gold
-                else:
-                    color = [0, 255, 255]     # Cyan
-
-                # Größere Voxel-Knoten (3x3 Kreuz) zeichnen, damit man sie im Vollbild super sieht
+                # Fette 3x3 Pixel-Kreuze für perfekte Sichtbarkeit im Video
                 for offset_x, offset_y in [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)]:
-                    for x_coord in [xl, xr]:
+                    for x_coord in [xl[i], xr[i]]:
                         px = x_coord + offset_x
-                        py = yd + offset_y
+                        py = yd[i] + offset_y
                         if 0 <= px < self.width and 0 <= py < self.height:
                             frame_buffer[py, px] = color
 
+            # Unkomprimierten Frame wegschreiben
             frame_path = os.path.join(self.tmp_dir, f"frame_{step:04d}.ppm")
             with open(frame_path, "wb") as f:
                 f.write(f"P6\n{self.width} {self.height}\n255\n".encode())
                 f.write(frame_buffer.tobytes())
 
-        print("        Kompiliere Breitbild-Frames via ffmpeg...")
+        print("        Kompiliere 180 IMAX-Frames via ffmpeg...")
         ffmpeg_cmd = [
             "ffmpeg", "-y", "-f", "image2", "-framerate", "30",
             "-i", os.path.join(self.tmp_dir, "frame_%04d.ppm"),
@@ -134,13 +129,14 @@ class PTRC3DMINTOrchestrator:
         
         try:
             subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            print(f"[ OK ] Video erfolgreich exportiert: {self.output_video}")
+            print(f"[ OK ] Episches Video exportiert: {self.output_video}")
         except (subprocess.CalledProcessError, FileNotFoundError):
             print("[ FEHLER ] ffmpeg-Aufruf fehlgeschlagen.")
 
         shutil.rmtree(self.tmp_dir)
-        print("[ DONE ] System bereinigt.")
+        print("[ DONE ] System vollständig bereinigt.")
 
 if __name__ == "__main__":
     orchestrator = PTRC3DMINTOrchestrator()
-    orchestrator.run_realtime_solver_pipeline(iterations=90)
+    orchestrator.run_realtime_solver_pipeline(iterations=180)
+
