@@ -38,15 +38,15 @@ except ImportError:
             self.state_flag_wave = 2
 
         def project_coordinate_stereo(self, x, y, z, iod=120):
-            # Optimierter Tiefenhebel für maximale visuelle Dynamik auf 1080p
-            scaled_depth = z // 4 
+            # Tiefenkompression angepasst für extreme Expansion auf 1080p
+            scaled_depth = z // 8
             if scaled_depth + self.invariant_limit <= 0:
                 scaled_depth = 1
             
-            # Breitbild-Projektion ohne Fließkomma-Rauschen
-            proj_x_left = ((x - iod) * 4) // (scaled_depth + self.invariant_limit)
-            proj_x_right = ((x + iod) * 4) // (scaled_depth + self.invariant_limit)
-            proj_y = (y * 4) // (scaled_depth + self.invariant_limit)
+            # Faktor 5x Vergrößerung: Multiplikator von 4 auf 20 angehoben!
+            proj_x_left = ((x - iod) * 20) // (scaled_depth + self.invariant_limit)
+            proj_x_right = ((x + iod) * 20) // (scaled_depth + self.invariant_limit)
+            proj_y = (y * 20) // (scaled_depth + self.invariant_limit)
             
             return proj_x_left + (self.width // 2), \
                    proj_x_right + (self.width // 2), \
@@ -97,10 +97,10 @@ class PTRC3DMINTOrchestrator:
             allowed_y = np.where((dy // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
             allowed_z = np.where((dz // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
 
-            # High-Velocity-Vorschub: Drohnen fliegen mit 12-facher Ganzzahl-Geschwindigkeit
-            agents[:, 0] += np.sign(dx) * allowed_x * 12
-            agents[:, 1] += np.sign(dy) * allowed_y * 12
-            agents[:, 2] += np.sign(dz) * allowed_z * 6
+                      # Maximale kinetische Dynamik im Ganzzahlraum (Geschwindigkeit massiv erhöht)
+            agents[:, 0] += np.sign(dx) * allowed_x * 45
+            agents[:, 1] += np.sign(dy) * allowed_y * 35
+            agents[:, 2] += np.sign(dz) * allowed_z * 15
 
             for i in range(len(agents)):
                 ax, ay, az = agents[i, 0], agents[i, 1], agents[i, 2]
