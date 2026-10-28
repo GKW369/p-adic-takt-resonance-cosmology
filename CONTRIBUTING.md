@@ -1,95 +1,65 @@
-# pTRC Framework: p-Adic Takt Resonance Cosmology
-**A Discrete, Multi-Modular Integer Inference & Look-Up System (\(\mathbb{Z}\))**
+<!--
+==============================================================================
+pTRC Framework - Discrete 1-Bit Integer Physics Engine
+Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+
+LICENSE & LIABILITY NOTICE:
+Academic, non-commercial research and evaluation is permitted strictly under 
+the terms of the GNU Affero General Public License version 3 (AGPLv3).
+For the complete, unedited license text see: [https://gnu.org](https://www.gnu.org/licenses/agpl-3.0.html)
+
+ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
+integration requires a separate, individually negotiated commercial infrastructure 
+waiver issued directly by the author.
+
+WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
+==============================================================================
+-->
+# Contributing to the pTRC Framework (CONTRIBUTING.md)
+
+Welcome to the pTRC (p-Adic Takt-Resonance Cosmology) project. To maintain the architectural and physical integrity of this repository, all contributors must strictly adhere to the fundamental structural and physical rules established in this framework.
+
+This project rejects the continuous real-number space continuum (\(\mathbb{R}^4\)) entirely and operates exclusively within the ring of discrete integers (\(\mathbb{Z}\)).
 
 ---
 
-> ### 📥 Quick Context Download Note
-> You can download the **entire repository** (including the core engine, all mathematical papers, experimental modules, and the 3D graphics pipeline) compiled into a single, comprehensive, and structured context file. Simply execute the integrated script `src/00_ptrc_repo_bundler.py` locally to automatically generate your unified `ptrc_complete_context_bundle.txt` for local evaluation or AI-assisted code reviews.
+## 🚫 Immutable Code-Hygiene & Validation Rules
+
+Every Pull Request (PR) is automatically audited by our GitHub Actions pipeline (`test_matrix.yml`) and a static code analyzer. Any violation of the rules below will result in an immediate, automated rejection of the PR.
+
+### 1. Absolute Ban on Floating-Point Arithmetic (Zero-Float-Rule)
+The core engine operates strictly on a whole-number hardware layer.
+* **Banned:** Any use of the `float` data type, decimal point declarations (e.g., `137.0` or `0.5`), and continuous or transcendental constants (such as `math.pi` or `math.e`).
+* **Required:** Explicit integer values and types (`int`, `np.int32`, `np.uint8`). Fractional relationships must be mapped via Fixed-Point Scaling.
+
+### 2. Division Protection (Analog Leakage Prevention)
+Standard analog division using the single slash operator (`/`) is strictly classified as an "Analog Leakage Exploit" and is banned from the active codebase because it forces Python to instantiate continuous fields in RAM.
+* **Banned:** `X / Y`
+* **Required:** Use the predefined Fixed-Point Scaling metric (`SCALE = 1000`). Always upscale the value in the numerator first, then apply strict integer floor division (`//`).
+* **Example:** `result = (value * SCALE) // divisor`
+
+### 3. Pure Integer Output Layer (No Decimal Formatting)
+All terminal logs, outputs, and visualization steps must reflect the discrete ontology of the system.
+* **Banned:** Printing log strings containing decimal dots, commas, or artificially split substrings designed to mimic continuous decimals.
+* **Required:** Map display variables natively to discrete, unsharable sub-units (e.g., `"Milli-Units"`, `"Milli-Hubble-Units"`, `"Nanoseconds"`), and print the scaled integers directly.
+
+### 4. Strict Deterministic Reversibility
+* **Banned:** Continuous random sampling methods like `np.random.rand()` or time benchmarks tracking standard float seconds.
+* **Required:** Deploy strict, integer-bounded pseudorandom generation via `np.random.randint()`. Time-tracking benchmarks must run exclusively via undivisible CPU nanoseconds using `time.time_ns()`.
 
 ---
 
-![pTRC Genesis Matrix](ptrc_4k_genesis.png)
+## 📂 Repository Structure & Submission Boundaries
 
-*Figure 1: The unmanifested integer field "Genesis" – generated via pure modular arithmetic entirely devoid of floating-point noise.*
+When submitting changes, ensure your modifications strictly respect our decoupled directory map without mixing methodologies:
+* **`src/`:** Reserved exclusively for production-ready, 100% integer-compliant core simulation modules.
+* **`experimental/`:** Advanced informational space research, non-linear parametric resonance, or open-system energy surplus calculations must remain isolated here. Never merge experimental open-system code into the stable `src/` core.
 
----
-
-## Abstract: Structural Deconstruction of Complex STEM Paradigm Bottlenecks
-
-The pTRC (p-Adic Takt Resonance Cosmology) framework introduces a fully deterministic, non-Archimedean integer inference engine designed to model highly complex physical and mathematical state profiles. By abandoning the continuous real-number manifold (\(\mathbb{R}^4\)), this architecture fundamentally eradicates cumulative floating-point rounding errors (FPU drift), interpolation noise, and asymptotic singularities at grid boundaries. 
-
-The core operational breakthrough lies in the total elimination of variable arithmetic processing cycles: the pTRC engine does not compute physical states dynamically in the classical Turing sense. Instead, it extracts predefined topological states instantly via **geometric register look-ups** mapped directly onto an invariant, discrete integer ring lattice (\(\mathbb{Z}\)). By pairing an absolute information propagation boundary velocity ($c = 1$ pixel/clock) with interlocking residue rings (\(\mathbb{Z}/210\mathbb{Z}\) and \(\mathbb{Z}/24\mathbb{Z}\)), computational complexity scales down flat across highly non-linear simulation domains.
+By opening a Pull Request, you certify that you have successfully validated your code locally using the master engine script (`python src/00_ptrc_first_principles_engine.py`) and agree to publish your contributions under the GNU Affero General Public License version 3 (AGPLv3).
 
 ---
 
-## Ontological Grounding: Epistemic Incompleteness over Totalizing Frameworks
-
-The pTRC framework explicitly **rejects** any metaphysical classification as a "Theory of Everything" (ToE). In strict alignment with *Gödel's Incompleteness Theorems*, no formal axiomatic system possessing sufficient complexity can prove its own consistency from within. Rather than chasing unprovable physical absolutism, the pTRC framework serves as a highly pragmatic, radically optimized translation layer to bypass continuous calculus overhead in STEM applications.
-
-Prior to spatial manifestation or continuous metric calibration, the system operates solely on un-fractioned, discrete integer rings. What conventional analog continuous measurement devices interpret as fractional remainder sequences or quantum mechanical uncertainty distributions (e.g., the anomalous experimental proton-to-electron mass discrepancy $M_{\text{exp}} \approx 1836.1526$) is mathematically deconstructed as an artifact of network routing overhead (*Clock Drag*) inside continuous transformations. The system bypasses infinity entirely, executing exclusively through invariant residue symmetries.
-
----
-
-## Architectural Mechanics & Industrial Disruption Vectors
-
-By translating dynamic floating-point partial differential equations into static register look-ups, the pTRC ecosystem optimizes memory bandwidth and thermal dissipation limits on hardware-constrained architectures:
-
-*   **FPU Bypass for Next-Gen Edge-AI Silicon:** Bypassing the floating-point execution layer natively prevents instruction pipeline stalls, register aliasing, and quantization entropy decay. This yields 100% deterministic inference states with zero thermal drift.
-*   **Isotropic Non-Archimedean Fluid Dynamics:** Realized via a Lattice-Gas Cellular Automaton (LGCA) inside the `fluid_resonance.py` module. Boundaries and vector interactions execute through discrete bitwise memory shifts (`np.roll`), guaranteeing 100% exact mass and momentum conservation without Navier-Stokes numerical blow-ups.
-*   **Shared-Memory Quantum Entanglement Prototyping:** Resolves EPR locality constraints without relying on spatial analog signaling variables. Entangled lattice nodes map directly to a unified pointer slot in kernel memory, compressing the quantum state collapse down to absolute $O(1)$ temporal complexity.
-*   **Anisotropic Crystalline Waveguide Trajectories:** Optimized for multi-layered solid-state ion transport paths (e.g., solid-state battery electrolytes). Spatial filtering runs lossless through the 144 open outer triangular facets of a center-locked vector equilibrium lattice.
-*   **1080p Stereoscopic & Ultra-HD 4K Graphics:** Implemented within the experimental `ptrc_3d_engine` layer. Computes real-time 3D perspective transformations, retinal depth curvature, and cross-mirror phase-shading contours strictly within the integer domain ($\mathbb{Z}^3$), completely skipping standard floating-point depth buffers and polygon vertex bottlenecks.
-
-## 📊 Industrial pTRC Application Matrix (Hardware & Software Bypass Vectors)
-
-| Physical Domain / Core Module | Pure Integer Architecture (\(\mathbb{Z}\)) | Commercial Lever (Advantage over Conventional FPU Arrays) | Target Market / Strategic Sectors |
-| :--- | :--- | :--- | :--- |
-| **Gaming & Real-Time Graphics**<br>`fluid_resonance.py`<br>`pi_square_crystallization.py` | 100% bit-exact integer domain tracking | **Radical Gaming Industry Disruption:**<br>1. **Collision Detection in O(1):** Spatiotemporal object overlaps are read instantly via integer matrix coordinate intersections, completely bypassing iterative bounding-box tree look-ups.<br>2. **Zero-Drift Network Netcode:** Guarantees an un-compromised, synchronous global multiplayer state. Eliminates client-server de-synchronizations (*desyncs*) as rounding interpolation variance drops to absolute zero.<br>3. **Lossless Particle Subsystems:** High-density fluid, aero, and fracturing dynamics run natively via register look-ups on standard ARM/i3 chips without activating the FPU. | Triple-A Game Studios, Next-Gen Engine Developers (Unity/Unreal Alternatives), Cloud Gaming Infrastructures |
-| **Artificial Intelligence**<br>`quantum_neural_network.py` | Modulo-24 register inference without synaptic float-noise | **100% Invariant AI Inference:** Eradicates accuracy degradation during post-training float-to-integer quantization. Yields ultra-low-power, secure neural inference directly inside memory arrays. | Edge-AI Chips, Autonomous Driving, Real-Time Autonomous Robotics |
-| **Material Sciences**<br>`battery_anisotropy.py` | 144-facet vector equilibrium group mapping | **Lossless BMS Real-Time Simulation:** Simulates absolute multi-layered ion migration inside solid-state batteries on lightweight local processors without fractional differential tracking. | Electric Vehicles (EV), Battery Management Systems (BMS), Energy Storage Grid Nodes |
-| **Cryptographic Systems**<br>`crypt_resonance.py` | Symmetric bit-transposition inside coprime residue rings | **Hardware-Level Post-Quantum Cryptography:** Ultra-low-latency cryptographic primitives that execute natively on simple logic gate steps, discarding complex arithmetic units. | Cyber-Defense, Internet of Things (IoT) Security, Military-Grade Communication Links |
-| **Hardware & Semiconductors**<br>`black_hole_information.py` | Information-theoretic invariant boundary 156 | **Side-Channel Attack Immune Silicon:** Bypasses float-dependent instruction cycles, producing flat, uniform power-draw profiles that eliminate differential power analysis vulnerabilities. | Secure Element Fabrics, Custom Silicon Vendors (ASIC/FPGA), Defense Electronics |
-| **Ballistics & Trajectory Control**<br>`gravity_edge_sharing.py` | Geometric whole-number quadrance indexing | **Instantaneous Orbital Invariance Tracking:** Trajectories are read directly from spatial register grids instead of being computed iteratively via floating-point transcendental functions (\(\sin, \cos\)). | Satellite Orbit Alignment, Kinetic Defense Interceptors, Precision Autonomous Drones |
-
-## Operational Execution & Module Orchestration
-
-The framework encapsulates functional core modules managed by the verification engine, utilizing terminal buffer configurations for clean visual rendering. Full execution commands and implementation details can be found in the repository's documentation.
-
----
-
-## ⚠ LEGAL STATUS, EVALUATION WARNING & LIABILITY DISCLAIMER
-
-This repository contains independent theoretical research and experimental software patterns within non-Archimedean integer physics (\(\mathbb{Z}\)). 
-
-*   **Operational Status:** The architecture provides deterministic stability and exact analytical processing for specific computational models.
-*   **Voluntary Execution:** Provided under the GNU Affero General Public License version 3 (AGPLv3) without endorsement for production-critical or safety-bearing infrastructure.
-*   **Exclusion of Warranty and Liability:** Operational risk remains with the executing entity, and all liability for systemic anomalies, data losses, or hardware deviations is categorically excluded under research dissemination provisions.
-
----
-
-## 📄 Licensing & Freelance Dual-Licensing Model (§ 18 EStG)
-
-### A. Academic and Open-Source Channel (GNU AGPLv3)
-A strictly copyleft framework for non-commercial research and open-source evaluation. Server-side or multi-tenant cloud deployments legally trigger copyleft source disclosure requirements.
-
-### B. Commercial Infrastructure License & Individual Agreements
-Corporate entities wishing to embed the pTRC framework into closed-source commercial architectures without disclosing their internal source code cannot operate under the AGPLv3. 
-
-For these scenarios, individual evaluation exemptions or collaborative research agreements can be requested. These are administered directly by the author as part of independent scientific and freelance research to cover ongoing material costs, strictly in accordance with German freelance regulations (§ 18 EStG).
-
-*   **Author / Freelance Researcher:** Kurt Guido Wirminghaus
-*   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de
-
----
-*Certified for Version 2.0.0-Alpha System Coherence. Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
-
----
-
-### 🇩🇪 Rechtlicher Hinweis & Haftungsbeschränkung nach deutschem Recht
-
-Für Nutzer und Vertragspartner mit Sitz in der Bundesrepublik Deutschland oder falls deutsches Recht Anwendung findet, gilt ergänzend folgende Rechtsvereinbarung:
-
-1. **Status der Tätigkeit (§ 18 EStG):** Dieses Framework und alle damit verbundenen Dokumente sind das Ergebnis freiberuflicher, unabhängiger wissenschaftlicher Forschung. Es wird ausdrücklich kein Gewerbe betrieben, keine kommerzielle Vertriebsplattform unterhalten und keine dauerhafte wirtschaftliche Absicht verfolgt. Jegliche individuellen Absprachen dienen rein der Deckung von wissenschaftlichen Sach- und Forschungskosten.
-2. **Haftungsausschluss bei unentgeltlicher Bereitstellung:** Soweit diese Software unentgeltlich unter den Bedingungen der GNU AGPLv3 genutzt wird, handelt es sich rechtlich um eine Schenkung. Gemäß § 521 BGB haftet der Autor hierbei ausschließlich für **Vorsatz und grobe Fahrlässigkeit**. Die Haftung für leichte Fahrlässigkeit, Folgeschäden, Datenverlust, Systemanomalien, Hardwareschäden oder entgangenen Gewinn ist vollständig und bedingungslos ausgeschlossen.
-3. **Gesetzliche Haftungsbegrenzung:** In allen anderen Fällen (z. B. bei individuellen Forschungsvereinbarungen) ist die Haftung für leicht fahrlässige Pflichtverletzungen ausgeschlossen, sofern diese keine vertragswesentlichen Pflichten (Kardinalpflichten), Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit oder ausdrückliche Garantien betreffen.
-4. **Keine Zusicherung:** Es werden keine Garantien für die Marktreife, Fehlerfreiheit oder Funktion in kritischen oder sicherheitsrelevanten Systemen übernommen. Die vollständige Validierung, das Testen und ein risiko-freies Sandboxing in einer isolierten Laufzeitumgebung obliegen einzig und allein der ausführenden Entität.
+*Document Classification: Academic Defense Protocol / Peer-Review Verification Matrix.*  
+*Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
