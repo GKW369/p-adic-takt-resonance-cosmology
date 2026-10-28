@@ -76,9 +76,8 @@ class PTRC3DMINTOrchestrator:
         agents = np.column_stack((agents_x, agents_y, agents_z))
 
         # Weit entfernte, entgegengesetzte Zielkoordinaten für epische Kreuzungen
-        targets_x = -agents_x + ((base_indices * 17) % 200) - 100
-        targets_y = -agents_y + ((base_indices * 19) % 200) - 100
-        targets_z = agents_z
+        targets = np.column_stack((-agents_x + ((base_indices * 17) % 200) - 100, -agents_y + ((base_indices * 19) % 200) - 100, agents_z))
+
         targets = np.column_stack((targets_x, targets_y, targets_z))
         
         for step in range(iterations):
