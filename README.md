@@ -34,8 +34,6 @@ By translating dynamic floating-point partial differential equations into static
 *   **Shared-Memory Quantum Entanglement Prototyping:** Resolves EPR locality constraints without relying on spatial analog signaling variables. Entangled lattice nodes map directly to a unified pointer slot in kernel memory, compressing the quantum state collapse down to absolute $O(1)$ temporal complexity.
 *   **Anisotropic Crystalline Waveguide Trajectories:** Optimized for multi-layered solid-state ion transport paths (e.g., solid-state battery electrolytes). Spatial filtering runs lossless through the 144 open outer triangular facets of a center-locked vector equilibrium lattice.
 
----
-
 ## 📊 Industrial pTRC Application Matrix (Hardware & Software Bypass Vectors)
 
 | Physical Domain / Core Module | Pure Integer Architecture (\(\mathbb{Z}\)) | Commercial Lever (Advantage over Conventional FPU Arrays) | Target Market / Strategic Sectors |
@@ -68,11 +66,24 @@ This repository contains independent theoretical research and experimental softw
 ### A. Academic and Open-Source Channel (GNU AGPLv3)
 A strictly copyleft framework for non-commercial research and open-source evaluation. Server-side or multi-tenant cloud deployments legally trigger copyleft source disclosure requirements.
 
-### B. Commercial Infrastructure License (Enterprise Waiver)
-Commercial exemptions from AGPLv3 copyleft requirements are administered directly by the author under German tax provisions (§ 18 EStG).
+### B. Commercial Infrastructure License & Individual Agreements
+Corporate entities wishing to embed the pTRC framework into closed-source commercial architectures without disclosing their internal source code cannot operate under the AGPLv3. 
+
+For these scenarios, individual agreements or evaluation exemptions can be requested. These are administered directly by the author as part of independent scientific research to cover ongoing research costs, strictly in accordance with German freelance regulations (§ 18 EStG).
 
 *   **Author / Freelance Researcher:** Kurt Guido Wirminghaus
 *   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de
 
 ---
 *Certified for Version 2.0.0-Alpha System Coherence. Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
+
+---
+
+### 🇩🇪 Rechtlicher Hinweis & Haftungsbeschränkung nach deutschem Recht
+
+Für Nutzer und Vertragspartner mit Sitz in der Bundesrepublik Deutschland oder falls deutsches Recht Anwendung findet, gilt ergänzend folgende Rechtsvereinbarung:
+
+1. **Status der Tätigkeit (§ 18 EStG):** Dieses Framework und alle damit verbundenen Dokumente sind das Ergebnis freiberuflicher, unabhängiger wissenschaftlicher Forschung. Es wird ausdrücklich kein Gewerbe betrieben, keine kommerzielle Vertriebsplattform unterhalten und keine dauerhafte wirtschaftliche Absicht verfolgt. Jegliche individuellen Absprachen dienen rein der Deckung von wissenschaftlichen Sach- und Forschungskosten.
+2. **Haftungsausschluss bei unentgeltlicher Bereitstellung:** Soweit diese Software unentgeltlich unter den Bedingungen der GNU AGPLv3 genutzt wird, handelt es sich rechtlich um eine Schenkung. Gemäß § 521 BGB haftet der Autor hierbei ausschließlich für **Vorsatz und grobe Fahrlässigkeit**. Die Haftung für leichte Fahrlässigkeit, Folgeschäden, Datenverlust, Systemanomalien, Hardwareschäden oder entgangenen Gewinn ist vollständig und bedingungslos ausgeschlossen.
+3. **Gesetzliche Haftungsbegrenzung:** In allen anderen Fällen (z. B. bei individuellen Forschungsvereinbarungen) ist die Haftung für leicht fahrlässige Pflichtverletzungen ausgeschlossen, sofern diese keine vertragswesentlichen Pflichten (Kardinalpflichten), Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit oder ausdrückliche Garantien betreffen.
+4. **Keine Zusicherung:** Es werden keine Garantien für die Marktreife, Fehlerfreiheit oder Funktion in kritischen oder sicherheitsrelevanten Systemen übernommen. Die vollständige Validierung, das Testen und ein risiko-freies Sandboxing in einer isolierten Laufzeitumgebung obliegen einzig und allein der ausführenden Entität.
