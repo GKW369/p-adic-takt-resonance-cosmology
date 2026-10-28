@@ -19,7 +19,6 @@
 
 # -*- coding: utf-8 -*-
 
-
 import os
 import sys
 import shutil
@@ -76,14 +75,13 @@ class PTRC3DMINTOrchestrator:
         # Startkoordinaten (X, Y, Z) der Agenten im Ganzzahlraum
         agents = np.array([
             [-300, -200, 50],
-,
             [-100, 450, 80],
             [250, -350, 160],
             [50, -50, 90]
         ], dtype=np.int64)
 
         # Zielkoordinaten im Vakuumgitter
-        targets = np.array([,
+        targets = np.array([
             [-600, -500, 10],
             [200, -200, 180],
             [-400, 300, 60],
@@ -92,8 +90,7 @@ class PTRC3DMINTOrchestrator:
 
         # Simulierter Frame-Loop
         for step in range(iterations):
-            # Frame-Buffer im RAM initialisieren (Reines Ganzzahl-Array für RGB)
-            # 0 = Vakuum-Hintergrund (Schwarz)
+            # Frame-Buffer im RAM initialisieren
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
             # --- 1. MINT-Ganzzahl-Routing (O(1)) ---
@@ -117,11 +114,11 @@ class PTRC3DMINTOrchestrator:
                 # Symmetrische Farbbestimmung über das Modulo-Sieb
                 state_registry = (ax * ay * az) % self.PRIMORIAL_MOD
                 if state_registry == (self.INVARIANT_LIMIT % self.PRIMORIAL_MOD):
-                    color = [231, 198, 113]  # Spectral Gold (Kern)
+                    color = [218, 165, 32]   # Spectral Gold (Kern)
                 else:
-                    color = [0, 200, 255]    # Spectral Blue / Cyan (Welle)
+                    color = [0, 255, 255]     # Spectral Blue / Cyan (Welle)
 
-                # Zeichne Voxel-Knoten in den Stereo-Buffer, sofern innerhalb der Bildschirmränder
+                # Zeichne Voxel-Knoten in den Stereo-Buffer
                 for offset_x, offset_y in [(-2, -2), (-1, -1), (0, 0), (1, 1), (2, 2)]:
                     for x_coord in [xl, xr]:
                         px = x_coord + offset_x
@@ -129,13 +126,13 @@ class PTRC3DMINTOrchestrator:
                         if 0 <= px < self.width and 0 <= py < self.height:
                             frame_buffer[py, px] = color
 
-            # Rohdaten-Frame als unkomprimierte PPM-Ganzzahldatei wegschreiben (Verhindert FPU-Codecs)
+            # Rohdaten-Frame wegschreiben
             frame_path = os.path.join(self.tmp_dir, f"frame_{step:04d}.ppm")
             with open(frame_path, "wb") as f:
                 f.write(f"P6\n{self.width} {self.height}\n255\n".encode())
                 f.write(frame_buffer.tobytes())
 
-        # --- 3. MP4-Kompilierung über ffmpeg-Subprocess ---
+        # --- 3. MP4-Kompilierung über ffmpeg ---
         print("        Kompiliere Frames zu ptrc_mint_solver_demo.mp4...")
         ffmpeg_cmd = [
             "ffmpeg", "-y", "-f", "image2", "-framerate", "30",
@@ -149,7 +146,7 @@ class PTRC3DMINTOrchestrator:
         except (subprocess.CalledProcessError, FileNotFoundError):
             print("[ FEHLER ] ffmpeg-Aufruf fehlgeschlagen. Überprüfe die Binaries auf deinem System.")
 
-        # --- 4. Automatisches Aufräumen (Garbage Collection) ---
+        # --- 4. Automatisches Aufräumen ---
         print("        Bereinige temporäre Frame-Reste...")
         shutil.rmtree(self.tmp_dir)
         print("[ DONE ] System vollständig aufgeräumt.")
