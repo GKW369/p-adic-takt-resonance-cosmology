@@ -35,10 +35,10 @@ class PTRC3DStereoEngine:
         self.state_flag_wave = 2
 
     def project_coordinate_stereo(self, x, y, z, iod=140):
-        # Tiefe konstant halten, um den Absturz in den Fluchtpunkt zu stoppen!
+        # Tiefe konstant auf 40 Takt-Einheiten halten, um FPU-Fluchtpunktdrift zu eliminieren
         scaled_depth = 40
         
-        # Gigantischer Hebel für maximale Breitbild-Explosion auf der Leinwand
+        # Ganzzahliger Skalierungshebel für das IMAX-Breitbildraster
         proj_x_left = ((x - iod) * 160) // (scaled_depth + self.invariant_limit)
         proj_x_right = ((x + iod) * 160) // (scaled_depth + self.invariant_limit)
         proj_y = (y * 160) // (scaled_depth + self.invariant_limit)
@@ -61,62 +61,66 @@ class PTRC3DMINTOrchestrator:
         self.tmp_dir = os.path.join(self.base_dir, "ptrc_rendering_tmp")
         self.output_video = os.path.join(self.base_dir, "ptrc_mint_solver_demo.mp4")
 
-    def run_realtime_solver_pipeline(self, iterations=180): # DOPPELTE LÄNGE!
+    def run_realtime_solver_pipeline(self, iterations=180):
         print("[ START ] Initialisiere pTRC IMAX-Schwarm-Projektor...")
         
         if os.path.exists(self.tmp_dir):
             shutil.rmtree(self.tmp_dir)
         os.makedirs(self.tmp_dir)
 
- # --- pTRC Ganzzahl-Fibonacci-Spiralengenerator (Null Fließkomma-Trigonometrie!) ---
+        # --- Pure Integer Fibonacci Sieve Architecture ---
+        # Herleitung der Richtungsachsen erfolgt komplett ohne sin/cos oder Pi.
+        # Wir nutzen die 144er Fibonacci-Stufe als Takt-Schrittweite im Modulo-24-Ring.
         base_indices = np.arange(1, 301, dtype=np.int64)
+        theta_steps = (base_indices * 144)
         
-        # Der Goldene Schnitt im Ganzzahlfeld (Annäherung des Goldenen Winkels)
-        # Über zyklische Modulo-Ringe simulieren wir den Rotations-Vorschub
-        theta_steps = (base_indices * 144)  # 144 ist eine echte Fibonacci-Zahl!
-        
-        # Ganzzahlige Approximation von Richtungs-Vektoren ohne sin/cos
-        # Wir nutzen die Modulo-Phasen deines Modulo-24-Takts zur Richtungszuweisung
+        # Richtungszuweisung über die 90-Grad-Kreuzphase des Modulo-24-Taktgebers
         dir_x = ((theta_steps % 24) - 12)
-        dir_y = (((theta_steps + 6) % 24) - 12)  # Um 90 Grad phasenverschoben
+        dir_y = (((theta_steps + 6) % 24) - 12)
         
-        # Radiales Wachstum: Der Radius wächst proportional zum Index (Archimedisch/Fibonacci)
+        # Radiales Wachstum starr gekoppelt an ganzzahligen Indexschritt
         radius = base_indices * 3
         
-        # Finale Ziel-Koordinaten im Breitbild verankern
+        # Koordinaten im unmanifestierten Ganzzahlraum verankern
         targets_x = (dir_x * radius) // 4
         targets_y = (dir_y * radius) // 4
         targets_z = np.ones(300, dtype=np.int64) * 100
         
         targets = np.column_stack((targets_x, targets_y, targets_z))
        
+        # --- Etablierung des 3D-Agentenregisters (NameError Fixed) ---
+        # Alle 300 Netzknoten starten synchronisiert im zentrierten Kernzustand
+        agents = np.zeros((300, 3), dtype=np.int64)
+        agents[:, 2] = 100
+        
         for step in range(iterations):
-            # Frame-Buffer initialisieren (Schwarz)
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
-            # --- 1. MINT-Ganzzahl-Routing (O(1)) ---
+            # --- 1. Verlustfreies MINT-Ganzzahl-Routing (O(1)) ---
             dx = (targets[:, 0] - agents[:, 0]) * self.SCALE
             dy = (targets[:, 1] - agents[:, 1]) * self.SCALE
 
+            # Sperrung komplementärer Teilungszonen über das Modulo-210-Sieb
             allowed_x = np.where((dx // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
             allowed_y = np.where((dy // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
 
-            # Ultraschnelle Oszillation über den Bildschirm
+            # Takt-Inkrementierung für die Raumbewegung
             agents[:, 0] += np.sign(dx) * allowed_x * 18
             agents[:, 1] += np.sign(dy) * allowed_y * 11
 
-            # --- 2. Vektorisierte Stereo-Projektions-Berechnung ---
+            # --- 2. Vektorisierte Stereo-Retina-Projektion ---
             xl, xr, yd = self.engine_3d.project_coordinate_stereo(agents[:, 0], agents[:, 1], agents[:, 2], iod=70)
 
-            # Mathematisches Sieb für alle Farben gleichzeitig
+            # Invarianz-Sichtung zur spektralen Trennung von Masse und Feldwelle
             state_registry = (agents[:, 0] * agents[:, 1]) % self.PRIMORIAL_MOD
             is_core = (state_registry == (self.INVARIANT_LIMIT % self.PRIMORIAL_MOD))
 
-            # Zeichne die vergrößerten Voxel-Knoten in den Buffer
+            # Ganzzahl-Mapping im Bild-Speicherraster
             for i in range(len(agents)):
-                color = [218, 165, 32] if is_core[i] else [0, 255, 255] # Gold oder Cyan
+                # Spektral-Gold (Masse-Kern) oder Spektral-Cyan (Resonanz-Welle)
+                color = [218, 165, 32] if is_core[i] else [0, 255, 255]
                 
-                # Fette 3x3 Pixel-Kreuze für perfekte Sichtbarkeit im Video
+                # Formschlüssige 3x3-Kreuzbruchlinien zur Eliminierung von Monitor-Lücken
                 for offset_x, offset_y in [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)]:
                     for x_coord in [xl[i], xr[i]]:
                         px = x_coord + offset_x
@@ -124,13 +128,13 @@ class PTRC3DMINTOrchestrator:
                         if 0 <= px < self.width and 0 <= py < self.height:
                             frame_buffer[py, px] = color
 
-            # Unkomprimierten Frame wegschreiben
+            # Export als unkomprimiertes P6-PPM-Format (Absolut rauschfrei)
             frame_path = os.path.join(self.tmp_dir, f"frame_{step:04d}.ppm")
             with open(frame_path, "wb") as f:
                 f.write(f"P6\n{self.width} {self.height}\n255\n".encode())
                 f.write(frame_buffer.tobytes())
 
-        print("        Kompiliere 180 IMAX-Frames via ffmpeg...")
+        print(f"        Kompiliere {iterations} IMAX-Frames via ffmpeg...")
         ffmpeg_cmd = [
             "ffmpeg", "-y", "-f", "image2", "-framerate", "30",
             "-i", os.path.join(self.tmp_dir, "frame_%04d.ppm"),
