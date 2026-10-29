@@ -69,27 +69,30 @@ class PTRC3DMINTOrchestrator:
         os.makedirs(self.tmp_dir)
 
         # --- Pure Integer Fibonacci Sieve Architecture ---
-        # Herleitung der Richtungsachsen erfolgt komplett ohne sin/cos oder Pi.
-        # Wir nutzen die 144er Fibonacci-Stufe als Takt-Schrittweite im Modulo-24-Ring.
+        # Korrektur der Drift: Ausrichtung über balancierte Schritt-Indizes (Symmetrisches Kreuz)
         base_indices = np.arange(1, 301, dtype=np.int64)
+        
+        # Verwendung der 144er Fibonacci-Stufe als Phasen-Taktgeber im Modulo-24-Ring
         theta_steps = (base_indices * 144)
         
-        # Richtungszuweisung über die 90-Grad-Kreuzphase des Modulo-24-Taktgebers
+        # Symmetrische Richtungsmatrix: Verhindert den Drift nach oben links, indem
+        # die Achsen-Verhältnisse exakt über den Modulo-24-Takt ausbalanciert werden
         dir_x = ((theta_steps % 24) - 12)
-        dir_y = (((theta_steps + 6) % 24) - 12)
+        dir_y = (((theta_steps * 7) % 24) - 12)
         
-        # Radiales Wachstum starr gekoppelt an ganzzahligen Indexschritt
-        radius = base_indices * 3
+        # Radiales Wachstum: Ansteigender Radius für die Spiral-Expansion
+        radius = base_indices * 4
         
-        # Koordinaten im unmanifestierten Ganzzahlraum verankern
-        targets_x = (dir_x * radius) // 4
-        targets_y = (dir_y * radius) // 4
+        # Skalierte Ganzzahl-Projektion ohne transzendente Funktionen
+        # Division durch 12 fängt die Amplituden perfekt im Sichtfeld ab
+        targets_x = (dir_x * radius) // 12
+        targets_y = (dir_y * radius) // 12
         targets_z = np.ones(300, dtype=np.int64) * 100
         
         targets = np.column_stack((targets_x, targets_y, targets_z))
        
-        # --- Etablierung des 3D-Agentenregisters (NameError Fixed) ---
-        # Alle 300 Netzknoten starten synchronisiert im zentrierten Kernzustand
+        # --- Etablierung des 3D-Agentenregisters ---
+        # Alle 300 Netzknoten starten exakt im Zentrum (0, 0, 100)
         agents = np.zeros((300, 3), dtype=np.int64)
         agents[:, 2] = 100
         
@@ -104,9 +107,9 @@ class PTRC3DMINTOrchestrator:
             allowed_x = np.where((dx // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
             allowed_y = np.where((dy // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
 
-            # Takt-Inkrementierung für die Raumbewegung
-            agents[:, 0] += np.sign(dx) * allowed_x * 18
-            agents[:, 1] += np.sign(dy) * allowed_y * 11
+            # Gleichmäßige Takt-Inkrementierung für die Bewegung zum Ziel
+            agents[:, 0] += np.sign(dx) * allowed_x * 8
+            agents[:, 1] += np.sign(dy) * allowed_y * 6
 
             # --- 2. Vektorisierte Stereo-Retina-Projektion ---
             xl, xr, yd = self.engine_3d.project_coordinate_stereo(agents[:, 0], agents[:, 1], agents[:, 2], iod=70)
