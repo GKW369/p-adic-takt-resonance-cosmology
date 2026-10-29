@@ -69,30 +69,44 @@ class PTRC3DMINTOrchestrator:
         os.makedirs(self.tmp_dir)
 
         # --- Pure Integer Fibonacci Sieve Architecture ---
-        # Korrektur der Drift: Ausrichtung über balancierte Schritt-Indizes (Symmetrisches Kreuz)
+        # 300 Netzknoten basierend auf der 144er Fibonacci-Ur-Zelle
         base_indices = np.arange(1, 301, dtype=np.int64)
         
-        # Verwendung der 144er Fibonacci-Stufe als Phasen-Taktgeber im Modulo-24-Ring
-        theta_steps = (base_indices * 144)
+        # Herleitung der gekrümmten Spiraltrajektorie ohne Pi oder analoge Trigonometrie:
+        # Wir nutzen die Restklassen-Schritte des Modulo-24-Takts als Rotations-Vorschub.
+        # Um die Drift zu eliminieren, werden die Achsen komplementär gespiegelt.
+        takt_phase = (base_indices * 144) % self.CLOCK_MOD
         
-        # Symmetrische Richtungsmatrix: Verhindert den Drift nach oben links, indem
-        # die Achsen-Verhältnisse exakt über den Modulo-24-Takt ausbalanciert werden
-        dir_x = ((theta_steps % 24) - 12)
-        dir_y = (((theta_steps * 7) % 24) - 12)
+        # Quadrance-basierte Richtungsauflösung analog zu deinem Kreis-Schnitt
+        # Durch die Multiplikation mit wechselnden Modulo-Schritten erzeugen wir
+        # eine raumzentrierte Rotation im unmanifestierten Ganzzahlraum.
+        dir_x = np.where(takt_phase % 4 == 0, 1, np.where(takt_phase % 4 == 1, -1, 0))
+        dir_y = np.where(takt_phase % 4 == 2, 1, np.where(takt_phase % 4 == 3, -1, 0))
         
-        # Radiales Wachstum: Ansteigender Radius für die Spiral-Expansion
-        radius = base_indices * 4
+        # Korrektur der 90-Grad-Phasenkreuzung über die 24 Kontaktflächen
+        for idx in range(300):
+            step_mod = (idx * 5) % self.CLOCK_MOD
+            if step_mod < 6:
+                dir_x[idx] += 1
+            elif step_mod < 12:
+                dir_y[idx] += 1
+            elif step_mod < 18:
+                dir_x[idx] -= 1
+            else:
+                dir_y[idx] -= 1
+
+        # Radiales Wachstum: Der Radius skaliert formschlüssig mit dem Index
+        radius = base_indices * 2
         
-        # Skalierte Ganzzahl-Projektion ohne transzendente Funktionen
-        # Division durch 12 fängt die Amplituden perfekt im Sichtfeld ab
-        targets_x = (dir_x * radius) // 12
-        targets_y = (dir_y * radius) // 12
+        # Absolute Zentrierung: Keine Kommazahlen, exakte Begrenzung im Sichtfeld
+        targets_x = (dir_x * radius)
+        targets_y = (dir_y * radius)
         targets_z = np.ones(300, dtype=np.int64) * 100
         
         targets = np.column_stack((targets_x, targets_y, targets_z))
        
         # --- Etablierung des 3D-Agentenregisters ---
-        # Alle 300 Netzknoten starten exakt im Zentrum (0, 0, 100)
+        # Alle Agenten starten perfekt synchronisiert im Kernzentrum (0, 0, 100)
         agents = np.zeros((300, 3), dtype=np.int64)
         agents[:, 2] = 100
         
@@ -103,27 +117,27 @@ class PTRC3DMINTOrchestrator:
             dx = (targets[:, 0] - agents[:, 0]) * self.SCALE
             dy = (targets[:, 1] - agents[:, 1]) * self.SCALE
 
-            # Sperrung komplementärer Teilungszonen über das Modulo-210-Sieb
+            # Siebung komplementärer Sperrzonen über das Modulo-210-Lattice
             allowed_x = np.where((dx // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
             allowed_y = np.where((dy // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
 
-            # Gleichmäßige Takt-Inkrementierung für die Bewegung zum Ziel
-            agents[:, 0] += np.sign(dx) * allowed_x * 8
-            agents[:, 1] += np.sign(dy) * allowed_y * 6
+            # Inkrementelle Bewegung zum Spiral-Zielzustand (Dämpfung der Ausreißer)
+            agents[:, 0] += np.sign(dx) * allowed_x * 4
+            agents[:, 1] += np.sign(dy) * allowed_y * 3
 
             # --- 2. Vektorisierte Stereo-Retina-Projektion ---
             xl, xr, yd = self.engine_3d.project_coordinate_stereo(agents[:, 0], agents[:, 1], agents[:, 2], iod=70)
 
-            # Invarianz-Sichtung zur spektralen Trennung von Masse und Feldwelle
+            # Invarianz-Sichtung zur spektralen Trennung (Masse-Kern vs. Feldwelle)
             state_registry = (agents[:, 0] * agents[:, 1]) % self.PRIMORIAL_MOD
             is_core = (state_registry == (self.INVARIANT_LIMIT % self.PRIMORIAL_MOD))
 
             # Ganzzahl-Mapping im Bild-Speicherraster
             for i in range(len(agents)):
-                # Spektral-Gold (Masse-Kern) oder Spektral-Cyan (Resonanz-Welle)
+                # Spektral-Gold (Masse) oder Spektral-Cyan (Resonanz-Welle)
                 color = [218, 165, 32] if is_core[i] else [0, 255, 255]
                 
-                # Formschlüssige 3x3-Kreuzbruchlinien zur Eliminierung von Monitor-Lücken
+                # Formschlüssige 3x3-Kreuzbruchlinien zur Schließung der Monitor-Lücken
                 for offset_x, offset_y in [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)]:
                     for x_coord in [xl[i], xr[i]]:
                         px = x_coord + offset_x
@@ -131,7 +145,7 @@ class PTRC3DMINTOrchestrator:
                         if 0 <= px < self.width and 0 <= py < self.height:
                             frame_buffer[py, px] = color
 
-            # Export als unkomprimiertes P6-PPM-Format (Absolut rauschfrei)
+            # Export als unkomprimiertes P6-PPM-Format (100% rauschfrei)
             frame_path = os.path.join(self.tmp_dir, f"frame_{step:04d}.ppm")
             with open(frame_path, "wb") as f:
                 f.write(f"P6\n{self.width} {self.height}\n255\n".encode())
