@@ -37,7 +37,7 @@ class PTRC3DStereoEngine:
         self.invariant_limit = 156
 
     def project_coordinate_stereo(self, x, y, z, iod=70):
-        """Perspektivische Stereo-Retina-Projektion mit festem Tiefenanker."""
+        """Perspektivische Stereo-Retina-Projektion mit festem Tiefenanker ohne Floats."""
         scaled_depth = 40
         denom = scaled_depth + self.invariant_limit
         
@@ -71,79 +71,76 @@ class PTRC3DMINTOrchestrator:
             shutil.rmtree(self.tmp_dir)
         os.makedirs(self.tmp_dir)
 
-        # 300 Netzknoten basierend auf der 144er Fibonacci-Ur-Zelle
-        num_agents = 300
+        # 600 Netzknoten für ein dichteres, satteres Bild beim Ausfüllen
+        num_agents = 600
         base_indices = np.arange(1, num_agents + 1, dtype=np.int64)
         
-        # --- MATHEMATISCHE MATRIX-HERLEITUNG DER FIBONACCI-SPIRALE IN Z ---
-        # Keine kontinuierlichen Winkel! Wir nutzen das Modulo-24-Uhrsieb als orthogonalen Richtungsgeber
+        # --- MATHEMATISCHE GEOMETRIE DER FIBONACCI-ZIELMATRIX IN Z ---
+        # Das Modulo-24-Uhrsieb bestimmt die orthogonalen Endpositionen
         takt_phase = (base_indices * 144) % self.CLOCK_MOD
-        
         dir_x = np.where(takt_phase % 4 == 0, 1, np.where(takt_phase % 4 == 1, -1, 0))
         dir_y = np.where(takt_phase % 4 == 2, 1, np.where(takt_phase % 4 == 3, -1, 0))
         
-        # Korrektur der Phasenkreuzung über die 24 Kontaktflächen zur Verhinderung von Aliasing
         for idx in range(num_agents):
             step_mod = (idx * 5) % self.CLOCK_MOD
-            if step_mod < 6:
-                dir_x[idx] += 1
-            elif step_mod < 12:
-                dir_y[idx] += 1
-            elif step_mod < 18:
-                dir_x[idx] -= 1
-            else:
-                dir_y[idx] -= 1
+            if step_mod < 6: dir_x[idx] += 1
+            elif step_mod < 12: dir_y[idx] += 1
+            elif step_mod < 18: dir_x[idx] -= 1
+            else: dir_y[idx] -= 1
 
-        # Skalierter Ganzzahl-Radius für die finale Fibonacci-Lattice-Dichte
         radius = base_indices * 2
-        
-        # Finale Zielkoordinaten der Fibonacci-Spirale
         targets_x = dir_x * radius
         targets_y = dir_y * radius
-        targets_z = np.ones(num_agents, dtype=np.int64) * 100
         
-        # --- AGENTEN-INITIALISIERUNG IM ZENTRUM (Axiom I) ---
-        # Alle Agenten starten unmanifestiert am Nullpunkt (Zentrum)
+        # --- INITIALISIERUNG AM NULLPUNKT (Axiom I) ---
         agents = np.zeros((num_agents, 3), dtype=np.int64)
-        agents[:, 2] = 100
+        agents[:, 2] = 100  # Starre Tiefenebene Z=100
         
-        # Berechnen von chaotischen Zwischen-Lattice-Zuständen für die Verteilungssimulation
-        expansion_seed = (base_indices * 1836) % self.PRIMORIAL_MOD
-        scatter_x = np.where(expansion_seed % 2 == 0, 1, -1) * (expansion_seed * 2)
-        scatter_y = np.where(expansion_seed % 3 == 0, 1, -1) * (expansion_seed * 2)
+        # Generiere ein weites, raumfüllendes Ablenkungsmuster über das 1-Byte-Register (256)
+        expansion_seed = (base_indices * 1836) % 256
+        max_fill_x = np.where(expansion_seed % 2 == 0, 1, -1) * (expansion_seed * 4)
+        max_fill_y = np.where(expansion_seed % 3 == 0, 1, -1) * (expansion_seed * 3)
 
         for step in range(self.frames_limit):
             frame_buffer = np.zeros((self.height, self.width, 3), dtype=np.uint8)
 
-            # --- DYNAMISCHE DRITTELUNG DES GESAMT-TAKTS ---
-            # Phase 1 (Frame 0-80):  Explosion / Verteilung aus dem Zentrum heraus
-            # Phase 2 (Frame 81-160): Umlenkung und Einfangen über das planetare Modulo-Uhrsieb
-            # Phase 3 (Frame 161-240): Formschlüssiger Kollaps in die Fibonacci-Zielmatrix
+            # --- DREI RECHENTAKT-PHASEN NACH KURT GUIDO WIRMINGHAUS ---
             if step <= 80:
-                # Interpolationsfreies Ganzzahl-Routing in die Peripherie
-                dx = (scatter_x - agents[:, 0]) * self.SCALE
-                dy = (scatter_y - agents[:, 1]) * self.SCALE
-                speed_divider = 12
+                # PHASE 1: Explosive Inflation. Die Agenten besetzen blitzartig den Raum
+                # und füllen den Bildschirm komplett aus, da noch kein Beobachter bremst.
+                progress = step * 12
+                current_targets_x = (max_fill_x * progress) // 80
+                current_targets_y = (max_fill_y * progress) // 80
+                speed_divider = 15
             elif step <= 160:
-                # Übergangs-Sichtung zur Stabilisierung der Trajektorien
-                dx = (((scatter_x + targets_x) // 2) - agents[:, 0]) * self.SCALE
-                dy = (((scatter_y + targets_y) // 2) - agents[:, 1]) * self.SCALE
-                speed_divider = 16
+                # PHASE 2: Das Aushandeln in den 136 Zwischentakten. Die Pixel wirbeln
+                # dezentral umher, füllen Freiräume und bereiten den Strukturwechsel vor.
+                phase_progress = (step - 80)
+                interference_x = np.where((base_indices + step) % 4 == 0, 30, -30)
+                interference_y = np.where((base_indices + step) % 4 == 2, 30, -30)
+                
+                current_targets_x = max_fill_x + (((targets_x - max_fill_x) * phase_progress) // 80) + interference_x
+                current_targets_y = max_fill_y + (((targets_y - max_fill_y) * phase_progress) // 80) + interference_y
+                speed_divider = 10
             else:
-                # Finaler, unbestechlicher O(1) Einlauf in das 144-seitige Kristallgitter
-                dx = (targets_x - agents[:, 0]) * self.SCALE
-                dy = (targets_y - agents[:, 1]) * self.SCALE
-                speed_divider = 8
+                # PHASE 3: Formschlüssiger Kollaps. Der Schwellenwert ist erreicht.
+                # Pixel für Pixel rastet unerbittlich auf seinen Planck-Platz in der Spirale ein.
+                current_targets_x = targets_x
+                current_targets_y = targets_y
+                speed_divider = 6
 
-            # Siebung von Sperrzonen über das primoriale Restklassen-Lattice Modulo 210
+            # Berechnung des ganzzahligen Vorschubs (Pixel-Eroberung)
+            dx = (current_targets_x - agents[:, 0]) * self.SCALE
+            dy = (current_targets_y - agents[:, 1]) * self.SCALE
+
+            # Siebung von Sperrzonen über das primoriale Restklassen-Lattice
             allowed_x = np.where((dx // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
             allowed_y = np.where((dy // self.SCALE) % self.PRIMORIAL_MOD != 0, 1, 0)
 
-            # Inkrementeller Vorschub Schritt für Schritt
             agents[:, 0] += np.sign(dx) * allowed_x * speed_divider
             agents[:, 1] += np.sign(dy) * allowed_y * speed_divider
 
-            # --- RETINA-PROJEKTION UND RENDERING (Axiom II) ---
+            # --- RETINA-PROJEKTION UND BIT-EXAKTES RENDERING ---
             xl, xr, yd = self.engine_3d.project_coordinate_stereo(agents[:, 0], agents[:, 1], agents[:, 2], iod=55)
 
             # Invarianz-Prüfung zur spektralen Farbtrennung (Kernmasse vs. Vakuumwelle)
@@ -151,10 +148,10 @@ class PTRC3DMINTOrchestrator:
             is_core = (state_registry <= self.INVARIANT_LIMIT)
 
             for i in range(num_agents):
-                # Spektral-Gold (Masse) oder Spektral-Cyan (Vakuum-Resonanzwelle)
+                # Spektral-Gold für Masse (Kern), Cyan für die Vakuum-Resonanzwelle
                 color = [218, 165, 32] if is_core[i] else [0, 255, 255]
                 
-                # Formschlüssige 3x3-Kreuzbruchlinien schließen Pixellücken auf flachen Monitoren
+                # 3x3 Kreuzbruchlinien um Pixellücken auf der flachen Renderebene zu schließen
                 for offset_x, offset_y in [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)]:
                     for x_coord in [xl[i], xr[i]]:
                         px = x_coord + offset_x
@@ -162,7 +159,7 @@ class PTRC3DMINTOrchestrator:
                         if 0 <= px < self.width and 0 <= py < self.height:
                             frame_buffer[py, px] = color
 
-            # Export als unkomprimiertes, bit-exaktes PPM-Bild (P6-Binär)
+            # Export als unkomprimiertes PPM-Bild
             frame_path = os.path.join(self.tmp_dir, f"frame_{step:04d}.ppm")
             with open(frame_path, "wb") as f:
                 f.write(f"P6\n{self.width} {self.height}\n255\n".encode('ascii'))
@@ -181,7 +178,7 @@ class PTRC3DMINTOrchestrator:
         
         try:
             subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-            print(f"\n[ SYSTEM CHECK OK ] Das unbestechliche Fibonacci-Demovideo ist gesichert!")
+            print(f"\n[ SYSTEM CHECK OK ] Das raumfüllende Fibonacci-Demovideo wurde erfolgreich gerendert!")
             print(f" -> Pfad: {self.output_video}\n")
         except (subprocess.CalledProcessError, FileNotFoundError):
             print("\n[ ACHTUNG ] FFmpeg-Kompression fehlgeschlagen. PPM-Frames verbleiben im Cache.")
