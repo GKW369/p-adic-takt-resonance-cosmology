@@ -53,24 +53,28 @@ By translating dynamic floating-point partial differential equations into static
 
 ## 🔐 Technical Showcase: Anti-Side-Channel Cryptographic Verification
 
-To evaluate the mathematical framework of the pTRC engine without floating-point constraints, a deterministic cryptographic verification script is available in the repository. It demonstrates how the **Coprime Residue Symmetry (Modulo 210/24)** handles streaming arrays with strict time-constant complexity ($O(1)$).
+To evaluate the mathematical framework of the pTRC engine without floating-point constraints, deterministic cryptographic verification scripts are available in the repository. They demonstrate how the **Coprime Residue Symmetry (Modulo 210/24)** handles streaming arrays with strict time-constant complexity ($O(1)$).
 
 ### 🚀 Evaluation (Local Verification)
-The telemetry and execution profile can be observed directly via the terminal. Navigate to the repository root and execute:
+The telemetry and execution profile can be observed directly via Python or raw compiled C-code execution. Navigate to the repository root and run either:
+
 ```bash
+# Python Interface Verification
 python3 src/00_ptrc_crypt_demo.py
+
+# Native Bare-Metal C-Verification
+cd embedded && gcc ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
 ```
 
-### 🎛 Embedded Hardware Architectures (Arduino / Raspberry Pi Pico / ASIC)
+### 🎛 Embedded Hardware Architectures & Low-Power Hardware Elements
 Because the pTRC cryptographic operations execute entirely within the discrete integer domain ($\mathbb{Z}$) and completely bypass the floating-point unit (FPU), the algorithm is designed for resource-constrained **Secure Elements** and **Edge-AI hardware layers** (e.g., ARM Cortex-M, ESP32, or custom logic gates).
+
+Full technical metrics, architecture cross-compilation instructions (e.g., targeting ARM Cortex-M0+ via `arm-none-eabi-gcc`), and hardware verification profiles are fully detailed in the dedicated hardware integration layer under:
+* **`embedded/ptrc_crypt_demo.md`**
 
 #### Core Technical Metrics:
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
 2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers, the power consumption profile remains structurally flat ($O(1)$ variance).
-
-#### Testing on Local Hardware:
-* **Extraction:** The functional mapping block `ptrc_crypt_engine` can be exported directly from `src/00_ptrc_crypt_demo.py`.
-* **Deployment:** The logic compiles natively within the Arduino IDE or MicroPython environments without requiring heavy floating-point arithmetic libraries, minimizing the local binary footprint.
 
 ## Operational Execution & Module Orchestration
 
