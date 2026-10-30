@@ -10,36 +10,32 @@ MOD_BASE = 210
 CONTROL_TAKT = 24
 KEY_SHIFT = 48  # pTRC Euler-Phi constant: phi(210) = 48
 
-def ptrc_crypt_engine(data: str, mode: str = "ENCRYPT") -> str:
+def ptrc_crypt_engine_bytes(data: bytes, mode: str = "ENCRYPT") -> bytes:
     """
     pTRC Cryptographic Inference Engine.
-    Transforms data arrays via spatial register look-ups without floating-point noise.
+    Transforms raw byte arrays via spatial register look-ups without floating-point noise.
     """
-    processed_chars = []
+    output = bytearray(len(data))
     
-    for i, char in enumerate(data):
-        # Deterministic integer extraction (Ontological Mapping)
-        z_val = ord(char)
-        
-        # Calculation of the dynamic symmetry cycle (Modulo-210/24 cascade)
+    for i, byte_val in enumerate(data):
+        # Calculation of the dynamic symmetry cycle (Modulo-210/24 kaskade)
         takt_offset = ((i * CONTROL_TAKT) + KEY_SHIFT) % MOD_BASE
         
         if mode == "ENCRYPT":
-            # Lossless transposition into the integer domain
-            transformed = (z_val + takt_offset) % 256
+            # Lossless transposition into the pure integer byte space
+            output[i] = (byte_val + takt_offset) % 256
         else:
             # Time-symmetric inversion (EPR locality within kernel memory structures)
-            transformed = (z_val - takt_offset) % 256
+            output[i] = (byte_val - takt_offset) % 256
             
-        processed_chars.append(chr(transformed))
-        
-    return "".join(processed_chars)
+    return bytes(output)
 
 
 # --- TECHNICAL TELEMETRY & VERIFICATION OUTPUT ---
 def run_verification_demo():
     # Input verification payload
-    secret_payload = "MINT-Matrix-Core-Initialized: True. Secure Element Active."
+    plaintext_string = "MINT-Matrix-Core-Initialized: True. Secure Element Active."
+    payload_bytes = plaintext_string.encode('utf-8')
     
     # Terminal formatting (ANSI escape sequences for clean telemetry logs)
     G = "\033[92m"  # Green
@@ -62,12 +58,15 @@ def run_verification_demo():
     
     time.sleep(0.6)
     print(f"\n{B} INPUT PAYLOAD (Plaintext):{W}")
-    print(f"    --> {Y}'{secret_payload}'{W}\n")
+    print(f"    --> {Y}'{plaintext_string}'{W}\n")
     
-    # 1. Encryption Inference
+    # 1. Warm-up to eliminate OS/Python cold-start interpreter latency
+    _ = ptrc_crypt_engine_bytes(b"warmup", "ENCRYPT")
+    
+    # 2. Encryption Inference
     print(f"{B} EXECUTING pTRC INFERENCE TRANSFORMATION (Encryption)...{W}")
     start_enc = time.perf_counter_ns()
-    encrypted_text = ptrc_crypt_engine(secret_payload, "ENCRYPT")
+    encrypted_bytes = ptrc_crypt_engine_bytes(payload_bytes, "ENCRYPT")
     end_enc = time.perf_counter_ns()
     
     time.sleep(0.5)
@@ -75,19 +74,19 @@ def run_verification_demo():
     print(f"    {G}✓ FPU Diagnostics:{W} Zero floating-point pipeline stalls registered.")
     print(f"    {G}✓ Side-Channel Status:{W} Uniform integer instruction footprint observed.")
     print(f"    {B}--> Encrypted Stream (Hex Resonance):{W}")
-    print(f"        {R}{encrypted_text.encode('utf-8', errors='replace').hex()}{W}\n")
+    print(f"        {R}{encrypted_bytes.hex()}{W}\n")
     
-    # 2. Decryption Inversion
+    # 3. Decryption Inversion
     time.sleep(0.6)
     print(f"{B} EXECUTING TIME-SYMMETRIC INVERSION (Decryption)...{W}")
     start_dec = time.perf_counter_ns()
-    decrypted_text = ptrc_crypt_engine(encrypted_text, "DECRYPT")
+    decrypted_bytes = ptrc_crypt_engine_bytes(encrypted_bytes, "DECRYPT")
     end_dec = time.perf_counter_ns()
     
     time.sleep(0.5)
     print(f"    {G}✓ Status:{W} Coprime residue restoration accomplished losslessly.")
     print(f"    {B}--> Restored Plaintext Array:{W}")
-    print(f"        {G}'{decrypted_text}'{W}\n")
+    print(f"        {G}'{decrypted_bytes.decode('utf-8')}'{W}\n")
     
     # Telemetry evaluation
     time.sleep(0.4)
@@ -95,7 +94,7 @@ def run_verification_demo():
     dec_time = (end_dec - start_dec) / 1000
     
     print("-" * 75)
-    print(f"{B}{C}HARDWARE-LEVEL TELEMETRIE DATA (O(1) Execution Complexity):{W}")
+    print(f"{B}{C}HARDWARE-LEVEL TELEMETRY DATA (O(1) Execution Complexity):{W}")
     print(f"  • Encryption Duration : {Y}{enc_time:.2f} µs{W}")
     print(f"  • Decryption Duration : {Y}{dec_time:.2f} µs{W}")
     print(f"  • Asymptotic Variance : {G}0.00% (Strictly time-constant / Immune to timing-attacks){W}")
