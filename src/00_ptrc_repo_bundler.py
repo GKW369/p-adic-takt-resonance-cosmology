@@ -22,16 +22,16 @@
 import os
 
 def bundle_repository():
-    # Definiere das Basisverzeichnis (wo dieses Skript liegt)
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # Definiere das Basisverzeichnis (wo dieses Skript liegt - eine Ebene über /src)
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     output_filename = "ptrc_complete_context_bundle.txt"
     output_file = os.path.join(base_dir, output_filename)
     
     # Erlaubte Datei-Endungen für den KI-Kontext
-    valid_extensions = (".py", ".md", ".txt")
+    valid_extensions = (".py", ".md", ".txt", ".c", ".h")
     
-    # Hauptordner, die wir samt all ihrer Unterordner scannen wollen
-    target_root_folders = ["src", "paper", "experimental"]
+    # Hauptordner auf der Hauptebene, die samt all ihrer Unterordner gescannt werden
+    target_root_folders = ["src", "paper", "experimental", "embedded"]
     
     print("[ START ] Erzeuge das globale pTRC-Kontext-Bundle mit Inhaltsverzeichnis...")
     
