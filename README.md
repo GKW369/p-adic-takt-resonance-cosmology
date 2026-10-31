@@ -103,7 +103,7 @@ Corporate entities wishing to embed the pTRC framework into closed-source commer
 For these scenarios, individual evaluation exemptions or collaborative research agreements can be requested. These are administered directly by the author as part of independent scientific and freelance research to cover ongoing material costs, strictly in accordance with German freelance regulations (§ 18 EStG).
 
 *   **Author / Freelance Researcher:** Kurt Guido Wirminghaus
-*   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de
+*   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de | https://www.linkedin.com/in/kurt-guido-wirminghaus/
 
 ---
 *Certified for Version 2.0.0-Alpha System Coherence. Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
