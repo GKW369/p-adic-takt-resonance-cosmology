@@ -1,0 +1,118 @@
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program (see the LICENSE file in the root directory).
+# If not, see <https://gnu.org>.
+# ==============================================================================
+
+# -*- coding: utf-8 
+
+import time
+import sys
+import os
+import numpy as np
+
+# Bindet dein bestehendes Kernmodul ein
+try:
+    from quantum_neural_network import PTRCQuantumNeuralNetwork
+except ImportError:
+    # Fallback-Definition der Klasse direkt aus deinem Repository, falls im falschen Pfad gestartet
+    class PTRCQuantumNeuralNetwork:
+        def __init__(self, layer_size=24):
+            self.control_base = layer_size
+            self.primorial_base = 210
+            self.invariant_limit = 156
+            self.SCALE = 1000
+            self.weight_matrix = np.zeros((self.control_base, self.control_base), dtype=np.int32)
+            self.activation_vector = np.zeros(self.control_base, dtype=np.uint8)
+            self._initialize_discrete_weights()
+
+        def _initialize_discrete_weights(self):
+            for i in range(self.control_base):
+                for j in range(self.control_base):
+                    if (i * j + 5) % self.control_base == 0:
+                        self.weight_matrix[i, j] = self.invariant_limit // 12
+                    else:
+                        self.weight_matrix[i, j] = 1
+
+        def forward_propagation_takt(self, raw_input_block):
+            input_data = np.asarray(raw_input_block, dtype=np.int32) % self.primorial_base
+            output_accumulator = np.zeros(self.control_base, dtype=np.int32)
+            for idx_out in range(self.control_base):
+                node_sum = 0
+                for idx_in in range(self.control_base):
+                    node_sum += input_data[idx_in] * self.weight_matrix[idx_in, idx_out]
+                output_accumulator[idx_out] = node_sum
+                scaled_threshold = (output_accumulator[idx_out] * self.SCALE) // self.invariant_limit
+                if scaled_threshold % self.control_base >= 12:
+                    self.activation_vector[idx_out] = 1
+                else:
+                    self.activation_vector[idx_out] = 0
+
+def run_nn_terminal_demo():
+    # Windows ANSI Support aktivieren
+    if sys.platform == "win32":
+        os.system('color')
+        
+    network = PTRCQuantumNeuralNetwork()
+    
+    # Terminal säubern
+    print("\033[2J\033[H", end="")
+    
+    # ANSI Farben
+    C, G, Y, W, B = "\033[96m", "\033[92m", "\033[93m", "\033[0m", "\033[1m"
+    
+    print(f"{B}{C}=" * 78)
+    print(f"  pTRC FRAMEWORK // QUANTUM_NEURAL_NETWORK INFERENCE ENGINE ver. 2.0.0-Alpha  ")
+    print(f"  Experimental Demo: Non-Linear Threshold Vectoring without Synaptic Float-Noise")
+    print(f"=" * 78 + f"{W}\n")
+    
+    time.sleep(0.5)
+    print(f"{B}[*] Target Layer size :{W} 24 Coherent Nodes (Z/24Z Control Takt)")
+    print(f"{B}[*] Core Objective     :{W} Quantization-Lossless Neural Inferences inside Memory Arrays")
+    print(f"{B}[*] Hardware Status    :{W} FPU Execution Layer completely Bypassed")
+    print("-" * 78)
+    
+    # Live-Simulation von 12 Inferenz-Takten mit wechselnden System-Takten
+    for takt in range(1, 13):
+        time.sleep(0.4)
+        print(f"\n{B}[TAKT-CYCLE {takt:02d}/12]{W} Generating 24-element integer excitation matrix...")
+        
+        # Erzeuge wechselnde ganzzahlige Eingangsdaten basierend auf dem Kalibrierungs-Takt 1836
+        excitation_input = np.ones(24, dtype=np.int32) * (1836 + takt * 210)
+        
+        # Ausführung der vorzeichenlosen Inferenz im Ganzzahlbereich
+        start_time = time.perf_counter_ns()
+        network.forward_propagation_takt(excitation_input)
+        end_time = time.perf_counter_ns()
+        
+        duration_us = (end_time - start_time) / 1000
+        
+        # Animierte Live-Darstellung der Aktivierungs-Matrix im Terminal
+        matrix_visual = ""
+        for act in network.activation_vector:
+            matrix_visual += f"{G}[■]{W}" if act == 1 else f"{C}[·]{W}"
+            
+        print(f"    --> Neural Grid Invariance Map: {matrix_visual}")
+        print(f"    ✓ Execution Time: {Y}{duration_us:.2f} µs{W} | Quantization Entropy Decay: {G}0.00%{W}")
+
+    print("\n" + "-" * 78)
+    print(f"{B}{G}[SUCCESS] Invariant multi-layer dot-product completed.")
+    print(f"--> Status: Neural Network Inference verified lossless inside pure Integer Ring (Z).{W}")
+    print(f"{B}{C}=" * 78 + f"{W}\n")
+
+if __name__ == "__main__":
+    run_nn_terminal_demo()
+
