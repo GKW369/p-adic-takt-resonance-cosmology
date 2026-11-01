@@ -60,7 +60,7 @@ The telemetry and execution profile can be observed directly via Python or raw c
 
 ```bash
 # Python Interface Verification
-python3 src/00_ptrc_crypt_demo.py
+python3 src/crypto/00_ptrc_crypt_demo.py
 
 # Native Bare-Metal C-Verification
 cd embedded && gcc ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
@@ -70,7 +70,7 @@ cd embedded && gcc ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_de
 Because the pTRC cryptographic operations execute entirely within the discrete integer domain ($\mathbb{Z}$) and completely bypass the floating-point unit (FPU), the algorithm is designed for resource-constrained **Secure Elements** and **Edge-AI hardware layers** (e.g., ARM Cortex-M, ESP32, or custom logic gates).
 
 Full technical metrics, architecture cross-compilation instructions (e.g., targeting ARM Cortex-M0+ via `arm-none-eabi-gcc`), and hardware verification profiles are fully detailed in the dedicated hardware integration layer under:
-* **`embedded/ptrc_crypt_demo.md`**
+* **`embedded/crypto/ptrc_crypt_demo.md`**
 
 #### Core Technical Metrics:
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
