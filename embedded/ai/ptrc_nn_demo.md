@@ -19,7 +19,7 @@
 
 # 🧠 Fixed-Point Edge-AI Integration Layer (Quantum Neural Processor)
 
-This directory houses the deterministic, floating-point-free implementation of the pTRC Quantum Neural Network core (`quantum_neural_network.py`) and its interactive verification layer (`00_ptrc_nn_demo.py`). 
+This directory houses the deterministic, floating-point-free implementation of the pTRC Quantum Neural Network core (`quantum_neural_network.py`) and its interactive verification layer (`00_ptrc_neural_network_demo.py`). 
 
 By shifting synaptic weight tracking entirely into the discrete integer domain ($\mathbb{Z}$) and utilizing multi-modular residue arithmetic, this architecture prevents quantization entropy decay by design.
 
@@ -38,7 +38,8 @@ The pTRC Quantum Neural Core eliminates this operational ceiling by executing in
 To execute the vectorized multi-layer validation sweep and observe real-time inference rendering inside your local environment, run:
 
 ```bash
-python3 embedded/ai/00_ptrc_nn_demo.py
+python3 embedded/ai/00_ptrc_neural_network_demo.py
+
 ```
 
 ### Expected Hardware Telemetry Log:
