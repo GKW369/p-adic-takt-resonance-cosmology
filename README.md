@@ -1,3 +1,22 @@
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program (see the LICENSE file in the root directory).
+# If not, see <https://gnu.org>.
+# ==============================================================================
+
 # pTRC Framework: p-Adic Takt Resonance Cosmology
 **A Discrete, Multi-Modular Integer Inference & Look-Up System (\(\mathbb{Z}\))**
 
@@ -27,8 +46,6 @@ The core operational breakthrough lies in the total elimination of variable arit
 The pTRC framework explicitly **rejects** any metaphysical classification as a "Theory of Everything" (ToE). In strict alignment with *Gödel's Incompleteness Theorems*, no formal axiomatic system possessing sufficient complexity can prove its own consistency from within. Rather than chasing unprovable physical absolutism, the pTRC framework serves as a highly pragmatic, radically optimized translation layer to bypass continuous calculus overhead in STEM applications.
 
 Prior to spatial manifestation or continuous metric calibration, the system operates solely on un-fractioned, discrete integer rings. What conventional analog continuous measurement devices interpret as fractional remainder sequences or quantum mechanical uncertainty distributions (e.g., the anomalous experimental proton-to-electron mass discrepancy $M_{\text{exp}} \approx 1836.1526$) is mathematically deconstructed as an artifact of network routing overhead (*Clock Drag*) inside continuous transformations. The system bypasses infinity entirely, executing exclusively through invariant residue symmetries.
-
----
 
 ## Architectural Mechanics & Industrial Disruption Vectors
 
@@ -60,10 +77,10 @@ The telemetry and execution profile can be observed directly via Python or raw c
 
 ```bash
 # Python Interface Verification
-python3 src/crypto/00_ptrc_crypt_demo.py
+python3 src/00_ptrc_crypt_demo.py
 
 # Native Bare-Metal C-Verification
-cd embedded && gcc ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
+cd embedded/crypto && gcc ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
 ```
 
 ### 🎛 Embedded Hardware Architectures & Low-Power Hardware Elements
@@ -103,7 +120,7 @@ Corporate entities wishing to embed the pTRC framework into closed-source commer
 For these scenarios, individual evaluation exemptions or collaborative research agreements can be requested. These are administered directly by the author as part of independent scientific and freelance research to cover ongoing material costs, strictly in accordance with German freelance regulations (§ 18 EStG).
 
 *   **Author / Freelance Researcher:** Kurt Guido Wirminghaus
-*   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de | https://www.linkedin.com/in/kurt-guido-wirminghaus/
+*   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de | https://linkedin.com
 
 ---
 *Certified for Version 2.0.0-Alpha System Coherence. Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
