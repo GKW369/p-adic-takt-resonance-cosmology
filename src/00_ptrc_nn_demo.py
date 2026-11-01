@@ -26,6 +26,10 @@ try:
     from quantum_neural_network import PTRCQuantumNeuralNetwork
 except ImportError:
     class PTRCQuantumNeuralNetwork:
+        r"""
+        pTRC Quantum Neural Network Core Engine Layer.
+        Fixed SyntaxWarning by using a raw string literal for mathematical notation.
+        """
         def __init__(self, layer_size=24):
             self.control_base = layer_size
             self.primorial_base = 210
@@ -71,7 +75,7 @@ def run_nn_terminal_demo():
     print(f"=============================================================================={W}\n")
     
     time.sleep(0.4)
-    print(f"{B}[*] Target Layer size :{W} 24 Coherent Nodes (Z/24Z Control Takt)")
+    print(f"{B}[*] Target Layer Size :{W} 24 Coherent Nodes (Z/24Z Control Takt)")
     print(f"{B}[*] Core Objective     :{W} Quantization-Lossless Neural Inferences inside Memory Arrays")
     print(f"{B}[*] Hardware Status    :{W} FPU Execution Layer completely Bypassed")
     print(f"------------------------------------------------------------------------------")
@@ -80,7 +84,7 @@ def run_nn_terminal_demo():
         time.sleep(0.2)
         print(f"\n[TAKT-CYCLE {takt:02d}/12] Generating 24-element integer excitation matrix...")
         
-        # Nutzen des System-Invarienten-Takts (1836) zur Generierung dynamischer Eingangssignale
+        # Utilizing the system invariant takt (1836) to generate dynamic input signals
         excitation_input = np.ones(24, dtype=np.int32) * (1836 + takt * 7)
         
         start_time = time.perf_counter_ns()
