@@ -17,18 +17,14 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
-# -*- coding: utf-8 
-
 import time
 import sys
 import os
 import numpy as np
 
-# Bindet dein bestehendes Kernmodul ein
 try:
     from quantum_neural_network import PTRCQuantumNeuralNetwork
 except ImportError:
-    # Fallback-Definition der Klasse direkt aus deinem Repository, falls im falschen Pfad gestartet
     class PTRCQuantumNeuralNetwork:
         def __init__(self, layer_size=24):
             self.control_base = layer_size
@@ -62,45 +58,37 @@ except ImportError:
                     self.activation_vector[idx_out] = 0
 
 def run_nn_terminal_demo():
-    # Windows ANSI Support aktivieren
     if sys.platform == "win32":
         os.system('color')
         
     network = PTRCQuantumNeuralNetwork()
     
-    # Terminal säubern
-    print("\033[2J\033[H", end="")
-    
-    # ANSI Farben
     C, G, Y, W, B = "\033[96m", "\033[92m", "\033[93m", "\033[0m", "\033[1m"
     
-    print(f"{B}{C}=" * 78)
+    print(f"\n{B}{C}==============================================================================")
     print(f"  pTRC FRAMEWORK // QUANTUM_NEURAL_NETWORK INFERENCE ENGINE ver. 2.0.0-Alpha  ")
     print(f"  Experimental Demo: Non-Linear Threshold Vectoring without Synaptic Float-Noise")
-    print(f"=" * 78 + f"{W}\n")
+    print(f"=============================================================================={W}\n")
     
-    time.sleep(0.5)
+    time.sleep(0.4)
     print(f"{B}[*] Target Layer size :{W} 24 Coherent Nodes (Z/24Z Control Takt)")
     print(f"{B}[*] Core Objective     :{W} Quantization-Lossless Neural Inferences inside Memory Arrays")
     print(f"{B}[*] Hardware Status    :{W} FPU Execution Layer completely Bypassed")
-    print("-" * 78)
+    print(f"------------------------------------------------------------------------------")
     
-    # Live-Simulation von 12 Inferenz-Takten mit wechselnden System-Takten
     for takt in range(1, 13):
-        time.sleep(0.4)
-        print(f"\n{B}[TAKT-CYCLE {takt:02d}/12]{W} Generating 24-element integer excitation matrix...")
+        time.sleep(0.2)
+        print(f"\n[TAKT-CYCLE {takt:02d}/12] Generating 24-element integer excitation matrix...")
         
-        # Erzeuge wechselnde ganzzahlige Eingangsdaten basierend auf dem Kalibrierungs-Takt 1836
-        excitation_input = np.ones(24, dtype=np.int32) * (1836 + takt * 210)
+        # Nutzen des System-Invarienten-Takts (1836) zur Generierung dynamischer Eingangssignale
+        excitation_input = np.ones(24, dtype=np.int32) * (1836 + takt * 7)
         
-        # Ausführung der vorzeichenlosen Inferenz im Ganzzahlbereich
         start_time = time.perf_counter_ns()
         network.forward_propagation_takt(excitation_input)
         end_time = time.perf_counter_ns()
         
         duration_us = (end_time - start_time) / 1000
         
-        # Animierte Live-Darstellung der Aktivierungs-Matrix im Terminal
         matrix_visual = ""
         for act in network.activation_vector:
             matrix_visual += f"{G}[■]{W}" if act == 1 else f"{C}[·]{W}"
@@ -108,11 +96,10 @@ def run_nn_terminal_demo():
         print(f"    --> Neural Grid Invariance Map: {matrix_visual}")
         print(f"    ✓ Execution Time: {Y}{duration_us:.2f} µs{W} | Quantization Entropy Decay: {G}0.00%{W}")
 
-    print("\n" + "-" * 78)
+    print(f"\n------------------------------------------------------------------------------")
     print(f"{B}{G}[SUCCESS] Invariant multi-layer dot-product completed.")
     print(f"--> Status: Neural Network Inference verified lossless inside pure Integer Ring (Z).{W}")
-    print(f"{B}{C}=" * 78 + f"{W}\n")
+    print(f"{B}{C}=============================================================================={W}\n")
 
 if __name__ == "__main__":
     run_nn_terminal_demo()
-
