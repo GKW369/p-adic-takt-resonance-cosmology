@@ -2,7 +2,7 @@
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
-# This program is free software: you can redistribute it and/or modify
+# This free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -22,11 +22,17 @@ import sys
 import os
 import numpy as np
 
-# Dynamische Pfad-Auflösung: Findet den 'src'-Ordner aus der neuen Verzeichnisstruktur heraus
+# Universelle Pfad-Auflösung: Erkennt automatisch, ob Start aus 'src' oder 'embedded/ai' erfolgt
 script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(script_dir))
-src_dir = os.path.join(project_root, "src")
-if os.path.exists(src_dir):
+if os.path.basename(script_dir) == "ai":
+    # Wenn in embedded/ai/, gehe zwei Ordner hoch zum Hauptverzeichnis und dann in src
+    project_root = os.path.dirname(os.path.dirname(script_dir))
+    src_dir = os.path.join(project_root, "src")
+else:
+    # Wenn bereits in src/, nutze das aktuelle Verzeichnis
+    src_dir = script_dir
+
+if os.path.exists(src_dir) and src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
 try:
@@ -103,7 +109,7 @@ def run_nn_terminal_demo():
         print(f"    ✓ Execution Time: {Y}{duration_us:.2f} µs{W} | Quantization Entropy Decay: {G}0.00%{W}")
 
     print(f"\n------------------------------------------------------------------------------")
-    print(f"{B}{G}[SUCCESS] Invariant multi-layer dot-product completed.")
+    print(f"{B}[G][SUCCESS] Invariant multi-layer dot-product completed.")
     print(f"--> Status: Neural Network Inference verified lossless inside pure Integer Ring (Z).{W}")
     print(f"{B}{C}=============================================================================={W}\n")
 
