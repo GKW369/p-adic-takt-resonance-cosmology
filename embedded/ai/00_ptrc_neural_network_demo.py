@@ -57,11 +57,6 @@ except ImportError:
                         self.weight_matrix[i, j] = 1
 
         def forward_propagation_takt(self, raw_input_block):
-            """
-            Drives a deterministic forward pass in the pure integer domain.
-            Bypasses smooth transcendental functions via scaled whole-number shifts.
-            Integrates the Non-Archimedean crossed Plichta-mirror matrix over Z \ {0}.
-            """
             # Ingestion des ganzzahligen Erregungsblocks Modulo 210
             input_data = np.asarray(raw_input_block, dtype=np.int32) % self.primorial_base
             output_accumulator = np.zeros(self.control_base, dtype=np.int32)
@@ -117,7 +112,8 @@ def run_nn_terminal_demo():
         
         # Künstliche Null-Erregung injizieren, um den Plichta-Spiegel im Takt-Lauf zu prüfen
         if takt % 3 == 0:
-            excitation_input[idx_zero := (takt * 2) % 24] = 0
+            idx_zero = (takt * 2) % 24
+            excitation_input[idx_zero] = 0
             excitation_input[(idx_zero + 5) % 24] = 0
         
         start_time = time.perf_counter_ns()
