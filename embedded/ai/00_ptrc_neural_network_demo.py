@@ -17,6 +17,8 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
+# -*- coding: utf-8 -*-
+
 import time
 import sys
 import os
