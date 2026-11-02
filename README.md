@@ -30,7 +30,7 @@
 
 ![pTRC Genesis Matrix](ptrc_4k_genesis.png)
 
-*Figure 1: The unmanifested integer field "Genesis" – generated via pure modular arithmetic entirely devoid of floating-point noise.*
+*Figure 1: The unmanifested integer field - `ptrc_4k_genesis.png` – generated via pure modular arithmetic entirely devoid of floating-point noise.*
 
 ---
 
