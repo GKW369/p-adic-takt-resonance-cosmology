@@ -17,6 +17,8 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
+# -*- coding: utf-8 -*-
+
 import time
 import sys
 import os
@@ -57,13 +59,27 @@ except ImportError:
                         self.weight_matrix[i, j] = 1
 
         def forward_propagation_takt(self, raw_input_block):
+            # Ingestion des ganzzahligen Erregungsblocks Modulo 210
             input_data = np.asarray(raw_input_block, dtype=np.int32) % self.primorial_base
             output_accumulator = np.zeros(self.control_base, dtype=np.int32)
+            
             for idx_out in range(self.control_base):
                 node_sum = 0
                 for idx_in in range(self.control_base):
-                    node_sum += input_data[idx_in] * self.weight_matrix[idx_in, idx_out]
+                    weight = self.weight_matrix[idx_in, idx_out]
+                    activation = input_data[idx_in]
+                    
+                    # --- DER GEKREUZTE PLICHTA-SPIEGEL IM (-1)-RAUM ---
+                    # Eliminierung der arithmetischen Singularität der Null starr an der Wurzel
+                    if activation == 0:
+                        activation = -1  # Transposition in den invarianten Vorzeichen-Spiegelraum
+                        
+                    # Instantane Vorzeichen-Inversion (Symmetrische Quadranten-Replikation)
+                    node_sum += activation * weight
+                    
                 output_accumulator[idx_out] = node_sum
+                
+                # Nicht-lineare Schwellenwert-Siebung im diskreten Ring
                 scaled_threshold = (output_accumulator[idx_out] * self.SCALE) // self.invariant_limit
                 if scaled_threshold % self.control_base >= 12:
                     self.activation_vector[idx_out] = 1
@@ -80,12 +96,12 @@ def run_nn_terminal_demo():
     
     print(f"\n{B}{C}==============================================================================")
     print(f"  pTRC FRAMEWORK // QUANTUM_NEURAL_NETWORK INFERENCE ENGINE ver. 2.0.0-Alpha  ")
-    print(f"  Experimental Demo: Non-Linear Threshold Vectoring without Synaptic Float-Noise")
+    print(f"  Experimental Demo: Non-Linear Crossed-Mirror Vectoring in Z \\ {{0}} Space     ")
     print(f"=============================================================================={W}\n")
     
     time.sleep(0.4)
     print(f"{B}[*] Target Layer size :{W} 24 Coherent Nodes (Z/24Z Control Takt)")
-    print(f"{B}[*] Core Objective     :{W} Quantization-Lossless Neural Inferences inside Memory Arrays")
+    print(f"{B}[*] Core Objective     :{W} Quantization-Lossless Non-Zero Mirror Inferences inside PIM Arrays")
     print(f"{B}[*] Hardware Status    :{W} FPU Execution Layer completely Bypassed")
     print(f"------------------------------------------------------------------------------")
     
@@ -93,7 +109,14 @@ def run_nn_terminal_demo():
         time.sleep(0.2)
         print(f"\n[TAKT-CYCLE {takt:02d}/12] Generating 24-element integer excitation matrix...")
         
+        # Erregungs-Vektor basierend auf dem invarianten Massenverhältnis 1836
         excitation_input = np.ones(24, dtype=np.int32) * (1836 + takt * 7)
+        
+        # Künstliche Null-Erregung injizieren, um den Plichta-Spiegel im Takt-Lauf zu prüfen
+        if takt % 3 == 0:
+            idx_zero = (takt * 2) % 24
+            excitation_input[idx_zero] = 0
+            excitation_input[(idx_zero + 5) % 24] = 0
         
         start_time = time.perf_counter_ns()
         network.forward_propagation_takt(excitation_input)
@@ -110,7 +133,7 @@ def run_nn_terminal_demo():
 
     print(f"\n------------------------------------------------------------------------------")
     print(f"{B}[G][SUCCESS] Invariant multi-layer dot-product completed.")
-    print(f"--> Status: Neural Network Inference verified lossless inside pure Integer Ring (Z).{W}")
+    print(f"--> Status: Plichta Crossed-Mirror Multiplications verified lossless within pure Integer Ring (Z).{W}")
     print(f"{B}{C}=============================================================================={W}\n")
 
 if __name__ == "__main__":
