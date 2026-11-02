@@ -90,6 +90,24 @@ Because the pTRC cryptographic operations execute entirely within the discrete i
 Full technical metrics, architecture cross-compilation instructions (e.g., targeting ARM Cortex-M0+ via `arm-none-eabi-gcc`), and hardware verification profiles are fully detailed in the dedicated hardware integration layer under:
 * **`embedded/crypto/ptrc_crypt_demo.md`**
 
+### 🧠 Technical Showcase: Lossless Fixed-Point Edge-AI Verification
+
+To evaluate the mathematical framework of the pTRC neural network architectures without continuous float decay or pipeline serialization, localized deep learning verification scripts are active in the repository. They demonstrate how the **Modulo-24 Clock Architecture** resolves multi-layer matrix weights natively directly inside register frameworks.
+
+#### 🚀 Evaluation (Local AI Verification)
+The live neural telemetry sweep and bit-exact threshold activations can be compiled and observed instantly inside your terminal environment. Navigate to the repository root and run:
+
+```bash
+# Vectorized Multi-Layer Inference Verification
+python3 embedded/ai/00_ptrc_neural_network_demo.py
+```
+
+#### 🎛 Processing-In-Memory (PIM) Fabrics & Custom Vector Arrays
+Because every forward propagation takt executes through whole-number shifts and strict integer floor division layers, the neural layers completely discard fractional quantization steps. This provides a clean architectural template designed for resource-constrained **Edge-AI hardware layers** and neuromorphic engines (e.g., ESP32, ARM Cortex networks).
+
+Full technical profiles, memory allocation constraints, and hardware-level execution metrics are fully detailed under:
+* **`embedded/ai/ptrc_neural_network_demo.md`**
+
 #### Core Technical Metrics:
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
 2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers, the power consumption profile remains structurally flat ($O(1)$ variance).
