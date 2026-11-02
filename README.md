@@ -6,7 +6,7 @@
 # LICENSE & LIABILITY NOTICE:
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+# For the complete, unedited license text see: https://gnu.org
 #
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
@@ -69,6 +69,26 @@ By translating dynamic floating-point partial differential equations into static
 | **Hardware & Semiconductors**<br>`black_hole_information.py` | Information-theoretic invariant boundary 156 | **Side-Channel Attack Immune Silicon:** Bypasses float-dependent instruction cycles, producing flat, uniform power-draw profiles that eliminate differential power analysis vulnerabilities. | Secure Element Fabrics, Custom Silicon Vendors (ASIC/FPGA), Defense Electronics |
 | **Ballistics & Trajectory Control**<br>`gravity_edge_sharing.py` | Geometric whole-number quadrance indexing | **Instantaneous Orbital Invariance Tracking:** Trajectories are read directly from spatial register grids instead of being computed iteratively via floating-point transcendental functions (\(\sin, \cos\)). | Satellite Orbit Alignment, Kinetic Defense Interceptors, Precision Autonomous Drones |
 
+## 🧠 Technical Showcase: Lossless Fixed-Point Edge-AI Verification
+
+To evaluate the mathematical framework of the pTRC neural network architectures without continuous float decay or pipeline serialization, localized deep learning verification scripts are active in the repository. They demonstrate how the **Modulo-24 Clock Architecture** resolves multi-layer matrix weights natively directly inside register frameworks.
+
+### 🚀 Evaluation (Local AI Verification)
+The live neural telemetry sweep and bit-exact threshold activations can be compiled and observed instantly inside your terminal environment. Navigate to the repository root and run:
+
+```bash
+# Vectorized Multi-Layer Inference Verification
+python3 embedded/ai/00_ptrc_neural_network_demo.py
+```
+
+### 🎛 Processing-In-Memory (PIM) Fabrics & Custom Vector Arrays
+Because every forward propagation takt executes through whole-number shifts and strict integer floor division layers, the neural layers completely discard fractional quantization steps. This provides a clean architectural template designed for resource-constrained **Edge-AI hardware layers** and neuromorphic engines (e.g., ESP32, ARM Cortex networks).
+
+Full technical profiles, memory allocation constraints, and hardware-level execution metrics are fully detailed under:
+* **`embedded/ai/ptrc_neural_network_demo.md`**
+
+---
+
 ## 🔐 Technical Showcase: Anti-Side-Channel Cryptographic Verification
 
 To evaluate the mathematical framework of the pTRC engine without floating-point constraints, deterministic cryptographic verification scripts are available in the repository. They demonstrate how the **Coprime Residue Symmetry (Modulo 210/24)** handles streaming arrays with strict time-constant complexity ($O(1)$).
@@ -90,25 +110,7 @@ Because the pTRC cryptographic operations execute entirely within the discrete i
 Full technical metrics, architecture cross-compilation instructions (e.g., targeting ARM Cortex-M0+ via `arm-none-eabi-gcc`), and hardware verification profiles are fully detailed in the dedicated hardware integration layer under:
 * **`embedded/crypto/ptrc_crypt_demo.md`**
 
-### 🧠 Technical Showcase: Lossless Fixed-Point Edge-AI Verification
-
-To evaluate the mathematical framework of the pTRC neural network architectures without continuous float decay or pipeline serialization, localized deep learning verification scripts are active in the repository. They demonstrate how the **Modulo-24 Clock Architecture** resolves multi-layer matrix weights natively directly inside register frameworks.
-
-#### 🚀 Evaluation (Local AI Verification)
-The live neural telemetry sweep and bit-exact threshold activations can be compiled and observed instantly inside your terminal environment. Navigate to the repository root and run:
-
-```bash
-# Vectorized Multi-Layer Inference Verification
-python3 embedded/ai/00_ptrc_neural_network_demo.py
-```
-
-#### 🎛 Processing-In-Memory (PIM) Fabrics & Custom Vector Arrays
-Because every forward propagation takt executes through whole-number shifts and strict integer floor division layers, the neural layers completely discard fractional quantization steps. This provides a clean architectural template designed for resource-constrained **Edge-AI hardware layers** and neuromorphic engines (e.g., ESP32, ARM Cortex networks).
-
-Full technical profiles, memory allocation constraints, and hardware-level execution metrics are fully detailed under:
-* **`embedded/ai/ptrc_neural_network_demo.md`**
-
-#### Core Technical Metrics:
+### 📊 Core Technical Metrics:
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
 2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers, the power consumption profile remains structurally flat ($O(1)$ variance).
 
@@ -139,7 +141,7 @@ Corporate entities wishing to embed the pTRC framework into closed-source commer
 For these scenarios, individual evaluation exemptions or collaborative research agreements can be requested. These are administered directly by the author as part of independent scientific and freelance research to cover ongoing material costs, strictly in accordance with German freelance regulations (§ 18 EStG).
 
 *   **Author / Freelance Researcher:** Kurt Guido Wirminghaus
-*   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de | https://www.linkedin.com/in/kurt-guido-wirminghaus/
+*   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de | https://linkedin.com
 
 ---
 *Certified for Version 2.0.0-Alpha System Coherence. Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
