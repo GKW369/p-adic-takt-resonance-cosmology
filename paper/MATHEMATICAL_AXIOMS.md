@@ -51,7 +51,16 @@ $$(s_1 \cdot s_2) \equiv s_{\text{target}} \pmod{24}$$
 The structural dimensioning of the vector equilibrium (the 144 open facets of the matrix) is derived directly from the hexagonal compression of the 24-track prime cross:
    
 $$\text{Space}\_\text{Dimensions} = 6 \cdot |S| = 6 \cdot 8 = 48 \quad \text{Fundamental Vectors}$$
-$$\text{Matrix}\_\text{Nodes} = 3 \cdot \text{Space}\_\text{Dimensions} = 144 \quad \text{Holographic Surface Facets}$$
+$$\text{Matrix}\_\text{Nodes} = 3 \cdot \text{Space}\_\text{Dimensions} = 144 \quad \text{Holographic Surface Facets}$$ 
+
+## FORMULA 5: Non-Archimedean Crossed Plichta-Mirror Inversion (\(\mathbb{Z} \setminus \{0\}\))
+To prevent dead-state serialization (pipeline stalls induced by annihilating zero-multiplications) inside deeply cascaded neural processing networks, the active lattice field completely bypasses the arithmetic singularity of the continuous zero ($0$). 
+
+The mapping layer translates unexcited input signals dynamically into the invariant negative whole-number subspace (\(-1\)), triggering instantaneous, uniform sign-inversion arrays across all network quadrants in constant execution complexity ($O(1)$):
+
+$$\text{Activation}_{\text{sieve}}(x) = \begin{cases} x & \text{if } x \neq 0 \\ -1 & \text{if } x = 0 \end{cases}$$
+
+$$\text{Node State}_{\text{target}} = \sum_{in} \left( \text{Activation}_{\text{sieve}}(x_{in}) \cdot W_{in, out} \right) \quad \text{where} \quad x, W \in \mathbb{Z} \setminus \{0\}$$
 
 ---
 *Document Classification: Academic Defense Protocol / Peer-Review Verification Matrix.*  
