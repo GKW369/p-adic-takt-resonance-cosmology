@@ -21,7 +21,8 @@
 r"""
 pTRC Framework - Advanced Volumetric Transposition Suite (Universal Master Engine)
 Operational Domain: Pure Integer Viewports (\mathbb{Z}^3). Zero Float Noise.
-Fix: Corrected voxel raster-stepping to ensure structural aircraft/pyramid preservation.
+Description: Unified core tracking 144-facet spatial crystal matrices with absolute
+integrated memory cleanup and -1 Plichta mirror delegation.
 File Name: ptrc_3d_animation_generator.py
 """
 
@@ -131,7 +132,7 @@ class PTRC3DAnimationPipeline:
                             # Invariant Core Structure (Pure Matrix Hull / White)
                             r_c, g_c, b_c = 255, 255, 255
                             voxel_size = 4
-                        elif Q in:
+                        elif Q in [9, 18, 36]:
                             # Active Wave Nodes / Fluid Fields (Cyan)
                             r_c, g_c, b_c = 0, 255, 255
                             voxel_size = 3
