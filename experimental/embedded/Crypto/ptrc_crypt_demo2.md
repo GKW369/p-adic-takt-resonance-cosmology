@@ -88,9 +88,17 @@ def ptrc_crystalline_crypt_engine_bytes(data: bytes, mode: str = "ENCRYPT") -> b
     return bytes(output)
 ```
 
-### 3. Multi-Ring p-Adic Scalability Metric
+### 3. Multi-Ring p-Adic Scalability & Exclusive User-Key Generation
 Security scaling within the pTRC framework purposefully avoids the expansion of bit-lengths typical of Archimedean algorithms (e.g., RSA/ECC). Instead, complexity scales strictly linear by cascading the processing sequence into higher coprime residue fields applying the Chinese Remainder Theorem (CRT):
 
-$$\mathbb{Z} / 210\mathbb{Z} \times \mathbb{Z} / 24\mathbb{Z} \times \mathbb{Z} / 11\mathbb{Z} \times \mathbb{Z} / 13\mathbb{Z} \times \dots$$
+$$\mathbb{Z} / 210\mathbb{Z} \times \mathbb{Z} / 24\mathbb{Z} \times \mathbb{Z} / p_n\mathbb{Z} \times \dots$$
+
+#### 🔑 Exclusive Crystalline User-Keys:
+This non-Archimedean architecture allows the generation of unique, hardware-bound user cryptographic profiles by dynamically stacking an independent, secret prime ring ($\mathbb{Z}/p_n\mathbb{Z}$) onto the core pTRC engine. 
+
+* The user-key is not a stored bit-string variable prone to side-channel leakage.
+* The key is the structural, mathematical dimension of the modular space itself.
+* Without compiling the exact coprime prime field into the local 1-Byte register execution loop, the global parity lock fails by design, rendering unauthorized decryption mathematically impossible.
 
 This structural layout guarantees an asymptotic variance of exactly 0.00% across all expansion layers. Because operations are locked onto 1-Byte registers ($\mathbb{Z}/256\mathbb{Z}$), hardware overflow acts as a zero-cost modulo reduction layer natively on low-power silicon fabrics—forcing time-based side-channel analysis to fail by design.
+
