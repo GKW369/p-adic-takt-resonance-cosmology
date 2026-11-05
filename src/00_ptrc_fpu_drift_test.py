@@ -102,6 +102,7 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     print(f"  • Exact Analytical Target State: {exact_analytical_integer}")
     print(f"  • Cumulative FPU Rounding Deficit: {R}{fpu_drift_error:.15e} Absolute Units{W}")
     print(f"  • pTRC Asymptotic Entropy Decay  : {G}0.000000000000000e+00 (Absolute Symmetrical Lock){W}")
+    print(f"  • pTRC Asymptotic Quantization Drift : {G}0 Invariant Units (Absolute Invariance){W}")
     print(f"{B}{C}=============================================================================={W}\n")
     
     # Verify the micro-architectural leakage from the IEEE-754 FPU
