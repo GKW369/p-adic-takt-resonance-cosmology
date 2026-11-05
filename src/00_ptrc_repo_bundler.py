@@ -38,7 +38,7 @@ def bundle_repository():
     # Erlaubte Datei-Endungen für den KI-Kontext
     valid_extensions = (".py", ".md", ".txt", ".c", ".h")
     
-    # Hauptordner im Root-Verzeichnis scannen
+    # Hauptordner im Root-Verzeichnis scannen (Experimental bleibt für spekulatve Texte gesperrt)
     target_root_folders = ["src", "paper", "embedded"]
     
     print(f"[ START ] Erzeuge das geschützte pTRC-Kontext-Bundle im Hauptverzeichnis: {root_dir}")
@@ -52,6 +52,7 @@ def bundle_repository():
         files_to_bundle.append("README.md")
         
     # Schritt 2: Standard-Ordner durchlaufen (src, paper, embedded)
+    # Bindet das neue Core-Testskript "src/00_ptrc_fpu_drift_test.py" nahtlos ein
     for root_folder in target_root_folders:
         root_folder_path = os.path.join(root_dir, root_folder)
         if not os.path.exists(root_folder_path):
@@ -67,7 +68,7 @@ def bundle_repository():
                     files_to_bundle.append(relative_path)
 
     # Schritt 3: ISOLIERTER SCAN der Grafik-Engine aus dem experimental-Ordner
-    # Schützt das System vor ungewollter Indexierung spekulativer Textdokumente.
+    # Extrahiert ausschließlich die harten mathematischen Visualisierungsskripte
     experimental_graphics_path = os.path.join(root_dir, "experimental", "ptrc_3d_engine")
     if os.path.exists(experimental_graphics_path):
         print("        -> Schalte Isolations-Sieve für Grafik-Sektion aktiv...")
