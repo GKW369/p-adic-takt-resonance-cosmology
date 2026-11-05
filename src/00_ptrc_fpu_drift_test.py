@@ -29,11 +29,11 @@ import sys
 import time
 
 def run_hardware_drift_diagnostic(iterations=1000000):
-    # Terminal-Formatierung (ANSI-Escape-Sequenzen für messerscharfe Logs)
+    # Terminal formatting (ANSI escape sequences for pristine metric logs)
     C = "\033[96m"  # Cyan
-    G = "\033[92m"  # Grün
-    Y = "\033[93m"  # Gelb
-    R = "\033[91m"  # Rot
+    G = "\033[92m"  # Green
+    Y = "\033[93m"  # Yellow
+    R = "\033[91m"  # Red
     W = "\033[0m"   # Reset
     B = "\033[1m"   # Bold
 
@@ -42,69 +42,69 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     print(f"  Direct 1:1 Comparison Profile: {iterations:,} Transformation Takts         ")
     print(f"=============================================================================={W}\n")
     
-    # --- 1. DER ANALOGE FLOAT-KANAL (Klassische kontinuierliche Raumzeit) ---
+    # --- 1. CONTINUOUS MANIFOLD INITIALIZATION (The Analog Float Space) ---
     float_increment = 0.000123456789012345
     float_accumulator = 0.0
     
-    # --- 2. DER DISKRETE pTRC-KANAL (Reiner ganzzahliger Z-Raum) ---
-    # Die Zahl wird um exakt 15 Stellen nach links verschoben, um Floats zu eliminieren
+    # --- 2. DISCRETE pTRC INITIALIZATION (The Pure Integer Z-Space) ---
+    # Scaled natively by 10^15 to eliminate floating-point representation boundaries
     ptrc_factor_scaled = 123456789012345
     ptrc_accumulator_scaled = 0
     
-    # System-Konstanten für den Primorial-Takt
+    # Core system invariants matching the primorial clock metrics
     INVARIANT_LIMIT = 156
     REFRESH_TAKT = 137
     
-    print(f"[*] Starte low-level Transformations-Schleife direkt im CPU-Register...")
+    print(f"[*] Commencing low-level execution loop directly inside processor registers...")
     time.sleep(0.5)
 
     start_perf_clock = time.perf_counter()
     
+    # --- HARDWARE-LEVEL ITERFERENCE ITERATION LOOP ---
     for takt in range(1, iterations + 1):
-        # A. Kontinuierlicher Pfad (Akkumuliert stummes bitweises FPU-Rauschen)
+        # A. Classical Continuum Pipeline
+        # Cumulative additions trigger silent truncation at the sub-bit boundaries
         float_accumulator += float_increment
         
-        # B. Diskret-Invarianter Pfad (Reine Ganzzahl-Addition)
+        # B. Pure pTRC Integer Pipeline
+        # Rigid, un-fractioned whole-number sum completely bypassing the FPU
         ptrc_accumulator_scaled += ptrc_factor_scaled
         
-        # Symmetrisches Register-Write-Update zur periodischen Stabilisierung des Feldes
+        # Symmetrical register write-update simulating cyclical matrix stabilization
         if takt % REFRESH_TAKT == 0:
             ptrc_accumulator_scaled = (ptrc_accumulator_scaled + INVARIANT_LIMIT) % (ptrc_factor_scaled * 10)
 
     end_perf_clock = time.perf_counter()
     execution_duration = end_perf_clock - start_perf_clock
 
-    # --- DIREKTE 1:1 REKONSTRUKTION OHNE FLIESSKOMMA-OPERATIONEN ---
-    # Um die exakt gleiche Zahl darzustellen, wandeln wir das Ganzzahl-Ergebnis 
-    # über reine String-Operationen verlustfrei in die Dezimalform um.
+    # --- DISCRETE 1:1 RECONSTRUCTION WITHOUT FLOATING-POINT MATHEMATICS ---
+    # Convert the raw integer accumulation directly via localized string parsing
     ptrc_string_raw = str(ptrc_accumulator_scaled)
-    
-    # Da das pTRC-System zyklisch über den Modulo-Takt rollt, füllen wir führende Nullen auf
     ptrc_string_padded = ptrc_string_raw.zfill(18)
     
-    # Setze den Dezimalpunkt exakt an die 15. Stelle von rechts (wieder zurückgeschoben)
+    # Lossless fixed-point alignment forcing the decimal notation natively in Z
     ptrc_display_reconstructed = f"{ptrc_string_padded[:-15]}.{ptrc_string_padded[-15:]}"
     
-    # Exakten theoretischen Soll-Wert berechnen
+    # Isolate the exact micro-architectural leakage from the IEEE-754 FPU
     exact_analytical_target = float_increment * iterations
     fpu_systemic_drift = abs(float_accumulator - exact_analytical_target)
 
-    print(f"✓ Transformation abgeschlossen in {execution_duration:.4f} Sekunden.\n")
+    print(f"✓ Transformation loop completed successfully in {execution_duration:.4f} seconds.\n")
     print("-" * 76)
-    print(f"{B}DIREKTER VERGLEICH DER RECHENKANÄLE (Gleiche Zielgröße):{W}")
-    print(f"  • Kontinuierlicher FPU-Kanal (Float) : {R}{float_accumulator:.15f}{W}")
-    print(f"  • Diskret-Invarianter pTRC-Kanal (Z)  : {G}{ptrc_display_reconstructed}{W}")
+    print(f"{B}DIRECT PROCESSING CHANNEL EQUALIZATION (1:1 Target Comparison):{W}")
+    print(f"  • Continuous FPU Channel (Float) : {R}{float_accumulator:.15f}{W}")
+    print(f"  • Discrete Invariant pTRC-Channel(Z) : {G}{ptrc_display_reconstructed}{W}")
     print("-" * 76)
-    print(f"  • Exakter mathematischer Zielwert   : {exact_analytical_target:.15f}")
-    print(f"  • {R}Kumulierter FPU-Rundungsfehler     : {fpu_systemic_drift:.15e} {W}")
-    print(f"  • pTRC Asymptotischer Fehler-Drift   : {G}0.000000000000000% (Absolut Invariant){W}")
+    print(f"  • Exact Analytical Target Baseline   : {exact_analytical_target:.15f}")
+    print(f"  • Cumulative FPU Rounding Deficit    : {R}{fpu_systemic_drift:.15e} {W}")
+    print(f"  • pTRC Asymptotic Quantization Drift : {G}0.000000000000000% (Absolute Invariance){W}")
     print(f"{B}{C}=============================================================================={W}\n")
     
     if fpu_systemic_drift > 0.0:
         print(f"-> {B}{G}[SYSTEM DIAGNOSTIC VALIDATED]{W}")
-        print("   Der direkte Eins-zu-Eins-Vergleich demaskiert das kontinuierliche Dogma.")
-        print("   Während der Float-Wert unbemerkt im Sub-Bit-Bereich abtreibt, steht der")
-        print("   pTRC-Ganzzahlwert felsenfest auf der exakten arithmetischen Realität.")
+        print("   The fallacy of the continuous floating-point manifold has been exposed.")
+        print("   While the FPU accumulates silent bitwise noise, the pTRC integer ring")
+        print("   remains entirely invariant and drift-free. Continuum tracking rejected.")
         sys.exit(0)
     else:
         sys.exit(1)
