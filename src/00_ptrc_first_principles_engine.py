@@ -31,16 +31,9 @@ import time
 import subprocess
 import os
 
-# Silence system and directory path warnings to guarantee full verification privacy
 os.environ["PYTHONWARNINGS"] = "ignore"
-
-# Initialize global execution clock on nanosecond level
 global_start = time.perf_counter_ns()
-
-# Maximum viewport terminal column width for perfect alignment geometry
 MAX_WIDTH = 166
-
-# Dynamically resolve the absolute directory where this master script resides
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 print("="*MAX_WIDTH)
@@ -53,7 +46,6 @@ time.sleep(0.100)
 print(f" -> [ PHASE MONITOR ] Aligning 24-Track Directional Residue Ring ... STATUS: HARMONIC CLOCK SYNCHRONIZED".ljust(MAX_WIDTH - 8) + "[ OK ]")
 print("-"*MAX_WIDTH)
 
-# Exact sequential registration matrix of all 20 executable physical repository units
 modules = [
     "00_ptrc_first_principles_engine.py", "base_resonance_calibration.py", "alpha_emitter.py",
     "fluid_resonance.py", "pi_square_crystallization.py", "prime_lattice_determinism.py",
@@ -64,14 +56,11 @@ modules = [
     "internal_loopback.py", "isotropy.py"
 ]
 
-# Telemetry register map for final performance audit matrix (Module_Index -> Duration_MS / Status)
 durations_ms = {}
 module_status = {}
 
 def print_module_line(mod_num, mod_name, status_text, success=True):
-    """Sanitizes output strings and enforces strict horizontal layout alignment."""
     clean_text = status_text.replace("-> ", "").replace("[ OK ] ", "").replace("RESULT: ", "").strip()
-    
     if len(clean_text) > 55:
         display_text = clean_text[:52] + "..."
     else:
@@ -84,12 +73,11 @@ def print_module_line(mod_num, mod_name, status_text, success=True):
 def get_mod_path(mod_filename):
     return os.path.join(SCRIPT_DIR, mod_filename)
 
-# Module 01: Core Integration Engine Self-Test
 durations_ms[1] = 1
 module_status[1] = True
 print_module_line(1, modules[0], "Engine Core Invariance Initialized")
 
-# Module 02: Base Resonance Calibration
+# Module 02
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, get_mod_path(modules[1])], capture_output=True, text=True)
 durations_ms[2] = (time.perf_counter_ns() - t_start) // 1000000
@@ -99,7 +87,7 @@ if res.returncode == 0:
 else:
     print_module_line(2, modules[1], f"ERR: {res.stderr.strip().split('\n')[-1]}", success=False)
 
-# Module 03: Alpha Emitter
+# Module 03
 t_start = time.perf_counter_ns()
 res = subprocess.run([sys.executable, get_mod_path(modules[2])], capture_output=True, text=True)
 durations_ms[3] = (time.perf_counter_ns() - t_start) // 1000000
@@ -109,14 +97,10 @@ if res.returncode == 0:
 else:
     print_module_line(3, modules[2], f"ERR: {res.stderr.strip().split('\n')[-1]}", success=False)
 
-# ==============================================================================
-# MODULE 04: Windtunnel Fluid Dynamics Resonance (UNBUFFERED ALT-SCREEN STREAM)
-# ==============================================================================
+# Module 04
 t_start = time.perf_counter_ns()
-
 sys.stdout.write("\033[?1049h\033[H")
 sys.stdout.flush()
-
 process = subprocess.Popen([sys.executable, "-u", get_mod_path(modules[3])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 while True:
@@ -129,23 +113,17 @@ while True:
     sys.stdout.flush()
 
 process.communicate()
-
 sys.stdout.write("\033[?1049l")
 sys.stdout.flush()
-
 durations_ms[4] = (time.perf_counter_ns() - t_start) // 1000000
 module_status[4] = (process.returncode == 0)
 print_module_line(4, modules[3], "Fluid Dynamic Matrix Realized" if process.returncode == 0 else "Fluid Engine Stream Interrupted", success=(process.returncode == 0))
 time.sleep(0.1)
 
-# ==============================================================================
-# MODULE 05: Symmetrical Whole-Number Pi Crystallization (UNBUFFERED ALT-SCREEN STREAM)
-# ==============================================================================
+# Module 05
 t_start = time.perf_counter_ns()
-
 sys.stdout.write("\033[?1049h\033[H")
 sys.stdout.flush()
-
 process_c = subprocess.Popen([sys.executable, "-u", get_mod_path(modules[4])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 while True:
@@ -158,16 +136,13 @@ while True:
     sys.stdout.flush()
 
 process_c.communicate()
-
 sys.stdout.write("\033[?1049l")
 sys.stdout.flush()
-
 durations_ms[5] = (time.perf_counter_ns() - t_start) // 1000000
 module_status[5] = (process_c.returncode == 0)
 print_module_line(5, modules[4], "Native 90x44 Spatial Lattice Resolved" if process_c.returncode == 0 else "Crystallization Interrupted", success=(process_c.returncode == 0))
 time.sleep(0.1)
 
-# Background execution loops with advanced error containment (Modules 06 to 20)
 static_results = [
     "100% Phase Synchronization", "Modulo-24 Group Locked", "156 Symmetrical Nodes", "+1 Entropy-Step Invariant",
     "0 Bit Modulo-Loss", "1 Planck-Area Unit Min", "144 Vector Map Locked", "137 Feynman Buffer Units",
@@ -188,9 +163,6 @@ for i in range(5, 20):
         err_msg = res.stderr.strip().split('\n')[-1] if res.stderr else "Non-zero exit status"
         print_module_line(i+1, modules[i], f"ERR: {err_msg}", success=False)
 
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
-# PERFORMANCE-MATRIX AUDIT REPORT (Strictly aligned columns geometry layout)
-# ------------------------------------------------------------------------------------------------------------------------------------------------------
 print("\n" + "="*MAX_WIDTH)
 print(f"pTRC REPOSITORY PERFORMANCE AUDIT | TARGET NODE: ACER ASPIRE E1-570 ARCHITECTURE".center(MAX_WIDTH))
 print("="*MAX_WIDTH)
@@ -203,8 +175,8 @@ for idx in range(1, 21):
     status_tag = "[ VALID ]" if module_status[idx] else "[ERROR  ]"
     print(f"   MODULE {idx:02d}/20         |   {name_clean.ljust(43)} |     {status_tag}     |    {str(duration).rjust(5)} ms (Pure Z-Operations)  ")
 
-# Compute final integrated application runtime metrics
 global_end = time.perf_counter_ns()
+# HÄRTUNG: Verwendung von rein ganzzahliger Division (//) zur Eliminierung von Floats
 total_ms = (global_end - global_start) // 1000000
 
 print("="*MAX_WIDTH)
