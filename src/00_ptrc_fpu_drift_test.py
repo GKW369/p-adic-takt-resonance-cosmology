@@ -22,7 +22,7 @@
 pTRC Framework - Hardware Diagnostic & Verification Suite
 File Name: 00_ptrc_fpu_drift_test.py
 Operational Domain: FPU Precision Degradation vs. Non-Archimedean Integer Invariance.
-Direct 1:1 Comparative Metric Edition. Absolute Whole-Number Arithmetics.
+Direct 1:1 Comparative Metric Edition. Symmetrical Whole-Number Outputs.
 """
 
 import sys
@@ -47,12 +47,10 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     REFRESH_TAKT = 137  # Isolated Observer Refresh Matrix (Feynman Quantum Proxy)
     
     # --- 1. CONTINUOUS MANIFOLD INITIALIZATION (The Analog Float Space) ---
-    # Input is derived dynamically via integer constants to feed the analog FPU channel
     float_increment = 123456789012345 / 1000000000000000
     float_accumulator = 0.0
     
     # --- 2. DISCRETE pTRC INITIALIZATION (The Pure Integer Z-Space) ---
-    # Scaled natively by 10^15 to eliminate floating-point representation boundaries
     ptrc_factor_scaled = 123456789012345
     ptrc_accumulator_scaled = 0
     
@@ -63,7 +61,6 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     
     # --- HARDWARE-LEVEL BACKGROUND EXECUTION LAYER ---
     for takt in range(1, iterations + 1):
-        # The background engines evolve entirely linear and un-damped
         float_accumulator += float_increment
         ptrc_accumulator_scaled += ptrc_factor_scaled
 
@@ -79,12 +76,12 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     float_observer_matrix = (float_accumulator + float_invariant_limit) % float_mod_boundary
 
     # --- DISCRETE 1:1 RECONSTRUCTION WITH ABSOLUTE WHOLE NUMBERS ---
-    # The FPU value is multiplied back into the integer register space to isolate the drift
     fpu_reconstructed_integer = int(float_observer_matrix * 1000000000000000)
     exact_analytical_integer = ((ptrc_factor_scaled * iterations) + INVARIANT_LIMIT) % ptrc_mod_boundary
     
-    # Isolate precision decay as a definitive whole-number variance count
-    fpu_bit_drift = abs(fpu_reconstructed_integer - exact_analytical_integer)
+    # Calculate the hardware-level variance as a scientific floating-point decimal
+    exact_analytical_float = exact_analytical_integer / 1000000000000000
+    fpu_drift_error = abs(float_observer_matrix - exact_analytical_float)
 
     print(f"✓ Background engine complete. Viewport refreshed under {execution_duration_ms} ms.\n")
     print("-" * 76)
@@ -93,8 +90,8 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     print(f"  • Discrete Invariant pTRC-Value: {G}{ptrc_observer_matrix}{W}")
     print("-" * 76)
     print(f"  • Exact Analytical Target State: {exact_analytical_integer}")
-    print(f"  • Cumulative FPU Rounding Deficit: {R}{fpu_bit_drift} Quantum Truncation Units{W}")
-    print(f"  • pTRC Asymptotic Entropy Decay  : {G}0 Invariant Units (Absolute Symmetrical Lock){W}")
+    print(f"  • Cumulative FPU Rounding Deficit: {R}{fpu_drift_error:.15e} Absolute Units{W}")
+    print(f"  • pTRC Asymptotic Entropy Decay  : {G}0.000000000000000e+00 (Absolute Symmetrical Lock){W}")
     print(f"{B}{C}=============================================================================={W}\n")
     
     # Verify the micro-architectural leakage from the IEEE-754 FPU
