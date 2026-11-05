@@ -39,18 +39,19 @@ def bundle_repository():
     valid_extensions = (".py", ".md", ".txt", ".c", ".h")
     
     # Hauptordner im Root-Verzeichnis scannen
-    target_root_folders = ["src", "paper", "experimental", "embedded"]
+    target_root_folders = ["src", "paper", "embedded"]
     
-    print(f"[ START ] Erzeuge das globale pTRC-Kontext-Bundle im Hauptverzeichnis: {root_dir}")
+    print(f"[ START ] Erzeuge das geschützte pTRC-Kontext-Bundle im Hauptverzeichnis: {root_dir}")
     
     # Listen, um die gefundenen Pfade für das Inhaltsverzeichnis zu sammeln
     files_to_bundle = []
     
-    # Schritt 1: Vorscan für das Inhaltsverzeichnis (README direkt im Root)
+    # Schritt 1: README direkt im Root erfassen
     readme_path = os.path.join(root_dir, "README.md")
     if os.path.exists(readme_path):
         files_to_bundle.append("README.md")
         
+    # Schritt 2: Standard-Ordner durchlaufen (src, paper, embedded)
     for root_folder in target_root_folders:
         root_folder_path = os.path.join(root_dir, root_folder)
         if not os.path.exists(root_folder_path):
@@ -62,15 +63,26 @@ def bundle_repository():
                     if filename == output_filename:
                         continue
                     file_path = os.path.join(dirpath, filename)
-                    # Relativen Pfad immer basierend auf dem Hauptverzeichnis berechnen
                     relative_path = os.path.relpath(file_path, root_dir)
                     files_to_bundle.append(relative_path)
 
-    # Schritt 2: Schreiben des Bundles (Inhaltsverzeichnis zuerst, dann die Inhalte)
+    # Schritt 3: ISOLIERTER SCAN der Grafik-Engine aus dem experimental-Ordner
+    # Schützt das System vor ungewollter Indexierung spekulativer Textdokumente.
+    experimental_graphics_path = os.path.join(root_dir, "experimental", "ptrc_3d_engine")
+    if os.path.exists(experimental_graphics_path):
+        print("        -> Schalte Isolations-Sieve für Grafik-Sektion aktiv...")
+        for dirpath, _, filenames in os.walk(experimental_graphics_path):
+            for filename in sorted(filenames):
+                if filename.endswith(valid_extensions):
+                    file_path = os.path.join(dirpath, filename)
+                    relative_path = os.path.relpath(file_path, root_dir)
+                    files_to_bundle.append(relative_path)
+
+    # Schritt 4: Schreiben des Bundles (Inhaltsverzeichnis zuerst, dann die Inhalte)
     with open(output_file, "w", encoding="utf-8") as outfile:
         # Header und Inhaltsverzeichnis in die Datei schreiben
         outfile.write("======================================================================\n")
-        outfile.write("pTRC REPOSITORY COMPLETE CONTEXT BUNDLE\n")
+        outfile.write("pTRC REPOSITORY COMPLETE CONTEXT BUNDLE (Isolated Graphics Release)\n")
         outfile.write("======================================================================\n\n")
         outfile.write("--- TABLE OF CONTENTS ---\n")
         for idx, rel_path in enumerate(files_to_bundle, 1):
@@ -91,7 +103,7 @@ def bundle_repository():
             outfile.write("\n\n")
             print(f"        Gebündelt und indexiert: {rel_path}")
                         
-    print(f"\n[ OK ] Das komplette Repository wurde vereint (inkl. Index): {output_file}")
+    print(f"\n[ OK ] Das bereinigte Repository-Bundle wurde vereint: {output_file}")
 
 if __name__ == "__main__":
     bundle_repository()
