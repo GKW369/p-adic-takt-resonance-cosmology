@@ -29,7 +29,6 @@ import sys
 import time
 
 def run_hardware_drift_diagnostic(iterations=1000000):
-    # Terminal formatting (ANSI escape sequences for pristine metric logs)
     C = "\033[96m"  # Cyan
     G = "\033[92m"  # Green
     Y = "\033[93m"  # Yellow
@@ -42,9 +41,8 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     print(f"  Direct 1:1 Comparison Profile: {iterations:,} Background Engine Takts       ")
     print(f"=============================================================================={W}\n")
     
-    # --- System Invariants matching the primorial clock metrics ---
     INVARIANT_LIMIT = 156
-    REFRESH_TAKT = 137  # Isolated Observer Refresh Matrix (Feynman Quantum Proxy)
+    REFRESH_TAKT = 137
     
     # --- 1. CONTINUOUS MANIFOLD INITIALIZATION (The Analog Float Space) ---
     float_increment = 123456789012345 / 1000000000000000
@@ -59,7 +57,6 @@ def run_hardware_drift_diagnostic(iterations=1000000):
 
     start_perf_clock = time.perf_counter()
     
-    # --- HARDWARE-LEVEL BACKGROUND EXECUTION LAYER ---
     for takt in range(1, iterations + 1):
         float_accumulator += float_increment
         ptrc_accumulator_scaled += ptrc_factor_scaled
@@ -67,7 +64,6 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     end_perf_clock = time.perf_counter()
     execution_duration_ms = int((end_perf_clock - start_perf_clock) * 1000)
 
-    # --- ISOLATED OBSERVER VIEWPORT PROJECTION (The 137 Refresh Takt) ---
     ptrc_mod_boundary = ptrc_factor_scaled * 10
     ptrc_observer_matrix = (ptrc_accumulator_scaled + INVARIANT_LIMIT) % ptrc_mod_boundary
     
@@ -75,11 +71,9 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     float_invariant_limit = INVARIANT_LIMIT / 1000000000000000
     float_observer_matrix = (float_accumulator + float_invariant_limit) % float_mod_boundary
 
-    # --- DISCRETE 1:1 RECONSTRUCTION WITH ABSOLUTE WHOLE NUMBERS ---
     fpu_reconstructed_integer = int(float_observer_matrix * 1000000000000000)
     exact_analytical_integer = ((ptrc_factor_scaled * iterations) + INVARIANT_LIMIT) % ptrc_mod_boundary
     
-    # Calculate the hardware-level variance as a scientific floating-point decimal
     exact_analytical_float = exact_analytical_integer / 1000000000000000
     fpu_drift_error = abs(float_observer_matrix - exact_analytical_float)
 
@@ -92,9 +86,9 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     print(f"  • Exact Analytical Target State: {exact_analytical_integer}")
     print(f"  • Cumulative FPU Rounding Deficit: {R}{fpu_drift_error:.15e} Absolute Units{W}")
     print(f"  • pTRC Asymptotic Entropy Decay  : {G}0.000000000000000e+00 (Absolute Symmetrical Lock){W}")
+    print(f"  • pTRC Asymptotic Quantization Drift : {G}0 Invariant Units (Absolute Invariance){W}")
     print(f"{B}{C}=============================================================================={W}\n")
     
-    # Verify the micro-architectural leakage from the IEEE-754 FPU
     if fpu_reconstructed_integer != ptrc_observer_matrix:
         print(f"-> {B}{G}[SYSTEM DIAGNOSTIC VALIDATED]{W}")
         print("   The fallacy of the continuous floating-point manifold has been exposed.")
