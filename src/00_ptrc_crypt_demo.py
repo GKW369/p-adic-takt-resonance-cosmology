@@ -79,7 +79,7 @@ def run_verification_demo():
     W = "\033[0m"   # Reset
     B = "\033[1m"   # Bold
     
-    print(f"\n{B}{C}=" * 75)
+    print(f"\n{B}{C}" + "=" * 75 + f"{W}")
     print(f"  pTRC FRAMEWORK // CRYSTALLINE CRYPT RESONANCE LAYER ver. 2.1.0-Alpha ")
     print(f"  1-Byte Machine Core: 24 Contact Junctions & 120 Free Outer Facets Inferences ")
     print(f"=" * 75 + f"{W}\n")
