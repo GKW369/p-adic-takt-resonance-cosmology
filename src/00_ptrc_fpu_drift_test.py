@@ -65,7 +65,7 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     ptrc_accumulator_scaled = 0
     
     print(f"[*] Commencing background engine state updates directly inside registers...")
-    time.sleep(0.5)
+    time.sleep(1)
 
     start_perf_clock = time.perf_counter()
     
