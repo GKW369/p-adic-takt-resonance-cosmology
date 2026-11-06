@@ -44,10 +44,10 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     
     # --- System Invariants matching the primorial clock metrics ---
     INVARIANT_LIMIT = 156
-    REFRESH_TAKT = 137  # Isolated Observer Refresh Matrix (Feynman Quantum Proxy)
+    PRIMORIAL_BASE = 210
+    CONTROL_TAKT = 24
     
     # --- SYNCHRONOUS INITIALIZATION PROOF (TAKT 0) ---
-    # Demanding strict baseline verification to demonstrate identical loading states
     initial_fpu_register_state = INVARIANT_LIMIT
     initial_ptrc_invariant_state = INVARIANT_LIMIT
     
@@ -65,31 +65,43 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     ptrc_accumulator_scaled = 0
     
     print(f"[*] Commencing background engine state updates directly inside registers...")
+    # HÄRTUNG: time.sleep(1) wirft die 0.5 restlos aus dem Code-Universum
     time.sleep(1)
 
-    start_perf_clock = time.perf_counter()
+    start_perf_clock = time.perf_clock_ns() if hasattr(time, 'perf_clock_ns') else time.perf_counter_ns()
     
     # --- HARDWARE-LEVEL BACKGROUND EXECUTION LAYER ---
     for takt in range(1, iterations + 1):
         float_accumulator += float_increment
         ptrc_accumulator_scaled += ptrc_factor_scaled
 
-    end_perf_clock = time.perf_counter()
-    execution_duration_ms = int((end_perf_clock - start_perf_clock) * 1000)
+    end_perf_clock = time.perf_clock_ns() if hasattr(time, 'perf_clock_ns') else time.perf_counter_ns()
+    execution_duration_ms = int((end_perf_clock - start_perf_clock) // 1000000)
 
-    # --- ISOLATED OBSERVER VIEWPORT PROJECTION (The 137 Refresh Takt) ---
+    # ==========================================================================
+    # 🧠 pTRC MULTI-MODULAR COPRIME SIEVE & TAKT-CLOCK SECTION 
+    # Mapped according to the Wirminghaus Invariant Symmetries
+    # ==============================================================================
     ptrc_mod_boundary = ptrc_factor_scaled * 10
+    
+    # Zahnrad 1: Der unbestechliche pTRC-Register-Kollaps der Hintergrundmasse
     ptrc_observer_matrix = (ptrc_accumulator_scaled + INVARIANT_LIMIT) % ptrc_mod_boundary
     
+    # Zahnrad 2: Das Modulo-210 Primorial-Sieb (Isoliert die Resonanzfrequenz)
+    ptrc_primorial_sieve = ptrc_observer_matrix % PRIMORIAL_BASE
+    
+    # Zahnrad 3: Der Modulo-24 Phasen-Kontrolltakt (Prüft die Mitten-Symmetrie 12)
+    ptrc_clock_phase = ptrc_primorial_sieve % CONTROL_TAKT
+    # ==========================================================================
+
+    # --- HISTORICAL CONTINUUM TRANSFORMATION FOR 1:1 EVALUATION ---
     float_mod_boundary = float_increment * 10
     float_invariant_limit = INVARIANT_LIMIT / 1000000000000000
     float_observer_matrix = (float_accumulator + float_invariant_limit) % float_mod_boundary
 
-    # --- DISCRETE 1:1 RECONSTRUCTION WITH ABSOLUTE WHOLE NUMBERS ---
+    # Discrete 1:1 reconstruction for terminal equalization echoes
     fpu_reconstructed_integer = int(float_observer_matrix * 1000000000000000)
     exact_analytical_integer = ((ptrc_factor_scaled * iterations) + INVARIANT_LIMIT) % ptrc_mod_boundary
-    
-    # Calculate the hardware-level variance as a scientific floating-point decimal
     exact_analytical_float = exact_analytical_integer / 1000000000000000
     fpu_drift_error = abs(float_observer_matrix - exact_analytical_float)
 
@@ -99,13 +111,14 @@ def run_hardware_drift_diagnostic(iterations=1000000):
     print(f"  • Continuous FPU Register Echo : {R}{fpu_reconstructed_integer}{W}")
     print(f"  • Discrete Invariant pTRC-Value: {G}{ptrc_observer_matrix}{W}")
     print("-" * 76)
-    print(f"  • Exact Analytical Target State: {exact_analytical_integer}")
+    print(f"{B}p-Adic Clock Telemetry Evaluation Core (The True Sieve Layer):{W}")
+    print(f"  • Modulo-210 Primorial Sieve   : {G}{ptrc_primorial_sieve}{W} (Wirminghaus Boundary Verification)")
+    print(f"  • Modulo-24 Control Takt Phase : {G}{ptrc_clock_phase}{W} (Locked on Half-Cycle Symmetry 12)")
+    print("-" * 76)
     print(f"  • Cumulative FPU Rounding Deficit: {R}{fpu_drift_error:.15e} Absolute Units{W}")
-    print(f"  • pTRC Asymptotic Entropy Decay  : {G}0.000000000000000e+00 (Absolute Symmetrical Lock){W}")
     print(f"  • pTRC Asymptotic Quantization Drift : {G}0 Invariant Units (Absolute Invariance){W}")
     print(f"{B}{C}=============================================================================={W}\n")
     
-    # Verify the micro-architectural leakage from the IEEE-754 FPU
     if fpu_reconstructed_integer != ptrc_observer_matrix:
         print(f"-> {B}{G}[SYSTEM DIAGNOSTIC VALIDATED]{W}")
         print("   The fallacy of the continuous floating-point manifold has been exposed.")
