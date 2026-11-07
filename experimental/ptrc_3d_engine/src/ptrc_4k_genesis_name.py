@@ -21,18 +21,20 @@
 r"""
 pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_name.py
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
-Features: Initials-only anonymized file output (Privacy Shield for Repository),
-          Phase-compensated irisating polychrome color matrices.
+Features: Interactive Terminal Input prompt for universal name mapping,
+          Automated phase-stabilization loop against dark-state collapse,
+          Initials-only anonymized dual-format file exporter (PNG + PPM).
 Optimized: 100% Vectorized Matrix Computations for Acer Aspire Dual-Core architectures.
 """
 
 import numpy as np
 import cv2
+import sys
 
 class PTRC4KArtisticGenesisEngine:
     """
     Erzeugt hochauflösende 3840x2160 Raumgitter-Strukturen, modifiziert durch 
-    textbasierte Namens-Rhythmen, fraktale Stride-Verschiebungen und irisierende Farbpaletten.
+    interaktive Namens-Rhythmen, automatische Phasen-Stabilisierung und Irisdruck-Farbpaletten.
     """
     def __init__(self, canvas_width=3840, canvas_height=2160):
         self.width = canvas_width
@@ -41,12 +43,12 @@ class PTRC4KArtisticGenesisEngine:
         self.control_base = 24
         self.invariant_limit = 156
 
-    def execute_artistic_takt(self, global_takt_pulse, name_string="KURT GUIDO WIRMINGHAUS", zoom_stride=2, color_vibe="cyan"):
+    def execute_artistic_takt(self, global_takt_pulse, name_string, zoom_stride=2, color_vibe="cyan"):
         """
-        Koppelt den textbasierten Namens-Rhythmus und die Zoom-Schrittweite (Rorschach-Fäden)
-        direkt in die divisionsfreie Matrix-Rasterung ein und färbt sie irisierend ein.
+        Koppelt den textbasierten Namens-Rhythmus direkt in die divisionsfreie Matrix-Rasterung ein.
+        Stabilisiert die Phase automatisch, damit keine leeren oder schwarzen Bilder entstehen.
         """
-        # 1. Namens-Vertonung: Berechne den harmonischen Phasen-Offset aus den Alphabet-Positionen
+        # 1. Namens-Vertonung & Phasen-Gewichtung
         ascii_sum = sum(ord(char) for char in name_string if char.isalnum())
         name_phase_offset = ascii_sum % self.control_base
         
@@ -54,14 +56,9 @@ class PTRC4KArtisticGenesisEngine:
         center_x = self.width // 2
         center_y = self.height // 2
         
-        # Initialen-Extraktion für den Log (Keine Klarnamen im Terminal-Output bei GitHub-Tests)
-        initials = "".join([part[0] for part in name_string.split() if part])
-        print(f" -> Mapping 4K Iris Art for Token: '{initials}' | Stride: {zoom_stride} | Palette: {color_vibe}")
-        
-        # 2. Rorschach-Zoom-Mechanik: Dynamische Schrittweite bricht das Gitter fraktal auf
+        # Erzeuge die Koordinaten-Gitter im diskreten Raum
         y_indices = np.arange(0, self.height, zoom_stride)
         x_indices = np.arange(0, self.width, zoom_stride)
-        
         Y, X = np.meshgrid(y_indices, x_indices, indexing='ij')
         
         # Quadrance-Berechnung (Z-Raum Transformation)
@@ -69,16 +66,25 @@ class PTRC4KArtisticGenesisEngine:
         delta_x = X - center_x
         discrete_quadrance = (delta_x * delta_x) + (delta_y * delta_y)
         
-        # Das Modulo-210 Uhrsieb
+        # Das Modulo-210 Uhrsieb (Raumgitter-Basis)
         residue_210 = discrete_quadrance % self.primorial_base
         sieve_mask = residue_210 <= self.invariant_limit
         
-        # Phasen-Kompensation: Modulo-Taktverschiebung stabilisieren, um "schwarze Seelen" zu verhindern
-        target_phase = (12 + name_phase_offset) % self.control_base
-        takt_check = (X * Y + takt_factor) % self.control_base
-        takt_mask = takt_check == target_phase
-        
-        valid_nodes_mask = sieve_mask & takt_mask
+        # Universeller Phasen-Suchlauf: Verhindert die "schwarze Seele", falls ein Offset ins Leere läuft
+        valid_nodes_mask = None
+        for phase_shift in range(self.control_base):
+            target_phase = (12 + name_phase_offset + phase_shift) % self.control_base
+            takt_check = (X * Y + takt_factor) % self.control_base
+            takt_mask = takt_check == target_phase
+            
+            test_mask = sieve_mask & takt_mask
+            if np.sum(test_mask) > 100:  # Mindestknotendichte für ein stabiles Bildgefüge
+                valid_nodes_mask = test_mask
+                break
+                
+        # Fallback, falls der Suchlauf extrem restriktiv ist
+        if valid_nodes_mask is None:
+            valid_nodes_mask = sieve_mask & ((X * Y + takt_factor) % self.control_base == 12)
         
         # Initialisiere die BGR-Farbmatrix komplett in Schwarz
         canvas_matrix = np.zeros((self.height, self.width, 3), dtype=np.uint8)
@@ -86,24 +92,24 @@ class PTRC4KArtisticGenesisEngine:
         if np.any(valid_nodes_mask):
             valid_quadrance = discrete_quadrance[valid_nodes_mask]
             
-            # Zero-Float Irisierung: Modulo-Wellen auf der Quadrance erzeugen rhythmische Bänder
+            # Zero-Float Irisierung: Modulo-Wellen auf der Quadrance erzeugen rhythmische Farb-Bänder
             color_wave = (valid_quadrance // 80) % 256
             color_wave_alt = (valid_quadrance // 200) % 256
             
             if color_vibe == "bonbon":
-                # Korrigierte Bonbon-Wellen-Verteilung für echtes Pracht-Magenta und Violett
+                # Bonbon-Palette: Kristallines Magenta, feuriges Violett und weiche Töne
                 b_channel = (130 + color_wave // 2) % 256
                 g_channel = (color_wave_alt) % 120
                 r_channel = (220 + color_wave // 3) % 256
             else:
-                # pTRC-Signatur-Palette für Kurt: Irisierendes Cyan, elektrisches Türkis
+                # pTRC-Signatur-Palette: Irisierendes Cyan, elektrisches Türkis und Smaragd
                 b_channel = (190 + color_wave // 2) % 256
                 g_channel = (160 + color_wave_alt) % 256
                 r_channel = (color_wave // 5) % 80
 
             rgb_pixels = np.stack([b_channel, g_channel, r_channel], axis=-1).astype(np.uint8)
             
-            # Fülle die Matrix unter Berücksichtigung des Zoom-Strides
+            # Fülle die Matrix unter Berücksichtigung des Zoom-Strides (Faden-Effekt)
             valid_y, valid_x = np.where(valid_nodes_mask)
             for dy in range(zoom_stride):
                 for dx in range(zoom_stride):
@@ -134,18 +140,38 @@ class PTRC4KArtisticGenesisEngine:
 
 
 if __name__ == "__main__":
-    print("[ pTRC-4K-ANONYMOUS-GENESIS ] Initializing Safe Art Pipelines...")
-    engine = PTRC4KArtisticGenesisEngine()
+    print("=" * 80)
+    print("[ pTRC-4K-UNIVERSAL-GENESIS ] INTERACTIVE MATRIX INITIALIZER")
+    print("=" * 80)
     
-    # 1. GENERIERUNG: Kurt Guido Wirminghaus -> Output anonymisiert als KGW
-    kurt_matrix = engine.execute_artistic_takt(global_takt_pulse=1836, name_string="KURT GUIDO WIRMINGHAUS", zoom_stride=2, color_vibe="cyan")
-    engine.export_dual_formats(kurt_matrix, "ptrc_4k_art_KGW")
+    # Interaktive Abfrage im Terminal
+    if sys.version_info[0] < 3:
+        user_name = raw_input("Bitte den gewünschten Namen eingeben: ")
+    else:
+        user_name = input("Bitte den gewünschten Namen eingeben: ")
+        
+    if not user_name.strip():
+        user_name = "ANONYMOUS REVOLUTION"
+        
+    # Extrahiere die Initialen für die absolut anonyme Dateibenennung auf GitHub
+    initials = "".join([part[0].upper() for part in user_name.split() if part])
+    if not initials:
+        initials = "XYZ"
+        
+    # Bestimme die Farbpalette anhand der Namens-Eingabe (Automatisches Bonbon für Anke)
+    vibe = "cyan"
+    if "anke" in user_name.lower():
+        vibe = "bonbon"
+        
+    filename_target = f"ptrc_4k_art_{initials}"
     
     print("-" * 80)
+    print(f" -> Starting Engine for Identity Token: '{initials}' | Mode: {vibe}")
     
-    # 2. GENERIERUNG: Anke Wirminghaus -> Output anonymisiert als AW (Phasenkompensiert!)
-    anke_matrix = engine.execute_artistic_takt(global_takt_pulse=1836, name_string="ANKE WIRMINGHAUS", zoom_stride=2, color_vibe="bonbon")
-    engine.export_dual_formats(anke_matrix, "ptrc_4k_art_AW")
+    engine = PTRC4KArtisticGenesisEngine()
+    matrix_output = engine.execute_artistic_takt(global_takt_pulse=1836, name_string=user_name, zoom_stride=2, color_vibe=vibe)
+    engine.export_dual_formats(matrix_output, filename_target)
     
     print("=" * 80)
-    print(" -> STATUS: Anonymized 4K Master-Suites successfully deployed into filesystem.")
+    print(f" -> SUCCESS: Files saved anonymously as '{filename_target}.png/.ppm'")
+    print("=" * 80)
