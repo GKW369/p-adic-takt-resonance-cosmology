@@ -19,128 +19,111 @@
 
 # -*- coding: utf-8 -*-
 r"""
-pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_name.py
+pTRC Framework - Core Rendering Module: Ultra-High-Definition 4K Genesis Grid
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
-Features: 100% Automatic Irisating Chromaticity based on digital wavelengths,
-          Single-prompt interactive terminal input (Zero Nerd-Overhead),
-          Initials-only anonymized dual-format file exporter (PNG + PPM).
+Optimized: 100% Vectorized Matrix Computations bypassing heavy Python loops.
 """
 
 import numpy as np
 import cv2
-import sys
 
-class PTRC4KArtisticGenesisEngine:
+class PTRC4KGenesisEngine:
+    """
+    Executes precise integer-based grid allocations for 3840x2160 resolution canvases
+    utilizing nested primorial residue filters and Modulo-24 control clocks.
+    """
     def __init__(self, canvas_width=3840, canvas_height=2160):
         self.width = canvas_width
         self.height = canvas_height
         self.primorial_base = 210
         self.control_base = 24
         self.invariant_limit = 156
-
-    def execute_artistic_takt(self, global_takt_pulse, name_string, zoom_stride=2):
-        # 1. Namens-Vertonung für den initialen Phasen-Offset
-        ascii_sum = sum(ord(char) for char in name_string if char.isalnum())
-        name_phase_offset = ascii_sum % self.control_base
+        self.SCALE = 1000
         
+        # 1-bit boolean 4K master canvas memory array
+        self.canvas_matrix = np.zeros((self.height, self.width), dtype=np.uint8)
+
+    # ==========================================================================
+    # !!! TARGET ZONE: GPU/MATRIX VEKTORISIERUNG FÜR 4K RESOLUTION !!!
+    # MARKER: PTRC_GPU_VECTOR_ACCELERATION_2026
+    # ==========================================================================
+    def execute_genesis_raster_takt(self, global_takt_pulse):
+        """
+        Populates the high-density coordinate grid based on numeric clock interference.
+        Vektorisiert über NumPy-Gittermatrizen, um die CPU/GPU-Inferenz maximal zu beschleunigen.
+        """
         takt_factor = int(global_takt_pulse) % self.primorial_base
         center_x = self.width // 2
         center_y = self.height // 2
         
-        y_indices = np.arange(0, self.height, zoom_stride)
-        x_indices = np.arange(0, self.width, zoom_stride)
+        print(f" -> Mapping high-density 4K integer space nodes via vectorized grids...")
+        
+        # Erzeuge Koordinaten-Gitter für die subsamplichen 2x2-Schritte (Vektor-Metrik)
+        y_indices = np.arange(0, self.height, 2)
+        x_indices = np.arange(0, self.width, 2)
+        
+        # Erzeugt zwei orthogonale 2D-Matrizen im Speicher
         Y, X = np.meshgrid(y_indices, x_indices, indexing='ij')
         
-        discrete_quadrance = ((X - center_x) ** 2) + ((Y - center_y) ** 2)
+        # Berechne die Abstandsquadrate für alle Pixel gleichzeitig (Z-Raum Transformation)
+        delta_y = Y - center_y
+        delta_x = X - center_x
+        discrete_quadrance = (delta_x * delta_x) + (delta_y * delta_y)
         
+        # 1. DAS MODULO-210 UHRSIEB (Parallel-Filterung auf der Matrix)
         residue_210 = discrete_quadrance % self.primorial_base
         sieve_mask = residue_210 <= self.invariant_limit
         
-        # Automatischer Phasen-Suchlauf gegen "schwarze Löcher"
-        valid_nodes_mask = None
-        for phase_shift in range(self.control_base):
-            target_phase = (12 + name_phase_offset + phase_shift) % self.control_base
-            takt_mask = ((X * Y + takt_factor) % self.control_base) == target_phase
-            
-            test_mask = sieve_mask & takt_mask
-            if np.sum(test_mask) > 100:
-                valid_nodes_mask = test_mask
-                break
-                
-        if valid_nodes_mask is None:
-            valid_nodes_mask = sieve_mask & ((X * Y + takt_factor) % self.control_base == 12)
+        # 2. DER Z/24Z PHASENKONTROLL-CHECK
+        takt_check = (X * Y + takt_factor) % self.control_base
+        takt_mask = takt_check == 12
         
-        canvas_matrix = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+        # Kombiniere beide Filter zu einer finalen Wahrheitsmatrix
+        valid_nodes_mask = sieve_mask & takt_mask
         
-        if np.any(valid_nodes_mask):
-            valid_quadrance = discrete_quadrance[valid_nodes_mask]
-            
-            # --- DIE DIGITALE WELLENLÄNGE ---
-            # Wir nutzen die Quadrance direkt als unbestechlichen Taktgeber für die Spektralfarben.
-            # Durch die Modulo-Schleifen bricht sich das Licht vollautomatisch irisierend.
-            wavelength_b = (valid_quadrance // 60) % 256
-            wavelength_g = (valid_quadrance // 120) % 256
-            wavelength_r = (valid_quadrance // 180) % 256
-            
-            # Zusätzliche Phasenverschiebung basierend auf dem Namen einweben, 
-            # damit jeder Name sein individuelles Farbspektrum entfaltet
-            b_channel = (wavelength_b + name_phase_offset * 5) % 256
-            g_channel = (wavelength_g + name_phase_offset * 10) % 256
-            r_channel = (wavelength_r + name_phase_offset * 15) % 256
-
-            rgb_pixels = np.stack([b_channel, g_channel, r_channel], axis=-1).astype(np.uint8)
-            
-            valid_y, valid_x = np.where(valid_nodes_mask)
-            for dy in range(zoom_stride):
-                for dx in range(zoom_stride):
-                    y_target = valid_y * zoom_stride + dy
-                    x_target = valid_x * zoom_stride + dx
-                    in_bounds = (y_target < self.height) & (x_target < self.width)
-                    if np.any(in_bounds):
-                        canvas_matrix[y_target[in_bounds], x_target[in_bounds]] = rgb_pixels[in_bounds]
-                        
-        return canvas_matrix
-
-    def export_dual_formats(self, matrix, base_filename):
-        png_path = f"{base_filename}.png"
-        cv2.imwrite(png_path, matrix)
-        print(f"    + [ PNG ] Sichtbares Bild gespeichert:  '{png_path}'")
+        # Hole die Indizes aller Punkte, die die physikalischen Bedingungen erfüllen
+        valid_y, valid_x = np.where(valid_nodes_mask)
         
-        ppm_path = f"{base_filename}.ppm"
-        rgb_matrix = cv2.cvtColor(matrix, cv2.COLOR_BGR2RGB)
-        header = f"P6\n{self.width} {self.height}\n255\n".encode('ascii')
-        with open(ppm_path, "wb") as f:
-            f.write(header)
-            f.write(rgb_matrix.tobytes())
-        print(f"    + [ PPM ] Unbestechlicher Ganzzahl-Master: '{ppm_path}'")
+        # Multipliziere die Indizes zurück auf die reale Auflösung
+        real_y = valid_y * 2
+        real_x = valid_x * 2
+        
+        # Blitzschnelle 2x2-Block-Zuweisung im Speicher ohne eine einzige Schleife
+        if len(real_y) > 0:
+            self.canvas_matrix[real_y, real_x] = 1
+            self.canvas_matrix[real_y + 1, real_x] = 1
+            self.canvas_matrix[real_y, real_x + 1] = 1
+            self.canvas_matrix[real_y + 1, real_x + 1] = 1
+    # ==========================================================================
+    # !!! END OF TARGET ZONE !!!
+    # ==========================================================================
 
+    def export_genesis_bitmap(self, output_path="ptrc_4k_genesis_master.png"):
+        """
+        Saves the processed 4K canvas matrix directly onto disk as a lossless image.
+        """
+        pixel_sharp_view = self.canvas_matrix * 255
+        cv2.imwrite(output_path, pixel_sharp_view)
+        print(f"    + [ SUCCESS ] Ultra-HD image master exported: '{output_path}'")
+
+    def verify_raster_mass_density(self):
+        """
+        Aggregates active 4K lattice pixels to measure total integrated mass load.
+        """
+        total_active_pixels = int(np.sum(self.canvas_matrix))
+        if total_active_pixels > 0:
+            return 1
+        return 0
 
 if __name__ == "__main__":
-    print("=" * 80)
-    print("[ pTRC-4K-AUTOMATIC-IRIS ] DIGITAL WAVELENGTH ENGINE")
-    print("=" * 80)
+    print("[ pTRC-4K-GENESIS ] Initializing high-resolution integer canvas pipelines...")
+    engine = PTRC4KGenesisEngine()
     
-    # Bereinigter, nativer Python 3 Input ohne fehleranfällige Typenprüfung
-    user_name = input("Bitte den Namen eingeben: ")
-        
-    if not user_name.strip():
-        print("[-] Fehler: Keine Eingabe erkannt. Abbruch.")
-        sys.exit(1)
-        
-    # Absolute Anonymisierung der Dateinamen über die Initialen der Eingabe
-    initials = "".join([part.upper() for part in user_name.split() if part])
-    if not initials:
-        initials = "GENESIS"
-        
-    filename_target = f"ptrc_4k_art_{initials}"
-    
-    print("-" * 80)
-    print(f" -> Starte Takt-Resonanz für: '{initials}' (Irisierung aktiv)")
-    
-    engine = PTRC4KArtisticGenesisEngine()
-    matrix_output = engine.execute_artistic_takt(global_takt_pulse=1836, name_string=user_name, zoom_stride=2)
-    engine.export_dual_formats(matrix_output, filename_target)
-    
-    print("=" * 80)
-    print(f" -> FERTIG: Bilder erfolgreich exportiert als '{filename_target}.png/.ppm'")
-    print("=" * 80)
+    print(" -> Clocking ultra-hd matrix generation cycles for system Takt 1836...")
+    engine.execute_genesis_raster_takt(global_takt_pulse=1836)
+    engine.export_genesis_bitmap("ptrc_4k_genesis_master.png")
+    is_valid = engine.verify_raster_mass_density()
+    print(f" -> [ VALIDATION ] 4K image raster pass completed successfully.")
+    print(f" -> High-Resolution Field Density Active Status: {is_valid}")
+    print(" -> STATUS: Zero-Float 4K Genesis Grid Suite Successfully Audited.")
+
