@@ -21,9 +21,8 @@
 r"""
 pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_name.py
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
-Features: Dual-Format-Exporter (Pure Zero-Float PPM + Universal OpenCV PNG),
-          Irisating polychrome color matrices (Offset Iris-Druck-Emulation),
-          Alphabetical string phase injection for Kurt Guido Wirminghaus & Anke Wirminghaus.
+Features: Initials-only anonymized file output (Privacy Shield for Repository),
+          Phase-compensated irisating polychrome color matrices.
 Optimized: 100% Vectorized Matrix Computations for Acer Aspire Dual-Core architectures.
 """
 
@@ -34,7 +33,6 @@ class PTRC4KArtisticGenesisEngine:
     """
     Erzeugt hochauflösende 3840x2160 Raumgitter-Strukturen, modifiziert durch 
     textbasierte Namens-Rhythmen, fraktale Stride-Verschiebungen und irisierende Farbpaletten.
-    Gibt sowohl den mathematischen PPM-Master als auch kompatible PNGs aus.
     """
     def __init__(self, canvas_width=3840, canvas_height=2160):
         self.width = canvas_width
@@ -56,7 +54,9 @@ class PTRC4KArtisticGenesisEngine:
         center_x = self.width // 2
         center_y = self.height // 2
         
-        print(f" -> Mapping 4K Iris Art for Token: '{name_string}' | Stride: {zoom_stride} | Palette: {color_vibe}")
+        # Initialen-Extraktion für den Log (Keine Klarnamen im Terminal-Output bei GitHub-Tests)
+        initials = "".join([part[0] for part in name_string.split() if part])
+        print(f" -> Mapping 4K Iris Art for Token: '{initials}' | Stride: {zoom_stride} | Palette: {color_vibe}")
         
         # 2. Rorschach-Zoom-Mechanik: Dynamische Schrittweite bricht das Gitter fraktal auf
         y_indices = np.arange(0, self.height, zoom_stride)
@@ -73,46 +73,43 @@ class PTRC4KArtisticGenesisEngine:
         residue_210 = discrete_quadrance % self.primorial_base
         sieve_mask = residue_210 <= self.invariant_limit
         
-        # Der Z/24Z Phasen-Check inklusive dem injizierten Namens-Takt
-        takt_check = (X * Y + takt_factor + name_phase_offset) % self.control_base
-        takt_mask = takt_check == 12
+        # Phasen-Kompensation: Modulo-Taktverschiebung stabilisieren, um "schwarze Seelen" zu verhindern
+        target_phase = (12 + name_phase_offset) % self.control_base
+        takt_check = (X * Y + takt_factor) % self.control_base
+        takt_mask = takt_check == target_phase
         
         valid_nodes_mask = sieve_mask & takt_mask
         
-        # Initialisiere die BGR-Farbmatrix für diesen Durchlauf komplett in Schwarz
+        # Initialisiere die BGR-Farbmatrix komplett in Schwarz
         canvas_matrix = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         
         if np.any(valid_nodes_mask):
-            # Extrahiere die Quadrance-Werte der gültigen Resonanzknoten
             valid_quadrance = discrete_quadrance[valid_nodes_mask]
             
             # Zero-Float Irisierung: Modulo-Wellen auf der Quadrance erzeugen rhythmische Bänder
             color_wave = (valid_quadrance // 80) % 256
             color_wave_alt = (valid_quadrance // 200) % 256
             
-            # Farbkanäle im BGR-Format vorbereiten (Blue, Green, Red)
             if color_vibe == "bonbon":
-                # Bonbon-Palette für Anke: Leuchtendes Magenta, Violett und weiche Pastelltöne
-                b_channel = (140 + color_wave // 3) % 256
-                g_channel = (color_wave_alt) % 150
-                r_channel = (210 + color_wave // 2) % 256
+                # Korrigierte Bonbon-Wellen-Verteilung für echtes Pracht-Magenta und Violett
+                b_channel = (130 + color_wave // 2) % 256
+                g_channel = (color_wave_alt) % 120
+                r_channel = (220 + color_wave // 3) % 256
             else:
-                # pTRC-Signatur-Palette für Kurt: Irisierendes Cyan, elektrisches Türkis, Smaragd
+                # pTRC-Signatur-Palette für Kurt: Irisierendes Cyan, elektrisches Türkis
                 b_channel = (190 + color_wave // 2) % 256
                 g_channel = (160 + color_wave_alt) % 256
                 r_channel = (color_wave // 5) % 80
 
-            # Erzeuge ein temporäres Pixel-Farb-Array für die gültigen Punkte
             rgb_pixels = np.stack([b_channel, g_channel, r_channel], axis=-1).astype(np.uint8)
             
-            # Fülle die Matrix unter Berücksichtigung des Zoom-Strides (Rorschach-Fadenzug)
+            # Fülle die Matrix unter Berücksichtigung des Zoom-Strides
             valid_y, valid_x = np.where(valid_nodes_mask)
             for dy in range(zoom_stride):
                 for dx in range(zoom_stride):
                     y_target = valid_y * zoom_stride + dy
                     x_target = valid_x * zoom_stride + dx
                     
-                    # Schneller Boundary Check via Maskierung
                     in_bounds = (y_target < self.height) & (x_target < self.width)
                     if np.any(in_bounds):
                         canvas_matrix[y_target[in_bounds], x_target[in_bounds]] = rgb_pixels[in_bounds]
@@ -121,40 +118,34 @@ class PTRC4KArtisticGenesisEngine:
 
     def export_dual_formats(self, matrix, base_filename):
         """
-        Gibt das Bild gleichzeitig in zwei Formaten aus:
-        1. Als universelle PNG-Datei (kompatibel für Bildbetrachter, GitHub, WhatsApp)
-        2. Als rein ganzzahligen, bibliotheksfreien PPM-Master (P6-Binärformat)
+        Gibt das Bild gleichzeitig in PNG (universell) und PPM (rein ganzzahlig) aus.
         """
-        # Format 1: Das alltagstaugliche PNG via OpenCV
         png_path = f"{base_filename}.png"
         cv2.imwrite(png_path, matrix)
-        print(f"    + [ PNG EXPORT ] Universal viewable image written: '{png_path}'")
+        print(f"    + [ PNG EXPORT ] Viewable image written: '{png_path}'")
         
-        # Format 2: Der unbestechliche Zero-Float PPM-Master (P6 Binär)
-        # Hinweis: OpenCV nutzt BGR, PPM erwartet RGB. Wir drehen die Kanäle flach um.
         ppm_path = f"{base_filename}.ppm"
         rgb_matrix = cv2.cvtColor(matrix, cv2.COLOR_BGR2RGB)
-        
         header = f"P6\n{self.width} {self.height}\n255\n".encode('ascii')
         with open(ppm_path, "wb") as f:
             f.write(header)
             f.write(rgb_matrix.tobytes())
-        print(f"    + [ PPM EXPORT ] Pure integer master-file written:  '{ppm_path}'")
+        print(f"    + [ PPM EXPORT ] Pure integer master written:  '{ppm_path}'")
 
 
 if __name__ == "__main__":
-    print("[ pTRC-4K-DUAL-FORMAT-GENESIS ] Initializing Matrix Pipelines...")
+    print("[ pTRC-4K-ANONYMOUS-GENESIS ] Initializing Safe Art Pipelines...")
     engine = PTRC4KArtisticGenesisEngine()
     
-    # 1. GENERIERUNG: Kurt Guido Wirminghaus (Cyan-Iris)
+    # 1. GENERIERUNG: Kurt Guido Wirminghaus -> Output anonymisiert als KGW
     kurt_matrix = engine.execute_artistic_takt(global_takt_pulse=1836, name_string="KURT GUIDO WIRMINGHAUS", zoom_stride=2, color_vibe="cyan")
-    engine.export_dual_formats(kurt_matrix, "ptrc_kurt_wirminghaus_signature_iris")
+    engine.export_dual_formats(kurt_matrix, "ptrc_4k_art_KGW")
     
     print("-" * 80)
     
-    # 2. GENERIERUNG: Anke Wirminghaus (Bonbon-Iris für die Frau)
+    # 2. GENERIERUNG: Anke Wirminghaus -> Output anonymisiert als AW (Phasenkompensiert!)
     anke_matrix = engine.execute_artistic_takt(global_takt_pulse=1836, name_string="ANKE WIRMINGHAUS", zoom_stride=2, color_vibe="bonbon")
-    engine.export_dual_formats(anke_matrix, "ptrc_anke_wirminghaus_bonbon_iris")
+    engine.export_dual_formats(anke_matrix, "ptrc_4k_art_AW")
     
     print("=" * 80)
-    print(" -> STATUS: Dual-Format Generation Complete. Master-PPMs and viewable PNGs secured.")
+    print(" -> STATUS: Anonymized 4K Master-Suites successfully deployed into filesystem.")
