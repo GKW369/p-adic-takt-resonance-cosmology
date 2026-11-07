@@ -120,7 +120,8 @@ if __name__ == "__main__":
     print("[ pTRC-4K-AUTOMATIC-IRIS ] DIGITAL WAVELENGTH ENGINE")
     print("=" * 80)
     
-    if sys.version_info < 3:
+    # Korrigierte Typenprüfung über sys.version_info[0]
+    if sys.version_info[0] < 3:
         user_name = raw_input("Bitte den Namen eingeben: ")
     else:
         user_name = input("Bitte den Namen eingeben: ")
@@ -130,7 +131,7 @@ if __name__ == "__main__":
         sys.exit(1)
         
     # Absolute Anonymisierung der Dateinamen über die Initialen der Eingabe
-    initials = "".join([part.upper() for part in user_name.split() if part])
+    initials = "".join([part[0].upper() for part in user_name.split() if part])
     if not initials:
         initials = "GENESIS"
         
