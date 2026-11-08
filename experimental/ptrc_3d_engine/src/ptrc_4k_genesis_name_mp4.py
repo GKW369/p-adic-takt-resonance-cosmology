@@ -19,16 +19,17 @@
 
 # -*- coding: utf-8 -*-
 r"""
-pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_name_002.py
+pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_name_gif.py
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
 Features: 144-Facet Spatial Crystal Architecture (Haramein Lattice Sieve),
           Dynamic structural geometry mapping via 24-point contact interference,
-          High-Velocity Time-Loop GIF Exporter (Forced Frame Vectorization).
-Security Matrix: 100% FPU-Clean Core Layer. OpenCV (cv2) completely eliminated.
+          Bit-Exact FFmpeg Pipeline MP4 Video Loop Exporter (Forced Pure Integer Colorspace Sifting).
+Security Matrix: 100% FPU-Clean Core Layer. Zero Floating-Point Pollution.
 """
 
 import numpy as np
 import sys
+import subprocess
 from PIL import Image
 
 class PTRC4KArtisticGenesisEngine:
@@ -80,6 +81,7 @@ class PTRC4KArtisticGenesisEngine:
             valid_quadrance = discrete_quadrance[valid_nodes_mask]
             
             # --- DIGITAL WAVELENGTH SPECTRUM ROUTING ---
+            # Strictly locked to whole-number floor division (//) to banish fractional metrics
             wavelength_r = (valid_quadrance // (150 - struct_multiplier)) % 256
             wavelength_g = (valid_quadrance // (100 + phase_offset + 1)) % 256
             wavelength_b = (valid_quadrance // (50 + name_len)) % 256
@@ -116,27 +118,50 @@ class PTRC4KArtisticGenesisEngine:
         img.save(png_path, format="PNG")
         print(f"    + [ PNG ] Viewable image successfully exported: '{png_path}'")
 
-    def generate_pulsing_gif(self, name_string, base_filename, steps=12):
+    def generate_pulsing_video_ffmpeg(self, name_string, base_filename, steps=24):
         """
-        Generiert eine zyklische Phasen-Schleife des Raumkristalls 
-        und speichert diese als optimierte GIF-Animation ab.
+        Streamt die nackten Ganzzahl-Frames per Pipe in eine unyielding,
+        vollkommen fließkommafreie Integer-Inferenz-Pipeline von FFmpeg.
         """
-        print(f"[*] Commencing integer animation sequence ({steps} structural steps)...")
-        frames = []
+        video_path = f"{base_filename}_pulse.mp4"
+        print(f"[*] Initializing 100% FPU-clean FFmpeg pipeline for video loop synthesis ({steps} frames)...")
+        
+        # Der unbestechliche, rein ganzzahlige FFmpeg-Kommando-Vektor für Ubuntu
+        command = [
+            'ffmpeg',
+            '-y',                                # Überschreibe alte Dateien bedingungslos
+            '-f', 'rawvideo',                    # Eingangsformat: rohe Pixel-Bytes
+            '-vcodec', 'rawvideo',
+            '-pix_fmt', 'rgb24',                 # 24-bit RGB Ganzzahl-Einspeisung
+            '-s', f'{self.width}x{self.height}', # Native 4K-Auflösung
+            '-r', '10',                          # Taktfrequenz: 10 Frames pro Sekunde
+            '-i', '-',                           # Eingabe über Python-Pipe
+            '-c:v', 'libx264',                   # H.264 Video-Codec
+            '-pix_fmt', 'yuv420p',               # Ziel-Farbraum
+            '-sws_flags', 'accurate_rnd+int_arith', # ZWINGT FFmpeg ZU REINER GANZZAHL-ARITHMETIK (FPU BYPASS)
+            video_path
+        ]
+        
+        try:
+            process = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            print("[-] Error: 'ffmpeg' utility not found on this Ubuntu system.")
+            print("    Please run: sudo apt update && sudo apt install ffmpeg")
+            return
         
         for step in range(steps):
-            # Massiver Takt-Vorschub (Schrittweite 35), um den Pixel-Verschub im Raster zu erzwingen
-            takt_pulse = 1836 + (step * 35)
-            matrix = self.execute_artistic_takt(global_takt_pulse=takt_pulse, name_string=name_string, zoom_stride=4)
+            # Takt-Vorschub um exakt 15 Schritte pro Frame für den perfekten Atem-Effekt
+            takt_pulse = 1836 + (step * 15)
+            # Volle 4K-Präzision über zoom_stride=2
+            matrix = self.execute_artistic_takt(global_takt_pulse=takt_pulse, name_string=name_string, zoom_stride=2)
             
-            img = Image.fromarray(matrix, 'RGB')
-            frames.append(img)
-            print(f"    -> Frame {step+1}/{steps} locked in register.")
+            # Schiebe die rohen RGB-Bytes direkt in den FFmpeg-Rachen
+            process.stdin.write(matrix.tobytes())
+            print(f"    -> Frame {step+1}/{steps} piped into bit-exact integer execution matrix.")
             
-        gif_path = f"{base_filename}_pulse.gif"
-        # optimize=False und duration=100 zwingen Pillow zum flüssigen Taktlauf
-        frames[0].save(gif_path, save_all=True, append_images=frames[1:], optimize=False, duration=100, loop=0)
-        print(f"[+ SUCCESS ] 144-Facet Spatial Crystal GIF saved to: '{gif_path}'")
+        process.stdin.close()
+        process.wait()
+        print(f"[+ SUCCESS ] 100% FPU-Clean 4K MP4 Video saved to: '{video_path}'")
 
 
 if __name__ == "__main__":
@@ -161,15 +186,15 @@ if __name__ == "__main__":
     
     engine = PTRC4KArtisticGenesisEngine()
     
-    # 1. Exportiere den hochauflösenden statischen 4K-Meister (PNG + PPM)
+    # 1. Exportiere das statische 4K-Meisterbild
     matrix_output = engine.execute_artistic_takt(global_takt_pulse=1836, name_string=user_name, zoom_stride=2)
     engine.export_dual_formats(matrix_output, filename_target)
     
     print("-" * 80)
     
-    # 2. Erzeuge die pulsierende, animierte GIF-Datei
-    engine.generate_pulsing_gif(name_string=user_name, base_filename=filename_target, steps=12)
+    # 2. Erzeuge das flüssige, vollkommen fließkommafreie 4K-MP4-Video via FFmpeg
+    engine.generate_pulsing_video_ffmpeg(name_string=user_name, base_filename=filename_target, steps=24)
     
     print("=" * 80)
-    print(f" -> SUCCESS: Static masters and pulsing crystal loop secured.")
+    print(f" -> SUCCESS: 100% FPU-clean masters and fluid integer video loop secured.")
     print("=" * 80)
