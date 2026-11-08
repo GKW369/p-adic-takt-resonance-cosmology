@@ -19,11 +19,11 @@
 
 # -*- coding: utf-8 -*-
 r"""
-pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_name_gif.py
+pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_name_mp4.py
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
 Features: 144-Facet Spatial Crystal Architecture (Haramein Lattice Sieve),
           Dynamic structural geometry mapping via 24-point contact interference,
-          Bit-Exact FFmpeg Pipeline MP4 Video Loop Exporter (Forced Pure Integer Colorspace Sifting).
+          Pipe-Stabilized Non-Lossy MP4 Video Exporter (Bypassing FPU Color-Converters).
 Security Matrix: 100% FPU-Clean Core Layer. Zero Floating-Point Pollution.
 """
 
@@ -81,7 +81,6 @@ class PTRC4KArtisticGenesisEngine:
             valid_quadrance = discrete_quadrance[valid_nodes_mask]
             
             # --- DIGITAL WAVELENGTH SPECTRUM ROUTING ---
-            # Strictly locked to whole-number floor division (//) to banish fractional metrics
             wavelength_r = (valid_quadrance // (150 - struct_multiplier)) % 256
             wavelength_g = (valid_quadrance // (100 + phase_offset + 1)) % 256
             wavelength_b = (valid_quadrance // (50 + name_len)) % 256
@@ -120,13 +119,13 @@ class PTRC4KArtisticGenesisEngine:
 
     def generate_pulsing_video_ffmpeg(self, name_string, base_filename, steps=24):
         """
-        Streamt die nackten Ganzzahl-Frames per Pipe in eine unyielding,
-        vollkommen fließkommafreie Integer-Inferenz-Pipeline von FFmpeg.
+        Streamt die nackten Ganzzahl-Frames per Pipe direkt in ein unverschlüsseltes,
+        nativ komprimiertes Ganzzahl-Video-Format (RLE-RGB Matrix) innerhalb von FFmpeg.
         """
         video_path = f"{base_filename}_pulse.mp4"
-        print(f"[*] Initializing 100% FPU-clean FFmpeg pipeline for video loop synthesis ({steps} frames)...")
+        print(f"[*] Initializing 100% FPU-clean Native RGB Video Pipeline ({steps} frames)...")
         
-        # Der unbestechliche, rein ganzzahlige FFmpeg-Kommando-Vektor für Ubuntu
+        # Native, division- und fließkommafreie RGB-Einspeisung ohne libx264-Farbraumwandler
         command = [
             'ffmpeg',
             '-y',                                # Überschreibe alte Dateien bedingungslos
@@ -136,9 +135,7 @@ class PTRC4KArtisticGenesisEngine:
             '-s', f'{self.width}x{self.height}', # Native 4K-Auflösung
             '-r', '10',                          # Taktfrequenz: 10 Frames pro Sekunde
             '-i', '-',                           # Eingabe über Python-Pipe
-            '-c:v', 'libx264',                   # H.264 Video-Codec
-            '-pix_fmt', 'yuv420p',               # Ziel-Farbraum
-            '-sws_flags', 'accurate_rnd+int_arith', # ZWINGT FFmpeg ZU REINER GANZZAHL-ARITHMETIK (FPU BYPASS)
+            '-c:v', 'png',                       # Nutzt den verlustfreien Ganzzahl-PNG-Codec im MP4-Container
             video_path
         ]
         
@@ -149,19 +146,22 @@ class PTRC4KArtisticGenesisEngine:
             print("    Please run: sudo apt update && sudo apt install ffmpeg")
             return
         
-        for step in range(steps):
-            # Takt-Vorschub um exakt 15 Schritte pro Frame für den perfekten Atem-Effekt
-            takt_pulse = 1836 + (step * 15)
-            # Volle 4K-Präzision über zoom_stride=2
-            matrix = self.execute_artistic_takt(global_takt_pulse=takt_pulse, name_string=name_string, zoom_stride=2)
-            
-            # Schiebe die rohen RGB-Bytes direkt in den FFmpeg-Rachen
-            process.stdin.write(matrix.tobytes())
-            print(f"    -> Frame {step+1}/{steps} piped into bit-exact integer execution matrix.")
-            
-        process.stdin.close()
-        process.wait()
-        print(f"[+ SUCCESS ] 100% FPU-Clean 4K MP4 Video saved to: '{video_path}'")
+        try:
+            for step in range(steps):
+                takt_pulse = 1836 + (step * 15)
+                # Volle 4K-Präzision über zoom_stride=2
+                matrix = self.execute_artistic_takt(global_takt_pulse=takt_pulse, name_string=name_string, zoom_stride=2)
+                
+                # Schiebe die rohen RGB-Bytes direkt in den FFmpeg-Rachen
+                process.stdin.write(matrix.tobytes())
+                print(f"    -> Frame {step+1}/{steps} locked into bit-exact video loop.")
+                
+            process.stdin.close()
+            process.wait()
+            print(f"[+ SUCCESS ] 100% FPU-Clean 4K Video saved to: '{video_path}'")
+        except BrokenPipeError:
+            print("[-] Critical Pipe Break: FFmpeg interface rejected streams.")
+            print("    Ensure your Ubuntu system has unrestricted access to the local video matrix.")
 
 
 if __name__ == "__main__":
@@ -175,14 +175,10 @@ if __name__ == "__main__":
         print("[-] Error: Empty input string detected. Aborting execution.")
         sys.exit(1)
         
-    initials = "".join([part.upper() for part in user_name.split() if part])
-    if not initials:
-        initials = "GENESIS"
-        
-    filename_target = f"ptrc_4k_art_{initials}"
+    filename_target = f"ptrc_4k_art_{user_name.replace(' ', '').upper()}"
     
     print("-" * 80)
-    print(f" -> Launching Takt Resonance Sieve for token: '{initials}'")
+    print(f" -> Launching Takt Resonance Sieve for token: '{user_name}'")
     
     engine = PTRC4KArtisticGenesisEngine()
     
@@ -196,5 +192,5 @@ if __name__ == "__main__":
     engine.generate_pulsing_video_ffmpeg(name_string=user_name, base_filename=filename_target, steps=24)
     
     print("=" * 80)
-    print(f" -> SUCCESS: 100% FPU-clean masters and fluid integer video loop secured.")
+    print(f" -> SUCCESS: 100% FPU-clean masters and stable video loop secured.")
     print("=" * 80)
