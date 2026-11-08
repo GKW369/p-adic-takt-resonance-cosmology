@@ -23,7 +23,7 @@ pTRC Framework - Core Rendering & Artistic Expression Module: ptrc_4k_genesis_na
 Operational Domain: Discrete 4K Resolution Mapping (\mathbb{Z}) via modular sifting.
 Features: 144-Facet Spatial Crystal Architecture (Haramein Lattice Sieve),
           Dynamic structural geometry mapping via 24-point contact interference,
-          Pipe-Stabilized Non-Lossy MP4 Video Exporter (Bypassing FPU Color-Converters).
+          Takt-Stabilized Pure Integer MP4 Video Exporter (Forced Frame Duration).
 Security Matrix: 100% FPU-Clean Core Layer. Zero Floating-Point Pollution.
 """
 
@@ -119,13 +119,13 @@ class PTRC4KArtisticGenesisEngine:
 
     def generate_pulsing_video_ffmpeg(self, name_string, base_filename, steps=24):
         """
-        Streamt die nackten Ganzzahl-Frames per Pipe direkt in ein unverschlüsseltes,
-        nativ komprimiertes Ganzzahl-Video-Format (RLE-RGB Matrix) innerhalb von FFmpeg.
+        Streamt die nackten Ganzzahl-Frames per Pipe direkt in eine getaktete,
+        vollkommen fließkommafreie Video-Infrastruktur innerhalb von FFmpeg.
         """
         video_path = f"{base_filename}_pulse.mp4"
-        print(f"[*] Initializing 100% FPU-clean Native RGB Video Pipeline ({steps} frames)...")
+        print(f"[*] Initializing Takt-stabilized Pure Integer Video Pipeline ({steps} frames)...")
         
-        # Native, division- und fließkommafreie RGB-Einspeisung ohne libx264-Farbraumwandler
+        # Der unbestechliche, rein ganzzahlige FFmpeg-Kommando-Vektor mit festem Frame-Takt
         command = [
             'ffmpeg',
             '-y',                                # Überschreibe alte Dateien bedingungslos
@@ -133,9 +133,10 @@ class PTRC4KArtisticGenesisEngine:
             '-vcodec', 'rawvideo',
             '-pix_fmt', 'rgb24',                 # 24-bit RGB Ganzzahl-Einspeisung
             '-s', f'{self.width}x{self.height}', # Native 4K-Auflösung
-            '-r', '10',                          # Taktfrequenz: 10 Frames pro Sekunde
+            '-framerate', '10',                  # EINGANGS-TAKTUNG: Erzwingt exakt 10 Frames pro Sekunde
             '-i', '-',                           # Eingabe über Python-Pipe
             '-c:v', 'png',                       # Nutzt den verlustfreien Ganzzahl-PNG-Codec im MP4-Container
+            '-vf', 'fps=10',                     # AUSGANGS-TAKTUNG: Stabilisiert die Wiedergabegeschwindigkeit
             video_path
         ]
         
@@ -161,7 +162,6 @@ class PTRC4KArtisticGenesisEngine:
             print(f"[+ SUCCESS ] 100% FPU-Clean 4K Video saved to: '{video_path}'")
         except BrokenPipeError:
             print("[-] Critical Pipe Break: FFmpeg interface rejected streams.")
-            print("    Ensure your Ubuntu system has unrestricted access to the local video matrix.")
 
 
 if __name__ == "__main__":
