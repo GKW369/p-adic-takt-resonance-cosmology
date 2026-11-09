@@ -84,7 +84,8 @@ def run_fpu_emulation_proof(iterations=1000000):
         print(f"\n-> {B}{G}[EMULATION PROOF SUCCESSFUL]{W}")
         print("   The FPU has been successfully hijacked by the pTRC framework.")
         print("   As long as states remain inside the 53-bit mantissa, FPU drift drops to absolute ZERO.")
-        print(f"{B}{C}=============================================================================={W}\n")
+        # HIER IST DER SYMMETRISCHE ZEILENUMBRUCH VOR DER ABSCHLIESSENDEN LINIE:
+        print(f"\n{B}{C}=============================================================================={W}\n")
         sys.exit(0)
     else:
         print(f"\n-> {B}{R}[PROOF FAILED]{W} Numerical divergence detected.")
