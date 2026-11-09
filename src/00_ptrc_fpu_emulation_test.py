@@ -68,7 +68,7 @@ def run_fpu_emulation_proof(iterations=1000000):
     print(f"  Current FPU Register value achieved:           {int(fpu_accumulator_emulated):,}\n")
     print("-" * 76)
     print(f"{B}DIRECT REGISTER EQUALIZATION DATA:{W}")
-    print(f"  • Pure Integer \mathbb{{Z}}-Register : {G}{ptrc_accumulator_integer}{W}")
+    print(f"  • Pure Integer Z-Register : {G}{ptrc_accumulator_integer}{W}")
     print(f"  • Emulated Float64-Register: {G}{int(fpu_accumulator_emulated)}{W}")
     print("-" * 76)
     print(f"{B}Final Uhrsieb Core Status Match (Modulo-210 Verification):{W}")
