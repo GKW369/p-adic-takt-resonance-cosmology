@@ -18,9 +18,11 @@
 # ==============================================================================
 
 # -*- coding: utf-8 -*-
+
 r"""
 pTRC Framework - Genesis Core Image Generator: ptrc_ancient_genesis_image.py
 Operational Domain: Baking Discrete Semitic Radical Vectors into a Single 4K Image.
+Update: 100% Zero-Removal. Strict implementation of the \mathbb{Z} \setminus \{0\} space.
 """
 
 import numpy as np
@@ -55,7 +57,7 @@ def generate_genesis_matrix_image():
 
     print(f"[*] Gematria Sum: {ascii_sum} | Phase Offset: {phase_offset}")
     print(f"[*] Multiplier:  {struct_multiplier} | Matrix Rule: Modulo-210/24")
-    print("[*] Calculating pixel lattice nodes branchless in Z...")
+    print("[*] Calculating pixel lattice nodes branchless in Z \\ {0}...")
 
     # Zeilenweiser Zoom-Stride von 4 erzeugt die punktreine Braille-Struktur
     zoom_stride = 4
@@ -63,8 +65,18 @@ def generate_genesis_matrix_image():
     x_indices = np.arange(0, width, zoom_stride)
     Y, X = np.meshgrid(y_indices, x_indices, indexing='ij')
 
-    # Diskrete Abstands-Quadrance im Ganzzahlraum
-    discrete_quadrance = ((X - center_x) ** 2) + ((Y - center_y) ** 2)
+    # --- DER UNBESTECHLICHE pTRC-PHASENSPRUNG (ELIMINIERUNG DER NULL) ---
+    # 1. Berechne den nackten Pixel-Abstand zur geometrischen Mitte (0 bis N)
+    raw_dx = (X - center_x) // zoom_stride
+    raw_dy = (Y - center_y) // zoom_stride
+
+    # 2. Wenn der Abstand >= 0 ist, addieren wir 1 (Verschiebung in den positiven Raum)
+    # Wenn der Abstand < 0 ist, bleibt er starr negativ (1, 2, 3... vs -1, -2, -3...)
+    pTRC_x = np.where(raw_dx >= 0, raw_dx + 1, raw_dx)
+    pTRC_y = np.where(raw_dy >= 0, raw_dy + 1, raw_dy)
+
+    # 3. Die unbestechliche Abstands-Quadrance im reinen Z \ {0} Raum
+    discrete_quadrance = (pTRC_x * pTRC_x) + (pTRC_y * pTRC_y)
 
     # Das Modulo-210 Uhrsieb
     residue_210 = (discrete_quadrance * struct_multiplier) % primorial_base
@@ -72,7 +84,7 @@ def generate_genesis_matrix_image():
 
     # 144-Facetten Haramein-Kontakt-Matrix
     takt_factor = takt_pulse % primorial_base
-    takt_check = (X * Y + takt_factor + phase_offset) % control_base
+    takt_check = (pTRC_x * pTRC_y + takt_factor + phase_offset) % control_base
     crystal_resonance = (discrete_quadrance // (radius_steps * radius_steps)) % control_base
     
     takt_mask = (takt_check == crystal_resonance) | (takt_check == 12)
