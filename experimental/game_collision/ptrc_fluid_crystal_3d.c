@@ -119,7 +119,7 @@ int main(void) {
 
     clock_gettime(CLOCK_MONOTONIC, &t_end);
 
-    uint64_t elapsed_ns = (uint64_t)(t_end.tv_sec - t_start.tv_sec) * 1000000000ULL
+    uint64_t elapsed_ns = (uint64_t)(t_end.tv_sec - t_start.tv_sec) * 1000000000
                         + (uint64_t)(t_end.tv_nsec - t_start.tv_nsec);
     uint64_t ns_per_takt = elapsed_ns / test_takts;
     uint64_t us_per_takt = ns_per_takt / 1000;
