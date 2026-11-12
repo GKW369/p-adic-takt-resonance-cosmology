@@ -19,8 +19,8 @@
  * ==============================================================================
  */
 
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
@@ -39,20 +39,11 @@
 #define HEIGHT 1080
 #define FRAMES 360   // 6 Sekunden bei 60 FPS
 
-static int8_t crystal_register[TOTAL_FACETS];
-
 typedef struct {
     int8_t dx;
     int8_t dy;
     int8_t dz;
 } CrystalDir;
-
-// Die 12 Grundrichtungen aus der 1+12 Kristallstruktur
-static const CrystalDir BASE_12_DIRS = {
-    { 2,  1,  0}, { 2, -1,  0}, {-2,  1,  0}, {-2, -1,  0},
-    { 0,  2,  1}, { 0,  2, -1}, { 0, -2,  1}, { 0, -2, -1},
-    { 1,  0,  2}, {-1,  0,  2}, { 1,  0, -2}, {-1,  0, -2}
-};
 
 typedef struct {
     int32_t x, y, z;
@@ -60,11 +51,29 @@ typedef struct {
     int8_t  flow_state;
 } Particle3D;
 
-static Particle3D particles[NUM_PARTICLES];
-// 1920 * 1080 * 3 Bytes (RGB24) = ca. 6,2 MB im RAM
-static uint8_t rgb_frame[HEIGHT * WIDTH * 3];
+static int8_t     *crystal_register = NULL;
+static CrystalDir *base_12_dirs     = NULL;
+static Particle3D *particles        = NULL;
+static uint8_t    *rgb_frame        = NULL;
 
 void init_3d_lattice(void) {
+    crystal_register = (int8_t *)malloc(TOTAL_FACETS * sizeof(int8_t));
+    base_12_dirs     = (CrystalDir *)malloc(12 * sizeof(CrystalDir));
+    particles        = (Particle3D *)malloc(NUM_PARTICLES * sizeof(Particle3D));
+    rgb_frame        = (uint8_t *)malloc((size_t)HEIGHT * WIDTH * 3);
+
+    // Die 12 Grundrichtungen aus der 1+12 Kristallstruktur
+    const int8_t raw_dirs[] = {
+         2,  1,  0,   2, -1,  0,  -2,  1,  0,  -2, -1,  0,
+         0,  2,  1,   0,  2, -1,   0, -2,  1,   0, -2, -1,
+         1,  0,  2,  -1,  0,  2,   1,  0, -2,  -1,  0, -2
+    };
+    for (int a = 0; a < 12; a++) {
+        base_12_dirs[a].dx = raw_dirs[a * 3 + 0];
+        base_12_dirs[a].dy = raw_dirs[a * 3 + 1];
+        base_12_dirs[a].dz = raw_dirs[a * 3 + 2];
+    }
+
     for (uint16_t f = 0; f < TOTAL_FACETS; f++) {
         crystal_register[f] = -1;
     }
@@ -84,15 +93,14 @@ void init_3d_lattice(void) {
 
 // Zeichnet ein formschlüssiges 3x3-Kristallkreuz direkt in den 1080p-RGB-Puffer
 static inline void draw_crystal_node(int32_t cx, int32_t cy, uint8_t r, uint8_t g, uint8_t b) {
-    const int8_t ox = {0, -1, 1,  0, 0};
-    const int8_t oy = {0,  0, 0, -1, 1};
+    const int8_t ox[] = {0, -1, 1,  0, 0};
+    const int8_t oy[] = {0,  0, 0, -1, 1};
 
     for (int k = 0; k < 5; k++) {
         int32_t px = cx + ox[k];
         int32_t py = cy + oy[k];
         if (px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT) {
             size_t idx = ((size_t)py * WIDTH + (size_t)px) * 3;
-            // Kern voll beleuchtet, Kreuzachsen harmonisch halbiert
             rgb_frame[idx + 0] = (k == 0) ? r : (uint8_t)(r >> 1);
             rgb_frame[idx + 1] = (k == 0) ? g : (uint8_t)(g >> 1);
             rgb_frame[idx + 2] = (k == 0) ? b : (uint8_t)(b >> 1);
@@ -104,16 +112,14 @@ void render_1080p_takt(uint32_t takt) {
     for (uint16_t f = 0; f < TOTAL_FACETS; f++) {
         crystal_register[f] = -1;
     }
-    // Hintergrund tiefes Kosmos-Schwarz (0, 0, 0)
-    memset(rgb_frame, 0, sizeof(rgb_frame));
+    memset(rgb_frame, 0, (size_t)HEIGHT * WIDTH * 3);
 
-    // Sanfte 3D-Kameradrehung über den Modulo-24-Takt
     int32_t cam_twist = (int32_t)((takt / 3) % 24) - 12;
     if (cam_twist == 0) cam_twist = -1;
 
     for (uint32_t i = 0; i < NUM_PARTICLES; i++) {
         uint8_t ax = particles[i].axis_id;
-        CrystalDir d = BASE_12_DIRS[ax];
+        CrystalDir d = base_12_dirs[ax];
 
         int32_t nx = particles[i].x + d.dx;
         int32_t ny = particles[i].y + d.dy;
@@ -148,7 +154,7 @@ void render_1080p_takt(uint32_t takt) {
             particles[i].flow_state = 1;
         } else {
             uint8_t alt_ax = (uint8_t)((ax + (f_idx % 11) + 1) % 12);
-            CrystalDir alt_d = BASE_12_DIRS[alt_ax];
+            CrystalDir alt_d = base_12_dirs[alt_ax];
             particles[i].axis_id = alt_ax;
             particles[i].x = nx + alt_d.dx;
             particles[i].y = ny + alt_d.dy;
@@ -165,13 +171,15 @@ void render_1080p_takt(uint32_t takt) {
             int32_t proj_x = ((rot_x * 2600 * SCALE) / denom) / 100 + (WIDTH / 2);
             int32_t proj_y = ((particles[i].y * 2600 * SCALE) / denom) / 100 + (HEIGHT / 2);
 
-            if (particles[i].flow_state == 1) {
-                // Direkter Strom (+1): Spektral-Gold
-                draw_crystal_node(proj_x, proj_y, 255, 200, 30);
-            } else {
-                // Wirbel-Kaskade (+3): Leuchtendes Cyan (tiefenabgestuft)
-                uint8_t blue_glow = (uint8_t)(160 + (f_idx % 95));
-                draw_crystal_node(proj_x, proj_y, 0, 230, blue_glow);
+            if (proj_x >= 0 && proj_x < WIDTH && proj_y >= 0 && proj_y < HEIGHT) {
+                if (particles[i].flow_state == 1) {
+                    // Direkter Strom (+1): Spektral-Gold
+                    draw_crystal_node(proj_x, proj_y, 255, 200, 30);
+                } else {
+                    // Wirbel-Kaskade (+3): Leuchtendes Cyan
+                    uint8_t blue_glow = (uint8_t)(160 + (f_idx % 95));
+                    draw_crystal_node(proj_x, proj_y, 0, 230, blue_glow);
+                }
             }
         }
     }
@@ -181,8 +189,8 @@ int main(void) {
     init_3d_lattice();
 
     const char *output_file = "ptrc_crystal_3d_1080p.mp4";
-    char ffmpeg_cmd;
-    snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
+    char *ffmpeg_cmd = (char *)malloc(512);
+    snprintf(ffmpeg_cmd, 512,
         "ffmpeg -y -f rawvideo -vcodec rawvideo -pix_fmt rgb24 "
         "-s %dx%d -r 60 -i - -c:v libx264 -crf 16 -preset fast -pix_fmt yuv420p %s",
         WIDTH, HEIGHT, output_file);
@@ -195,6 +203,7 @@ int main(void) {
     FILE *pipe = popen(ffmpeg_cmd, "w");
     if (!pipe) {
         printf("[-] Fehler: FFmpeg konnte nicht gestartet werden (bitte 'ffmpeg' installieren).\n");
+        free(ffmpeg_cmd);
         return 1;
     }
 
@@ -209,7 +218,7 @@ int main(void) {
         total_render_ns += (uint64_t)(t_end.tv_sec - t_start.tv_sec) * UINT64_C(1000000000)
                          + (uint64_t)(t_end.tv_nsec - t_start.tv_nsec);
 
-        fwrite(rgb_frame, 1, sizeof(rgb_frame), pipe);
+        fwrite(rgb_frame, 1, (size_t)HEIGHT * WIDTH * 3, pipe);
 
         if (frame % 60 == 0) {
             printf("    + %u / %u Frames (1080p) synthetisiert...\n", frame, FRAMES);
@@ -227,6 +236,12 @@ int main(void) {
     } else {
         printf("[-] FFmpeg-Beendigung mit Status %d. Bitte pruefen, ob ffmpeg installiert ist.\n", status);
     }
+
+    free(ffmpeg_cmd);
+    free(crystal_register);
+    free(base_12_dirs);
+    free(particles);
+    free(rgb_frame);
 
     return 0;
 }
