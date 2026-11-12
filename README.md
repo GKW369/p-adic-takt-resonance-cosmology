@@ -21,7 +21,7 @@
 # pTRC Framework: p-Adic Takt Resonance Cosmology
 **A Discrete, Multi-Modular Integer Inference & Look-Up System (\(\mathbb{Z}\))** 
 
-[![DOI](https://zenodo.org)](https://doi.org)
+[![DOI](https://zenodo.org/badge/1404438414.svg)](https://doi.org/10.5281/zenodo.24143794)
 
 
 ---
