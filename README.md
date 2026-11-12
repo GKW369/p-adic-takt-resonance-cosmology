@@ -21,7 +21,7 @@
 # pTRC Framework: p-Adic Takt Resonance Cosmology
 **A Discrete, Multi-Modular Integer Inference & Look-Up System (\(\mathbb{Z}\))** 
 
-[![DOI](https://zenodo.org/badge/1404438414.svg)](https://doi.org/10.5281/zenodo.24143794)
+[![DOI](https://zenodo.org)](https://doi.org)
 
 
 ---
@@ -65,7 +65,7 @@ By translating dynamic floating-point partial differential equations into static
 
 | Physical Domain / Core Module | Pure Integer Architecture (\(\mathbb{Z}\)) | Commercial Lever (Advantage over Conventional FPU Arrays) | Target Market / Strategic Sectors |
 | :--- | :--- | :--- | :--- |
-| **Gaming & Real-Time Graphics**<br>`fluid_resonance.py`<br>`pi_square_crystallization.py` | 100% bit-exact integer domain tracking | **Radical Gaming Industry Disruption:**<br>1. **Collision Detection in O(1):** Spatiotemporal object overlaps are read instantly via integer matrix coordinate intersections, completely bypassing iterative bounding-box tree look-ups.<br>2. **Zero-Drift Network Netcode:** Guarantees an un-compromised, synchronous global multiplayer state. Eliminates client-server de-synchronizations (*desyncs*) as rounding interpolation variance drops to absolute zero.<br>3. **Lossless Particle Subsystems:** High-density fluid, aero, and fracturing dynamics run natively via register look-ups on standard ARM/i3 chips without activating the FPU. | Triple-A Game Studios, Next-Gen Engine Developers (Unity/Unreal Alternatives), Cloud Gaming Infrastructures |
+| **Gaming & Real-Time Graphics**<br>`fluid_resonance.py`<br>`pi_square_crystallization.py`<br>`ptrc_fluid_crystal_3d.c` | 100% bit-exact integer domain tracking | **Radical Gaming Industry Disruption:**<br>1. **Collision Detection in O(1):** Spatiotemporal object overlaps are read instantly via integer matrix coordinate intersections, completely bypassing iterative bounding-box tree look-ups.<br>2. **Zero-Drift Network Netcode:** Guarantees an un-compromised, synchronous global multiplayer state. Eliminates client-server de-synchronizations (*desyncs*) as rounding interpolation variance drops to absolute zero.<br>3. **Lossless Particle Subsystems:** High-density fluid, aero, and fracturing dynamics run natively via register look-ups on standard ARM/i3 chips without activating the FPU. | Triple-A Game Studios, Next-Gen Engine Developers (Unity/Unreal Alternatives), Cloud Gaming Infrastructures |
 | **Artificial Intelligence**<br>`quantum_neural_network.py` | Modulo-24 register inference without synaptic float-noise | **100% Invariant AI Inference:** Eradicates accuracy degradation during post-training float-to-integer quantization. Yields ultra-low-power, secure neural inference directly inside memory arrays. | Edge-AI Chips, Autonomous Driving, Real-Time Autonomous Robotics |
 | **Material Sciences**<br>`battery_anisotropy.py` | 144-facet vector equilibrium group mapping | **Lossless BMS Real-Time Simulation:** Simulates absolute multi-layered ion migration inside solid-state batteries on lightweight local processors without fractional differential tracking. | Electric Vehicles (EV), Battery Management Systems (BMS), Energy Storage Grid Nodes |
 | **Cryptographic Systems**<br>`crypt_resonance.py` | Symmetric bit-transposition inside coprime residue rings | **Hardware-Level Post-Quantum Cryptography:** Ultra-low-latency cryptographic primitives that execute natively on simple logic gate steps, discarding complex arithmetic units. | Cyber-Defense, Internet of Things (IoT) Security, Military-Grade Communication Links |
@@ -121,29 +121,32 @@ Full technical metrics, architecture cross-compilation instructions (e.g., targe
 
 ## 🎮 Technical Showcase: Zero-Float 3D Collision & Fluid-Cascade Engine (C-Core)
 
-To demonstrate deterministic, constant-time spatial physics without floating-point depth buffers or Cartesian grid anisotropy, a bare-metal C99 implementation (`experimental/game_collision/`) is included in the repository. It maps 10,000 active 3D particles onto a flat **144-facet vector equilibrium register** (`24 contact junctions + 120 free outer facets`) using a zero-free bipolar state space (`-1`, `+1`, `+3`).
+To demonstrate deterministic, constant-time spatial physics without floating-point depth buffers or Cartesian grid anisotropy, a bare-metal C99 implementation (`embedded/game_collision/`) is included in the repository. It maps up to 25,000 active 3D particles onto a flat **144-facet vector equilibrium register** (`24 contact junctions + 120 free outer facets`) using a zero-free bipolar state space (`-1`, `+1`, `+3`).
 
 ### 🚀 Evaluation (Local Compilation & Verification)
 The benchmark suite, live 3D terminal visualizer, and raw-RGB 1080p FFmpeg video synthesizer can be compiled and executed directly via `gcc`:
 
 ```bash
 # 1. Headless 10,000-Particle 3D Cascade Benchmark (~98 µs / takt)
-cd experimental/game_collision && gcc -O3 ptrc_fluid_crystal_3d.c -o ptrc_fluid3d && ./ptrc_fluid3d
+cd embedded/game_collision && gcc -O3 ptrc_fluid_crystal_3d.c -o ptrc_fluid3d && ./ptrc_fluid3d
 
 # 2. Live 3D Retina Projection Visualizer (Auto-scales to terminal/TV size)
 gcc -O3 ptrc_crystal_live_3d.c -o ptrc_live3d && ./ptrc_live3d
 
-# 3. Full-HD 1080p @ 60 FPS Video Synthesis (FFmpeg Pipe)
+# 3. Full-HD 1080p @ 60 FPS Video Synthesis (25,000 Particles + Depth Fog via FFmpeg Pipe)
 gcc -O3 ptrc_crystal_video_1080p.c -o ptrc_vid && ./ptrc_vid
 ```
 
 ### 📊 Verified Single-Thread Hardware Benchmarks (ARM Cortex-A77, `-O3`):
 * **Bipolar Collision Detection (10,000 Objects):** `62 µs` per takt (~`15,946 FPS`)
 * **Full 3D Cascade & Vortex Deflection (10,000 Objects):** `98 µs` per takt (~`10,178 FPS`)
-* **3D Physics + Live Retina Projection:** `933 µs` per frame (~`1,071 FPS`)
+* **3D Physics + Live Terminal Retina Projection (10,000 Objects):** `933 µs` per frame (~`1,071 FPS`)
+* **Full 1080p 3D Rotation + Additive Shader + Depth Fog (25,000 Objects):** `2,085 µs` per frame (~`479 FPS`)
 
 Full build instructions for both Linux workstations and Android/Termux environments are documented under:
-* **`experimental/game_collision/README.md`**
+* **`embedded/game_collision/pTRC_game_collision.md`**
+
+---
 
 ## Operational Execution & Module Orchestration
 
