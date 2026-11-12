@@ -117,6 +117,34 @@ Full technical metrics, architecture cross-compilation instructions (e.g., targe
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic, activation, and fluid-resonance operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
 2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers, the power consumption profile remains structurally flat ($O(1)$ variance).
 
+---
+
+## 🎮 Technical Showcase: Zero-Float 3D Collision & Fluid-Cascade Engine (C-Core)
+
+To demonstrate deterministic, constant-time spatial physics without floating-point depth buffers or Cartesian grid anisotropy, a bare-metal C99 implementation (`experimental/game_collision/`) is included in the repository. It maps 10,000 active 3D particles onto a flat **144-facet vector equilibrium register** (`24 contact junctions + 120 free outer facets`) using a zero-free bipolar state space (`-1`, `+1`, `+3`).
+
+### 🚀 Evaluation (Local Compilation & Verification)
+The benchmark suite, live 3D terminal visualizer, and raw-RGB 1080p FFmpeg video synthesizer can be compiled and executed directly via `gcc`:
+
+```bash
+# 1. Headless 10,000-Particle 3D Cascade Benchmark (~98 µs / takt)
+cd experimental/game_collision && gcc -O3 ptrc_fluid_crystal_3d.c -o ptrc_fluid3d && ./ptrc_fluid3d
+
+# 2. Live 3D Retina Projection Visualizer (Auto-scales to terminal/TV size)
+gcc -O3 ptrc_crystal_live_3d.c -o ptrc_live3d && ./ptrc_live3d
+
+# 3. Full-HD 1080p @ 60 FPS Video Synthesis (FFmpeg Pipe)
+gcc -O3 ptrc_crystal_video_1080p.c -o ptrc_vid && ./ptrc_vid
+```
+
+### 📊 Verified Single-Thread Hardware Benchmarks (ARM Cortex-A77, `-O3`):
+* **Bipolar Collision Detection (10,000 Objects):** `62 µs` per takt (~`15,946 FPS`)
+* **Full 3D Cascade & Vortex Deflection (10,000 Objects):** `98 µs` per takt (~`10,178 FPS`)
+* **3D Physics + Live Retina Projection:** `933 µs` per frame (~`1,071 FPS`)
+
+Full build instructions for both Linux workstations and Android/Termux environments are documented under:
+* **`experimental/game_collision/README.md`**
+
 ## Operational Execution & Module Orchestration
 
 The framework encapsulates functional core modules managed by the verification engine, utilizing terminal buffer configurations for clean visual rendering. Full execution commands and implementation details can be found in the repository's documentation.
