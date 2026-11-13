@@ -32,13 +32,13 @@
 #define FREE_FACETS         120
 #define TOTAL_FACETS        144
 
-#define PYRAMID_LAYERS      48          /* Dense 1+12 Space-Crystal Pyramid */
-#define PYRAMID_CENTER_X    (-25)       /* Shifted left in Z \ {0} for wide wake trail */
+#define PYRAMID_LAYERS      48
+#define PYRAMID_CENTER_X    (-25)
 #define PYRAMID_CENTER_Y    1
 #define PYRAMID_CENTER_Z    1
 #define MAX_PYRAMID_CELLS   12000
 
-#define NUM_AGENTS          32768       /* Volumetric Wind-Tunnel Space Crystals */
+#define NUM_AGENTS          32768
 #define MAX_RENDER_NODES    (MAX_PYRAMID_CELLS + NUM_AGENTS)
 #define MAX_DEPTH_BUCKETS   512
 
@@ -168,12 +168,9 @@ void build_fcc_crystal_pyramid(void) {
     for (int32_t layer = 0; layer < PYRAMID_LAYERS; layer++) {
         int32_t half = (PYRAMID_LAYERS - layer) / 2;
         int32_t y_pos = ((PYRAMID_LAYERS / 2) - layer);
-        if (y_pos == 0) continue;
 
         for (int32_t iz = -half; iz <= half; iz++) {
-            if (iz == 0) continue;
             for (int32_t ix = -half; ix <= half; ix++) {
-                if (ix == 0) continue;
                 if (((ix + y_pos + iz) & 1) != 0) continue;
 
                 int32_t on_edge = (ix >= half - 1 || ix <= -half + 1 || iz >= half - 1 || iz <= -half + 1);
@@ -205,7 +202,7 @@ void respawn_agent_at_inlet(uint32_t i, uint32_t seed_offset) {
     if (sy >= 0) sy += 1;
     if (sz >= 0) sz += 1;
     if (((sx + sy + sz) & 1) != 0) sx += 1;
-    if (sx == 0) sx = -2;
+    if (sx == 0) sx = -1;
 
     agents[i].x = (int16_t)sx;
     agents[i].y = (int16_t)sy;
@@ -233,9 +230,22 @@ void init_volumetric_universe(void) {
         uint32_t spread = (i * 2654435761U) % 388U;
         int32_t ix = -195 + (int32_t)spread;
         if (((ix + agents[i].y + agents[i].z) & 1) != 0) ix += 1;
-        if (ix == 0) ix = -2;
+        if (ix == 0) ix = -1;
         agents[i].x = (int16_t)ix;
     }
+}
+
+static inline int32_t step_z_no_zero(int32_t pos, int32_t vel) {
+    if (vel > 0) {
+        for (int32_t s = 0; s < vel; s++) {
+            pos = (pos == -1) ? 1 : (pos + 1);
+        }
+    } else if (vel < 0) {
+        for (int32_t s = 0; s > vel; s--) {
+            pos = (pos == 1) ? -1 : (pos - 1);
+        }
+    }
+    return pos;
 }
 
 void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *out_rend_ns, uint32_t *out_impacts) {
@@ -254,13 +264,9 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
     uint32_t impacts = 0;
 
     for (uint32_t i = 0; i < NUM_AGENTS; i++) {
-        int32_t nx = (int32_t)agents[i].x + agents[i].vx;
-        int32_t ny = (int32_t)agents[i].y + agents[i].vy;
-        int32_t nz = (int32_t)agents[i].z + agents[i].vz;
-
-        if (nx == 0) nx += (agents[i].vx >= 0) ? 1 : -1;
-        if (ny == 0) ny += (agents[i].vy >= 0) ? 1 : -1;
-        if (nz == 0) nz += (agents[i].vz >= 0) ? 1 : -1;
+        int32_t nx = step_z_no_zero((int32_t)agents[i].x, (int32_t)agents[i].vx);
+        int32_t ny = step_z_no_zero((int32_t)agents[i].y, (int32_t)agents[i].vy);
+        int32_t nz = step_z_no_zero((int32_t)agents[i].z, (int32_t)agents[i].vz);
 
         int32_t rel_x = nx - PYRAMID_CENTER_X;
         int32_t rel_y = ny - hover_y;
@@ -280,13 +286,9 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 
                 if (cos_p > 0) agents[i].vz = (int8_t)-agents[i].vz;
 
-                nx += agents[i].vx * 2;
-                ny += agents[i].vy * 2;
-                nz += agents[i].vz * 2;
-
-                if (nx == 0) nx = 1;
-                if (ny == 0) ny = 1;
-                if (nz == 0) nz = 1;
+                nx = step_z_no_zero(nx, (int32_t)agents[i].vx * 2);
+                ny = step_z_no_zero(ny, (int32_t)agents[i].vy * 2);
+                nz = step_z_no_zero(nz, (int32_t)agents[i].vz * 2);
 
                 agents[i].wave_freq  = (uint8_t)(185 + ((i + frame) & 63));
                 agents[i].wave_amp   = 252;
@@ -455,7 +457,7 @@ static void save_audit_png(uint32_t frame) {
 int main(void) {
     init_volumetric_universe();
 
-    const char *output_file = "ptrc_volumetric_fcc_windtunnel_clean_1080p.mp4";
+    const char *output_file = "ptrc_volumetric_fcc_windtunnel_1080p.mp4";
     char ffmpeg_cmd[512];
     snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
         "ffmpeg -y -loglevel warning -f rawvideo -vcodec rawvideo -pix_fmt rgb24 "
