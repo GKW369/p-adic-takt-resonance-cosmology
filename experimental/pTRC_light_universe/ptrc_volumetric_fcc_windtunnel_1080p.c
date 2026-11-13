@@ -34,9 +34,9 @@
 
 #define PYRAMID_LAYERS      48
 #define PYRAMID_CENTER_X    (-25)
-#define PYRAMID_CENTER_Y    1
+#define PYRAMID_CENTER_Y    (-5)        /* Lifted 6 rows upward in viewport */
 #define PYRAMID_CENTER_Z    1
-#define MAX_PYRAMID_CELLS   12000
+#define MAX_PYRAMID_CELLS   16000
 
 #define NUM_AGENTS          32768
 #define MAX_RENDER_NODES    (MAX_PYRAMID_CELLS + NUM_AGENTS)
@@ -101,6 +101,17 @@ static inline uint64_t now_ns(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+}
+
+/* Strictly Z \ {0} Perspective Projection: Never produces 0; -1 maps to left center, +1 to right center */
+static inline int32_t project_z_no_zero(int64_t num, int64_t den, int32_t half_span) {
+    if (num >= 0) {
+        int32_t cell = (int32_t)(num / den) + 1;      /* +1, +2, +3 ... (never 0) */
+        return half_span + cell - 1;
+    } else {
+        int32_t cell = -(int32_t)((-num) / den) - 1;  /* -1, -2, -3 ... (never 0) */
+        return half_span + cell;
+    }
 }
 
 static inline void transduce_light_wave(uint8_t freq, uint8_t amp, int32_t depth_shade, uint8_t *r, uint8_t *g, uint8_t *b) {
@@ -173,15 +184,18 @@ void build_fcc_crystal_pyramid(void) {
             for (int32_t ix = -half; ix <= half; ix++) {
                 if (((ix + y_pos + iz) & 1) != 0) continue;
 
-                int32_t on_edge = (ix >= half - 1 || ix <= -half + 1 || iz >= half - 1 || iz <= -half + 1);
-                int32_t on_base = (layer <= 1);
-                if (on_edge || on_base) {
+                int32_t ax = (ix < 0) ? -ix : ix;
+                int32_t az = (iz < 0) ? -iz : iz;
+                int32_t max_xz = (ax > az) ? ax : az;
+                int32_t depth_from_hull = half - max_xz;
+
+                if (depth_from_hull <= 3 || layer <= 1) {
                     if (pyramid_count < MAX_PYRAMID_CELLS) {
                         pyramid[pyramid_count].lx = (int16_t)ix;
                         pyramid[pyramid_count].ly = (int16_t)y_pos;
                         pyramid[pyramid_count].lz = (int16_t)iz;
                         pyramid[pyramid_count].facet_phase = (uint8_t)((layer * 7 + ix * 11 + iz * 13) & 0xFF);
-                        pyramid[pyramid_count].shell_flag = (uint8_t)(on_edge ? 1 : 0);
+                        pyramid[pyramid_count].shell_flag = (uint8_t)((depth_from_hull <= 1) ? 1 : 0);
                         pyramid_count++;
                     }
                 }
@@ -258,7 +272,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
     int32_t cos_p         = get_smooth_cos(pyr_rot_phase);
     int32_t sin_p         = get_smooth_sin(pyr_rot_phase);
     int32_t hover_y       = PYRAMID_CENTER_Y + ((get_smooth_sin(hover_phase) * 9) / SCALE);
-    if (hover_y == 0) hover_y = 1;
+    if (hover_y == 0) hover_y = -1;
     int32_t pyr_half      = PYRAMID_LAYERS / 2;
 
     uint32_t impacts = 0;
@@ -345,8 +359,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 
         int64_t denom = ((cz * SCALE) / 1414) + INVARIANT_LIMIT;
         if (denom > 0 && cz >= 40 && cz < MAX_DEPTH_BUCKETS) {
-            int32_t sx = (int32_t)(((int64_t)vx * 3650) / denom) + (WIDTH / 2);
-            int32_t sy = (int32_t)((cy_s * 3650) / (denom * SCALE)) + (HEIGHT / 2);
+            int32_t sx = project_z_no_zero((int64_t)vx * 3650, denom, WIDTH / 2);
+            int32_t sy = project_z_no_zero(cy_s * 3650, denom * SCALE, HEIGHT / 2);
 
             if ((uint32_t)sx < WIDTH && (uint32_t)sy < HEIGHT) {
                 int32_t shade = 255 - ((int32_t)(cz - 175) * 2);
@@ -358,7 +372,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                 if (rad > 5) rad = 5;
 
                 uint8_t p_freq = (uint8_t)(20 + ((pyramid[p].facet_phase + frame) & 48));
-                uint8_t p_amp  = pyramid[p].shell_flag ? 245 : 175;
+                uint8_t p_amp  = pyramid[p].shell_flag ? 245 : 115;
                 uint8_t r, g, b;
                 transduce_light_wave(p_freq, p_amp, shade, &r, &g, &b);
 
@@ -389,8 +403,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 
         int64_t denom = ((cz * SCALE) / 1414) + INVARIANT_LIMIT;
         if (denom > 0 && cz >= 40 && cz < MAX_DEPTH_BUCKETS) {
-            int32_t sx = (int32_t)(((int64_t)vx * 3650) / denom) + (WIDTH / 2);
-            int32_t sy = (int32_t)((cy_s * 3650) / (denom * SCALE)) + (HEIGHT / 2);
+            int32_t sx = project_z_no_zero((int64_t)vx * 3650, denom, WIDTH / 2);
+            int32_t sy = project_z_no_zero(cy_s * 3650, denom * SCALE, HEIGHT / 2);
 
             if ((uint32_t)sx < WIDTH && (uint32_t)sy < HEIGHT) {
                 int32_t depth_shade = 250 - ((int32_t)(cz - 165) * 2);
