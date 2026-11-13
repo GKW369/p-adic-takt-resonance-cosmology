@@ -42,10 +42,9 @@
 #define MAX_RENDER_NODES    (MAX_PYRAMID_CELLS + NUM_AGENTS)
 #define MAX_DEPTH_BUCKETS   512
 
-#define GRID_NX             64
-#define GRID_NY             32
-#define GRID_NZ             32
-#define GRID_SIZE           (GRID_NX * GRID_NY * GRID_NZ)
+/* Exact 1:1 Space-Crystal Contact Table (Power-of-2 Hash for Exact Coordinate Match) */
+#define CONTACT_TABLE_SIZE  131072
+#define CONTACT_TABLE_MASK  (CONTACT_TABLE_SIZE - 1)
 
 #define AUDIT_FRAME_START   360
 #define AUDIT_FRAME_END     364
@@ -61,7 +60,7 @@ typedef struct {
     int8_t  vx, vy, vz;
     uint8_t wave_freq;
     uint8_t wave_amp;
-    int8_t  state_flag;     /* +1 = Laminar Stream (>), +3 = Motorized-Wall Deflected Wave (x) */
+    int8_t  state_flag;     /* +1 = Undisturbed Stream, +3 = Post-Collision Wave */
 } AgentCrystal;
 
 typedef struct {
@@ -69,10 +68,10 @@ typedef struct {
     uint16_t cz;
     uint8_t  radius;
     uint8_t  r, g, b;
-    int8_t   is_pyramid;    /* +1 = Motorized Pyramid Barrier (O), -1 = Fluid Crystal */
+    int8_t   is_pyramid;    /* +1 = Motorized Pyramid Barrier, -1 = Fluid Crystal */
 } RenderCrystal;
 
-static int32_t        fluid_grid[GRID_SIZE];
+static int32_t        contact_slot[CONTACT_TABLE_SIZE];
 static PyramidCrystal *pyramid      = NULL;
 static uint32_t       pyramid_count = 0;
 static AgentCrystal   *agents       = NULL;
@@ -180,15 +179,16 @@ static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radiu
     }
 }
 
-/* Upright 52-Layer 1+12 Pyramid: Apex at +26 (top of viewport), Wide Base at -26 (bottom) */
+/* Upright 52-Layer 1+12 Pyramid: Apex at -26 (top of screen), Wide Base at +26 (bottom) */
 void build_fcc_crystal_pyramid(void) {
     pyramid = (PyramidCrystal *)malloc(MAX_PYRAMID_CELLS * sizeof(PyramidCrystal));
     pyramid_count = 1;
 
     for (int32_t layer = 1; layer <= PYRAMID_LAYERS; layer++) {
-        int32_t half  = (PYRAMID_LAYERS - layer + 1) / 2;
-        int32_t y_pos = ((PYRAMID_LAYERS / 2) - layer + 1);
-        if (y_pos == 0) y_pos = -1;
+        int32_t half  = (layer + 1) / 2;
+        int32_t y_pos = (layer <= (PYRAMID_LAYERS / 2))
+                        ? (layer - (PYRAMID_LAYERS / 2) - 1)
+                        : (layer - (PYRAMID_LAYERS / 2));
 
         for (int32_t kz = -half; kz <= half; kz++) {
             if (kz == 0) continue;
@@ -241,7 +241,6 @@ void respawn_agent_at_inlet(uint32_t i, uint32_t takt_step) {
     agents[i].y = (int16_t)sy;
     agents[i].z = (int16_t)sz;
 
-    /* Laminar Inflow (+1 crystal/takt) */
     agents[i].vx = 1;
     agents[i].vy = (int8_t)((i & 1U) ? 1 : -1);
     agents[i].vz = (int8_t)(((i >> 1) & 1U) ? 1 : -1);
@@ -271,7 +270,7 @@ void init_volumetric_universe(void) {
 void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *out_rend_ns, uint32_t *out_impacts) {
     uint64_t t0 = now_ns();
 
-    for (uint32_t g = 1; g <= GRID_SIZE; g++) fluid_grid[g - 1] = -1;
+    for (uint32_t c = 1; c <= CONTACT_TABLE_SIZE; c++) contact_slot[c - 1] = -1;
 
     /* Motorized 24-Clock Quadrance Rotation (>> 4) & Harmonic Hover (>> 3) */
     uint32_t rot_idx = ((frame - 1U) >> 4) % MODULO_24_CLOCK;
@@ -295,7 +294,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             agents[idx].vz = (int8_t)-agents[idx].vz;
         }
 
-        /* 1. Motorized Pyramid Wall Collision: Moving-Boundary Specular Reflection */
+        /* 1. Direct Contact Collision with Motorized Pyramid Surface */
         int32_t rel_x = nx - PYRAMID_CENTER_X;
         int32_t rel_y = ny - hover_y;
         int32_t rel_z = nz - PYRAMID_CENTER_Z;
@@ -303,7 +302,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         if (rel_y >= -pyr_half && rel_y <= pyr_half) {
             int32_t loc_x = (rel_x * quad_u + rel_z * quad_v) / SCALE;
             int32_t loc_z = (-rel_x * quad_v + rel_z * quad_u) / SCALE;
-            int32_t allowed_r = (pyr_half - rel_y + 2) >> 1;
+            int32_t allowed_r = (rel_y + pyr_half + 2) >> 1;
             if (allowed_r < 2) allowed_r = 2;
 
             int32_t ax = (loc_x < 0) ? -loc_x : loc_x;
@@ -316,17 +315,15 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                 int32_t lvz = (-(int32_t)agents[idx].vx * quad_v + (int32_t)agents[idx].vz * quad_u) / SCALE;
                 int32_t lvy = (int32_t)agents[idx].vy;
 
-                /* Local surface velocity of the motorized rotating pyramid wall: v_wall = omega x r_local */
+                /* Local surface velocity of motorized rotating pyramid: v_wall = omega x r_local */
                 int32_t wall_vx = (-loc_z) / 12;
                 int32_t wall_vz = (loc_x)  / 12;
 
-                /* Relative velocity of incoming particle with respect to moving pyramid face */
                 int32_t rel_vx = lvx - wall_vx;
                 int32_t rel_vy = lvy;
                 int32_t rel_vz = lvz - wall_vz;
 
-                /* Local 2:1 sloped pyramid face normal */
-                int32_t fnx = 0, fny = 1, fnz = 0;
+                int32_t fnx = 0, fny = -1, fnz = 0;
                 if (ax >= az) {
                     fnx = (loc_x >= 0) ? 2 : -2;
                 } else {
@@ -345,7 +342,6 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                     rel_vz += fnz;
                 }
 
-                /* Transform back to world frame: v_out = v_rel' + v_wall (adds motorized rotational impulse) */
                 lvx = rel_vx + wall_vx;
                 lvy = rel_vy;
                 lvz = rel_vz + wall_vz;
@@ -355,10 +351,9 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                 int32_t wvy = lvy;
 
                 if (wvx == 0) wvx = (fnx >= 0) ? 1 : -1;
-                if (wvy == 0) wvy = 1;
+                if (wvy == 0) wvy = -1;
                 if (wvz == 0) wvz = (fnz >= 0) ? 1 : -1;
 
-                /* Bounded to +/-3 crystals/takt so motorized energy injection propagates cleanly */
                 if (wvx >  3) wvx =  3;
                 if (wvx < -3) wvx = -3;
                 if (wvy >  3) wvy =  3;
@@ -380,17 +375,22 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             }
         }
 
-        /* 2. Strictly Energy-Conserving Particle-to-Particle Collision (Pure Momentum Swap, Zero Amplification) */
-        int32_t gx = (nx + 220) / 7;
-        int32_t gy = (ny + 112) / 7;
-        int32_t gz = (nz + 72)  / 5;
-        if (gx >= 1 && gx <= GRID_NX && gy >= 1 && gy <= GRID_NY && gz >= 1 && gz <= GRID_NZ) {
-            uint32_t cell_id = (uint32_t)(((gz - 1) * GRID_NY + (gy - 1)) * GRID_NX + (gx - 1));
-            int32_t other = fluid_grid[cell_id];
-            if (other == -1) {
-                fluid_grid[cell_id] = (int32_t)idx;
-            } else {
-                uint32_t oidx = (uint32_t)other;
+        /* 2. Exact Space-Crystal Contact Collision: Impulse transfers ONLY when two particles meet at the exact same crystal (nx, ny, nz) */
+        uint32_t key = ((uint32_t)(uint16_t)nx * 73856093U) ^
+                       ((uint32_t)(uint16_t)ny * 19349663U) ^
+                       ((uint32_t)(uint16_t)nz * 83492791U);
+        uint32_t slot = key & CONTACT_TABLE_MASK;
+        int32_t other = contact_slot[slot];
+
+        if (other == -1) {
+            contact_slot[slot] = (int32_t)idx;
+        } else {
+            uint32_t oidx = (uint32_t)other;
+            if (agents[oidx].x == (int16_t)nx &&
+                agents[oidx].y == (int16_t)ny &&
+                agents[oidx].z == (int16_t)nz) {
+
+                /* Pure Conservative Momentum Exchange between colliding partners */
                 int8_t tvx = agents[idx].vx;
                 int8_t tvy = agents[idx].vy;
                 int8_t tvz = agents[idx].vz;
@@ -403,10 +403,6 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                 agents[oidx].vy = tvy;
                 agents[oidx].vz = tvz;
 
-                /* Far-left inflow boundary condition (x < -195) maintains steady wind-tunnel feed */
-                if (nx < -195 && agents[idx].vx < 1)  agents[idx].vx  = 1;
-                if (nx < -195 && agents[oidx].vx < 1) agents[oidx].vx = 1;
-
                 if (agents[idx].state_flag == 3 || agents[oidx].state_flag == 3) {
                     agents[idx].state_flag  = 3;
                     agents[oidx].state_flag = 3;
@@ -416,7 +412,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             }
         }
 
-        if (nx > 215 || nx < -225 || ny > 112 || ny < -112 || nz > 72 || nz < -72) {
+        /* Boundary Check: Any particle exiting the simulation volume is replaced by fresh inflow at the left inlet */
+        if (nx > 215 || nx < -220 || ny > 112 || ny < -112 || nz > 72 || nz < -72) {
             respawn_agent_at_inlet(idx, frame + idx);
         } else {
             agents[idx].x = (int16_t)nx;
@@ -586,9 +583,9 @@ int main(void) {
     uint64_t sum_impacts = 1;
 
     printf("===============================================================================\n");
-    printf("  pTRC 24-CLOCK QUADRANCE & FLUID-RESONANCE ENGINE (1080p | MOTORIZED ROTATION)\n");
+    printf("  pTRC 24-CLOCK QUADRANCE & CONTACT-IMPULSE ENGINE (1080p | 12s EXACT LATTICE)\n");
     printf("  Hardware Target : Acer Aspire E1-570 (Intel Core i3 Pure Integer Z-Clock)\n");
-    printf("  Active Crystals : %u Pyramid Centers + %u Fluid Centers\n", pyramid_count, NUM_AGENTS);
+    printf("  Active Crystals : %u Pyramid Centers + %u Fluid Centers (Direct Contact)\n", pyramid_count, NUM_AGENTS);
     printf("  Note            : Simulation kernel is strictly Z \\ {0}, float-free, and uses\n");
     printf("                    24-clock quadrance rings; terminal metrics are for humans.\n");
     printf("===============================================================================\n");
