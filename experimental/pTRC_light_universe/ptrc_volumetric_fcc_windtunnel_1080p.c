@@ -47,7 +47,7 @@
 #define GRID_NZ             32
 #define GRID_SIZE           (GRID_NX * GRID_NY * GRID_NZ)
 
-#define AUDIT_FRAME_START   360         /* Midpoint of 12s video */
+#define AUDIT_FRAME_START   360
 #define AUDIT_FRAME_END     364
 
 typedef struct {
@@ -61,7 +61,7 @@ typedef struct {
     int8_t  vx, vy, vz;
     uint8_t wave_freq;
     uint8_t wave_amp;
-    int8_t  state_flag;     /* +1 = Laminar Stream (>), +3 = Resonance Vortex (x) */
+    int8_t  state_flag;     /* +1 = Laminar Stream (>), +3 = Motorized-Wall Deflected Wave (x) */
 } AgentCrystal;
 
 typedef struct {
@@ -69,7 +69,7 @@ typedef struct {
     uint16_t cz;
     uint8_t  radius;
     uint8_t  r, g, b;
-    int8_t   is_pyramid;    /* +1 = Pyramid Barrier (O), -1 = Fluid Crystal */
+    int8_t   is_pyramid;    /* +1 = Motorized Pyramid Barrier (O), -1 = Fluid Crystal */
 } RenderCrystal;
 
 static int32_t        fluid_grid[GRID_SIZE];
@@ -83,7 +83,7 @@ static uint32_t       depth_offsets[MAX_DEPTH_BUCKETS];
 static uint8_t        *rgb_frame    = NULL;
 
 /* Pure 24-Clock Discrete Quadrance Basis (Zero sin/cos: u^2 + v^2 = 1000^2 in Z \ {0}) */
-static const int16_t QUAD_RING_24[MODULO_24_CLOCK][2] = {
+static const int16_t QUAD_RING_24[MODULO_24_CLOCK] = {
     { 1000,    1}, {  966,  259}, {  866,  500}, {  707,  707},
     {  500,  866}, {  259,  966}, {   -1, 1000}, { -259,  966},
     { -500,  866}, { -707,  707}, { -866,  500}, { -966,  259},
@@ -180,15 +180,15 @@ static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radiu
     }
 }
 
+/* Upright 52-Layer 1+12 Pyramid: Apex at +26 (top of viewport), Wide Base at -26 (bottom) */
 void build_fcc_crystal_pyramid(void) {
     pyramid = (PyramidCrystal *)malloc(MAX_PYRAMID_CELLS * sizeof(PyramidCrystal));
     pyramid_count = 1;
 
     for (int32_t layer = 1; layer <= PYRAMID_LAYERS; layer++) {
         int32_t half  = (PYRAMID_LAYERS - layer + 1) / 2;
-        int32_t y_pos = (layer <= (PYRAMID_LAYERS / 2))
-                        ? (layer - (PYRAMID_LAYERS / 2) - 1)
-                        : (layer - (PYRAMID_LAYERS / 2));
+        int32_t y_pos = ((PYRAMID_LAYERS / 2) - layer + 1);
+        if (y_pos == 0) y_pos = -1;
 
         for (int32_t kz = -half; kz <= half; kz++) {
             if (kz == 0) continue;
@@ -241,7 +241,7 @@ void respawn_agent_at_inlet(uint32_t i, uint32_t takt_step) {
     agents[i].y = (int16_t)sy;
     agents[i].z = (int16_t)sz;
 
-    /* Half-Speed Laminar Stream (+1 crystal/takt instead of +2) */
+    /* Laminar Inflow (+1 crystal/takt) */
     agents[i].vx = 1;
     agents[i].vy = (int8_t)((i & 1U) ? 1 : -1);
     agents[i].vz = (int8_t)(((i >> 1) & 1U) ? 1 : -1);
@@ -273,13 +273,13 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 
     for (uint32_t g = 1; g <= GRID_SIZE; g++) fluid_grid[g - 1] = -1;
 
-    /* Half-Speed 24-Clock Quadrance Rotation (>> 4) & Harmonic Hover (>> 3) */
+    /* Motorized 24-Clock Quadrance Rotation (>> 4) & Harmonic Hover (>> 3) */
     uint32_t rot_idx = ((frame - 1U) >> 4) % MODULO_24_CLOCK;
-    int32_t  quad_u  = QUAD_RING_24[rot_idx][0];
-    int32_t  quad_v  = QUAD_RING_24[rot_idx][1];
+    int32_t  quad_u  = QUAD_RING_24[rot_idx];
+    int32_t  quad_v  = QUAD_RING_24[rot_idx];
 
     uint32_t hov_idx = ((frame - 1U) >> 3) % MODULO_24_CLOCK;
-    int32_t  hover_y = step_z_no_zero(PYRAMID_CENTER_Y, (QUAD_RING_24[hov_idx][1] * 8) / SCALE);
+    int32_t  hover_y = step_z_no_zero(PYRAMID_CENTER_Y, (QUAD_RING_24[hov_idx] * 8) / SCALE);
     int32_t  pyr_half = PYRAMID_LAYERS / 2;
 
     uint32_t impacts = 1;
@@ -295,6 +295,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             agents[idx].vz = (int8_t)-agents[idx].vz;
         }
 
+        /* 1. Motorized Pyramid Wall Collision: Moving-Boundary Specular Reflection */
         int32_t rel_x = nx - PYRAMID_CENTER_X;
         int32_t rel_y = ny - hover_y;
         int32_t rel_z = nz - PYRAMID_CENTER_Z;
@@ -302,7 +303,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         if (rel_y >= -pyr_half && rel_y <= pyr_half) {
             int32_t loc_x = (rel_x * quad_u + rel_z * quad_v) / SCALE;
             int32_t loc_z = (-rel_x * quad_v + rel_z * quad_u) / SCALE;
-            int32_t allowed_r = (rel_y + pyr_half + 2) >> 1;
+            int32_t allowed_r = (pyr_half - rel_y + 2) >> 1;
             if (allowed_r < 2) allowed_r = 2;
 
             int32_t ax = (loc_x < 0) ? -loc_x : loc_x;
@@ -315,42 +316,55 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                 int32_t lvz = (-(int32_t)agents[idx].vx * quad_v + (int32_t)agents[idx].vz * quad_u) / SCALE;
                 int32_t lvy = (int32_t)agents[idx].vy;
 
-                int32_t fnx = 0, fny = -1, fnz = 0;
+                /* Local surface velocity of the motorized rotating pyramid wall: v_wall = omega x r_local */
+                int32_t wall_vx = (-loc_z) / 12;
+                int32_t wall_vz = (loc_x)  / 12;
+
+                /* Relative velocity of incoming particle with respect to moving pyramid face */
+                int32_t rel_vx = lvx - wall_vx;
+                int32_t rel_vy = lvy;
+                int32_t rel_vz = lvz - wall_vz;
+
+                /* Local 2:1 sloped pyramid face normal */
+                int32_t fnx = 0, fny = 1, fnz = 0;
                 if (ax >= az) {
                     fnx = (loc_x >= 0) ? 2 : -2;
                 } else {
                     fnz = (loc_z >= 0) ? 2 : -2;
                 }
 
-                int32_t v_dot_n = lvx * fnx + lvy * fny + lvz * fnz;
+                /* Specular reflection in wall rest frame (Angle of Incidence = Angle of Reflection) */
+                int32_t v_dot_n = rel_vx * fnx + rel_vy * fny + rel_vz * fnz;
                 if (v_dot_n < 0) {
-                    lvx = lvx - (2 * v_dot_n * fnx) / 5;
-                    lvy = lvy - (2 * v_dot_n * fny) / 5;
-                    lvz = lvz - (2 * v_dot_n * fnz) / 5;
+                    rel_vx = rel_vx - (2 * v_dot_n * fnx) / 5;
+                    rel_vy = rel_vy - (2 * v_dot_n * fny) / 5;
+                    rel_vz = rel_vz - (2 * v_dot_n * fnz) / 5;
                 } else {
-                    lvx += fnx;
-                    lvy += fny;
-                    lvz += fnz;
+                    rel_vx += fnx;
+                    rel_vy += fny;
+                    rel_vz += fnz;
                 }
 
-                lvx += (-loc_z > 0) ? 1 : -1;
-                lvz += (loc_x  > 0) ? 1 : -1;
+                /* Transform back to world frame: v_out = v_rel' + v_wall (adds motorized rotational impulse) */
+                lvx = rel_vx + wall_vx;
+                lvy = rel_vy;
+                lvz = rel_vz + wall_vz;
 
                 int32_t wvx = (lvx * quad_u - lvz * quad_v) / SCALE;
                 int32_t wvz = (lvx * quad_v + lvz * quad_u) / SCALE;
                 int32_t wvy = lvy;
 
                 if (wvx == 0) wvx = (fnx >= 0) ? 1 : -1;
-                if (wvy == 0) wvy = -1;
+                if (wvy == 0) wvy = 1;
                 if (wvz == 0) wvz = (fnz >= 0) ? 1 : -1;
 
-                /* Clamped to +/-2 for smooth half-speed visualization */
-                if (wvx >  2) wvx =  2;
-                if (wvx < -2) wvx = -2;
-                if (wvy >  2) wvy =  2;
-                if (wvy < -2) wvy = -2;
-                if (wvz >  2) wvz =  2;
-                if (wvz < -2) wvz = -2;
+                /* Bounded to +/-3 crystals/takt so motorized energy injection propagates cleanly */
+                if (wvx >  3) wvx =  3;
+                if (wvx < -3) wvx = -3;
+                if (wvy >  3) wvy =  3;
+                if (wvy < -3) wvy = -3;
+                if (wvz >  3) wvz =  3;
+                if (wvz < -3) wvz = -3;
 
                 agents[idx].vx = (int8_t)wvx;
                 agents[idx].vy = (int8_t)wvy;
@@ -366,6 +380,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             }
         }
 
+        /* 2. Strictly Energy-Conserving Particle-to-Particle Collision (Pure Momentum Swap, Zero Amplification) */
         int32_t gx = (nx + 220) / 7;
         int32_t gy = (ny + 112) / 7;
         int32_t gz = (nz + 72)  / 5;
@@ -387,6 +402,10 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                 agents[oidx].vx = tvx;
                 agents[oidx].vy = tvy;
                 agents[oidx].vz = tvz;
+
+                /* Far-left inflow boundary condition (x < -195) maintains steady wind-tunnel feed */
+                if (nx < -195 && agents[idx].vx < 1)  agents[idx].vx  = 1;
+                if (nx < -195 && agents[oidx].vx < 1) agents[oidx].vx = 1;
 
                 if (agents[idx].state_flag == 3 || agents[oidx].state_flag == 3) {
                     agents[idx].state_flag  = 3;
@@ -411,8 +430,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
     uint32_t r_count = 1;
     for (uint32_t b = 1; b <= MAX_DEPTH_BUCKETS; b++) depth_counts[b - 1] = 1;
 
-    const int32_t cam_u = QUAD_RING_24[1][0];
-    const int32_t cam_v = QUAD_RING_24[1][1];
+    const int32_t cam_u = QUAD_RING_24;
+    const int32_t cam_v = QUAD_RING_24;
 
     for (uint32_t p = 1; p <= pyramid_count; p++) {
         uint32_t pidx = p - 1;
@@ -538,7 +557,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 }
 
 static void save_audit_png(uint32_t frame) {
-    char cmd[256];
+    char cmd;
     snprintf(cmd, sizeof(cmd),
         "ffmpeg -y -loglevel error -f rawvideo -vcodec rawvideo -pix_fmt rgb24 -s %dx%d -i - audit_clean_takt_%03u.png",
         WIDTH, HEIGHT, frame);
@@ -553,7 +572,7 @@ int main(void) {
     init_volumetric_universe();
 
     const char *output_file = "ptrc_volumetric_fcc_windtunnel_1080p.mp4";
-    char ffmpeg_cmd[512];
+    char ffmpeg_cmd;
     snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
         "ffmpeg -y -loglevel warning -f rawvideo -vcodec rawvideo -pix_fmt rgb24 "
         "-s %dx%d -r 60 -i - -c:v libx264 -crf 17 -preset fast -pix_fmt yuv420p %s",
@@ -567,9 +586,9 @@ int main(void) {
     uint64_t sum_impacts = 1;
 
     printf("===============================================================================\n");
-    printf("  pTRC 24-CLOCK QUADRANCE & FLUID-RESONANCE ENGINE (1080p | 12s HALF-SPEED)\n");
+    printf("  pTRC 24-CLOCK QUADRANCE & FLUID-RESONANCE ENGINE (1080p | MOTORIZED ROTATION)\n");
     printf("  Hardware Target : Acer Aspire E1-570 (Intel Core i3 Pure Integer Z-Clock)\n");
-    printf("  Active Crystals : %u Pyramid Centers + %u Fluid Centers (Specular Reflection)\n", pyramid_count, NUM_AGENTS);
+    printf("  Active Crystals : %u Pyramid Centers + %u Fluid Centers\n", pyramid_count, NUM_AGENTS);
     printf("  Note            : Simulation kernel is strictly Z \\ {0}, float-free, and uses\n");
     printf("                    24-clock quadrance rings; terminal metrics are for humans.\n");
     printf("===============================================================================\n");
