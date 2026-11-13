@@ -17,7 +17,6 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -34,7 +33,11 @@
 #define TOTAL_FACETS        144
 
 #define PYRAMID_LAYERS      48          /* Dense 1+12 Space-Crystal Pyramid */
+#define PYRAMID_CENTER_X    (-25)       /* Shifted left in Z \ {0} for wide wake trail */
+#define PYRAMID_CENTER_Y    1
+#define PYRAMID_CENTER_Z    1
 #define MAX_PYRAMID_CELLS   12000
+
 #define NUM_AGENTS          32768       /* Volumetric Wind-Tunnel Space Crystals */
 #define MAX_RENDER_NODES    (MAX_PYRAMID_CELLS + NUM_AGENTS)
 #define MAX_DEPTH_BUCKETS   512
@@ -123,7 +126,6 @@ static inline void transduce_light_wave(uint8_t freq, uint8_t amp, int32_t depth
     *b = (uint8_t)((raw_b * gain) >> 8);
 }
 
-/* Inverse Pi-Square Crystallization: Draw Volumetric Spherical 1+12 Crystal Disc (dx^2 + dy^2 <= R^2) */
 static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radius, uint8_t r, uint8_t g, uint8_t b) {
     if (radius <= 1) {
         if ((uint32_t)cx < WIDTH && (uint32_t)cy < HEIGHT) {
@@ -166,18 +168,21 @@ void build_fcc_crystal_pyramid(void) {
     for (int32_t layer = 0; layer < PYRAMID_LAYERS; layer++) {
         int32_t half = (PYRAMID_LAYERS - layer) / 2;
         int32_t y_pos = ((PYRAMID_LAYERS / 2) - layer);
+        if (y_pos == 0) continue;
 
         for (int32_t iz = -half; iz <= half; iz++) {
+            if (iz == 0) continue;
             for (int32_t ix = -half; ix <= half; ix++) {
+                if (ix == 0) continue;
                 if (((ix + y_pos + iz) & 1) != 0) continue;
 
                 int32_t on_edge = (ix >= half - 1 || ix <= -half + 1 || iz >= half - 1 || iz <= -half + 1);
                 int32_t on_base = (layer <= 1);
                 if (on_edge || on_base) {
                     if (pyramid_count < MAX_PYRAMID_CELLS) {
-                        pyramid[pyramid_count].lx = (int16_t)((ix == 0) ? 1 : ix);
-                        pyramid[pyramid_count].ly = (int16_t)((y_pos == 0) ? 1 : y_pos);
-                        pyramid[pyramid_count].lz = (int16_t)((iz == 0) ? 1 : iz);
+                        pyramid[pyramid_count].lx = (int16_t)ix;
+                        pyramid[pyramid_count].ly = (int16_t)y_pos;
+                        pyramid[pyramid_count].lz = (int16_t)iz;
                         pyramid[pyramid_count].facet_phase = (uint8_t)((layer * 7 + ix * 11 + iz * 13) & 0xFF);
                         pyramid[pyramid_count].shell_flag = (uint8_t)(on_edge ? 1 : 0);
                         pyramid_count++;
@@ -194,14 +199,17 @@ void respawn_agent_at_inlet(uint32_t i, uint32_t seed_offset) {
     uint32_t h3 = (h2 ^ (h2 >> 13)) * 3266489917U;
 
     int32_t sx = -195 + (int32_t)(h1 % 47U);
-    int32_t sy = (int32_t)(h2 % 131U) - 65;
-    int32_t sz = (int32_t)(h3 % 131U) - 65;
+    int32_t sy = (int32_t)(h2 % 130U) - 65;
+    int32_t sz = (int32_t)(h3 % 130U) - 65;
 
+    if (sy >= 0) sy += 1;
+    if (sz >= 0) sz += 1;
     if (((sx + sy + sz) & 1) != 0) sx += 1;
+    if (sx == 0) sx = -2;
 
-    agents[i].x = (int16_t)((sx == 0) ? -1 : sx);
-    agents[i].y = (int16_t)((sy == 0) ? -1 : sy);
-    agents[i].z = (int16_t)((sz == 0) ? -1 : sz);
+    agents[i].x = (int16_t)sx;
+    agents[i].y = (int16_t)sy;
+    agents[i].z = (int16_t)sz;
 
     agents[i].vx = (int8_t)(1 + (int32_t)(h3 % 3U));
     agents[i].vy = 0;
@@ -222,10 +230,11 @@ void init_volumetric_universe(void) {
 
     for (uint32_t i = 0; i < NUM_AGENTS; i++) {
         respawn_agent_at_inlet(i, i * 17U + 3U);
-        uint32_t spread = (i * 2654435761U) % 389U;
+        uint32_t spread = (i * 2654435761U) % 388U;
         int32_t ix = -195 + (int32_t)spread;
         if (((ix + agents[i].y + agents[i].z) & 1) != 0) ix += 1;
-        agents[i].x = (int16_t)((ix == 0) ? -1 : ix);
+        if (ix == 0) ix = -2;
+        agents[i].x = (int16_t)ix;
     }
 }
 
@@ -238,7 +247,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
     uint8_t hover_phase   = (uint8_t)((frame * 2) & 0xFF);
     int32_t cos_p         = get_smooth_cos(pyr_rot_phase);
     int32_t sin_p         = get_smooth_sin(pyr_rot_phase);
-    int32_t hover_y       = (get_smooth_sin(hover_phase) * 9) / SCALE;
+    int32_t hover_y       = PYRAMID_CENTER_Y + ((get_smooth_sin(hover_phase) * 9) / SCALE);
+    if (hover_y == 0) hover_y = 1;
     int32_t pyr_half      = PYRAMID_LAYERS / 2;
 
     uint32_t impacts = 0;
@@ -248,22 +258,25 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         int32_t ny = (int32_t)agents[i].y + agents[i].vy;
         int32_t nz = (int32_t)agents[i].z + agents[i].vz;
 
-        if (nx == 0) nx += agents[i].vx;
+        if (nx == 0) nx += (agents[i].vx >= 0) ? 1 : -1;
         if (ny == 0) ny += (agents[i].vy >= 0) ? 1 : -1;
         if (nz == 0) nz += (agents[i].vz >= 0) ? 1 : -1;
 
+        int32_t rel_x = nx - PYRAMID_CENTER_X;
         int32_t rel_y = ny - hover_y;
+        int32_t rel_z = nz - PYRAMID_CENTER_Z;
+
         if (rel_y >= -pyr_half && rel_y <= pyr_half) {
             int32_t allowed_r = (rel_y + pyr_half) >> 1;
             if (allowed_r < 3) allowed_r = 3;
-            int32_t ax = (nx < 0) ? -nx : nx;
-            int32_t az = (nz < 0) ? -nz : nz;
+            int32_t ax = (rel_x < 0) ? -rel_x : rel_x;
+            int32_t az = (rel_z < 0) ? -rel_z : rel_z;
 
             if (ax <= allowed_r && az <= allowed_r) {
                 impacts++;
-                agents[i].vx = (nx < 0) ? -1 : 2;
+                agents[i].vx = (rel_x < 0) ? -1 : 2;
                 agents[i].vy = (rel_y <= 0) ? -1 : 1;
-                agents[i].vz = (nz >= 0) ? 1 : -1;
+                agents[i].vz = (rel_z >= 0) ? 1 : -1;
 
                 if (cos_p > 0) agents[i].vz = (int8_t)-agents[i].vz;
 
@@ -271,8 +284,12 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
                 ny += agents[i].vy * 2;
                 nz += agents[i].vz * 2;
 
+                if (nx == 0) nx = 1;
+                if (ny == 0) ny = 1;
+                if (nz == 0) nz = 1;
+
                 agents[i].wave_freq  = (uint8_t)(185 + ((i + frame) & 63));
-                agents[i].wave_amp   = 250;
+                agents[i].wave_amp   = 252;
                 agents[i].flow_state = 3;
             }
         }
@@ -314,8 +331,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
     const int32_t cam_sin_y = 259;
 
     for (uint32_t p = 0; p < pyramid_count; p++) {
-        int32_t rx = ((int32_t)pyramid[p].lx * cos_p - (int32_t)pyramid[p].lz * sin_p) / SCALE;
-        int32_t rz = ((int32_t)pyramid[p].lx * sin_p + (int32_t)pyramid[p].lz * cos_p) / SCALE;
+        int32_t rx = (((int32_t)pyramid[p].lx * cos_p - (int32_t)pyramid[p].lz * sin_p) / SCALE) + PYRAMID_CENTER_X;
+        int32_t rz = (((int32_t)pyramid[p].lx * sin_p + (int32_t)pyramid[p].lz * cos_p) / SCALE) + PYRAMID_CENTER_Z;
         int32_t ry = (int32_t)pyramid[p].ly + hover_y;
 
         int32_t vx = (rx * cam_cos_y - rz * cam_sin_y) / SCALE;
@@ -426,7 +443,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 static void save_audit_png(uint32_t frame) {
     char cmd[256];
     snprintf(cmd, sizeof(cmd),
-        "ffmpeg -y -loglevel error -f rawvideo -vcodec rawvideo -pix_fmt rgb24 -s %dx%d -i - audit_vol_takt_%03u.png",
+        "ffmpeg -y -loglevel error -f rawvideo -vcodec rawvideo -pix_fmt rgb24 -s %dx%d -i - audit_clean_takt_%03u.png",
         WIDTH, HEIGHT, frame);
     FILE *img_pipe = popen(cmd, "w");
     if (img_pipe) {
@@ -438,7 +455,7 @@ static void save_audit_png(uint32_t frame) {
 int main(void) {
     init_volumetric_universe();
 
-    const char *output_file = "ptrc_volumetric_fcc_windtunnel_1080p.mp4";
+    const char *output_file = "ptrc_volumetric_fcc_windtunnel_clean_1080p.mp4";
     char ffmpeg_cmd[512];
     snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
         "ffmpeg -y -loglevel warning -f rawvideo -vcodec rawvideo -pix_fmt rgb24 "
@@ -494,7 +511,7 @@ int main(void) {
     printf("  • 1080p Volumetrische Rasterung    : %llu us / Frame\n", avg_rend_us);
     printf("  • Gesamtzeit inkl. Full-HD Export  : %llu us / Frame (~%llu FPS)\n", avg_tot_us, total_fps);
     printf("  • Pyramiden-Kollisionen gesamt     : %llu Abprall-Events\n", (unsigned long long)sum_impacts);
-    printf("  • Analyse-Frames exportiert        : audit_vol_takt_180.png .. 184.png\n");
+    printf("  • Analyse-Frames exportiert        : audit_clean_takt_180.png .. 184.png\n");
     printf("===============================================================================\n");
 
     free(pyramid);
