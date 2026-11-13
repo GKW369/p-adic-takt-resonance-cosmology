@@ -11,33 +11,28 @@
 
 ---
 
-## 🧠 Core Architectural Paradigm
+## 🧠 Core Architectural Paradigm (v4.1 High-Density Transposition)
 
-The **pTRC Light Universe Engine** (`ptrc_light_universe_video.c`) unifies spatial memory, discrete physics, and real-time 1080p visualization inside a decentralized **1+12 Closest-Packed Space Crystal Lattice** (Cuboctahedral / FCC packing of 144-facet cells):
+The **pTRC Light Universe Engine** (`ptrc_transposed_universe_1080p.c`) demonstrates how spatial memory, quantized wave mechanics, and 1080p volumetric rendering converge inside a unified **1+12 Closest-Packed Space Crystal Lattice** without floating-point math (`float`/`double`), trigonometric libraries (`libm`), or GPU shaders:
 
-1. **Zero RGB Storage in Space (Quantized Wave Physics):**
-   * Spatial crystals do not store red, green, or blue pixel values. Instead, each cell holds a discrete **Wave Frequency (`wave_freq`, $0\dots255$)** and **Wave Amplitude (`wave_amp`, $0\dots255$)** alongside its 1-byte core state (`1..81` stable elements, `82..145` DNA/observer clusters) and 120 decentralized memory facets (`outer_facets[120]`).
-   * **Observer-Only Retina Transduction:** Color (`RGB`) exists solely at the moment of observation—transduced on the fly when quantized frequency and amplitude intersect the observer's viewport.
-2. **Speed-of-Light Propagation ($c = 1\text{ Cell / Takt}$):**
-   * Every discrete takt advances wave packets by exactly one lattice unit across the 12 neighbor vectors of the 1+12 Ur-cell.
-   * An $O(1)$ **3D Spatial Hash Grid** (`hash_3d_cell`) resolves true neighbor-to-neighbor wave superposition and lateral **Love/Cohesion Resonance (`love_cohesion`)** without $8\times16$ modulo tiling artifacts.
-3. **Selective 137-Takt Observer Plane & 120 FPS Transposition Governor:**
-   * **Continuous Background Physics:** All 1-takt interactions run continuously across the entire lattice in L1 cache.
-   * **Dynamic 120 FPS Transposition:** Measured via monotonic nanosecond telemetry (`clock_gettime`), the observer render plane targets **120 FPS (`8,333,333 ns` frame budget)**. On constrained hardware (such as mobile ARM SoCs), the engine dynamically transposes its facet rasterization stride (`1..4`) and sampling divisor (`137 -> 68 -> 34 -> 17`) using pure integer bit-shifts (`>> 1`) to sustain smooth 120 FPS playback without interrupting the underlying $c = 1$ physics clock.
+1. **Cubic Scale Transposition (115,000 Active Space Crystals):**
+   * To bridge Planck-scale discrete steps into smooth, macroscopic visible light without stroboscopic jumps, the engine transposes both temporal phase (`256-step quarter-wave lookup`) and spatial crystal density.
+   * **Macroscopic Pyramid Cluster (~15,500 Space Crystals):** A rotating, harmonically hovering 36-layer crystalline pyramid occupying one-quarter of the 1080p viewport, exhibiting internal Moiré and wave-interference fringes across its shell and diagonal ribs.
+   * **100,000 Interacting Space-Crystal Agents:** Free lattice cells streaming around and colliding with the rotating pyramid flanks, absorbing rotational momentum and shifting upward in quantized wave frequency.
+2. **Zero RGB Storage in Space (Quantized Wave Transduction):**
+   * Crystals store zero RGB values in memory—only discrete **Wave Frequency (`wave_freq`, $0\dots255$)** and **Wave Amplitude (`wave_amp`, $0\dots255$)** inside compact 12-byte structures fitting inside mobile L2/L3 CPU caches.
+   * **Observer-Only Retina Transduction (`transduce_light_wave`):** RGB color is synthesized exclusively when quantized waves intersect the observer's viewport plane.
+3. **144-Facet L1-Cache Coupling:**
+   * All 115,000 crystals interact through a shared 144-byte register (`24` contact junctions + `120` outer facets) mapped to the zero-free integer domain ($\mathbb{Z} \setminus \{0\}$).
 
 ---
 
 ## 🚀 Compilation & Execution (Mobile ARM / Linux Workstation)
 
 ```bash
-# Compile with native architecture optimizations (tested on Samsung Galaxy S21 FE / ARM Cortex-A77)
-gcc -O3 -march=native -Wall -Wextra ptrc_light_universe_video.c -o ptrc_light_vid
+# Compile with native architecture flags (tested on Samsung Galaxy S21 FE / ARM Cortex-A77)
+gcc -O3 -march=native -Wall -Wextra ptrc_transposed_universe_1080p.c -o ptrc_trans
 
-# Run simulation & pipe 1080p raw frames directly to FFmpeg
-./ptrc_light_vid
+# Execute 1080p @ 60 FPS simulation and pipe directly to FFmpeg
+./ptrc_trans
 ```
-
-### Live Telemetry HUD (Top-Left Overlay)
-* **Row 1 (6 digits):** Monotonic Universe Takt Counter ($c = 1$ step/takt)
-* **Row 2 (Left, 3 digits):** Real-time Observer Render Frame Rate (FPS, targeting 120+)
-* **Row 2 (Right, 1 digit):** Active Transposition Stride (`1` = full 144-facet resolution, `2..4` = transposed macro-facets)
