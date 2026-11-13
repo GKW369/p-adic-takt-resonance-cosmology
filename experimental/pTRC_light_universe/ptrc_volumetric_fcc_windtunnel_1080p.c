@@ -34,7 +34,7 @@
 
 #define PYRAMID_LAYERS      48
 #define PYRAMID_CENTER_X    (-25)
-#define PYRAMID_CENTER_Y    (-5)
+#define PYRAMID_CENTER_Y    (-6)
 #define PYRAMID_CENTER_Z    1
 #define MAX_PYRAMID_CELLS   16000
 
@@ -48,7 +48,7 @@
 typedef struct {
     int16_t lx, ly, lz;
     uint8_t facet_phase;
-    uint8_t shell_flag;
+    int8_t  shell_flag;
 } PyramidCrystal;
 
 typedef struct {
@@ -77,7 +77,7 @@ static uint32_t       depth_counts[MAX_DEPTH_BUCKETS];
 static uint32_t       depth_offsets[MAX_DEPTH_BUCKETS];
 static uint8_t        *rgb_frame    = NULL;
 
-static const int16_t QUARTER_WAVE_64[64] = {
+static const int16_t QUARTER_WAVE_64[] = {
     1000,1000, 999, 997, 995, 992, 989, 985, 981, 976, 970, 964, 957, 950, 942, 933,
      924, 914, 904, 893, 882, 870, 858, 845, 831, 818, 803, 788, 773, 757, 741, 724,
      707, 690, 672, 653, 634, 615, 596, 576, 556, 535, 514, 493, 471, 450, 428, 405,
@@ -86,8 +86,8 @@ static const int16_t QUARTER_WAVE_64[64] = {
 
 /* Strictly Z \ {0} Cosine Lookup (Zero crossings resolve to +1 / -1, never 0) */
 static inline int32_t get_smooth_cos(uint8_t phase) {
-    uint8_t q   = (uint8_t)((phase >> 6) + 1);  /* Quadrant 1..4 */
-    uint8_t idx = (uint8_t)(phase & 63);        /* Index 0..63 into LUT */
+    uint8_t q   = (uint8_t)((phase >> 6) + 1);
+    uint8_t idx = (uint8_t)(phase & 63);
     if (q == 1) return  QUARTER_WAVE_64[idx];
     if (q == 2) return (idx == 0) ? -1 : -QUARTER_WAVE_64[64 - idx];
     if (q == 3) return -QUARTER_WAVE_64[idx];
@@ -124,15 +124,11 @@ static inline int32_t add_z_no_zero(int32_t a, int32_t b) {
     return (sum == 0) ? -1 : sum;
 }
 
-/* Strictly Z \ {0} Perspective Projection (0 = -1): Output is 1..span (never 0) */
+/* Pure Z \ {0} Perspective Projection: Direct integer division, 0 resolves strictly to -1 */
 static inline int32_t project_z_no_zero(int64_t num, int64_t den, int32_t half_span) {
-    if (num > 0) {
-        int32_t cell = (int32_t)(num / den) + 1;      /* +1, +2, +3 ... */
-        return half_span + cell;
-    } else {
-        int32_t cell = -(int32_t)((-num) / den) - 1;  /* -1, -2, -3 ... (0 -> -1) */
-        return half_span + cell + 1;
-    }
+    int32_t cell = (int32_t)(num / den);
+    if (cell == 0) cell = -1;
+    return (cell > 0) ? (half_span + cell) : (half_span + cell + 1);
 }
 
 static inline void transduce_light_wave(uint8_t freq, uint8_t amp, int32_t depth_shade, uint8_t *r, uint8_t *g, uint8_t *b) {
@@ -161,7 +157,6 @@ static inline void transduce_light_wave(uint8_t freq, uint8_t amp, int32_t depth
     *b = (uint8_t)((out_b < 1U) ? 1U : out_b);
 }
 
-/* Inverse Pi-Square Volumetric Discs on 1-based Retina Coordinates (sx in 1..WIDTH, sy in 1..HEIGHT) */
 static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radius, uint8_t r, uint8_t g, uint8_t b) {
     if (radius <= 1) {
         if (cx >= 1 && cx <= WIDTH && cy >= 1 && cy <= HEIGHT) {
@@ -197,15 +192,15 @@ static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radiu
     }
 }
 
-/* Every 1+12 Space Crystal is an Equal Center: Direct Oblique 1+12 Basis Embedding */
+/* Proportioned 48-Layer 1+12 Pyramid (Apex at top -24, Base at bottom +24) */
 void build_fcc_crystal_pyramid(void) {
     pyramid = (PyramidCrystal *)malloc(MAX_PYRAMID_CELLS * sizeof(PyramidCrystal));
     pyramid_count = 1;
 
     for (int32_t layer = 1; layer <= PYRAMID_LAYERS; layer++) {
-        int32_t half = (PYRAMID_LAYERS - layer + 1) / 2;
-        int32_t y_pos = ((PYRAMID_LAYERS / 2) - layer + 1);
-        if (y_pos == 0) y_pos = -1;
+        int32_t half  = (layer + 1) / 2;
+        int32_t y_pos = layer - (PYRAMID_LAYERS / 2) - 1;
+        if (y_pos >= 0) y_pos += 1;
 
         for (int32_t iz = -half; iz <= half; iz++) {
             int32_t cz = (iz == 0) ? -1 : iz;
@@ -217,13 +212,12 @@ void build_fcc_crystal_pyramid(void) {
                 int32_t max_xz = (ax > az) ? ax : az;
                 int32_t depth_from_hull = half - max_xz;
 
-                if (depth_from_hull <= 2 || layer <= 2) {
+                if (depth_from_hull <= 2 || layer >= PYRAMID_LAYERS - 1) {
                     if (pyramid_count <= MAX_PYRAMID_CELLS) {
-                        /* Oblique 1+12 FCC staggering without dropping any lattice center */
                         int32_t stagger = ((layer & 1) == 1) ? 1 : -1;
-                        pyramid[pyramid_count - 1].lx = (int16_t)add_z_no_zero(cx * 2, stagger);
+                        pyramid[pyramid_count - 1].lx = add_z_no_zero(cx, stagger);
                         pyramid[pyramid_count - 1].ly = (int16_t)y_pos;
-                        pyramid[pyramid_count - 1].lz = (int16_t)add_z_no_zero(cz * 2, -stagger);
+                        pyramid[pyramid_count - 1].lz = add_z_no_zero(cz, -stagger);
                         pyramid[pyramid_count - 1].facet_phase = (uint8_t)((layer * 7 + cx * 11 + cz * 13) & 0xFF);
                         pyramid[pyramid_count - 1].shell_flag = (int8_t)((depth_from_hull <= 1) ? 1 : -1);
                         pyramid_count++;
@@ -235,31 +229,29 @@ void build_fcc_crystal_pyramid(void) {
     pyramid_count--;
 }
 
-/* Direct 1+12 Basis Embedding: Every Index (a,b,c) in (Z \ {0})^3 is a 1+12 Crystal Center */
 void respawn_agent_at_inlet(uint32_t i, uint32_t seed_offset) {
     uint32_t h1 = (i * 2654435761U) + (seed_offset * 1597334677U);
     uint32_t h2 = (h1 ^ (h1 >> 15)) * 2246822519U;
     uint32_t h3 = (h2 ^ (h2 >> 13)) * 3266489917U;
 
     int32_t a = -98 + (int32_t)(h1 % 23U);
-    int32_t b = (int32_t)(h2 % 65U) - 32;
-    int32_t c = (int32_t)(h3 % 65U) - 32;
+    int32_t b = (int32_t)(h2 % 48U) - 24;
+    int32_t c = (int32_t)(h3 % 48U) - 24;
 
     if (a == 0) a = -1;
     if (b == 0) b = -1;
     if (c == 0) c = -1;
 
-    /* 1+12 FCC Basis Vectors: X = a+c, Y = a+b, Z = b+c (every node is an equal 1+12 center) */
+    /* 1+12 FCC Basis Vectors: Every node (a,b,c) is an equal 1+12 crystal center */
     agents[i].x = (int16_t)add_z_no_zero(a, c);
     agents[i].y = (int16_t)add_z_no_zero(b, c);
     agents[i].z = (int16_t)add_z_no_zero(a, b);
 
-    /* Strictly Non-Zero Velocity in Z \ {0}: Laminar +1..+3 with 1-bit chiral micro-oscillation */
     agents[i].vx = (int8_t)(1 + (int32_t)(h3 % 3U));
     agents[i].vy = (int8_t)((h2 & 1U) ? 1 : -1);
     agents[i].vz = (int8_t)((h3 & 1U) ? 1 : -1);
 
-    agents[i].wave_freq  = (uint8_t)(92 + ((agents[i].y + 65) >> 1));
+    agents[i].wave_freq  = (uint8_t)(92 + ((agents[i].y + 50) & 63));
     agents[i].wave_amp   = (uint8_t)(175 + (h2 & 63));
     agents[i].flow_state = 1;
 }
@@ -290,7 +282,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
     uint8_t hover_phase   = (uint8_t)((frame * 2) & 0xFF);
     int32_t cos_p         = get_smooth_cos(pyr_rot_phase);
     int32_t sin_p         = get_smooth_sin(pyr_rot_phase);
-    int32_t hover_y       = add_z_no_zero(PYRAMID_CENTER_Y, (get_smooth_sin(hover_phase) * 9) / SCALE);
+    int32_t hover_y       = add_z_no_zero(PYRAMID_CENTER_Y, (get_smooth_sin(hover_phase) * 8) / SCALE);
     int32_t pyr_half      = PYRAMID_LAYERS / 2;
 
     uint32_t impacts = 1;
@@ -301,7 +293,6 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         int32_t ny = step_z_no_zero((int32_t)agents[idx].y, (int32_t)agents[idx].vy);
         int32_t nz = step_z_no_zero((int32_t)agents[idx].z, (int32_t)agents[idx].vz);
 
-        /* Laminar 1-bit chiral oscillation (+/-1, never 0) preserves straight mean streamline */
         if (agents[idx].flow_state == 1) {
             agents[idx].vy = (int8_t)-agents[idx].vy;
             agents[idx].vz = (int8_t)-agents[idx].vz;
@@ -311,9 +302,10 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         int32_t rel_y = ny - hover_y;
         int32_t rel_z = nz - PYRAMID_CENTER_Z;
 
+        /* Upright pyramid collision envelope (apex at rel_y = -24, wide base at rel_y = +24) */
         if (rel_y >= -pyr_half && rel_y <= pyr_half) {
-            int32_t allowed_r = (rel_y + pyr_half) >> 1;
-            if (allowed_r < 3) allowed_r = 3;
+            int32_t allowed_r = (rel_y + pyr_half + 2) >> 1;
+            if (allowed_r < 2) allowed_r = 2;
             int32_t ax = (rel_x < 0) ? -rel_x : rel_x;
             int32_t az = (rel_z < 0) ? -rel_z : rel_z;
 
