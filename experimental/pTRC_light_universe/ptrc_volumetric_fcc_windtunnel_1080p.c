@@ -34,7 +34,7 @@
 
 #define PYRAMID_LAYERS      52
 #define PYRAMID_CENTER_X    (-24)
-#define PYRAMID_CENTER_Y    (-4)
+#define PYRAMID_CENTER_Y    (-6)
 #define PYRAMID_CENTER_Z    1
 #define MAX_PYRAMID_CELLS   16000
 
@@ -56,7 +56,7 @@ typedef struct {
     int8_t  vx, vy, vz;
     uint8_t wave_freq;
     uint8_t wave_amp;
-    int8_t  flow_state;     /* +1 = Laminar Chiral Stream, +3 = Deflected Vortex */
+    int8_t  flow_state;     /* +1 = Laminar Stream, +3 = Deflected Vortex */
 } AgentCrystal;
 
 typedef struct {
@@ -192,33 +192,32 @@ static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radiu
     }
 }
 
-/* Cross-Free 52-Layer 1+12 Pyramid: Iterates strictly over Z \ {0} without doubling -1 */
 void build_fcc_crystal_pyramid(void) {
     pyramid = (PyramidCrystal *)malloc(MAX_PYRAMID_CELLS * sizeof(PyramidCrystal));
     pyramid_count = 1;
 
     for (int32_t layer = 1; layer <= PYRAMID_LAYERS; layer++) {
-        int32_t half  = (layer + 1) / 2;
-        int32_t y_pos = (layer <= (PYRAMID_LAYERS / 2))
-                        ? (layer - (PYRAMID_LAYERS / 2) - 1)
-                        : (layer - (PYRAMID_LAYERS / 2));
+        int32_t half  = (PYRAMID_LAYERS - layer + 1) / 2;
+        int32_t y_pos = ((PYRAMID_LAYERS / 2) - layer + 1);
+        if (y_pos == 0) y_pos = -1;
 
         for (int32_t iz = -half; iz <= half; iz++) {
             if (iz == 0) continue;
             for (int32_t ix = -half; ix <= half; ix++) {
                 if (ix == 0) continue;
 
+                if (((ix + y_pos + iz) & 1) != 0) continue;
+
                 int32_t ax = (ix < 0) ? -ix : ix;
                 int32_t az = (iz < 0) ? -iz : iz;
                 int32_t max_xz = (ax > az) ? ax : az;
                 int32_t depth_from_hull = half - max_xz;
 
-                if (depth_from_hull <= 2 || layer >= PYRAMID_LAYERS - 1) {
+                if (depth_from_hull <= 2 || layer <= 2) {
                     if (pyramid_count <= MAX_PYRAMID_CELLS) {
-                        int32_t stagger = ((layer & 1) == 1) ? 1 : -1;
-                        pyramid[pyramid_count - 1].lx = (int16_t)add_z_no_zero(ix, stagger);
+                        pyramid[pyramid_count - 1].lx = (int16_t)ix;
                         pyramid[pyramid_count - 1].ly = (int16_t)y_pos;
-                        pyramid[pyramid_count - 1].lz = (int16_t)add_z_no_zero(iz, -stagger);
+                        pyramid[pyramid_count - 1].lz = (int16_t)iz;
                         pyramid[pyramid_count - 1].facet_phase = (uint8_t)((layer * 7 + ix * 11 + iz * 13) & 0xFF);
                         pyramid[pyramid_count - 1].shell_flag = (int8_t)((depth_from_hull <= 1) ? 1 : -1);
                         pyramid_count++;
@@ -230,18 +229,17 @@ void build_fcc_crystal_pyramid(void) {
     pyramid_count--;
 }
 
-/* Uniform Full-Viewport Wind-Tunnel Inlet in Z \ {0} (Covers entire screen height y = -68..+68) */
+/* Uniform Full-Screen Wind-Tunnel Inlet in Z \ {0} (Covers y = -105..+105 across entire 1080p height) */
 void respawn_agent_at_inlet(uint32_t i, uint32_t seed_offset) {
     uint32_t h1 = (i * 2654435761U) + (seed_offset * 1597334677U);
     uint32_t h2 = (h1 ^ (h1 >> 15)) * 2246822519U;
     uint32_t h3 = (h2 ^ (h2 >> 13)) * 3266489917U;
 
     int32_t sx = -205 + (int32_t)(h1 % 45U);
-    int32_t sy = (int32_t)(h2 % 136U) - 68;
+    int32_t sy = (int32_t)(h2 % 210U) - 105;
     int32_t sz = (int32_t)(h3 % 116U) - 58;
 
-    /* 1+12 FCC lattice stagger without triangular sum clustering */
-    if (((sx + sy + sz) & 1) == 1) {
+    if (((sx + sy + sz) & 1) != 0) {
         sy = step_z_no_zero(sy, 1);
     }
     if (sx == 0) sx = -1;
@@ -253,10 +251,10 @@ void respawn_agent_at_inlet(uint32_t i, uint32_t seed_offset) {
     agents[i].z = (int16_t)sz;
 
     agents[i].vx = (int8_t)(1 + (int32_t)(h3 % 3U));
-    agents[i].vy = (int8_t)((h2 & 1U) ? 1 : -1);
-    agents[i].vz = (int8_t)((h3 & 1U) ? 1 : -1);
+    agents[i].vy = (int8_t)((i & 1U) ? 1 : -1);
+    agents[i].vz = (int8_t)(((i >> 1) & 1U) ? 1 : -1);
 
-    agents[i].wave_freq  = (uint8_t)(92 + ((sy + 68) >> 1));
+    agents[i].wave_freq  = (uint8_t)(92 + (((sy + 105) * 64) / 210));
     agents[i].wave_amp   = (uint8_t)(180 + (h2 & 63));
     agents[i].flow_state = 1;
 }
@@ -298,6 +296,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         int32_t ny = step_z_no_zero((int32_t)agents[idx].y, (int32_t)agents[idx].vy);
         int32_t nz = step_z_no_zero((int32_t)agents[idx].z, (int32_t)agents[idx].vz);
 
+        /* Laminar stream keeps exact level direction until hitting a crystal surface */
         if (agents[idx].flow_state == 1) {
             agents[idx].vy = (int8_t)-agents[idx].vy;
             agents[idx].vz = (int8_t)-agents[idx].vz;
@@ -307,9 +306,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         int32_t rel_y = ny - hover_y;
         int32_t rel_z = nz - PYRAMID_CENTER_Z;
 
-        /* Upright pyramid collision envelope (apex at rel_y = -26, wide base at rel_y = +26) */
         if (rel_y >= -pyr_half && rel_y <= pyr_half) {
-            int32_t allowed_r = (rel_y + pyr_half + 2) >> 1;
+            int32_t allowed_r = (pyr_half - rel_y + 2) >> 1;
             if (allowed_r < 2) allowed_r = 2;
             int32_t ax = (rel_x < 0) ? -rel_x : rel_x;
             int32_t az = (rel_z < 0) ? -rel_z : rel_z;
@@ -317,7 +315,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             if (ax <= allowed_r && az <= allowed_r) {
                 impacts++;
                 agents[idx].vx = (rel_x < 0) ? -1 : 2;
-                agents[idx].vy = (rel_y <= 0) ? -1 : 1;
+                agents[idx].vy = (rel_y >= 0) ? 1 : -1;
                 agents[idx].vz = (rel_z >= 0) ? 1 : -1;
 
                 if (cos_p > 0) agents[idx].vz = (int8_t)-agents[idx].vz;
@@ -351,7 +349,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             }
         }
 
-        if (nx > 205 || nx < -215 || ny > 75 || ny < -75 || nz > 75 || nz < -75) {
+        if (nx > 205 || nx < -215 || ny > 110 || ny < -110 || nz > 75 || nz < -75) {
             respawn_agent_at_inlet(idx, frame + idx);
         } else {
             agents[idx].x = (int16_t)nx;
