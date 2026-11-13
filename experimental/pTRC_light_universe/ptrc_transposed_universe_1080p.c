@@ -348,8 +348,10 @@ int main(void) {
     }
 
     pclose(pipe);
-    uint64_t avg_us = (total_ns / FRAMES) / 1000ULL;
+       uint64_t est_fps = (avg_us > 0ULL) ? (1000000ULL / avg_us) : 0ULL;
     printf("[ OK ] Transponiertes 115k-Video fertig! Rechenzeit pro Frame: %" PRIu64 " us (~%" PRIu64 " FPS)\n",
+           avg_us, est_fps);
+
            avg_us, (avg_us > 0) ? (1000000ULL / avg_us) : 0ULL);
 
     free(pyramid);
