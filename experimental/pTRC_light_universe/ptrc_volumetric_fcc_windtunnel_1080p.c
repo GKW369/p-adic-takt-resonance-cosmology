@@ -32,9 +32,9 @@
 #define FREE_FACETS         120
 #define TOTAL_FACETS        144
 
-#define PYRAMID_LAYERS      48
-#define PYRAMID_CENTER_X    (-25)
-#define PYRAMID_CENTER_Y    (-6)
+#define PYRAMID_LAYERS      52
+#define PYRAMID_CENTER_X    (-24)
+#define PYRAMID_CENTER_Y    (-4)
 #define PYRAMID_CENTER_Z    1
 #define MAX_PYRAMID_CELLS   16000
 
@@ -192,33 +192,34 @@ static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radiu
     }
 }
 
-/* Proportioned 48-Layer 1+12 Pyramid (Apex at top -24, Base at bottom +24) */
+/* Cross-Free 52-Layer 1+12 Pyramid: Iterates strictly over Z \ {0} without doubling -1 */
 void build_fcc_crystal_pyramid(void) {
     pyramid = (PyramidCrystal *)malloc(MAX_PYRAMID_CELLS * sizeof(PyramidCrystal));
     pyramid_count = 1;
 
     for (int32_t layer = 1; layer <= PYRAMID_LAYERS; layer++) {
         int32_t half  = (layer + 1) / 2;
-        int32_t y_pos = layer - (PYRAMID_LAYERS / 2) - 1;
-        if (y_pos >= 0) y_pos += 1;
+        int32_t y_pos = (layer <= (PYRAMID_LAYERS / 2))
+                        ? (layer - (PYRAMID_LAYERS / 2) - 1)
+                        : (layer - (PYRAMID_LAYERS / 2));
 
         for (int32_t iz = -half; iz <= half; iz++) {
-            int32_t cz = (iz == 0) ? -1 : iz;
+            if (iz == 0) continue;
             for (int32_t ix = -half; ix <= half; ix++) {
-                int32_t cx = (ix == 0) ? -1 : ix;
+                if (ix == 0) continue;
 
-                int32_t ax = (cx < 0) ? -cx : cx;
-                int32_t az = (cz < 0) ? -cz : cz;
+                int32_t ax = (ix < 0) ? -ix : ix;
+                int32_t az = (iz < 0) ? -iz : iz;
                 int32_t max_xz = (ax > az) ? ax : az;
                 int32_t depth_from_hull = half - max_xz;
 
                 if (depth_from_hull <= 2 || layer >= PYRAMID_LAYERS - 1) {
                     if (pyramid_count <= MAX_PYRAMID_CELLS) {
                         int32_t stagger = ((layer & 1) == 1) ? 1 : -1;
-                        pyramid[pyramid_count - 1].lx = add_z_no_zero(cx, stagger);
+                        pyramid[pyramid_count - 1].lx = (int16_t)add_z_no_zero(ix, stagger);
                         pyramid[pyramid_count - 1].ly = (int16_t)y_pos;
-                        pyramid[pyramid_count - 1].lz = add_z_no_zero(cz, -stagger);
-                        pyramid[pyramid_count - 1].facet_phase = (uint8_t)((layer * 7 + cx * 11 + cz * 13) & 0xFF);
+                        pyramid[pyramid_count - 1].lz = (int16_t)add_z_no_zero(iz, -stagger);
+                        pyramid[pyramid_count - 1].facet_phase = (uint8_t)((layer * 7 + ix * 11 + iz * 13) & 0xFF);
                         pyramid[pyramid_count - 1].shell_flag = (int8_t)((depth_from_hull <= 1) ? 1 : -1);
                         pyramid_count++;
                     }
@@ -229,30 +230,34 @@ void build_fcc_crystal_pyramid(void) {
     pyramid_count--;
 }
 
+/* Uniform Full-Viewport Wind-Tunnel Inlet in Z \ {0} (Covers entire screen height y = -68..+68) */
 void respawn_agent_at_inlet(uint32_t i, uint32_t seed_offset) {
     uint32_t h1 = (i * 2654435761U) + (seed_offset * 1597334677U);
     uint32_t h2 = (h1 ^ (h1 >> 15)) * 2246822519U;
     uint32_t h3 = (h2 ^ (h2 >> 13)) * 3266489917U;
 
-    int32_t a = -98 + (int32_t)(h1 % 23U);
-    int32_t b = (int32_t)(h2 % 48U) - 24;
-    int32_t c = (int32_t)(h3 % 48U) - 24;
+    int32_t sx = -205 + (int32_t)(h1 % 45U);
+    int32_t sy = (int32_t)(h2 % 136U) - 68;
+    int32_t sz = (int32_t)(h3 % 116U) - 58;
 
-    if (a == 0) a = -1;
-    if (b == 0) b = -1;
-    if (c == 0) c = -1;
+    /* 1+12 FCC lattice stagger without triangular sum clustering */
+    if (((sx + sy + sz) & 1) == 1) {
+        sy = step_z_no_zero(sy, 1);
+    }
+    if (sx == 0) sx = -1;
+    if (sy == 0) sy = -1;
+    if (sz == 0) sz = -1;
 
-    /* 1+12 FCC Basis Vectors: Every node (a,b,c) is an equal 1+12 crystal center */
-    agents[i].x = (int16_t)add_z_no_zero(a, c);
-    agents[i].y = (int16_t)add_z_no_zero(b, c);
-    agents[i].z = (int16_t)add_z_no_zero(a, b);
+    agents[i].x = (int16_t)sx;
+    agents[i].y = (int16_t)sy;
+    agents[i].z = (int16_t)sz;
 
     agents[i].vx = (int8_t)(1 + (int32_t)(h3 % 3U));
     agents[i].vy = (int8_t)((h2 & 1U) ? 1 : -1);
     agents[i].vz = (int8_t)((h3 & 1U) ? 1 : -1);
 
-    agents[i].wave_freq  = (uint8_t)(92 + ((agents[i].y + 50) & 63));
-    agents[i].wave_amp   = (uint8_t)(175 + (h2 & 63));
+    agents[i].wave_freq  = (uint8_t)(92 + ((sy + 68) >> 1));
+    agents[i].wave_amp   = (uint8_t)(180 + (h2 & 63));
     agents[i].flow_state = 1;
 }
 
@@ -266,8 +271,8 @@ void init_volumetric_universe(void) {
 
     for (uint32_t i = 1; i <= NUM_AGENTS; i++) {
         respawn_agent_at_inlet(i - 1, i * 17U + 3U);
-        uint32_t spread = (i * 2654435761U) % 388U;
-        int32_t ix = -195 + (int32_t)spread;
+        uint32_t spread = (i * 2654435761U) % 408U;
+        int32_t ix = -205 + (int32_t)spread;
         if (ix == 0) ix = -1;
         agents[i - 1].x = (int16_t)ix;
     }
@@ -302,7 +307,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
         int32_t rel_y = ny - hover_y;
         int32_t rel_z = nz - PYRAMID_CENTER_Z;
 
-        /* Upright pyramid collision envelope (apex at rel_y = -24, wide base at rel_y = +24) */
+        /* Upright pyramid collision envelope (apex at rel_y = -26, wide base at rel_y = +26) */
         if (rel_y >= -pyr_half && rel_y <= pyr_half) {
             int32_t allowed_r = (rel_y + pyr_half + 2) >> 1;
             if (allowed_r < 2) allowed_r = 2;
@@ -346,7 +351,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
             }
         }
 
-        if (nx > 195 || nx < -205 || ny > 75 || ny < -75 || nz > 75 || nz < -75) {
+        if (nx > 205 || nx < -215 || ny > 75 || ny < -75 || nz > 75 || nz < -75) {
             respawn_agent_at_inlet(idx, frame + idx);
         } else {
             agents[idx].x = (int16_t)nx;
