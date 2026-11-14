@@ -24,12 +24,12 @@ This directory contains the modular, production-ready C-language implementation 
 ## 📁 Contained Files (v3.2)
 * **`ptrc_crystal.h` & `ptrc_crystal.c`**: Modular C core implementing the **Active 144-Facet Vector Equilibrium Sponge**, **4-Quadrant Crossed Plichta-Mirror reflection over `-1`**, the **137-Takt Fine-Structure Render Pulse**, a live **Multi-Ring CRT Cascade** ($\mathbb{Z}/210\mathbb{Z} \times \mathbb{Z}/11\mathbb{Z} \times \mathbb{Z}/13\mathbb{Z} \times \mathbb{Z}/17\mathbb{Z}$), and a **192-bit (24-byte) SLIP-MAC Authentication Tag**.
 * **`ptrc_crypt_demo.c`**: Standalone verification binary demonstrating AEAD encryption, AAD header binding, and 1-bit tamper rejection.
-* **`src/ptrc_crystal_aead.py` & `src/00_test_ptrc_crypt_parity.py`**: Bit-exact Python reference and automated cross-language parity audit.
+* **`src/ptrc_crystal_aead.py` & `src/00_test_ptrc_crypt_parity.py`**: Bit-exact Python reference and automated production cross-language parity audit.
 
 ## 🚀 Compilation & Verification (v3.2)
 ```bash
 gcc -O3 -Wall -Wextra ptrc_crystal.c ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
-python3 src/00_test_ptrc_crypt_parity.py
+python3 ../../src/00_test_ptrc_crypt_parity.py
 ```
 
 ## 🔌 Target Architecture Deployment (ARM Cortex-M0+ Bare-Metal)
@@ -63,12 +63,20 @@ This section documents the upgraded **pTRC Cryptographic Inference Core (v4.0)**
   2. **512-Bit `pTRC-KDF` (`ptrc_kdf_derive`)**: Derives 512-bit session keys and 128-bit nonces via a 576-step crystalline sponge cascade.
   3. **Holographic 4-Quadrant Crossed Plichta-Mirror & 137-Takt Pulse**: Bijective reflection across `-1` inside $\{-128 \dots -1, +1 \dots +128\}$ coupled with a global 137-takt synchronization pulse.
   4. **192-Bit SLIP-MAC AEAD**: Constant-time verification ($O(1)$) and `volatile` SRAM zeroization (`ptrc_crystal_wipe`).
-* **`ptrc_crypt_demo.c` & `CMakeLists.txt`**: Standalone verification binary and CMake build configuration.
-* **`src/ptrc_crystal_aead.py`, `src/00_test_ptrc_crypt_parity.py`, `src/00_test_ptrc_crypt_metrics.py`**: Bit-exact Python reference, cross-language parity audit, and Strict Avalanche Criterion (SAC) benchmark.
+* **`ptrc_crypt_demo.c` & `CMakeLists.txt`**: Standalone verification binary and root CMake build configuration.
+* **`src/ptrc_crystal_aead.py`, `src/00_test_ptrc_crypt_parity.py`, `src/00_test_ptrc_crypt_metrics.py`**: Bit-exact Python reference, production cross-language parity audit, and 512-bit Strict Avalanche Criterion (SAC) benchmark.
 
 ## 🚀 Compilation & Verification (v4.0)
+Run from the repository root directory:
 ```bash
 cmake -B build && cmake --build build && ./build/ptrc_hardware_demo
+python3 src/00_test_ptrc_crypt_parity.py
+python3 src/00_test_ptrc_crypt_metrics.py
+```
+
+Or run directly from inside `embedded/crypto/`:
+```bash
+gcc -O3 -Wall -Wextra ptrc_crystal.c ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
 python3 ../../src/00_test_ptrc_crypt_parity.py
 python3 ../../src/00_test_ptrc_crypt_metrics.py
 ```
@@ -89,4 +97,4 @@ Instead of relying on static prime lookup tables in Flash or RAM, v4.0 anchors i
 The `ptrc_kdf_derive` primitive ingests master keying material, domain-separation labels, and context salts into the 144-facet vector equilibrium sponge. Over 576 non-linear mixing rounds ($24 \times 24$ contact-junction rotations coupled with 4-quadrant Plichta-Mirror reflections across `-1`), it squeezes independent 512-bit session keys and 128-bit nonces in strict constant time ($O(1)$) inside a ~180-byte stack frame.
 
 ### 3. Strict Avalanche Criterion (SAC) & Cross-Language Bit-Parity
-Verified by `00_test_ptrc_crypt_metrics.py` and `00_test_ptrc_crypt_parity.py`, flipping any single input bit in the 512-bit key, 128-bit nonce, AAD header, or plaintext induces an output bit-flip probability tightly centered at **50.0%** across both ciphertext and the 192-bit SLIP-MAC tag. Bit-exact deterministic execution is enforced across C99 bare-metal targets (ARM Cortex-M0+) and Python reference audits without floating-point hardware (`-mfloat-abi=soft`).
+Verified by `src/00_test_ptrc_crypt_metrics.py` and `src/00_test_ptrc_crypt_parity.py`, flipping any single input bit in the 512-bit key, 128-bit nonce, AAD header, or plaintext induces an output bit-flip probability tightly centered at **50.0%** across both ciphertext and the 192-bit SLIP-MAC tag. Bit-exact deterministic execution is enforced across C99/C11 bare-metal targets (ARM Cortex-M0+) and Python reference audits without floating-point hardware (`-mfloat-abi=soft`).
