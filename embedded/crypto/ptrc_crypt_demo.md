@@ -60,9 +60,10 @@ This section documents the upgraded **pTRC Cryptographic Inference Core (v4.0)**
 ## 📁 Contained Files (v4.0)
 * **`ptrc_crystal.h` & `ptrc_crystal.c`**: Modular C core implementing:
   1. **Zero-Table pTRC Primorial Macro-Cascade (`P15 = 614,889,782,588,491,410`)**: Decodes four 64-bit coprime Primorial-anchored ring moduli directly from the first 256 bits of the 512-bit key via Euclidean GCD locking (`ptrc_gcd64`), requiring zero lookup tables in Flash/RAM.
-  2. **512-Bit `pTRC-KDF` (`ptrc_kdf_derive`)**: Derives 512-bit session keys and 128-bit nonces via a 576-step crystalline sponge cascade.
-  3. **Holographic 4-Quadrant Crossed Plichta-Mirror & 137-Takt Pulse**: Bijective reflection across `-1` inside $\{-128 \dots -1, +1 \dots +128\}$ coupled with a global 137-takt synchronization pulse.
-  4. **192-Bit SLIP-MAC AEAD**: Constant-time verification ($O(1)$) and `volatile` SRAM zeroization (`ptrc_crystal_wipe`).
+  2. **Deterministic 8-Prime CRT Key & Nonce Generator (`ptrc_primorial_keygen`)**: Generates non-repeating 512-bit keys and 128-bit nonces across 8 pairwise coprime 1-byte prime rings (`251, 241, 239, 233, 229, 227, 223, 211`, period $> 1.09 \times 10^{19}$ takts) without relying on an analog hardware TRNG.
+  3. **512-Bit `pTRC-KDF` (`ptrc_kdf_derive`)**: Derives 512-bit session keys and 128-bit nonces via a 576-step crystalline sponge cascade.
+  4. **Holographic 4-Quadrant Crossed Plichta-Mirror & 137-Takt Pulse**: Bijective reflection across `-1` inside $\{-128 \dots -1, +1 \dots +128\}$ coupled with a global 137-takt synchronization pulse.
+  5. **192-Bit SLIP-MAC AEAD**: Constant-time verification ($O(1)$) and `volatile` SRAM zeroization (`ptrc_crystal_wipe`).
 * **`ptrc_crypt_demo.c` & `CMakeLists.txt`**: Standalone verification binary and root CMake build configuration.
 * **`src/ptrc_crystal_aead.py`, `src/00_test_ptrc_crypt_parity.py`, `src/00_test_ptrc_crypt_metrics.py`**: Bit-exact Python reference, production cross-language parity audit, and 512-bit Strict Avalanche Criterion (SAC) benchmark.
 
@@ -93,8 +94,11 @@ arm-none-eabi-gcc -O3 -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -c ptrc_cryst
 ### 1. Zero-Table Primorial Macro-Cascade (`P15 = 614,889,782,588,491,410`)
 Instead of relying on static prime lookup tables in Flash or RAM, v4.0 anchors its modular ring arithmetic on the 15th Primorial $P_{15} = 2 \times 3 \times 5 \times 7 \times 11 \times 13 \times 17 \times 19 \times 23 \times 29 \times 31 \times 37 \times 41 \times 43 \times 47 = 614,889,782,588,491,410$. During initialization, the first 256 bits of the 512-bit master key parameterize four 64-bit dynamic ring moduli, locked to strict pairwise coprimality via Euclidean GCD (`ptrc_gcd64`). This eliminates table-driven cache-timing side channels while generating an astronomical Chinese Remainder Theorem (CRT) cycle period well beyond $2^{240}$ takts.
 
-### 2. 512-Bit Crystalline Key Derivation Function (`pTRC-KDF`)
+### 2. Deterministic 8-Prime CRT Key & Nonce Generator (`ptrc_primorial_keygen`)
+For resource-constrained microcontrollers lacking a certified analog True Random Number Generator (TRNG), `ptrc_primorial_keygen` advances a session takt counter and domain seed across eight pairwise coprime 1-byte prime moduli (`251, 241, 239, 233, 229, 227, 223, 211`), each coprime to both `210` and `137`. By the Chinese Remainder Theorem, this 8-byte state spans a non-repeating period exceeding $1.09 \times 10^{19}$ takts, producing unique 128-bit nonces and 512-bit keys deterministically without analog entropy hardware.
+
+### 3. 512-Bit Crystalline Key Derivation Function (`pTRC-KDF`)
 The `ptrc_kdf_derive` primitive ingests master keying material, domain-separation labels, and context salts into the 144-facet vector equilibrium sponge. Over 576 non-linear mixing rounds ($24 \times 24$ contact-junction rotations coupled with 4-quadrant Plichta-Mirror reflections across `-1`), it squeezes independent 512-bit session keys and 128-bit nonces in strict constant time ($O(1)$) inside a ~180-byte stack frame.
 
-### 3. Strict Avalanche Criterion (SAC) & Cross-Language Bit-Parity
-Verified by `src/00_test_ptrc_crypt_metrics.py` and `src/00_test_ptrc_crypt_parity.py`, flipping any single input bit in the 512-bit key, 128-bit nonce, AAD header, or plaintext induces an output bit-flip probability tightly centered at **50.0%** across both ciphertext and the 192-bit SLIP-MAC tag. Bit-exact deterministic execution is enforced across C99/C11 bare-metal targets (ARM Cortex-M0+) and Python reference audits without floating-point hardware (`-mfloat-abi=soft`).
+### 4. Strict Avalanche Criterion (SAC) & Cross-Language Bit-Parity
+Verified by `src/00_test_ptrc_crypt_metrics.py` and `src/00_test_ptrc_crypt_parity.py`, flipping any single input bit in the 512-bit key, 128-bit nonce, AAD header, or plaintext induces an output bit-flip probability tightly centered at **50.0%** across both ciphertext and the 192-bit SLIP-MAC tag. Bit-exact deterministic execution is enforced across C11 bare-metal targets (ARM Cortex-M0+) and Python reference audits without floating-point hardware (`-mfloat-abi=soft`).
