@@ -5,7 +5,7 @@
 # LICENSE & LIABILITY NOTICE:
 # Academic, non-commercial research and evaluation is permitted strictly under 
 # the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+# For the complete, unedited license text see: https://gnu.org
 #
 # ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
 # integration requires a separate, individually negotiated commercial infrastructure 
@@ -16,7 +16,7 @@
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
 # ==============================================================================
 
- name: pTRC Framework — Complete Lattice, Crypto v4.0 & Bare-Metal CI
+name: pTRC Framework — Complete Lattice, Crypto v4.0 & Bare-Metal CI
 
 on:
   push:
@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   core-lattice-and-axiom-audit:
-    name: 1. Core Lattice & Z \ {0} Axiom Tests (Python ${{ matrix.python-version }})
+    name: 1. Core Lattice & 20-Module First-Principles Audit (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -49,21 +49,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install numpy pytest
+          pip install numpy
 
-      - name: Run Discrete 1+12 Space-Crystal Lattice & Axiom Suite
+      - name: Run 20-Module First-Principles Engine & Edge-AI Demo
         env:
           PYTHONPATH: src
         run: |
-          if [ -f src/test_ptrc_core.py ]; then
-            pytest src/test_ptrc_core.py -v
-          fi
-          if [ -f src/ptrc_axiom_audit.py ]; then
-            python src/ptrc_axiom_audit.py
-          fi
-          if [ -f examples/01_harmonic_oscillator.py ]; then
-            python examples/01_harmonic_oscillator.py
-          fi
+          python3 src/00_ptrc_first_principles_engine.py
+          python3 embedded/ai/00_ptrc_neural_network_demo.py
 
   crypto-v4-cmake-and-parity:
     name: 2. Crypto v4.0 (512-Bit C11 & Python Parity + Avalanche Metrics)
@@ -90,25 +83,25 @@ jobs:
 
       - name: Run Standalone C11 512-Bit Crypto Demo
         run: |
-          ./build/ptrc_crypt_demo
+          ./build/ptrc_hardware_demo
 
       - name: Run 512-Bit C11 / Python Bit-Parity & Tamper Lock Suite
         env:
           PYTHONPATH: src
         run: |
-          python src/test_ptrc_crypt_parity.py
+          python3 src/00_test_ptrc_crypt_parity.py
 
-      - name: Run Cryptographic Avalanche, Chi-Square & Zero-Float Metrics
+      - name: Run 512-Bit Strict Avalanche & Shannon Entropy Audit
         env:
           PYTHONPATH: src
         run: |
-          python src/test_ptrc_crypt_metrics.py
+          python3 src/00_test_ptrc_crypt_metrics.py
 
-      - name: Run Full Python/C11 End-to-End Terminal Demo
+      - name: Run Full Python Terminal Crypto Demo
         env:
           PYTHONPATH: src
         run: |
-          python examples/00_ptrc_crypt_demo.py
+          python3 src/00_ptrc_crypt_demo.py
 
   bare-metal-and-zero-float-gate:
     name: 3. Bare-Metal Cortex-M0+ Cross-Compile & Zero-Float Gate
@@ -140,7 +133,7 @@ jobs:
           targets = [
               pathlib.Path("embedded/crypto/ptrc_crystal.h"),
               pathlib.Path("embedded/crypto/ptrc_crystal.c"),
-              pathlib.Path("examples/ptrc_crypt_demo.c"),
+              pathlib.Path("embedded/crypto/ptrc_crypt_demo.c"),
               pathlib.Path("src/ptrc_crystal_aead.py"),
               pathlib.Path("src/crypt_resonance.py"),
           ]
@@ -151,7 +144,6 @@ jobs:
               if not path.exists():
                   continue
               text = path.read_text(encoding="utf-8")
-              # Strip C block comments and Python docstrings/comments
               cleaned = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
               cleaned = re.sub(r"//.*", "", cleaned)
               cleaned = re.sub(r"#.*", "", cleaned)
