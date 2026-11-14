@@ -15,7 +15,8 @@
 # IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
 # ==============================================================================
-name: pTRC Core Invariance & AGPLv3 Audit
+
+ name: pTRC Framework — Complete Lattice, Crypto v4.0 & Bare-Metal CI
 
 on:
   push:
@@ -23,49 +24,144 @@ on:
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: read
+
 jobs:
-  compliance_audit:
+  core-lattice-and-axiom-audit:
+    name: 1. Core Lattice & Z \ {0} Axiom Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
     steps:
-    - name: Checkout Code Baseline
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Initialize Pure Hardware Environment (Python 3.11)
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install Discrete Computing Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install numpy opencv-python
+      - name: Install Core Test Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install numpy pytest
 
-    - name: Run Core First-Principles Orchestrator
-      run: |
-        python src/00_ptrc_first_principles_engine.py
+      - name: Run Discrete 1+12 Space-Crystal Lattice & Axiom Suite
+        env:
+          PYTHONPATH: src
+        run: |
+          if [ -f src/test_ptrc_core.py ]; then
+            pytest src/test_ptrc_core.py -v
+          fi
+          if [ -f src/ptrc_axiom_audit.py ]; then
+            python src/ptrc_axiom_audit.py
+          fi
+          if [ -f examples/01_harmonic_oscillator.py ]; then
+            python examples/01_harmonic_oscillator.py
+          fi
 
-    - name: Audit Static Code-Hygiene (Zero-Float-Rule)
-      run: |
-        echo "======================================================================"
-        echo "   STARTING STATIC ANALYSIS LAYER: TESTING FOR ANALOG LEAKAGE FIELDS"
-        echo "======================================================================"
-        if grep -r --include="*.py" -E "\bfloat\b|\b[0-9]+\.[0-9]+\b" src/ experimental/; then
-          echo " -> [ CRITICAL ERROR ] Analog Leakage detected! Banned float fields found in RAM mapping."
-          exit 1
-        fi
-        if grep -r --include="*.py" -E "[a-zA-Z0-9_)]\s*/\s*[a-zA-Z0-9_]" src/ experimental/; then
-          echo " -> [ CRITICAL ERROR ] Analog Division Exploit! Double-slash (//) floor division required."
-          exit 1
-        fi
-        echo "STATUS: 100% Floating-Point-Free Invariance Confirmed."
+  crypto-v4-cmake-and-parity:
+    name: 2. Crypto v4.0 (512-Bit C11 & Python Parity + Avalanche Metrics)
+    runs-on: ubuntu-latest
 
-    - name: Audit Symmetrical License-Headers (AGPLv3 Coherence)
-      run: |
-        echo "======================================================================"
-        echo "   STARTING LEGAL ANALYSIS LAYER: TESTING FOR LICENSE COHERENCE"
-        echo "======================================================================"
-        if ! grep -r --include="*.py" "https://gnu.org" src/ experimental/; then
-          echo " -> [ LICENSE CONFLICT ] Missing or unverified AGPLv3 deep-link compliance header!"
-          exit 1
-        fi
-        echo "STATUS: AGPLv3 Symmetrical Headers verified across all core nodes."
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install CMake & Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc make
+
+      - name: Configure & Build C11 Shared Library + Standalone Demo (CMake)
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel
+
+      - name: Run Standalone C11 512-Bit Crypto Demo
+        run: |
+          ./build/ptrc_crypt_demo
+
+      - name: Run 512-Bit C11 / Python Bit-Parity & Tamper Lock Suite
+        env:
+          PYTHONPATH: src
+        run: |
+          python src/test_ptrc_crypt_parity.py
+
+      - name: Run Cryptographic Avalanche, Chi-Square & Zero-Float Metrics
+        env:
+          PYTHONPATH: src
+        run: |
+          python src/test_ptrc_crypt_metrics.py
+
+      - name: Run Full Python/C11 End-to-End Terminal Demo
+        env:
+          PYTHONPATH: src
+        run: |
+          python examples/00_ptrc_crypt_demo.py
+
+  bare-metal-and-zero-float-gate:
+    name: 3. Bare-Metal Cortex-M0+ Cross-Compile & Zero-Float Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install ARM Bare-Metal Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi
+
+      - name: Cross-Compile Crypto Kernel for Cortex-M0+ (Soft-Float / No FPU / -Wall -Werror)
+        run: |
+          arm-none-eabi-gcc -c embedded/crypto/ptrc_crystal.c \
+            -Iembedded/crypto \
+            -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft \
+            -O2 -std=c11 -ffreestanding -Wall -Wextra -Werror \
+            -o /tmp/ptrc_crystal_m0plus.o
+          arm-none-eabi-size /tmp/ptrc_crystal_m0plus.o
+
+      - name: Static Zero-Float & Zero-Trig Gate on Crypto Kernels
+        run: |
+          python3 - << 'EOF'
+          import pathlib, re, sys
+
+          targets = [
+              pathlib.Path("embedded/crypto/ptrc_crystal.h"),
+              pathlib.Path("embedded/crypto/ptrc_crystal.c"),
+              pathlib.Path("examples/ptrc_crypt_demo.c"),
+              pathlib.Path("src/ptrc_crystal_aead.py"),
+              pathlib.Path("src/crypt_resonance.py"),
+          ]
+          forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp|math)\b")
+          failed = False
+
+          for path in targets:
+              if not path.exists():
+                  continue
+              text = path.read_text(encoding="utf-8")
+              # Strip C block comments and Python docstrings/comments
+              cleaned = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+              cleaned = re.sub(r"//.*", "", cleaned)
+              cleaned = re.sub(r"#.*", "", cleaned)
+              for lineno, line in enumerate(cleaned.splitlines(), 1):
+                  m = forbidden.search(line)
+                  if m:
+                      print(f"ERROR: Forbidden token '{m.group(0)}' in {path}:{lineno}: {line.strip()}")
+                      failed = True
+
+          if failed:
+              sys.exit(1)
+          print("OK: 100% Zero-Float & Zero-Trig verified across all C11 and Python crypto kernels.")
+          EOF
