@@ -19,7 +19,7 @@
 
 # 🧠 Crystalline Edge-AI Integration Layer (144-Facet Quantum Space Engine)
 
-This directory houses the deterministic, 1-Byte fixed-point implementation of the pTRC Crystalline Quantum Neural Network Core (`ptrc_neural_network_demo.py`) ver. 2.1.0-Alpha. 
+This directory houses the deterministic, 1-Byte fixed-point implementation of the pTRC Crystalline Quantum Neural Network Core (`00_ptrc_neural_network_demo.py`) ver. 2.1.0-Alpha. 
 
 By shifting processing logic from continuous fractional variables entirely into a 1-Byte physical register space ($\mathbb{Z}/256\mathbb{Z}$), this architecture achieves a formclosed, hardware-bound structural link that inherently prevents quantization entropy decay.
 
@@ -55,10 +55,10 @@ Because all operations are bounded to 1-Byte register spaces ($\mathbb{Z}/256\ma
 
 ## 🚀 Execution & Real-Time Telemetry
 
-To audit the 144-facet vectoring pipeline and verify the symmetrical parity lock status inside your local execution environment, run the master module:
+To audit the 144-facet vectoring pipeline and verify the symmetrical parity lock status inside your local execution environment, run the master module from the repository root:
 
 ```bash
-python3 experimental/ptrc_neural_network_demo.py
+python3 embedded/ai/00_ptrc_neural_network_demo.py
 ```
 
 ### Verified Asymptotic Profile:
