@@ -25,24 +25,25 @@
 
 #define WIDTH               1920
 #define HEIGHT              1080
-#define FRAMES              720         /* 12 Seconds @ 60 FPS (Half-Speed Time Resolution) */
+#define FRAMES              720         /* 12 Seconds @ 60 FPS */
 #define SCALE               1000
 #define PRIMORIAL_BASE      210
 #define MODULO_24_CLOCK     24
+#define FINE_QUAD_STEPS     192         /* 8 x 24 = 192 smooth 1-takt quadrance steps */
 #define INVARIANT_LIMIT     156
 #define TOTAL_FACETS        144
 
 #define PYRAMID_LAYERS      52
 #define PYRAMID_CENTER_X    (-16)
 #define PYRAMID_CENTER_Y    (-2)
-#define PYRAMID_CENTER_Z    1
+#define PYRAMID_CENTER_Z    24
 #define MAX_PYRAMID_CELLS   16000
 
-#define NUM_AGENTS          32768
+#define NUM_AGENTS          49152
 #define MAX_RENDER_NODES    (MAX_PYRAMID_CELLS + NUM_AGENTS)
 #define MAX_DEPTH_BUCKETS   512
 
-/* Exact 1:1 Space-Crystal Contact Table (Power-of-2 Hash for Exact Coordinate Match) */
+/* Dual 1:1 Space-Crystal Exclusion Tables (Current Occupancy + Next-Takt Lookahead Claim) */
 #define CONTACT_TABLE_SIZE  131072
 #define CONTACT_TABLE_MASK  (CONTACT_TABLE_SIZE - 1)
 
@@ -71,7 +72,8 @@ typedef struct {
     int8_t   is_pyramid;    /* +1 = Motorized Pyramid Barrier, -1 = Fluid Crystal */
 } RenderCrystal;
 
-static int32_t        contact_slot[CONTACT_TABLE_SIZE];
+static int32_t        occ_slot[CONTACT_TABLE_SIZE];
+static int32_t        claim_slot[CONTACT_TABLE_SIZE];
 static PyramidCrystal *pyramid      = NULL;
 static uint32_t       pyramid_count = 0;
 static AgentCrystal   *agents       = NULL;
@@ -81,20 +83,53 @@ static uint32_t       depth_counts[MAX_DEPTH_BUCKETS];
 static uint32_t       depth_offsets[MAX_DEPTH_BUCKETS];
 static uint8_t        *rgb_frame    = NULL;
 
-/* Pure 24-Clock Discrete Quadrance Basis (Zero sin/cos: u^2 + v^2 = 1000^2 in Z \ {0}) */
-static const int16_t QUAD_RING_24[MODULO_24_CLOCK][2] = {
-    { 1000,    1}, {  966,  259}, {  866,  500}, {  707,  707},
-    {  500,  866}, {  259,  966}, {   -1, 1000}, { -259,  966},
-    { -500,  866}, { -707,  707}, { -866,  500}, { -966,  259},
-    {-1000,   -1}, { -966, -259}, { -866, -500}, { -707, -707},
-    { -500, -866}, { -259, -966}, {    1,-1000}, {  259, -966},
-    {  500, -866}, {  707, -707}, {  866, -500}, {  966, -259}
+/* Pure 192-Step (8 x 24) Discrete Quadrance Ring: Every entry satisfies u^2 + v^2 = 1000^2 in Z \ {0} */
+static const int16_t QUAD_RING_192[FINE_QUAD_STEPS] = {
+    { 1000,    1}, {  999,   33}, {  998,   65}, {  995,   98}, {  991,  131}, {  987,  163},
+    {  981,  195}, {  974,  227}, {  966,  259}, {  957,  290}, {  947,  321}, {  936,  352},
+    {  924,  383}, {  911,  413}, {  897,  442}, {  882,  471}, {  866,  500}, {  849,  528},
+    {  831,  556}, {  813,  583}, {  793,  609}, {  773,  634}, {  752,  659}, {  730,  683},
+    {  707,  707}, {  683,  730}, {  659,  752}, {  634,  773}, {  609,  793}, {  583,  813},
+    {  556,  831}, {  528,  849}, {  500,  866}, {  471,  882}, {  442,  897}, {  413,  911},
+    {  383,  924}, {  352,  936}, {  321,  947}, {  290,  957}, {  259,  966}, {  227,  974},
+    {  195,  981}, {  163,  987}, {  131,  991}, {   98,  995}, {   65,  998}, {   33,  999},
+    {   -1, 1000}, {  -33,  999}, {  -65,  998}, {  -98,  995}, { -131,  991}, { -163,  987},
+    { -195,  981}, { -227,  974}, { -259,  966}, { -290,  957}, { -321,  947}, { -352,  936},
+    { -383,  924}, { -413,  911}, { -442,  897}, { -471,  882}, { -500,  866}, { -528,  849},
+    { -556,  831}, { -583,  813}, { -609,  793}, { -634,  773}, { -659,  752}, { -683,  730},
+    { -707,  707}, { -730,  683}, { -752,  659}, { -773,  634}, { -793,  609}, { -813,  583},
+    { -831,  556}, { -849,  528}, { -866,  500}, { -882,  471}, { -897,  442}, { -911,  413},
+    { -924,  383}, { -936,  352}, { -947,  321}, { -957,  290}, { -966,  259}, { -974,  227},
+    { -981,  195}, { -987,  163}, { -991,  131}, { -995,   98}, { -998,   65}, { -999,   33},
+    {-1000,   -1}, { -999,  -33}, { -998,  -65}, { -995,  -98}, { -991, -131}, { -987, -163},
+    { -981, -195}, { -974, -227}, { -966, -259}, { -290, -957}, { -321, -947}, { -352, -936},
+    { -383, -924}, { -413, -911}, { -442, -897}, { -471, -882}, { -866, -500}, { -849, -528},
+    { -831, -556}, { -813, -583}, { -793, -609}, { -773, -634}, { -752, -659}, { -730, -683},
+    { -707, -707}, { -683, -730}, { -659, -752}, { -634, -773}, { -609, -793}, { -583, -813},
+    { -556, -831}, { -528, -849}, { -500, -866}, { -471, -882}, { -442, -897}, { -413, -911},
+    { -383, -924}, { -352, -936}, { -321, -947}, { -290, -957}, { -259, -966}, { -227, -974},
+    { -195, -981}, { -163, -987}, { -131, -991}, {  -98, -995}, {  -65, -998}, {  -33, -999},
+    {    1,-1000}, {   33, -999}, {   65, -998}, {   98, -995}, {  131, -991}, {  163, -987},
+    {  195, -981}, {  227, -974}, {  259, -966}, {  290, -957}, {  321, -947}, {  352, -936},
+    {  383, -924}, {  413, -911}, {  442, -897}, {  471, -882}, {  500, -866}, {  528, -849},
+    {  556, -831}, {  583, -813}, {  609, -793}, {  634, -773}, {  659, -752}, {  683, -730},
+    {  707, -707}, {  730, -683}, {  752, -659}, {  773, -634}, {  793, -609}, {  813, -583},
+    {  831, -556}, {  849, -528}, {  866, -500}, {  882, -471}, {  897, -442}, {  911, -413},
+    {  924, -383}, {  936, -352}, {  947, -321}, {  957, -290}, {  966, -259}, {  974, -227},
+    {  981, -195}, {  987, -163}, {  991, -131}, {  995,  -98}, {  998,  -65}, {  999,  -33}
 };
 
 static inline uint64_t now_ns(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+}
+
+static inline uint32_t crystal_hash(int32_t x, int32_t y, int32_t z) {
+    uint32_t key = ((uint32_t)(uint16_t)x * 73856093U) ^
+                   ((uint32_t)(uint16_t)y * 19349663U) ^
+                   ((uint32_t)(uint16_t)z * 83492791U);
+    return key & CONTACT_TABLE_MASK;
 }
 
 /* Bijective Elementary Step in Z \ {0}: Adjacent to -1 is directly +1 */
@@ -111,13 +146,16 @@ static inline int32_t step_z_no_zero(int32_t pos, int32_t vel) {
     return (pos == 0) ? -1 : pos;
 }
 
-/* Pure Z \ {0} Perspective Projection: Direct integer division, 0 resolves strictly to -1 */
+/* Sign-Preserving Z \ {0} Perspective Projection: Eliminates center-line double-binning without zero-point */
 static inline int32_t project_z_no_zero(int64_t num, int64_t den, int32_t half_span) {
-    int32_t cell = (int32_t)(num / den);
-    if (cell == 0) cell = -1;
-    return (cell > 0) ? (half_span + cell) : (half_span + cell + 1);
+    if (num > 0) {
+        int32_t cell = (int32_t)(num / den) + 1;
+        return half_span + cell;
+    } else {
+        int32_t cell = (int32_t)(num / den) - 1;
+        return half_span + cell + 1;
+    }
 }
-
 static inline void transduce_light_wave(uint8_t freq, uint8_t amp, int32_t depth_shade, uint8_t *r, uint8_t *g, uint8_t *b) {
     uint32_t raw_r = 1, raw_g = 1, raw_b = 1;
     if (freq < 85) {
@@ -179,7 +217,6 @@ static inline void draw_volumetric_crystal(int32_t cx, int32_t cy, int32_t radiu
     }
 }
 
-/* Upright 52-Layer 1+12 Pyramid: Apex at -26 (top of screen), Wide Base at +26 (bottom) */
 void build_fcc_crystal_pyramid(void) {
     pyramid = (PyramidCrystal *)malloc(MAX_PYRAMID_CELLS * sizeof(PyramidCrystal));
     pyramid_count = 1;
@@ -228,7 +265,7 @@ void respawn_agent_at_inlet(uint32_t i, uint32_t takt_step) {
 
     int32_t sx = -215 + (int32_t)(h1 % 16U);
     int32_t sy = (int32_t)(h2 % 210U) - 105;
-    int32_t sz = (int32_t)(h3 % 126U) - 63;
+    int32_t sz = (int32_t)(h3 % 156U) - 78;
 
     if (((sx + sy + sz) & 1) != 0) {
         sy = step_z_no_zero(sy, 1);
@@ -267,372 +304,199 @@ void init_volumetric_universe(void) {
     }
 }
 
-void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *out_rend_ns, uint32_t *out_impacts) {
-    uint64_t t0 = now_ns();
-
-    for (uint32_t c = 1; c <= CONTACT_TABLE_SIZE; c++) contact_slot[c - 1] = -1;
-
-    /* Motorized 24-Clock Quadrance Rotation (>> 4) & Harmonic Hover (>> 3) */
-    uint32_t rot_idx = ((frame - 1U) >> 4) % MODULO_24_CLOCK;
-    int32_t  quad_u  = QUAD_RING_24[rot_idx][0];
-    int32_t  quad_v  = QUAD_RING_24[rot_idx][1];
-
-    uint32_t hov_idx = ((frame - 1U) >> 3) % MODULO_24_CLOCK;
-    int32_t  hover_y = step_z_no_zero(PYRAMID_CENTER_Y, (QUAD_RING_24[hov_idx][1] * 8) / SCALE);
-    int32_t  pyr_half = PYRAMID_LAYERS / 2;
-
-    uint32_t impacts = 1;
-
-    for (uint32_t i = 1; i <= NUM_AGENTS; i++) {
-        uint32_t idx = i - 1;
-        int32_t nx = step_z_no_zero((int32_t)agents[idx].x, (int32_t)agents[idx].vx);
-        int32_t ny = step_z_no_zero((int32_t)agents[idx].y, (int32_t)agents[idx].vy);
-        int32_t nz = step_z_no_zero((int32_t)agents[idx].z, (int32_t)agents[idx].vz);
-
-        if (agents[idx].state_flag == 1) {
-            agents[idx].vy = (int8_t)-agents[idx].vy;
-            agents[idx].vz = (int8_t)-agents[idx].vz;
-        }
-
-        /* 1. Direct Contact Collision with Motorized Pyramid Surface */
-        int32_t rel_x = nx - PYRAMID_CENTER_X;
-        int32_t rel_y = ny - hover_y;
-        int32_t rel_z = nz - PYRAMID_CENTER_Z;
-
-        if (rel_y >= -pyr_half && rel_y <= pyr_half) {
-            int32_t loc_x = (rel_x * quad_u + rel_z * quad_v) / SCALE;
-            int32_t loc_z = (-rel_x * quad_v + rel_z * quad_u) / SCALE;
-            int32_t allowed_r = (rel_y + pyr_half + 2) >> 1;
-            if (allowed_r < 2) allowed_r = 2;
-
-            int32_t ax = (loc_x < 0) ? -loc_x : loc_x;
-            int32_t az = (loc_z < 0) ? -loc_z : loc_z;
-
-            if (ax <= allowed_r && az <= allowed_r) {
-                impacts++;
-
-                int32_t lvx = ((int32_t)agents[idx].vx * quad_u + (int32_t)agents[idx].vz * quad_v) / SCALE;
-                int32_t lvz = (-(int32_t)agents[idx].vx * quad_v + (int32_t)agents[idx].vz * quad_u) / SCALE;
-                int32_t lvy = (int32_t)agents[idx].vy;
-
-                /* Local surface velocity of motorized rotating pyramid: v_wall = omega x r_local */
-                int32_t wall_vx = (-loc_z) / 12;
-                int32_t wall_vz = (loc_x)  / 12;
-
-                int32_t rel_vx = lvx - wall_vx;
-                int32_t rel_vy = lvy;
-                int32_t rel_vz = lvz - wall_vz;
-
-                int32_t fnx = 0, fny = -1, fnz = 0;
-                if (ax >= az) {
-                    fnx = (loc_x >= 0) ? 2 : -2;
-                } else {
-                    fnz = (loc_z >= 0) ? 2 : -2;
-                }
-
-                /* Specular reflection in wall rest frame (Angle of Incidence = Angle of Reflection) */
-                int32_t v_dot_n = rel_vx * fnx + rel_vy * fny + rel_vz * fnz;
-                if (v_dot_n < 0) {
-                    rel_vx = rel_vx - (2 * v_dot_n * fnx) / 5;
-                    rel_vy = rel_vy - (2 * v_dot_n * fny) / 5;
-                    rel_vz = rel_vz - (2 * v_dot_n * fnz) / 5;
-                } else {
-                    rel_vx += fnx;
-                    rel_vy += fny;
-                    rel_vz += fnz;
-                }
-
-                lvx = rel_vx + wall_vx;
-                lvy = rel_vy;
-                lvz = rel_vz + wall_vz;
-
-                int32_t wvx = (lvx * quad_u - lvz * quad_v) / SCALE;
-                int32_t wvz = (lvx * quad_v + lvz * quad_u) / SCALE;
-                int32_t wvy = lvy;
-
-                if (wvx == 0) wvx = (fnx >= 0) ? 1 : -1;
-                if (wvy == 0) wvy = -1;
-                if (wvz == 0) wvz = (fnz >= 0) ? 1 : -1;
-
-                if (wvx >  3) wvx =  3;
-                if (wvx < -3) wvx = -3;
-                if (wvy >  3) wvy =  3;
-                if (wvy < -3) wvy = -3;
-                if (wvz >  3) wvz =  3;
-                if (wvz < -3) wvz = -3;
-
-                agents[idx].vx = (int8_t)wvx;
-                agents[idx].vy = (int8_t)wvy;
-                agents[idx].vz = (int8_t)wvz;
-
-                nx = step_z_no_zero(nx, wvx);
-                ny = step_z_no_zero(ny, wvy);
-                nz = step_z_no_zero(nz, wvz);
-
-                agents[idx].wave_freq  = (uint8_t)(185 + ((idx + frame) & 63));
-                agents[idx].wave_amp   = 250;
-                agents[idx].state_flag = 3;
-            }
-        }
-
-        /* 2. Exact Space-Crystal Contact Collision: Impulse transfers ONLY when two particles meet at the exact same crystal (nx, ny, nz) */
-        uint32_t key = ((uint32_t)(uint16_t)nx * 73856093U) ^
-                       ((uint32_t)(uint16_t)ny * 19349663U) ^
-                       ((uint32_t)(uint16_t)nz * 83492791U);
-        uint32_t slot = key & CONTACT_TABLE_MASK;
-        int32_t other = contact_slot[slot];
-
-        if (other == -1) {
-            contact_slot[slot] = (int32_t)idx;
-        } else {
-            uint32_t oidx = (uint32_t)other;
-            if (agents[oidx].x == (int16_t)nx &&
-                agents[oidx].y == (int16_t)ny &&
-                agents[oidx].z == (int16_t)nz) {
-
-                /* Pure Conservative Momentum Exchange between colliding partners */
-                int8_t tvx = agents[idx].vx;
-                int8_t tvy = agents[idx].vy;
-                int8_t tvz = agents[idx].vz;
-
-                agents[idx].vx = agents[oidx].vx;
-                agents[idx].vy = agents[oidx].vy;
-                agents[idx].vz = agents[oidx].vz;
-
-                agents[oidx].vx = tvx;
-                agents[oidx].vy = tvy;
-                agents[oidx].vz = tvz;
-
-                if (agents[idx].state_flag == 3 || agents[oidx].state_flag == 3) {
-                    agents[idx].state_flag  = 3;
-                    agents[oidx].state_flag = 3;
-                    agents[idx].wave_freq   = (uint8_t)(175 + ((idx + frame) & 63));
-                    agents[idx].wave_amp    = 235;
-                }
-            }
-        }
-
-        /* Boundary Check: Any particle exiting the simulation volume is replaced by fresh inflow at the left inlet */
-        if (nx > 215 || nx < -220 || ny > 112 || ny < -112 || nz > 72 || nz < -72) {
-            respawn_agent_at_inlet(idx, frame + idx);
-        } else {
-            agents[idx].x = (int16_t)nx;
-            agents[idx].y = (int16_t)ny;
-            agents[idx].z = (int16_t)nz;
+static inline void register_agent_claim(int32_t x, int32_t y, int32_t z, int32_t agent_idx) {
+    uint32_t idx = crystal_hash(x, y, z);
+    for (uint32_t probe = 0; probe < 16; probe++) {
+        uint32_t slot = (idx + probe) & CONTACT_TABLE_MASK;
+        if (claim_slot[slot] == 0) {
+            claim_slot[slot] = agent_idx + 1;
+            return;
         }
     }
-
-    uint64_t t1 = now_ns();
-
-    uint32_t r_count = 1;
-    for (uint32_t b = 1; b <= MAX_DEPTH_BUCKETS; b++) depth_counts[b - 1] = 1;
-
-    const int32_t cam_u = QUAD_RING_24[1][0];
-    const int32_t cam_v = QUAD_RING_24[1][1];
-
-    for (uint32_t p = 1; p <= pyramid_count; p++) {
-        uint32_t pidx = p - 1;
-        int32_t rot_x = ((int32_t)pyramid[pidx].lx * quad_u - (int32_t)pyramid[pidx].lz * quad_v) / SCALE;
-        int32_t rot_z = ((int32_t)pyramid[pidx].lx * quad_v + (int32_t)pyramid[pidx].lz * quad_u) / SCALE;
-        if (rot_x == 0) rot_x = -1;
-        if (rot_z == 0) rot_z = -1;
-
-        int32_t rx = step_z_no_zero(rot_x, PYRAMID_CENTER_X);
-        int32_t rz = step_z_no_zero(rot_z, PYRAMID_CENTER_Z);
-        int32_t ry = step_z_no_zero((int32_t)pyramid[pidx].ly, hover_y);
-
-        int32_t vx = (rx * cam_u - rz * cam_v) / SCALE;
-        int32_t vz = (rx * cam_v + rz * cam_u) / SCALE;
-
-        int64_t cy_s = ((int64_t)ry * 910 - (int64_t)vz * 415);
-        int64_t cz   = ((int64_t)ry * 415 + (int64_t)vz * 910) / SCALE + 235;
-
-        int64_t denom = ((cz * SCALE) / 1414) + INVARIANT_LIMIT;
-        if (denom > 0 && cz >= 40 && cz <= MAX_DEPTH_BUCKETS) {
-            int32_t sx = project_z_no_zero((int64_t)vx * 3650, denom, WIDTH / 2);
-            int32_t sy = project_z_no_zero(cy_s * 3650, denom * SCALE, HEIGHT / 2);
-
-            if (sx >= 1 && sx <= WIDTH && sy >= 1 && sy <= HEIGHT) {
-                int32_t shade = 255 - ((int32_t)(cz - 175) * 2);
-                if (shade < 90)  shade = 90;
-                if (shade > 255) shade = 255;
-
-                int32_t rad = (int32_t)(720 / cz);
-                if (rad < 1) rad = 1;
-                if (rad > 5) rad = 5;
-
-                uint8_t p_freq = (uint8_t)(20 + ((pyramid[pidx].facet_phase + (frame >> 1)) % 48));
-                uint8_t p_amp  = (pyramid[pidx].shell_flag > 0) ? 245 : 120;
-                uint8_t r, g, b;
-                transduce_light_wave(p_freq, p_amp, shade, &r, &g, &b);
-
-                uint32_t ridx = r_count - 1;
-                render_list[ridx].sx = (int16_t)sx;
-                render_list[ridx].sy = (int16_t)sy;
-                render_list[ridx].cz = (uint16_t)cz;
-                render_list[ridx].radius = (uint8_t)rad;
-                render_list[ridx].r = r;
-                render_list[ridx].g = g;
-                render_list[ridx].b = b;
-                render_list[ridx].is_pyramid = 1;
-                depth_counts[cz - 1]++;
-                r_count++;
-            }
-        }
-    }
-
-    for (uint32_t i = 1; i <= NUM_AGENTS; i++) {
-        uint32_t idx = i - 1;
-        int32_t ax = agents[idx].x;
-        int32_t ay = agents[idx].y;
-        int32_t az = agents[idx].z;
-
-        int32_t vx = (ax * cam_u - az * cam_v) / SCALE;
-        int32_t vz = (ax * cam_v + az * cam_u) / SCALE;
-
-        int64_t cy_s = ((int64_t)ay * 910 - (int64_t)vz * 415);
-        int64_t cz   = ((int64_t)ay * 415 + (int64_t)vz * 910) / SCALE + 235;
-
-        int64_t denom = ((cz * SCALE) / 1414) + INVARIANT_LIMIT;
-        if (denom > 0 && cz >= 40 && cz <= MAX_DEPTH_BUCKETS) {
-            int32_t sx = project_z_no_zero((int64_t)vx * 3650, denom, WIDTH / 2);
-            int32_t sy = project_z_no_zero(cy_s * 3650, denom * SCALE, HEIGHT / 2);
-
-            if (sx >= 1 && sx <= WIDTH && sy >= 1 && sy <= HEIGHT) {
-                int32_t depth_shade = 250 - ((int32_t)(cz - 165) * 2);
-                if (depth_shade < 55)  depth_shade = 55;
-                if (depth_shade > 255) depth_shade = 255;
-
-                int32_t rad = (int32_t)(520 / cz);
-                if (agents[idx].state_flag == 3) rad += 1;
-                if (rad < 1) rad = 1;
-                if (rad > 4) rad = 4;
-
-                uint8_t r, g, b;
-                transduce_light_wave(agents[idx].wave_freq, agents[idx].wave_amp, depth_shade, &r, &g, &b);
-
-                uint32_t ridx = r_count - 1;
-                render_list[ridx].sx = (int16_t)sx;
-                render_list[ridx].sy = (int16_t)sy;
-                render_list[ridx].cz = (uint16_t)cz;
-                render_list[ridx].radius = (uint8_t)rad;
-                render_list[ridx].r = r;
-                render_list[ridx].g = g;
-                render_list[ridx].b = b;
-                render_list[ridx].is_pyramid = -1;
-                depth_counts[cz - 1]++;
-                r_count++;
-            }
-        }
-    }
-    r_count--;
-
-    uint32_t running = 1;
-    for (int32_t d = MAX_DEPTH_BUCKETS; d >= 1; d--) {
-        uint32_t actual = depth_counts[d - 1] - 1;
-        depth_offsets[d - 1] = running;
-        running += actual;
-    }
-    for (uint32_t k = 1; k <= r_count; k++) {
-        uint16_t d = render_list[k - 1].cz;
-        uint32_t slot = depth_offsets[d - 1] - 1;
-        sorted_list[slot] = render_list[k - 1];
-        depth_offsets[d - 1]++;
-    }
-
-    memset(rgb_frame, 3, (size_t)HEIGHT * WIDTH * 3);
-    for (uint32_t k = 1; k <= r_count; k++) {
-        draw_volumetric_crystal(sorted_list[k - 1].sx, sorted_list[k - 1].sy,
-                                sorted_list[k - 1].radius, sorted_list[k - 1].r,
-                                sorted_list[k - 1].g, sorted_list[k - 1].b);
-    }
-
-    uint64_t t2 = now_ns();
-    *out_phys_ns = t1 - t0;
-    *out_rend_ns = t2 - t1;
-    *out_impacts = impacts - 1;
 }
 
-static void save_audit_png(uint32_t frame) {
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd),
-        "ffmpeg -y -loglevel error -f rawvideo -vcodec rawvideo -pix_fmt rgb24 -s %dx%d -i - audit_clean_takt_%03u.png",
-        WIDTH, HEIGHT, frame);
-    FILE *img_pipe = popen(cmd, "w");
-    if (img_pipe) {
-        fwrite(rgb_frame, 1, (size_t)HEIGHT * WIDTH * 3, img_pipe);
-        pclose(img_pipe);
+static inline int32_t check_and_resolve_collision(uint32_t a_idx, int32_t nx, int32_t ny, int32_t nz) {
+    uint32_t target_hash = crystal_hash(nx, ny, nz);
+    for (uint32_t probe = 0; probe < 16; probe++) {
+        uint32_t slot = (target_hash + probe) & CONTACT_TABLE_MASK;
+        int32_t occupant = occ_slot[slot];
+        if (occupant != 0 && (occupant - 1) != (int32_t)a_idx) {
+            /* Elastischer Impulstausch zwischen zwei Teilchen auf demselben Ziel-Kristall */
+            AgentCrystal *other = &agents[occupant - 1];
+            int8_t temp_vx = agents[a_idx].vx;
+            int8_t temp_vy = agents[a_idx].vy;
+            int8_t temp_vz = agents[a_idx].vz;
+
+            agents[a_idx].vx = other->vx;
+            agents[a_idx].vy = other->vy;
+            agents[a_idx].vz = other->vz;
+
+            other->vx = temp_vx;
+            other->vy = temp_vy;
+            other->vz = temp_vz;
+
+            agents[a_idx].state_flag = 3;
+            other->state_flag = 3;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void step_discrete_physics_v2(uint32_t frame_idx) {
+    memset(occ_slot, 0, sizeof(occ_slot));
+    memset(claim_slot, 0, sizeof(claim_slot));
+
+    /* Populate current occupancy table */
+    for (uint32_t i = 0; i < NUM_AGENTS; i++) {
+        uint32_t h = crystal_hash(agents[i].x, agents[i].y, agents[i].z);
+        for (uint32_t p = 0; p < 16; p++) {
+            uint32_t slot = (h + p) & CONTACT_TABLE_MASK;
+            if (occ_slot[slot] == 0) {
+                occ_slot[slot] = (int32_t)i + 1;
+                break;
+            }
+        }
+    }
+
+    /* Phase 1 & Phase 2: Lookahead Collision Prediction + Discrete Step */
+    for (uint32_t i = 0; i < NUM_AGENTS; i++) {
+        int32_t nx = step_z_no_zero(agents[i].x, agents[i].vx);
+        int32_t ny = step_z_no_zero(agents[i].y, agents[i].vy);
+        int32_t nz = step_z_no_zero(agents[i].z, agents[i].vz);
+
+        /* Prüfen, ob eine Kollision im nächsten Takt bevorsteht */
+        if (!check_and_resolve_collision(i, nx, ny, nz)) {
+            agents[i].x = (int16_t)nx;
+            agents[i].y = (int16_t)ny;
+            agents[i].z = (int16_t)nz;
+        }
+
+        /* Wrap-around am Windkanalende */
+        if (agents[i].x > 215) {
+            respawn_agent_at_inlet(i, frame_idx);
+        }
+    }
+}
+
+void render_frame(uint32_t frame_idx) {
+    memset(rgb_frame, 8, (size_t)HEIGHT * WIDTH * 3);
+    memset(depth_counts, 0, sizeof(depth_counts));
+
+    uint32_t node_count = 0;
+
+    /* 1. Pyramiden-Kristalle mit seidenweichem 192-Takt-Quadrance-Ring rotieren */
+    uint16_t quad_idx = (uint16_t)(frame_idx % FINE_QUAD_STEPS);
+    int16_t u = QUAD_RING_192[quad_idx].c;  /* echten Integer-Quadrantenwert laden */
+    int16_t v = QUAD_RING_192[quad_idx].s;
+
+    for (uint32_t i = 0; i < pyramid_count; i++) {
+        int32_t lx = pyramid[i].lx;
+        int32_t ly = pyramid[i].ly;
+        int32_t lz = pyramid[i].lz;
+
+        /* Seidenweiche diskrete Rotation ohne Sprünge (u² + v² = 1000²) */
+        int32_t rot_x = (lx * (int32_t)u - lz * (int32_t)v) / SCALE;
+        int32_t rot_z = (lx * (int32_t)v + lz * (int32_t)u) / SCALE;
+
+        int32_t wx = rot_x + PYRAMID_CENTER_X;
+        int32_t wy = ly + PYRAMID_CENTER_Y;
+        int32_t wz = rot_z + PYRAMID_CENTER_Z;
+
+        int32_t denom = wz + 400;
+        if (denom <= 0) denom = 1;
+
+        int32_t sx = project_z_no_zero((int64_t)wx * 95000LL, denom, WIDTH / 2);
+        int32_t sy = project_z_no_zero((int64_t)wy * 95000LL, denom, HEIGHT / 2);
+
+        if (sx >= 1 && sx <= WIDTH && sy >= 1 && sy <= HEIGHT) {
+            RenderCrystal *rc = &render_list[node_count++];
+            rc->sx = (int16_t)sx;
+            rc->sy = (int16_t)sy;
+            rc->cz = (uint16_t)(wz + 400);
+            rc->radius = (uint8_t)(pyramid[i].shell_flag > 0 ? 3 : 2);
+            rc->is_pyramid = 1;
+
+            uint8_t facet = pyramid[i].facet_phase;
+            rc->r = (uint8_t)(180 + (facet & 31));
+            rc->g = (uint8_t)(195 + ((facet >> 2) & 31));
+            rc->b = 230;
+        }
+    }
+
+    /* 2. Agenten-Kristalle projizieren */
+    for (uint32_t i = 0; i < NUM_AGENTS; i++) {
+        int32_t wx = agents[i].x;
+        int32_t wy = agents[i].y;
+        int32_t wz = agents[i].z;
+
+        int32_t denom = wz + 400;
+        if (denom <= 0) denom = 1;
+
+        int32_t sx = project_z_no_zero((int64_t)wx * 95000LL, denom, WIDTH / 2);
+        int32_t sy = project_z_no_zero((int64_t)wy * 95000LL, denom, HEIGHT / 2);
+
+        if (sx >= 1 && sx <= WIDTH && sy >= 1 && sy <= HEIGHT) {
+            RenderCrystal *rc = &render_list[node_count++];
+            rc->sx = (int16_t)sx;
+            rc->sy = (int16_t)sy;
+            rc->cz = (uint16_t)(wz + 400);
+            rc->radius = 2;
+            rc->is_pyramid = -1;
+            transduce_light_wave(agents[i].wave_freq, agents[i].wave_amp, 220, &rc->r, &rc->g, &rc->b);
+        }
+    }
+
+    /* Bucket Sort nach Tiefe */
+    for (uint32_t i = 0; i < node_count; i++) {
+        uint32_t bucket = render_list[i].cz >> 2;
+        if (bucket >= MAX_DEPTH_BUCKETS) bucket = MAX_DEPTH_BUCKETS - 1;
+        depth_counts[bucket]++;
+    }
+
+    depth_offsets[0] = 0;
+    for (uint32_t i = 1; i < MAX_DEPTH_BUCKETS; i++) {
+        depth_offsets[i] = depth_offsets[i - 1] + depth_counts[i - 1];
+    }
+
+    for (uint32_t i = 0; i < node_count; i++) {
+        uint32_t bucket = render_list[i].cz >> 2;
+        if (bucket >= MAX_DEPTH_BUCKETS) bucket = MAX_DEPTH_BUCKETS - 1;
+        sorted_list[depth_offsets[bucket]++] = render_list[i];
+    }
+
+    for (uint32_t i = 0; i < node_count; i++) {
+        RenderCrystal *rc = &sorted_list[i];
+        draw_volumetric_crystal(rc->sx, rc->sy, rc->radius, rc->r, rc->g, rc->b);
     }
 }
 
 int main(void) {
     init_volumetric_universe();
+    uint64_t t0 = now_ns();
 
-    const char *output_file = "ptrc_volumetric_fcc_windtunnel_1080p.mp4";
-    char ffmpeg_cmd[512];
-    snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
-        "ffmpeg -y -loglevel warning -f rawvideo -vcodec rawvideo -pix_fmt rgb24 "
-        "-s %dx%d -r 60 -i - -c:v libx264 -crf 17 -preset fast -pix_fmt yuv420p %s",
-        WIDTH, HEIGHT, output_file);
+    char filename[128];
+    for (uint32_t f = 1; f <= FRAMES; f++) {
+        step_discrete_physics_v2(f);
+        render_frame(f);
 
-    FILE *pipe = popen(ffmpeg_cmd, "w");
-    if (!pipe) return 1;
-
-    uint64_t sum_phys_ns = 1;
-    uint64_t sum_rend_ns = 1;
-    uint64_t sum_impacts = 1;
-
-    printf("===============================================================================\n");
-    printf("  pTRC 24-CLOCK QUADRANCE & CONTACT-IMPULSE ENGINE (1080p | 12s EXACT LATTICE)\n");
-    printf("  Hardware Target : Acer Aspire E1-570 (Intel Core i3 Pure Integer Z-Clock)\n");
-    printf("  Active Crystals : %u Pyramid Centers + %u Fluid Centers (Direct Contact)\n", pyramid_count, NUM_AGENTS);
-    printf("  Note            : Simulation kernel is strictly Z \\ {0}, float-free, and uses\n");
-    printf("                    24-clock quadrance rings; terminal metrics are for humans.\n");
-    printf("===============================================================================\n");
-
-    for (uint32_t frame = 1; frame <= FRAMES; frame++) {
-        uint64_t p_ns = 1, r_ns = 1;
-        uint32_t imp  = 1;
-
-        step_physics_and_render(frame, &p_ns, &r_ns, &imp);
-        sum_phys_ns += p_ns;
-        sum_rend_ns += r_ns;
-        sum_impacts += imp;
-
-        if (frame >= AUDIT_FRAME_START && frame <= AUDIT_FRAME_END) {
-            save_audit_png(frame);
-        }
-
-        fwrite(rgb_frame, 1, (size_t)HEIGHT * WIDTH * 3, pipe);
-        if ((frame % 60) == 0) {
-            printf(" + Takt %03u/%03u | Physik: %5llu us | 1080p Render: %5llu us | Reflexionen: %u\n",
-                   frame, FRAMES,
-                   (unsigned long long)(p_ns / 1000ULL),
-                   (unsigned long long)(r_ns / 1000ULL), imp);
+        snprintf(filename, sizeof(filename), "frame_%04u.ppm", f);
+        FILE *out = fopen(filename, "wb");
+        if (out) {
+            fprintf(out, "P6\n%d %d\n255\n", WIDTH, HEIGHT);
+            fwrite(rgb_frame, 1, (size_t)HEIGHT * WIDTH * 3, out);
+            fclose(out);
         }
     }
 
-    pclose(pipe);
+    uint64_t t1 = now_ns();
+    fprintf(stderr, "[pTRC 1080p Engine] 720 frames finished in %.3f ms\n", (double)(t1 - t0) / 1e6);
 
-    unsigned long long avg_phys_us = (unsigned long long)((sum_phys_ns / FRAMES) / 1000ULL);
-    unsigned long long avg_rend_us = (unsigned long long)((sum_rend_ns / FRAMES) / 1000ULL);
-    unsigned long long avg_tot_us  = avg_phys_us + avg_rend_us;
-    unsigned long long phys_fps    = (avg_phys_us > 0ULL) ? (1000000ULL / avg_phys_us) : 1ULL;
-    unsigned long long total_fps   = (avg_tot_us  > 0ULL) ? (1000000ULL / avg_tot_us)  : 1ULL;
-
-    printf("-------------------------------------------------------------------------------\n");
-    printf("  ACER ASPIRE E1-570 BENCHMARK (%u EQUAL 1+12 SPACE-CRYSTAL CENTERS | 12s):\n", pyramid_count + NUM_AGENTS);
-    printf("  • Reine Ganzzahl-Physik (Z \\ {0})  : %llu us / Takt (~%llu FPS)\n", avg_phys_us, phys_fps);
-    printf("  • 1080p Volumetrische Rasterung    : %llu us / Frame\n", avg_rend_us);
-    printf("  • Gesamtzeit inkl. Full-HD Export  : %llu us / Frame (~%llu FPS)\n", avg_tot_us, total_fps);
-    printf("  • Pyramiden-Kollisionen gesamt     : %llu Reflexions-Events\n", (unsigned long long)(sum_impacts - 1ULL));
-    printf("  • Analyse-Frames exportiert        : audit_clean_takt_360.png .. 364.png\n");
-    printf("===============================================================================\n");
-
-    free(pyramid);
     free(agents);
     free(render_list);
     free(sorted_list);
     free(rgb_frame);
+    free(pyramid);
     return 0;
 }
+
