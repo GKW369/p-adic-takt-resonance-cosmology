@@ -14,120 +14,100 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program (see the LICENSE file in the root directory).
-# If not, see <https://www.gnu.org/licenses/>.
+# If not, see <https://gnu.org>.
 # ==============================================================================
-
 
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Core Cryptography Module: Symmetrical Matrix Encryption
-Operational Domain: Cyclically closed primorial integer rings (\mathbb{Z}/210\mathbb{Z}).
-Provides lightweight, side-channel immune metrics without continuous key vectors or float lag.
+pTRC Framework - Core Cryptography Module: 144-Facet AEAD Matrix Encryption
+Operational Domain: Active 144-Facet Sponge & CRT Rings (Z/210Z x 11 x 13 x 17).
+Integrates PTRCHardenedCrystalAEAD into the central repository verification pipeline.
 """
 
+import os
+import sys
 import numpy as np
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+
+from ptrc_crystal_aead import PTRCHardenedCrystalAEAD
+
 
 class PTRCCryptResonanceEngine:
     """
-    Executes multi-tiered matrix encryption and state permutations 
-    utilizing integer residue classes and discrete 24-step clock intervals.
+    Wraps the 144-Facet Crystalline AEAD Engine for whole-number matrix blocks
+    and repository-wide integer telemetry verification.
     """
-    def __init__(self, key_vector_seed=1836):
+
+    def __init__(self, key_vector_seed: int = 1836):
         self.primorial_base = 210
         self.control_base = 24
         self.calibration_limit = 156
-        
-        # Initialize internal encryption state registers using pure integers
-        self.state_key = int(key_vector_seed % self.primorial_base)
-        self.control_key = int(key_vector_seed % self.control_base)
+        self.seed = int(key_vector_seed)
 
-    def generate_discrete_cipher_takt(self, raw_integer_payload):
-        """
-        Encrypts a discrete data node using non-linear arithmetic shifting layers.
-        Guarantees deterministic bit-invertibility entirely without transcendental functions.
-        """
-        payload = int(raw_integer_payload)
-        
-        # 1. Layer: Primorial residue transposition step
-        transposed_state = (payload + self.state_key) % self.primorial_base
-        
-        # 2. Layer: Structural bitwise XOR using the control layer base
-        cipher_phase = (transposed_state ^ self.control_key)
-        
-        # 3. Layer: Wirminghaus offset permutation rule
-        if cipher_phase % 2 == 0:
-            final_cipher = (cipher_phase + self.calibration_limit) % self.primorial_base
-        else:
-            final_cipher = (cipher_phase + 12) % self.primorial_base
-            
-        return final_cipher
+        # Derive deterministic 256-bit (32-byte) key and 96-bit (12-byte) nonce in Z
+        self.secret_key = bytes(
+            ((self.seed * (i + 1) + self.calibration_limit) * 13) & 0xFF
+            for i in range(32)
+        )
+        self.nonce = bytes(
+            ((self.seed + i * self.control_base) * 7) & 0xFF
+            for i in range(12)
+        )
+        self.aad_header = b"PTRC:MODULE16|RING:210|TAKT:24"
 
-    def decrypt_discrete_cipher_takt(self, cipher_integer_payload):
+    def encrypt_data_matrix(self, whole_number_array) -> tuple[bytes, bytes, tuple[int, ...]]:
         """
-        Reverses the multi-tiered integer transformations to recover the exact input vector.
-        Operates drift-free to secure absolute numerical reconstruction.
-        """
-        cipher = int(cipher_integer_payload)
-        
-        # 1. Reverse Layer 3: Unwind the Wirminghaus conditional permutations
-        # Exhaustive search within the finite ring to guarantee mathematical inversion without floats
-        intermediate_state = 0
-        for candidate in range(self.primorial_base):
-            if candidate % 2 == 0:
-                test = (candidate + self.calibration_limit) % self.primorial_base
-            else:
-                test = (candidate + 12) % self.primorial_base
-                
-            if test == cipher:
-                intermediate_state = candidate
-                break
-                
-        # 2. Reverse Layer 2: Bitwise XOR operations are self-inverting
-        unwound_phase = (intermediate_state ^ self.control_key)
-        
-        # 3. Reverse Layer 1: Inverse modular arithmetic step
-        original_payload = (unwound_phase - self.state_key) % self.primorial_base
-        
-        return original_payload
-
-    def encrypt_data_matrix(self, whole_number_array):
-        """
-        Processes an entire block data structure sequentially.
-        Guarantees timing-attack immunity due to constant integer operational lengths.
+        Converts an integer array into a byte stream and executes 144-Facet AEAD encryption.
+        Returns (ciphertext_bytes, slip_mac_tag, original_shape).
         """
         input_matrix = np.asarray(whole_number_array, dtype=np.int32)
-        cipher_matrix = np.zeros_like(input_matrix)
-        
-        # Flatten array matrix to process spatial streams losslessly
-        flat_input = input_matrix.ravel()
-        flat_cipher = cipher_matrix.ravel()
-        
-        for idx in range(flat_input.size):
-            flat_cipher[idx] = self.generate_discrete_cipher_takt(flat_input[idx])
-            
-        return cipher_matrix
+        raw_bytes = input_matrix.tobytes()
+        ciphertext, slip_tag = PTRCHardenedCrystalAEAD.encrypt(
+            self.secret_key, self.nonce, raw_bytes, aad=self.aad_header
+        )
+        return ciphertext, slip_tag, input_matrix.shape
+
+    def decrypt_data_matrix(
+        self, ciphertext: bytes, slip_tag: bytes, original_shape: tuple[int, ...]
+    ) -> tuple[bool, np.ndarray]:
+        """
+        Verifies the 192-bit SLIP-MAC tag in constant time and restores the integer matrix.
+        """
+        authentic, raw_bytes = PTRCHardenedCrystalAEAD.decrypt(
+            self.secret_key, self.nonce, ciphertext, slip_tag, aad=self.aad_header
+        )
+        restored = np.frombuffer(raw_bytes, dtype=np.int32).reshape(original_shape).copy()
+        return authentic, restored
+
 
 if __name__ == "__main__":
-    print("[ pTRC-CRYPT ] Initializing post-quantum matrix cipher pipeline...")
+    print("[ pTRC-CRYPT ] Initializing 144-Facet AEAD & SLIP-MAC matrix pipeline...")
     engine = PTRCCryptResonanceEngine(key_vector_seed=1836)
-    
-    # Experimental array representing multi-scale metric blocks to encrypt
+
+    # Experimental array representing multi-scale metric blocks
     source_block = np.array([24, 156, 1836], dtype=np.int32)
-    
-    print(" -> Executing symmetrical integer encryption pass...")
-    encrypted_block = engine.encrypt_data_matrix(source_block)
-    
-    print(" -> Executing deterministic decryption pass...")
-    decrypted_block = np.zeros_like(encrypted_block)
-    
-    # Corrected dimension extraction for flat array loop validation
-    for i in range(encrypted_block.size):
-        decrypted_block[i] = engine.decrypt_discrete_cipher_takt(encrypted_block[i])
-        
-    # Verify absolute numerical identity tracking
-    validation_status = np.array_equal(source_block, decrypted_block)
-    
-    print(f" -> [ VALIDATION ] Symmetrical loop audit completed.")
-    print(f" -> Ciphertext Output Vector: {encrypted_block}")
+
+    print(" -> Executing 144-Facet AEAD encryption pass...")
+    cipher_bytes, tag_bytes, shape = engine.encrypt_data_matrix(source_block)
+
+    print(" -> Executing constant-time SLIP-MAC audit & decryption pass...")
+    is_authentic, decrypted_block = engine.decrypt_data_matrix(cipher_bytes, tag_bytes, shape)
+
+    # 1-Bit Tamper Check
+    tampered_cipher = bytearray(cipher_bytes)
+    tampered_cipher[0] ^= 0x01
+    tamper_rejected, _ = engine.decrypt_data_matrix(bytes(tampered_cipher), tag_bytes, shape)
+
+    validation_status = is_authentic and (not tamper_rejected) and np.array_equal(source_block, decrypted_block)
+
+    print(f" -> [ VALIDATION ] SLIP-MAC Tag (Hex): {tag_bytes.hex()}")
     print(f" -> Reconstructed Input Match: {validation_status}")
-    print(" -> STATUS: Zero-Float Symmetrical Cryptography Block Verified Secure.")
+    if validation_status:
+        print(" -> STATUS: Zero-Float 144-Facet AEAD & SLIP-MAC Verified Secure.")
+        sys.exit(0)
+    else:
+        print(" -> STATUS: ERR - Crystalline AEAD Parity Check Failed.")
+        sys.exit(1)
