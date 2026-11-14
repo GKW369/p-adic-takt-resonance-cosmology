@@ -131,6 +131,7 @@ Full technical metrics, architecture cross-compilation instructions (e.g., targe
 The cryptographic layer has been upgraded to **v4.0 (512-Bit Key / 128-Bit Nonce)** by placing a four-stage, table-free **64-bit Primorial Macro-Cascade** ahead of the 144-facet crystal—eliminating Mersenne primes and lookup-table memory overhead while maintaining 100% Zero-Float execution ($\mathbb{Z} \setminus \{0\}$):
 
 * **Zero-Table pTRC Primorial Decoding (`P15 = 614,889,782,588,491,410`):** Decodes four coprime 64-bit ring moduli on-the-fly from the first 256 key bits using Euclidean GCD sieving (`gcd == 1` with `210`), keeping total SRAM usage near ~180 bytes.
+* **Deterministic 8-Prime CRT Key & Nonce Generator (`ptrc_primorial_keygen`):** Generates unique 128-bit nonces and 512-bit keys across 8 pairwise coprime 1-byte prime rings (`251, 241, 239, 233, 229, 227, 223, 211`, CRT period $> 1.09 \times 10^{19}$ takts) without requiring an analog hardware TRNG.
 * **512-Bit `pTRC-KDF` & Dynamic Inner Rings:** Derives 512-bit session keys and 128-bit nonces via a 576-step sponge cascade while the second 256 key bits dynamically select three coprime inner CRT rings coupled with the **137-Takt Fine-Structure Render Pulse**.
 * **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, constant-time tag verification ($O(1)$), and `volatile` SRAM zeroization (`ptrc_crystal_wipe`).
 
