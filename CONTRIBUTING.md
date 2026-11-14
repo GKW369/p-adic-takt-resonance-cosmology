@@ -57,6 +57,48 @@ When submitting changes, ensure your modifications strictly respect our decouple
 * **`src/`:** Reserved exclusively for production-ready, 100% integer-compliant core simulation modules.
 * **`experimental/`:** Advanced informational space research, non-linear parametric resonance, or open-system energy surplus calculations must remain isolated here. Never merge experimental open-system code into the stable `src/` core.
 
+# 🤝 Contributing Guidelines & Zero-Float Engineering Standards (v3.3)
+
+Thank you for your interest in contributing to the **pTRC Framework** (*p-Adic Takt Resonance Cosmology*). To preserve deterministic bit-exactness across all hardware targets, every contribution must adhere to the rules below.
+
+---
+
+## 1. The Zero-Float & Non-Zero Domain Covenant
+* **No Floating-Point Math:** Never introduce `float`, `double`, `math.sin`, `math.cos`, `math.pi`, or standard division (`/`) in core `src/` or `embedded/` modules.
+* **Integer Scaling & Floor Division:** Use explicit integer scaling (`SCALE = 1000`) paired with floor division (`//`) in Python and explicit integer widths (`uint8_t`, `int16_t`, `int32_t`, `uint32_t`) in C99.
+* **Zero-Singularity Avoidance ($\mathbb{Z} \setminus \{0\}$):** Where symmetric sign inversion is required, apply the bijective **Crossed Plichta-Mirror** across `-1` (`{-128..-1, +1..+128}`) rather than allowing states to collapse onto zero.
+* **Multiplier-Free Edge-AI:** New neural or inference layers under `embedded/ai/` must avoid floating-point dot products and hardware multipliers, utilizing Modulo-24 phase masks and coprime totient sieve rays ($\varphi(210) = 48$).
+
+---
+
+## 2. Mandatory Pre-Submission Verification Checklist
+Before opening a Pull Request, run the full local verification suite from the repository root:
+
+```bash
+# 1. Verify C vs. Python Cryptographic Bit-Parity & Zero-Float Hygiene
+python3 src/test_ptrc_crypt_parity.py
+
+# 2. Verify Strict Avalanche Criterion (SAC ~ 50.00%) & Byte Uniformity
+python3 src/test_ptrc_crypt_metrics.py
+
+# 3. Verify Edge-AI Interference Sieve Bit-Parity (C vs. Python)
+python3 src/test_ptrc_ai_parity.py
+
+# 4. Run the 20-Module First-Principles Audit Pipeline
+python3 src/00_ptrc_first_principles_engine.py
+
+# 5. Regenerate the Unified Context Bundle
+python3 src/00_ptrc_repo_bundler.py
+```
+
+* All C code must compile cleanly with `-O3 -Wall -Wextra -Wpedantic -Wconversion` and cross-compile for `arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft` without warnings or `libm` dependencies.
+
+---
+
+## 3. Licensing & Attribution
+* All accepted contributions are distributed under the **GNU Affero General Public License v3 (AGPLv3)**.
+* By submitting a Pull Request, you confirm that your code is your own original work, contains no proprietary third-party code or patented primitives, and may be licensed under the repository's dual-licensing framework (AGPLv3 / individual commercial research waivers administered by Kurt Guido Wirminghaus).
+
 By opening a Pull Request, you certify that you have successfully validated your code locally using the master engine script (`python src/00_ptrc_first_principles_engine.py`) and agree to publish your contributions under the GNU Affero General Public License version 3 (AGPLv3).
 
 ---
