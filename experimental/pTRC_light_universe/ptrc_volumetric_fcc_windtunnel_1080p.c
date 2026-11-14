@@ -82,7 +82,7 @@ static uint32_t       depth_offsets[MAX_DEPTH_BUCKETS];
 static uint8_t        *rgb_frame    = NULL;
 
 /* Pure 24-Clock Discrete Quadrance Basis (Zero sin/cos: u^2 + v^2 = 1000^2 in Z \ {0}) */
-static const int16_t QUAD_RING_24[MODULO_24_CLOCK] = {
+static const int16_t QUAD_RING_24[MODULO_24_CLOCK][2] = {
     { 1000,    1}, {  966,  259}, {  866,  500}, {  707,  707},
     {  500,  866}, {  259,  966}, {   -1, 1000}, { -259,  966},
     { -500,  866}, { -707,  707}, { -866,  500}, { -966,  259},
@@ -274,11 +274,11 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 
     /* Motorized 24-Clock Quadrance Rotation (>> 4) & Harmonic Hover (>> 3) */
     uint32_t rot_idx = ((frame - 1U) >> 4) % MODULO_24_CLOCK;
-    int32_t  quad_u  = QUAD_RING_24[rot_idx];
-    int32_t  quad_v  = QUAD_RING_24[rot_idx];
+    int32_t  quad_u  = QUAD_RING_24[rot_idx][0];
+    int32_t  quad_v  = QUAD_RING_24[rot_idx][1];
 
     uint32_t hov_idx = ((frame - 1U) >> 3) % MODULO_24_CLOCK;
-    int32_t  hover_y = step_z_no_zero(PYRAMID_CENTER_Y, (QUAD_RING_24[hov_idx] * 8) / SCALE);
+    int32_t  hover_y = step_z_no_zero(PYRAMID_CENTER_Y, (QUAD_RING_24[hov_idx][1] * 8) / SCALE);
     int32_t  pyr_half = PYRAMID_LAYERS / 2;
 
     uint32_t impacts = 1;
@@ -427,8 +427,8 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
     uint32_t r_count = 1;
     for (uint32_t b = 1; b <= MAX_DEPTH_BUCKETS; b++) depth_counts[b - 1] = 1;
 
-    const int32_t cam_u = QUAD_RING_24;
-    const int32_t cam_v = QUAD_RING_24;
+    const int32_t cam_u = QUAD_RING_24[1][0];
+    const int32_t cam_v = QUAD_RING_24[1][1];
 
     for (uint32_t p = 1; p <= pyramid_count; p++) {
         uint32_t pidx = p - 1;
@@ -554,7 +554,7 @@ void step_physics_and_render(uint32_t frame, uint64_t *out_phys_ns, uint64_t *ou
 }
 
 static void save_audit_png(uint32_t frame) {
-    char cmd;
+    char cmd[256];
     snprintf(cmd, sizeof(cmd),
         "ffmpeg -y -loglevel error -f rawvideo -vcodec rawvideo -pix_fmt rgb24 -s %dx%d -i - audit_clean_takt_%03u.png",
         WIDTH, HEIGHT, frame);
@@ -569,7 +569,7 @@ int main(void) {
     init_volumetric_universe();
 
     const char *output_file = "ptrc_volumetric_fcc_windtunnel_1080p.mp4";
-    char ffmpeg_cmd;
+    char ffmpeg_cmd[512];
     snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
         "ffmpeg -y -loglevel warning -f rawvideo -vcodec rawvideo -pix_fmt rgb24 "
         "-s %dx%d -r 60 -i - -c:v libx264 -crf 17 -preset fast -pix_fmt yuv420p %s",
