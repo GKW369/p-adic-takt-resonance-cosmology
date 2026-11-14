@@ -92,9 +92,11 @@ class PTRCHardenedCrystalAEAD:
         if len(key) != PTRC_KEY_BYTES or len(nonce) != PTRC_NONCE_BYTES:
             raise ValueError("Key must be 64 bytes (512-bit) and Nonce 16 bytes (128-bit).")
 
-        self.macro_mod = [ptrc_decode_macro_ring(key[s * 8:(s + 1) * 8], s) for s in range(4)]
-        self.macro_state = []
+        self.macro_mod = list()
+        self.macro_state = list()
         for s in range(4):
+            mod_s = ptrc_decode_macro_ring(key[s * 8:(s + 1) * 8], s)
+            self.macro_mod.append(mod_s)
             k_word = 0
             for b in range(8):
                 k_word = (k_word << 8) | key[s * 8 + b]
@@ -104,7 +106,7 @@ class PTRCHardenedCrystalAEAD:
                  + 1442695040888963407)
                 & 0xFFFFFFFFFFFFFFFF
             )
-            self.macro_state.append(mixed_seed % self.macro_mod[s])
+            self.macro_state.append(mixed_seed % mod_s)
 
         self.junctions = np.zeros(CONTROL_TAKT, dtype=np.uint8)
         self.outer_facets = np.zeros(FREE_FACETS, dtype=np.uint8)
@@ -158,152 +160,4 @@ class PTRCHardenedCrystalAEAD:
         crt_mix = ((self.crt_phase_1 * 19) + (self.crt_phase_2 * 17) + (self.crt_phase_3 * 13) + macro_mask) & 0xFF
         base_takt = ((t * CONTROL_TAKT) + KEY_SHIFT) % MOD_BASE
 
-        j_val = int(self.junctions[j_idx])
-        f_a = int(self.outer_facets[f_idx_a])
-        f_b = int(self.outer_facets[f_idx_b])
-
-        mixed = ((j_val ^ base_takt ^ macro_mask) * 11 + f_a + crt_mix) & 0xFF
-        mixed = rotl8(mixed, 3) ^ f_b
-
-        new_j = ((j_val + mixed) * 7 + 1) & 0xFF
-        self.junctions[j_idx] = new_j
-        self.outer_facets[f_idx_a] = (f_a ^ rotl8(mixed, 5)) & 0xFF
-        self.outer_facets[f_idx_b] = ((f_b + new_j) ^ crt_mix) & 0xFF
-
-        if (t % RENDER_TAKT_137) == 0:
-            frame_parity = INVARIANT_LIMIT ^ macro_mask
-            for k in range(CONTROL_TAKT):
-                frame_parity ^= rotl8(int(self.junctions[k]), k & 7)
-            for f in range(FREE_FACETS):
-                h_mirror = plichta_crossed_mirror(int(self.outer_facets[f]), f & 3)
-                self.outer_facets[f] = ((h_mirror + frame_parity) ^ int(self.junctions[f % CONTROL_TAKT])) & 0xFF
-
-        self.takt_counter += 1
-
-    def absorb_aad(self, aad: bytes) -> None:
-        for b in aad:
-            j_idx = self.takt_counter % CONTROL_TAKT
-            f_idx = (self.takt_counter * 13) % FREE_FACETS
-            self.junctions[j_idx] ^= b
-            self.outer_facets[f_idx] = (int(self.outer_facets[f_idx]) + plichta_crossed_mirror(b, j_idx)) & 0xFF
-            self._lattice_takt_step()
-
-    def finalize_slip_tag(self, aad_len: int, payload_len: int) -> bytes:
-        len_block = [
-            aad_len & 0xFF, (aad_len >> 8) & 0xFF, (aad_len >> 16) & 0xFF, (aad_len >> 24) & 0xFF,
-            payload_len & 0xFF, (payload_len >> 8) & 0xFF, (payload_len >> 16) & 0xFF, (payload_len >> 24) & 0xFF,
-        ]
-        for i, lb in enumerate(len_block):
-            self.junctions[i] ^= lb
-            idx = (i * 15) % FREE_FACETS
-            self.outer_facets[idx] = (int(self.outer_facets[idx]) + lb) & 0xFF
-
-        for _ in range(CONTROL_TAKT * CONTROL_TAKT):
-            self._lattice_takt_step()
-
-        tag = bytearray(SLIP_TAG_BYTES)
-        for i in range(SLIP_TAG_BYTES):
-            outer_fold = 0
-            for k in range(5):
-                outer_fold ^= rotl8(int(self.outer_facets[i * 5 + k]), k + 1)
-            tag[i] = ((int(self.junctions[i]) + outer_fold) ^ INVARIANT_LIMIT) & 0xFF
-        return bytes(tag)
-
-    def wipe(self) -> None:
-        self.junctions.fill(0)
-        self.outer_facets.fill(0)
-        self.macro_state = [0, 0, 0, 0]
-        self.takt_counter = 0
-
-    @classmethod
-    def derive_key_and_nonce(cls, master_seed: bytes, context_info: bytes = b"") -> tuple[bytes, bytes]:
-        base_k = bytes((((i + 1) * 19 + INVARIANT_LIMIT) ^ KEY_SHIFT) & 0xFF for i in range(PTRC_KEY_BYTES))
-        base_n = bytes((((i + 1) * 23 + RENDER_TAKT_137) & 0xFF) for i in range(PTRC_NONCE_BYTES))
-
-        ctx = cls(base_k, base_n)
-        ctx.absorb_aad(master_seed)
-        ctx.absorb_aad(context_info)
-
-        for _ in range(CONTROL_TAKT * CONTROL_TAKT):
-            ctx._lattice_takt_step()
-
-        out_key = bytearray(PTRC_KEY_BYTES)
-        for i in range(PTRC_KEY_BYTES):
-            ctx._lattice_takt_step()
-            out_key[i] = int(ctx.junctions[i % CONTROL_TAKT]) ^ int(ctx.outer_facets[(i * 7) % FREE_FACETS])
-
-        out_nonce = bytearray(PTRC_NONCE_BYTES)
-        for i in range(PTRC_NONCE_BYTES):
-            ctx._lattice_takt_step()
-            out_nonce[i] = (int(ctx.junctions[(i * 3) % CONTROL_TAKT]) + int(ctx.outer_facets[(i * 11) % FREE_FACETS])) & 0xFF
-
-        ctx.wipe()
-        return bytes(out_key), bytes(out_nonce)
-
-    @classmethod
-    def generate_primorial_keypair(cls, session_takt: int, domain_seed: bytes = b"") -> tuple[bytes, bytes]:
-        """Deterministic 8-Prime CRT Ring Generator for 512-Bit Key & 128-Bit Nonce (Zero TRNG)."""
-        ring_state = bytearray(8)
-        takt_buf = bytearray(8)
-        for r, p in enumerate(KEYGEN_PRIME_RINGS):
-            res = (session_takt + (r * 137)) % p
-            for i, sb in enumerate(domain_seed):
-                res = (res * 13 + sb + i) % p
-            ring_state[r] = plichta_crossed_mirror(res, r)
-            takt_buf[r] = (session_takt >> (r * 8)) & 0xFF
-
-        out_key, raw_nonce = cls.derive_key_and_nonce(bytes(ring_state), domain_seed)
-        out_nonce = bytearray(PTRC_NONCE_BYTES)
-        for i in range(PTRC_NONCE_BYTES):
-            out_nonce[i] = (raw_nonce[i] ^ ring_state[i & 7] ^ takt_buf[i & 7]) & 0xFF
-        return out_key, bytes(out_nonce)
-
-    @classmethod
-    def encrypt(cls, key: bytes, nonce: bytes, plaintext: bytes, aad: bytes = b"") -> tuple[bytes, bytes]:
-        ctx = cls(key, nonce)
-        ctx.absorb_aad(aad)
-        out = bytearray(len(plaintext))
-
-        for i, b in enumerate(plaintext):
-            ctx._lattice_takt_step()
-            j_idx = ctx.takt_counter % CONTROL_TAKT
-            f_idx = (ctx.takt_counter * 11) % FREE_FACETS
-            keystream = rotl8(int(ctx.junctions[j_idx]), 2) ^ int(ctx.outer_facets[f_idx])
-            q_phase = int(ctx.junctions[j_idx]) ^ (ctx.crt_phase_1 & 0xFF)
-
-            mirrored = plichta_crossed_mirror(b, q_phase)
-            cipher_byte = (mirrored + keystream) & 0xFF
-            out[i] = cipher_byte
-
-            fb_idx = (j_idx * 5 + ctx.crt_phase_2) % FREE_FACETS
-            ctx.outer_facets[fb_idx] = (int(ctx.outer_facets[fb_idx]) + cipher_byte) ^ keystream
-
-        tag = ctx.finalize_slip_tag(len(aad), len(plaintext))
-        ctx.wipe()
-        return bytes(out), tag
-
-    @classmethod
-    def decrypt(cls, key: bytes, nonce: bytes, ciphertext: bytes, tag: bytes, aad: bytes = b"") -> tuple[bool, bytes]:
-        ctx = cls(key, nonce)
-        ctx.absorb_aad(aad)
-        out = bytearray(len(ciphertext))
-
-        for i, cipher_byte in enumerate(ciphertext):
-            ctx._lattice_takt_step()
-            j_idx = ctx.takt_counter % CONTROL_TAKT
-            f_idx = (ctx.takt_counter * 11) % FREE_FACETS
-            keystream = rotl8(int(ctx.junctions[j_idx]), 2) ^ int(ctx.outer_facets[f_idx])
-            q_phase = int(ctx.junctions[j_idx]) ^ (ctx.crt_phase_1 & 0xFF)
-
-            mirrored = (cipher_byte - keystream) & 0xFF
-            out[i] = plichta_crossed_unmirror(mirrored, q_phase)
-
-            fb_idx = (j_idx * 5 + ctx.crt_phase_2) % FREE_FACETS
-            ctx.outer_facets[fb_idx] = (int(ctx.outer_facets[fb_idx]) + cipher_byte) ^ keystream
-
-        computed_tag = ctx.finalize_slip_tag(len(aad), len(ciphertext))
-        ctx.wipe()
-
-        if not verify_tag_ct(computed_tag, tag):
-            return False, bytes(len(ciphertext))
-        return True, bytes(out)
+bash record_crypto_demo.sh
