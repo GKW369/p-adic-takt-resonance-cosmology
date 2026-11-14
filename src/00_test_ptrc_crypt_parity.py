@@ -21,7 +21,8 @@
 """
 pTRC Framework - Production Cross-Language Parity Audit (v4.0 512-Bit Primorial AEAD)
 Verifies bit-exact determinism between C11 bare-metal implementation (embedded/crypto)
-and pure Python reference (src/ptrc_crystal_aead.py) across KDF, AEAD, and 1-bit tamper rejection.
+and pure Python reference (src/ptrc_crystal_aead.py) across 8-Prime CRT Keygen, KDF,
+AEAD, and 1-bit tamper rejection.
 """
 
 import ctypes
@@ -70,10 +71,20 @@ def find_demo_executable() -> Path | None:
 
 
 def verify_ctypes_parity(lib_path: Path) -> bool:
-    """Direct C11 <-> Python ABI parity check via ctypes for KDF & 512-bit AEAD."""
+    """Direct C11 <-> Python ABI parity check via ctypes for 8-Prime Keygen, KDF & 512-bit AEAD."""
     lib = ctypes.CDLL(str(lib_path))
 
-    # void ptrc_kdf_derive(const uint8_t *master_seed, size_t seed_len, const uint8_t *context_info, size_t info_len, uint8_t out_key[64], uint8_t out_nonce[16])
+    # void ptrc_primorial_keygen(uint64_t session_takt, const uint8_t *domain_seed, size_t seed_len, uint8_t out_key, uint8_t out_nonce)
+    lib.ptrc_primorial_keygen.argtypes = [
+        ctypes.c_uint64,
+        ctypes.POINTER(ctypes.c_uint8),
+        ctypes.c_size_t,
+        ctypes.POINTER(ctypes.c_uint8),
+        ctypes.POINTER(ctypes.c_uint8),
+    ]
+    lib.ptrc_primorial_keygen.restype = None
+
+    # void ptrc_kdf_derive(const uint8_t *master_seed, size_t seed_len, const uint8_t *context_info, size_t info_len, uint8_t out_key, uint8_t out_nonce)
     lib.ptrc_kdf_derive.argtypes = [
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
@@ -84,7 +95,7 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     ]
     lib.ptrc_kdf_derive.restype = None
 
-    # void ptrc_aead_encrypt(const uint8_t key[64], const uint8_t nonce[16], const uint8_t *aad, size_t aad_len, const uint8_t *plaintext, uint8_t *ciphertext, size_t length, uint8_t tag_out[24])
+    # void ptrc_aead_encrypt(const uint8_t key, const uint8_t nonce, const uint8_t *aad, size_t aad_len, const uint8_t *plaintext, uint8_t *ciphertext, size_t length, uint8_t tag_out)
     lib.ptrc_aead_encrypt.argtypes = [
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
@@ -97,7 +108,7 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     ]
     lib.ptrc_aead_encrypt.restype = None
 
-    # int ptrc_aead_decrypt(const uint8_t key[64], const uint8_t nonce[16], const uint8_t *aad, size_t aad_len, const uint8_t *ciphertext, uint8_t *plaintext, size_t length, const uint8_t expected_tag[24])
+    # int ptrc_aead_decrypt(const uint8_t key, const uint8_t nonce, const uint8_t *aad, size_t aad_len, const uint8_t *ciphertext, uint8_t *plaintext, size_t length, const uint8_t expected_tag)
     lib.ptrc_aead_decrypt.argtypes = [
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
@@ -110,6 +121,22 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     ]
     lib.ptrc_aead_decrypt.restype = ctypes.c_int
 
+    # 1. Verify Deterministic 8-Prime CRT Key & Nonce Generator (Zero TRNG)
+    session_takt = 1836137210
+    domain_seed = b"GKW369-8PRIME-CRT-RING-GENERATOR"
+    py_gen_key, py_gen_nonce = PTRCHardenedCrystalAEAD.generate_primorial_keypair(session_takt, domain_seed)
+
+    c_seed = (ctypes.c_uint8 * len(domain_seed)).from_buffer_copy(domain_seed)
+    c_gen_key = (ctypes.c_uint8 * 64)()
+    c_gen_nonce = (ctypes.c_uint8 * 16)()
+    lib.ptrc_primorial_keygen(session_takt, c_seed, len(domain_seed), c_gen_key, c_gen_nonce)
+
+    if bytes(c_gen_key) != py_gen_key or bytes(c_gen_nonce) != py_gen_nonce:
+        print("[ FAIL ] 8-Prime CRT Keygen parity mismatch between C11 and Python!")
+        return False
+    print("[ PASS ] 8-Prime CRT Key & Nonce Generator bit-exact parity verified (C11 == Python).")
+
+    # 2. Verify 512-Bit pTRC-KDF
     ikm = b"GKW369-PRIMORDIAL-MASTER-SEED-2026-V4"
     info = b"PTRC:AUDIT|P15-MACRO|TAKT:137"
     aad = b"HDR:SEQ=0001|MODE=512BIT-PRIMORDIAL"
@@ -130,6 +157,7 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
         return False
     print("[ PASS ] 512-Bit pTRC-KDF bit-exact parity verified (C11 == Python).")
 
+    # 3. Verify 512-Bit AEAD & 192-Bit SLIP-MAC
     py_ct, py_tag = PTRCHardenedCrystalAEAD.encrypt(py_key, py_nonce, plaintext, aad=aad)
 
     c_aad = (ctypes.c_uint8 * len(aad)).from_buffer_copy(aad)
@@ -144,16 +172,15 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
         return False
     print("[ PASS ] 512-Bit AEAD ciphertext & 192-bit SLIP-MAC tag bit-exact parity verified.")
 
-    # Verify authentic decryption in C11 (returns 1 on authentic, 0 on tamper)
+    # 4. Verify authentic decryption & 1-bit tamper rejection in C11
     c_dec = (ctypes.c_uint8 * len(plaintext))()
     rc_ok = lib.ptrc_aead_decrypt(c_key, c_nonce, c_aad, len(aad), c_ct, c_dec, len(plaintext), c_tag)
     if rc_ok != 1 or bytes(c_dec) != plaintext:
         print("[ FAIL ] C11 authentic decryption failed!")
         return False
 
-    # Verify 1-bit tamper rejection & buffer wipe in C11
     c_ct_tampered = (ctypes.c_uint8 * len(plaintext)).from_buffer_copy(bytes(c_ct))
-    c_ct_tampered[0] ^= 0x01
+    c_ct_tampered ^= 0x01
     c_dec_wiped = (ctypes.c_uint8 * len(plaintext)).from_buffer_copy(b"\xAA" * len(plaintext))
     rc_bad = lib.ptrc_aead_decrypt(
         c_key, c_nonce, c_aad, len(aad), c_ct_tampered, c_dec_wiped, len(plaintext), c_tag
