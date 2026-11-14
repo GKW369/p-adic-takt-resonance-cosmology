@@ -17,7 +17,6 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
-
 #include "ptrc_crystal.h"
 #include <string.h>
 
@@ -143,36 +142,41 @@ static void ptrc_lattice_takt_step(ptrc_crystal_ctx_t *ctx) {
 void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES], const uint8_t nonce[PTRC_NONCE_BYTES]) {
     memset(ctx, 0, sizeof(ptrc_crystal_ctx_t));
 
-    /* First 256 bits (key[0..31]) decode the 4 Macro-Primorial Rings without lookup tables */
+    /* First 256 bits (key[0..31]) decode the 4 Macro-Primorial Rings & seed full 64-bit residues */
     for (uint8_t s = 0; s < 4; s++) {
         ctx->macro_mod[s] = ptrc_decode_macro_ring(&key[s * 8], s);
+        uint64_t k_word = 0ULL;
+        for (size_t b = 0; b < 8; b++) {
+            k_word = (k_word << 8) | (uint64_t)key[s * 8 + b];
+        }
         uint64_t n_part = ((uint64_t)nonce[s * 4] << 24) | ((uint64_t)nonce[s * 4 + 1] << 16) |
                           ((uint64_t)nonce[s * 4 + 2] << 8) | (uint64_t)nonce[s * 4 + 3];
-        ctx->macro_state[s] = n_part % ctx->macro_mod[s];
+        uint64_t mixed_seed = (k_word ^ (n_part * 0x9E3779B97F4A7C15ULL)) * 6364136223846793005ULL + 1442695040888963407ULL;
+        ctx->macro_state[s] = mixed_seed % ctx->macro_mod[s];
     }
 
-    /* Second 256 bits (key[32..63]) configure the 144-Facet Crystal & Dynamic Inner Rings */
+    /* Second 256 bits (key[32..63]) + full 512-bit key diffusion into the 144-Facet Crystal */
     const uint8_t *c_key = &key[32];
-    uint8_t idx1 = (uint8_t)((c_key[0] ^ c_key[16]) & 0x0F);
-    uint8_t idx2 = (uint8_t)((idx1 + 1 + ((c_key[1] ^ c_key[17]) % 15)) & 0x0F);
-    uint8_t idx3 = (uint8_t)((idx2 + 1 + ((c_key[2] ^ c_key[18]) % 14)) & 0x0F);
+    uint8_t idx1 = (uint8_t)((c_key[0] ^ c_key[16] ^ key[0]) & 0x0F);
+    uint8_t idx2 = (uint8_t)((idx1 + 1 + ((c_key[1] ^ c_key[17] ^ key[8]) % 15)) & 0x0F);
+    uint8_t idx3 = (uint8_t)((idx2 + 1 + ((c_key[2] ^ c_key[18] ^ key[16]) % 14)) & 0x0F);
 
     ctx->dyn_ring_1 = PRIME_RING_POOL[idx1];
     ctx->dyn_ring_2 = PRIME_RING_POOL[idx2];
     ctx->dyn_ring_3 = PRIME_RING_POOL[idx3];
 
     for (size_t i = 0; i < CONTROL_TAKT; i++) {
-        ctx->junctions[i] = (uint8_t)(c_key[i] ^ c_key[(i + 8) & 31] ^ INVARIANT_LIMIT);
+        ctx->junctions[i] = (uint8_t)(c_key[i] ^ c_key[(i + 8) & 31] ^ key[i] ^ key[(i + 8) & 31] ^ INVARIANT_LIMIT);
     }
     for (size_t i = 0; i < FREE_FACETS; i++) {
-        uint8_t k_byte = c_key[(i * 7) & 31];
+        uint8_t k_byte = (uint8_t)(c_key[(i * 7) & 31] ^ key[(i * 11) & 31]);
         uint8_t n_byte = nonce[(i * 5) & 15];
         ctx->outer_facets[i] = plichta_crossed_mirror((uint8_t)(k_byte * 13 + n_byte * 17 + (uint8_t)i), (uint8_t)i);
     }
 
-    ctx->crt_phase_1 = (uint16_t)((c_key[3] ^ nonce[0]) % ctx->dyn_ring_1);
-    ctx->crt_phase_2 = (uint16_t)((c_key[4] ^ nonce[1]) % ctx->dyn_ring_2);
-    ctx->crt_phase_3 = (uint16_t)((c_key[5] ^ nonce[2]) % ctx->dyn_ring_3);
+    ctx->crt_phase_1 = (uint16_t)((c_key[3] ^ key[24] ^ nonce[0]) % ctx->dyn_ring_1);
+    ctx->crt_phase_2 = (uint16_t)((c_key[4] ^ key[25] ^ nonce[1]) % ctx->dyn_ring_2);
+    ctx->crt_phase_3 = (uint16_t)((c_key[5] ^ key[26] ^ nonce[2]) % ctx->dyn_ring_3);
 
     for (size_t w = 0; w < (CONTROL_TAKT * CONTROL_TAKT); w++) {
         ptrc_lattice_takt_step(ctx);
