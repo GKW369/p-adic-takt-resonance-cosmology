@@ -20,9 +20,14 @@
 #include "ptrc_crystal.h"
 #include <string.h>
 
-static const uint16_t PRIME_RING_POOL[16] = {
+static const uint16_t PRIME_RING_POOL = {
     11, 13, 17, 19, 23, 29, 31, 37,
     41, 43, 47, 53, 59, 61, 67, 71
+};
+
+/* 8 pairwise coprime primes < 256 (all coprime to 210 & 137 -> CRT period > 1.09e19) */
+static const uint8_t KEYGEN_PRIME_RINGS = {
+    251, 241, 239, 233, 229, 227, 223, 211
 };
 
 static inline uint8_t rotl8(uint8_t value, uint8_t shift) {
@@ -30,7 +35,6 @@ static inline uint8_t rotl8(uint8_t value, uint8_t shift) {
     return (uint8_t)((value << shift) | (value >> ((8 - shift) & 7)));
 }
 
-/* Euclidean GCD Sieve from prime_lattice_determinism.py (Zero-Float) */
 static uint64_t ptrc_gcd64(uint64_t a, uint64_t b) {
     while (b > 0ULL) {
         uint64_t tmp = b;
@@ -40,13 +44,11 @@ static uint64_t ptrc_gcd64(uint64_t a, uint64_t b) {
     return a;
 }
 
-/* Generates a 64-bit coprime Primorial-encoded ring modulus on-the-fly (Zero Table RAM) */
 static uint64_t ptrc_decode_macro_ring(const uint8_t *k_slice, uint8_t stage) {
     uint64_t raw = 0ULL;
     for (size_t i = 0; i < 8; i++) {
         raw = (raw << 8) | (uint64_t)k_slice[i];
     }
-    /* Anchor inside P15 Primorial scale and lock onto a coprime ray (gcd == 1 with 210) */
     uint64_t base = (PRIMORIAL_P15 / (uint64_t)(stage + 2)) + (raw % (PRIMORIAL_P15 / 8ULL));
     uint64_t candidate = (base - (base % MOD_BASE)) + (uint64_t)((raw % 48ULL) * 4ULL + 1ULL);
     while (ptrc_gcd64(candidate, MOD_BASE) != 1ULL) {
@@ -55,7 +57,6 @@ static uint64_t ptrc_decode_macro_ring(const uint8_t *k_slice, uint8_t stage) {
     return candidate;
 }
 
-/* Crossed Plichta-Mirror in Z \ {0} (Jumps across -1 without 0) */
 static inline uint8_t plichta_crossed_mirror(uint8_t b, uint8_t quadrant_phase) {
     int16_t z_val = (int16_t)b - 128;
     int16_t non_zero = (z_val >= 0) ? (z_val + 1) : z_val;
@@ -89,7 +90,6 @@ void ptrc_crystal_wipe(ptrc_crystal_ctx_t *ctx) {
     }
 }
 
-/* Advances the 4-Stage 64-Bit Primorial Macro-Cascade and returns an 8-bit interference mask */
 static uint8_t ptrc_macro_cascade_step(ptrc_crystal_ctx_t *ctx) {
     uint64_t fold = 0ULL;
     for (size_t s = 0; s < 4; s++) {
@@ -142,7 +142,6 @@ static void ptrc_lattice_takt_step(ptrc_crystal_ctx_t *ctx) {
 void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES], const uint8_t nonce[PTRC_NONCE_BYTES]) {
     memset(ctx, 0, sizeof(ptrc_crystal_ctx_t));
 
-    /* First 256 bits (key[0..31]) decode the 4 Macro-Primorial Rings & seed full 64-bit residues */
     for (uint8_t s = 0; s < 4; s++) {
         ctx->macro_mod[s] = ptrc_decode_macro_ring(&key[s * 8], s);
         uint64_t k_word = 0ULL;
@@ -155,11 +154,10 @@ void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES
         ctx->macro_state[s] = mixed_seed % ctx->macro_mod[s];
     }
 
-    /* Second 256 bits (key[32..63]) + full 512-bit key diffusion into the 144-Facet Crystal */
-    const uint8_t *c_key = &key[32];
-    uint8_t idx1 = (uint8_t)((c_key[0] ^ c_key[16] ^ key[0]) & 0x0F);
-    uint8_t idx2 = (uint8_t)((idx1 + 1 + ((c_key[1] ^ c_key[17] ^ key[8]) % 15)) & 0x0F);
-    uint8_t idx3 = (uint8_t)((idx2 + 1 + ((c_key[2] ^ c_key[18] ^ key[16]) % 14)) & 0x0F);
+    const uint8_t *c_key = &key;
+    uint8_t idx1 = (uint8_t)((c_key ^ c_key ^ key) & 0x0F);
+    uint8_t idx2 = (uint8_t)((idx1 + 1 + ((c_key ^ c_key ^ key) % 15)) & 0x0F);
+    uint8_t idx3 = (uint8_t)((idx2 + 1 + ((c_key ^ c_key ^ key) % 14)) & 0x0F);
 
     ctx->dyn_ring_1 = PRIME_RING_POOL[idx1];
     ctx->dyn_ring_2 = PRIME_RING_POOL[idx2];
@@ -174,9 +172,9 @@ void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES
         ctx->outer_facets[i] = plichta_crossed_mirror((uint8_t)(k_byte * 13 + n_byte * 17 + (uint8_t)i), (uint8_t)i);
     }
 
-    ctx->crt_phase_1 = (uint16_t)((c_key[3] ^ key[24] ^ nonce[0]) % ctx->dyn_ring_1);
-    ctx->crt_phase_2 = (uint16_t)((c_key[4] ^ key[25] ^ nonce[1]) % ctx->dyn_ring_2);
-    ctx->crt_phase_3 = (uint16_t)((c_key[5] ^ key[26] ^ nonce[2]) % ctx->dyn_ring_3);
+    ctx->crt_phase_1 = (uint16_t)((c_key ^ key ^ nonce) % ctx->dyn_ring_1);
+    ctx->crt_phase_2 = (uint16_t)((c_key ^ key ^ nonce) % ctx->dyn_ring_2);
+    ctx->crt_phase_3 = (uint16_t)((c_key ^ key ^ nonce) % ctx->dyn_ring_3);
 
     for (size_t w = 0; w < (CONTROL_TAKT * CONTROL_TAKT); w++) {
         ptrc_lattice_takt_step(ctx);
@@ -194,7 +192,7 @@ static void ptrc_absorb_aad(ptrc_crystal_ctx_t *ctx, const uint8_t *aad, size_t 
 }
 
 static void ptrc_finalize_slip_tag(ptrc_crystal_ctx_t *ctx, size_t aad_len, size_t payload_len, uint8_t tag_out[SLIP_TAG_BYTES]) {
-    uint8_t len_block[8] = {
+    uint8_t len_block = {
         (uint8_t)(aad_len & 0xFF), (uint8_t)((aad_len >> 8) & 0xFF),
         (uint8_t)((aad_len >> 16) & 0xFF), (uint8_t)((aad_len >> 24) & 0xFF),
         (uint8_t)(payload_len & 0xFF), (uint8_t)((payload_len >> 8) & 0xFF),
@@ -248,6 +246,32 @@ void ptrc_kdf_derive(
         out_nonce[i] = (uint8_t)(ctx.junctions[(i * 3) % CONTROL_TAKT] + ctx.outer_facets[(i * 11) % FREE_FACETS]);
     }
     ptrc_crystal_wipe(&ctx);
+}
+
+void ptrc_primorial_keygen(
+    uint64_t session_takt,
+    const uint8_t *domain_seed,
+    size_t seed_len,
+    uint8_t out_key[PTRC_KEY_BYTES],
+    uint8_t out_nonce[PTRC_NONCE_BYTES]
+) {
+    uint8_t ring_state;
+    uint8_t takt_buf;
+
+    for (uint8_t r = 0; r < 8; r++) {
+        uint8_t p = KEYGEN_PRIME_RINGS[r];
+        uint8_t res = (uint8_t)((session_takt + (uint64_t)(r * 137ULL)) % (uint64_t)p);
+        for (size_t i = 0; i < seed_len; i++) {
+            res = (uint8_t)(((uint16_t)res * 13U + (uint16_t)domain_seed[i] + (uint16_t)i) % (uint16_t)p);
+        }
+        ring_state[r] = plichta_crossed_mirror(res, r);
+        takt_buf[r] = (uint8_t)((session_takt >> (r * 8)) & 0xFFULL);
+    }
+
+    ptrc_kdf_derive(ring_state, sizeof(ring_state), domain_seed, seed_len, out_key, out_nonce);
+    for (size_t i = 0; i < PTRC_NONCE_BYTES; i++) {
+        out_nonce[i] = (uint8_t)(out_nonce[i] ^ ring_state[i & 7] ^ takt_buf[i & 7]);
+    }
 }
 
 void ptrc_aead_encrypt(
