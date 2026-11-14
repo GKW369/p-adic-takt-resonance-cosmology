@@ -23,7 +23,6 @@
 
 [![DOI](https://zenodo.org/badge/1404438414.svg)](https://doi.org/10.5281/zenodo.24143794)
 
-
 ---
 
 > ### 📥 Quick Context Download Note
@@ -94,17 +93,25 @@ Full technical profiles, memory allocation constraints, and hardware-level execu
 
 ## 🔐 Technical Showcase: Anti-Side-Channel Cryptographic Verification
 
-To evaluate the mathematical framework of the pTRC engine without floating-point constraints, deterministic cryptographic verification scripts are available in the repository. They demonstrate how the **Coprime Residue Symmetry (Modulo 210/24)** handles streaming arrays with strict time-constant complexity ($O(1)$).
+To evaluate the mathematical framework of the pTRC engine without floating-point constraints, deterministic cryptographic verification scripts are available in the repository. They demonstrate how the **Coprime Residue Symmetry (Modulo 210/24 & P15 Primorial Macro-Cascade)** handles streaming arrays with strict time-constant complexity ($O(1)$).
 
 ### 🚀 Evaluation (Local Verification)
 The telemetry and execution profile can be observed directly via Python or raw compiled C-code execution. Navigate to the repository root and run either:
 
 ```bash
-# Python Interface Verification
+# Python Interface Verification & Production Audits (v4.0 512-Bit Primorial AEAD)
 python3 src/00_ptrc_crypt_demo.py
+python3 src/00_test_ptrc_crypt_parity.py
+python3 src/00_test_ptrc_crypt_metrics.py
 
-# Native Bare-Metal C-Verification
-cd embedded/crypto && gcc ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
+# CMake Build & Standalone Bare-Metal C-Verification
+cmake -B build && cmake --build build && ./build/ptrc_hardware_demo
+```
+
+Or compile directly inside `embedded/crypto/`:
+
+```bash
+cd embedded/crypto && gcc -O3 -Wall -Wextra ptrc_crystal.c ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
 ```
 
 ### 🎛 Embedded Hardware Architectures & Low-Power Hardware Elements
@@ -126,7 +133,6 @@ The cryptographic layer has been upgraded to **v4.0 (512-Bit Key / 128-Bit Nonce
 * **Zero-Table pTRC Primorial Decoding (`P15 = 614,889,782,588,491,410`):** Decodes four coprime 64-bit ring moduli on-the-fly from the first 256 key bits using Euclidean GCD sieving (`gcd == 1` with `210`), keeping total SRAM usage near ~180 bytes.
 * **512-Bit `pTRC-KDF` & Dynamic Inner Rings:** Derives 512-bit session keys and 128-bit nonces via a 576-step sponge cascade while the second 256 key bits dynamically select three coprime inner CRT rings coupled with the **137-Takt Fine-Structure Render Pulse**.
 * **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, constant-time tag verification ($O(1)$), and `volatile` SRAM zeroization (`ptrc_crystal_wipe`).
-
 
 ---
 
