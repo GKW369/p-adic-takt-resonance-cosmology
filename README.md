@@ -117,6 +117,17 @@ Full technical metrics, architecture cross-compilation instructions (e.g., targe
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic, activation, and fluid-resonance operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
 2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers, the power consumption profile remains structurally flat ($O(1)$ variance).
 
+### 🔐 v4.0 Update: 512-Bit Zero-Table Primorial Macro-Cascade & AEAD
+
+[![pTRC v4.0 Crystalline AEAD & AI CI](https://github.com)](https://github.com)
+
+The cryptographic layer has been upgraded to **v4.0 (512-Bit Key / 128-Bit Nonce)** by placing a four-stage, table-free **64-bit Primorial Macro-Cascade** ahead of the 144-facet crystal—eliminating Mersenne primes and lookup-table memory overhead while maintaining 100% Zero-Float execution ($\mathbb{Z} \setminus \{0\}$):
+
+* **Zero-Table pTRC Primorial Decoding (`P15 = 614,889,782,588,491,410`):** Decodes four coprime 64-bit ring moduli on-the-fly from the first 256 key bits using Euclidean GCD sieving (`gcd == 1` with `210`), keeping total SRAM usage near ~180 bytes.
+* **512-Bit `pTRC-KDF` & Dynamic Inner Rings:** Derives 512-bit session keys and 128-bit nonces via a 576-step sponge cascade while the second 256 key bits dynamically select three coprime inner CRT rings coupled with the **137-Takt Fine-Structure Render Pulse**.
+* **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, constant-time tag verification ($O(1)$), and `volatile` SRAM zeroization (`ptrc_crystal_wipe`).
+
+
 ---
 
 ## 🎮 Technical Showcase: Zero-Float 3D Collision & Fluid-Cascade Engine (C-Core)
