@@ -22,42 +22,46 @@
 -->
 
 cmake_minimum_required(VERSION 3.16)
-project(ptrc_crystal_aead VERSION 3.3.0 LANGUAGES C)
+project(pTRC_Crystal_Crypto C)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-# Static Bare-Metal Library (Zero FPU, Zero Dynamic Memory)
-add_library(ptrc_crystal STATIC
-    ptrc_crystal.c
-    ptrc_crystal.h
+set(CRYPTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/embedded/crypto")
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+# Output shared library directly to build/ for Python ctypes auto-discovery
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+# 1. Shared C11 library (for Python ctypes parity & benchmark verification)
+add_library(ptrc_crystal SHARED
+    "${CRYPTO_DIR}/ptrc_crystal.c"
 )
 
 target_include_directories(ptrc_crystal PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    "${CRYPTO_DIR}"
 )
 
-target_compile_options(ptrc_crystal PRIVATE
-    -O3
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wconversion
+if(MSVC)
+    target_compile_options(ptrc_crystal PRIVATE /W4 /O2)
+else()
+    target_compile_options(ptrc_crystal PRIVATE -O3 -Wall -Wextra -Wpedantic)
+endif()
+
+# 2. Standalone C11 512-bit AEAD & KDF demonstration executable (located in src/)
+add_executable(ptrc_crypt_demo
+    "${SRC_DIR}/ptrc_crypt_demo.c"
+    "${CRYPTO_DIR}/ptrc_crystal.c"
 )
 
-# Standalone Verification Executable
-add_executable(ptrc_hardware_demo
-    ptrc_crypt_demo.c
+target_include_directories(ptrc_crypt_demo PRIVATE
+    "${CRYPTO_DIR}"
 )
 
-target_link_libraries(ptrc_hardware_demo PRIVATE ptrc_crystal)
-
-Verwende Code mit Vorsicht.
-
-So bauen Entwickler das Modul mit CMake:
-
-bash
-cd embedded/crypto
-cmake -B build && cmake --build build
-./build/ptrc_hardware_demo
+if(MSVC)
+    target_compile_options(ptrc_crypt_demo PRIVATE /W4 /O2)
+else()
+    target_compile_options(ptrc_crypt_demo PRIVATE -O3 -Wall -Wextra -Wpedantic)
+endif()
