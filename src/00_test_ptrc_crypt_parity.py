@@ -25,7 +25,6 @@ and pure Python reference (src/ptrc_crystal_aead.py) across KDF, AEAD, and 1-bit
 """
 
 import ctypes
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -74,7 +73,7 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     """Direct C11 <-> Python ABI parity check via ctypes for KDF & 512-bit AEAD."""
     lib = ctypes.CDLL(str(lib_path))
 
-    # void ptrc_kdf_derive(const uint8_t *ikm, size_t ikm_len, const uint8_t *info, size_t info_len, uint8_t out_key[64], uint8_t out_nonce[16])
+    # void ptrc_kdf_derive(const uint8_t *master_seed, size_t seed_len, const uint8_t *context_info, size_t info_len, uint8_t out_key[64], uint8_t out_nonce[16])
     lib.ptrc_kdf_derive.argtypes = [
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
@@ -85,28 +84,28 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     ]
     lib.ptrc_kdf_derive.restype = None
 
-    # void ptrc_aead_encrypt(const uint8_t key[64], const uint8_t nonce[16], const uint8_t *aad, size_t aad_len, const uint8_t *pt, size_t len, uint8_t *ct, uint8_t tag[24])
+    # void ptrc_aead_encrypt(const uint8_t key[64], const uint8_t nonce[16], const uint8_t *aad, size_t aad_len, const uint8_t *plaintext, uint8_t *ciphertext, size_t length, uint8_t tag_out[24])
     lib.ptrc_aead_encrypt.argtypes = [
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
-        ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
+        ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
     ]
     lib.ptrc_aead_encrypt.restype = None
 
-    # int ptrc_aead_decrypt(const uint8_t key[64], const uint8_t nonce[16], const uint8_t *aad, size_t aad_len, const uint8_t *ct, size_t len, const uint8_t tag[24], uint8_t *pt)
+    # int ptrc_aead_decrypt(const uint8_t key[64], const uint8_t nonce[16], const uint8_t *aad, size_t aad_len, const uint8_t *ciphertext, uint8_t *plaintext, size_t length, const uint8_t expected_tag[24])
     lib.ptrc_aead_decrypt.argtypes = [
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
-        ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
+        ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
     ]
     lib.ptrc_aead_decrypt.restype = ctypes.c_int
@@ -138,17 +137,17 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     c_ct = (ctypes.c_uint8 * len(plaintext))()
     c_tag = (ctypes.c_uint8 * 24)()
 
-    lib.ptrc_aead_encrypt(c_key, c_nonce, c_aad, len(aad), c_pt, len(plaintext), c_ct, c_tag)
+    lib.ptrc_aead_encrypt(c_key, c_nonce, c_aad, len(aad), c_pt, c_ct, len(plaintext), c_tag)
 
     if bytes(c_ct) != py_ct or bytes(c_tag) != py_tag:
         print("[ FAIL ] AEAD ciphertext or 192-bit SLIP-MAC tag mismatch!")
         return False
     print("[ PASS ] 512-Bit AEAD ciphertext & 192-bit SLIP-MAC tag bit-exact parity verified.")
 
-    # Verify authentic decryption in C11
+    # Verify authentic decryption in C11 (returns 1 on authentic, 0 on tamper)
     c_dec = (ctypes.c_uint8 * len(plaintext))()
-    rc_ok = lib.ptrc_aead_decrypt(c_key, c_nonce, c_aad, len(aad), c_ct, len(plaintext), c_tag, c_dec)
-    if rc_ok != 0 or bytes(c_dec) != plaintext:
+    rc_ok = lib.ptrc_aead_decrypt(c_key, c_nonce, c_aad, len(aad), c_ct, c_dec, len(plaintext), c_tag)
+    if rc_ok != 1 or bytes(c_dec) != plaintext:
         print("[ FAIL ] C11 authentic decryption failed!")
         return False
 
@@ -157,9 +156,9 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     c_ct_tampered[0] ^= 0x01
     c_dec_wiped = (ctypes.c_uint8 * len(plaintext)).from_buffer_copy(b"\xAA" * len(plaintext))
     rc_bad = lib.ptrc_aead_decrypt(
-        c_key, c_nonce, c_aad, len(aad), c_ct_tampered, len(plaintext), c_tag, c_dec_wiped
+        c_key, c_nonce, c_aad, len(aad), c_ct_tampered, c_dec_wiped, len(plaintext), c_tag
     )
-    if rc_bad == 0 or any(b != 0 for b in bytes(c_dec_wiped)):
+    if rc_bad != 0 or any(b != 0 for b in bytes(c_dec_wiped)):
         print("[ FAIL ] C11 1-bit tamper rejection or fail-closed zeroization failed!")
         return False
     print("[ PASS ] Fail-closed 1-bit tamper rejection & zeroization verified.")
