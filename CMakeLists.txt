@@ -65,3 +65,4 @@ if(MSVC)
 else()
     target_compile_options(ptrc_crypt_demo PRIVATE -O3 -Wall -Wextra -Wpedantic)
 endif()
+
