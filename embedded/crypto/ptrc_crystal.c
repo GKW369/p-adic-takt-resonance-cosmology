@@ -164,3 +164,136 @@ void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES
         ptrc_lattice_takt_step(ctx);
     }
 }
+
+static void ptrc_absorb_aad(ptrc_crystal_ctx_t *ctx, const uint8_t *aad, size_t aad_len) {
+    for (size_t i = 0; i < aad_len; i++) {
+        uint8_t j_idx = (uint8_t)(ctx->takt_counter % CONTROL_TAKT);
+        uint8_t f_idx = (uint8_t)((ctx->takt_counter * 13) % FREE_FACETS);
+        ctx->junctions[j_idx] ^= aad[i];
+        ctx->outer_facets[f_idx] = (uint8_t)(ctx->outer_facets[f_idx] + plichta_crossed_mirror(aad[i], j_idx));
+        ptrc_lattice_takt_step(ctx);
+    }
+}
+
+static void ptrc_finalize_slip_tag(ptrc_crystal_ctx_t *ctx, size_t aad_len, size_t payload_len, uint8_t tag_out[SLIP_TAG_BYTES]) {
+    uint8_t len_block[8] = {
+        (uint8_t)(aad_len & 0xFF), (uint8_t)((aad_len >> 8) & 0xFF),
+        (uint8_t)((aad_len >> 16) & 0xFF), (uint8_t)((aad_len >> 24) & 0xFF),
+        (uint8_t)(payload_len & 0xFF), (uint8_t)((payload_len >> 8) & 0xFF),
+        (uint8_t)((payload_len >> 16) & 0xFF), (uint8_t)((payload_len >> 24) & 0xFF)
+    };
+
+    for (size_t i = 0; i < 8; i++) {
+        ctx->junctions[i] ^= len_block[i];
+        ctx->outer_facets[(i * 15) % FREE_FACETS] += len_block[i];
+    }
+    for (size_t f = 0; f < (CONTROL_TAKT * CONTROL_TAKT); f++) {
+        ptrc_lattice_takt_step(ctx);
+    }
+    for (size_t i = 0; i < SLIP_TAG_BYTES; i++) {
+        uint8_t outer_fold = 0;
+        for (size_t k = 0; k < 5; k++) {
+            outer_fold ^= rotl8(ctx->outer_facets[i * 5 + k], (uint8_t)(k + 1));
+        }
+        tag_out[i] = (uint8_t)((ctx->junctions[i] + outer_fold) ^ INVARIANT_LIMIT);
+    }
+}
+
+void ptrc_kdf_derive(
+    const uint8_t *master_seed, size_t seed_len,
+    const uint8_t *context_info, size_t info_len,
+    uint8_t out_key[PTRC_KEY_BYTES], uint8_t out_nonce[PTRC_NONCE_BYTES]
+) {
+    uint8_t base_k[PTRC_KEY_BYTES];
+    uint8_t base_n[PTRC_NONCE_BYTES];
+    for (size_t i = 0; i < PTRC_KEY_BYTES; i++) {
+        base_k[i] = (uint8_t)(((i + 1) * 19 + INVARIANT_LIMIT) ^ KEY_SHIFT);
+    }
+    for (size_t i = 0; i < PTRC_NONCE_BYTES; i++) {
+        base_n[i] = (uint8_t)(((i + 1) * 23 + RENDER_TAKT_137) & 0xFF);
+    }
+
+    ptrc_crystal_ctx_t ctx;
+    ptrc_crystal_init(&ctx, base_k, base_n);
+    ptrc_absorb_aad(&ctx, master_seed, seed_len);
+    ptrc_absorb_aad(&ctx, context_info, info_len);
+
+    for (size_t w = 0; w < (CONTROL_TAKT * CONTROL_TAKT); w++) {
+        ptrc_lattice_takt_step(&ctx);
+    }
+    for (size_t i = 0; i < PTRC_KEY_BYTES; i++) {
+        ptrc_lattice_takt_step(&ctx);
+        out_key[i] = (uint8_t)(ctx.junctions[i % CONTROL_TAKT] ^ ctx.outer_facets[(i * 7) % FREE_FACETS]);
+    }
+    for (size_t i = 0; i < PTRC_NONCE_BYTES; i++) {
+        ptrc_lattice_takt_step(&ctx);
+        out_nonce[i] = (uint8_t)(ctx.junctions[(i * 3) % CONTROL_TAKT] + ctx.outer_facets[(i * 11) % FREE_FACETS]);
+    }
+    ptrc_crystal_wipe(&ctx);
+}
+
+void ptrc_aead_encrypt(
+    const uint8_t key[PTRC_KEY_BYTES], const uint8_t nonce[PTRC_NONCE_BYTES],
+    const uint8_t *aad, size_t aad_len,
+    const uint8_t *plaintext, uint8_t *ciphertext, size_t length,
+    uint8_t tag_out[SLIP_TAG_BYTES]
+) {
+    ptrc_crystal_ctx_t ctx;
+    ptrc_crystal_init(&ctx, key, nonce);
+    ptrc_absorb_aad(&ctx, aad, aad_len);
+
+    for (size_t i = 0; i < length; i++) {
+        ptrc_lattice_takt_step(&ctx);
+        uint8_t j_idx = (uint8_t)(ctx.takt_counter % CONTROL_TAKT);
+        uint8_t f_idx = (uint8_t)((ctx.takt_counter * 11) % FREE_FACETS);
+        uint8_t keystream = (uint8_t)(rotl8(ctx.junctions[j_idx], 2) ^ ctx.outer_facets[f_idx]);
+        uint8_t q_phase = (uint8_t)(ctx.junctions[j_idx] ^ (uint8_t)ctx.crt_phase_1);
+
+        uint8_t mirrored = plichta_crossed_mirror(plaintext[i], q_phase);
+        uint8_t cipher_byte = (uint8_t)(mirrored + keystream);
+        ciphertext[i] = cipher_byte;
+
+        uint8_t fb_idx = (uint8_t)((j_idx * 5 + ctx.crt_phase_2) % FREE_FACETS);
+        ctx.outer_facets[fb_idx] = (uint8_t)((ctx.outer_facets[fb_idx] + cipher_byte) ^ keystream);
+    }
+
+    ptrc_finalize_slip_tag(&ctx, aad_len, length, tag_out);
+    ptrc_crystal_wipe(&ctx);
+}
+
+int ptrc_aead_decrypt(
+    const uint8_t key[PTRC_KEY_BYTES], const uint8_t nonce[PTRC_NONCE_BYTES],
+    const uint8_t *aad, size_t aad_len,
+    const uint8_t *ciphertext, uint8_t *plaintext, size_t length,
+    const uint8_t expected_tag[SLIP_TAG_BYTES]
+) {
+    ptrc_crystal_ctx_t ctx;
+    uint8_t computed_tag[SLIP_TAG_BYTES];
+
+    ptrc_crystal_init(&ctx, key, nonce);
+    ptrc_absorb_aad(&ctx, aad, aad_len);
+
+    for (size_t i = 0; i < length; i++) {
+        ptrc_lattice_takt_step(&ctx);
+        uint8_t j_idx = (uint8_t)(ctx.takt_counter % CONTROL_TAKT);
+        uint8_t f_idx = (uint8_t)((ctx.takt_counter * 11) % FREE_FACETS);
+        uint8_t keystream = (uint8_t)(rotl8(ctx.junctions[j_idx], 2) ^ ctx.outer_facets[f_idx]);
+        uint8_t q_phase = (uint8_t)(ctx.junctions[j_idx] ^ (uint8_t)ctx.crt_phase_1);
+
+        uint8_t cipher_byte = ciphertext[i];
+        uint8_t mirrored = (uint8_t)(cipher_byte - keystream);
+        plaintext[i] = plichta_crossed_unmirror(mirrored, q_phase);
+
+        uint8_t fb_idx = (uint8_t)((j_idx * 5 + ctx.crt_phase_2) % FREE_FACETS);
+        ctx.outer_facets[fb_idx] = (uint8_t)((ctx.outer_facets[fb_idx] + cipher_byte) ^ keystream);
+    }
+
+    ptrc_finalize_slip_tag(&ctx, aad_len, length, computed_tag);
+    ptrc_crystal_wipe(&ctx);
+
+    int authentic = ptrc_verify_tag_ct(computed_tag, expected_tag);
+    if (!authentic) {
+        memset(plaintext, 0, length);
+    }
+    return authentic;
+}
