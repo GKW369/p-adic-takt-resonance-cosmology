@@ -111,9 +111,9 @@ class PTRCHardenedCrystalAEAD:
         self.takt_counter = 0
 
         c_key = key[32:64]
-        idx1 = (c_key ^ c_key ^ key) & 0x0F
-        idx2 = (idx1 + 1 + ((c_key ^ c_key ^ key) % 15)) & 0x0F
-        idx3 = (idx2 + 1 + ((c_key ^ c_key ^ key) % 14)) & 0x0F
+        idx1 = (c_key[0] ^ c_key[16] ^ key[0]) & 0x0F
+        idx2 = (idx1 + 1 + ((c_key[1] ^ c_key[17] ^ key[1]) % 15)) & 0x0F
+        idx3 = (idx2 + 1 + ((c_key[2] ^ c_key[18] ^ key[2]) % 14)) & 0x0F
 
         self.dyn_ring_1 = PRIME_RING_POOL[idx1]
         self.dyn_ring_2 = PRIME_RING_POOL[idx2]
@@ -128,9 +128,9 @@ class PTRCHardenedCrystalAEAD:
             raw_seed = (k_byte * 13 + n_byte * 17 + i) & 0xFF
             self.outer_facets[i] = plichta_crossed_mirror(raw_seed, i)
 
-        self.crt_phase_1 = (c_key ^ key ^ nonce) % self.dyn_ring_1
-        self.crt_phase_2 = (c_key ^ key ^ nonce) % self.dyn_ring_2
-        self.crt_phase_3 = (c_key ^ key ^ nonce) % self.dyn_ring_3
+        self.crt_phase_1 = (c_key[3] ^ key[3] ^ nonce[0]) % self.dyn_ring_1
+        self.crt_phase_2 = (c_key[4] ^ key[4] ^ nonce[1]) % self.dyn_ring_2
+        self.crt_phase_3 = (c_key[5] ^ key[5] ^ nonce[2]) % self.dyn_ring_3
 
         for _ in range(CONTROL_TAKT * CONTROL_TAKT):
             self._lattice_takt_step()
@@ -212,7 +212,7 @@ class PTRCHardenedCrystalAEAD:
     def wipe(self) -> None:
         self.junctions.fill(0)
         self.outer_facets.fill(0)
-        self.macro_state =
+        self.macro_state = [0, 0, 0, 0]
         self.takt_counter = 0
 
     @classmethod
