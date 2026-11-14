@@ -1,107 +1,70 @@
 <!--
-==============================================================================
-pTRC Framework - Discrete 1-Bit Integer Physics Engine
-Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
-
-LICENSE & LIABILITY NOTICE:
-Academic, non-commercial research and evaluation is permitted strictly under 
-the terms of the GNU Affero General Public License version 3 (AGPLv3).
-For the complete, unedited license text see: [https://gnu.org](https://www.gnu.org/licenses/agpl-3.0.html)
-
-ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
-integration requires a separate, individually negotiated commercial infrastructure 
-waiver issued directly by the author.
-
-WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
-==============================================================================
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# LICENSE & LIABILITY NOTICE:
+# Academic, non-commercial research and evaluation is permitted strictly under 
+# the terms of the GNU Affero General Public License version 3 (AGPLv3).
+# For the complete, unedited license text see: https://gnu.org
+#
+# ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
+# integration requires a separate, individually negotiated commercial infrastructure 
+# waiver issued directly by the author.
+#
+# WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
+# ==============================================================================
 -->
-# Contributing to the pTRC Framework (CONTRIBUTING.md)
 
-Welcome to the pTRC (p-Adic Takt-Resonance Cosmology) project. To maintain the architectural and physical integrity of this repository, all contributors must strictly adhere to the fundamental structural and physical rules established in this framework.
+# Contributing to the pTRC Framework
 
-This project rejects the continuous real-number space continuum (\(\mathbb{R}^4\)) entirely and operates exclusively within the ring of discrete integers (\(\mathbb{Z}\)).
-
----
-
-## 🚫 Immutable Code-Hygiene & Validation Rules
-
-Every Pull Request (PR) is automatically audited by our GitHub Actions pipeline (`test_matrix.yml`) and a static code analyzer. Any violation of the rules below will result in an immediate, automated rejection of the PR.
-
-### 1. Absolute Ban on Floating-Point Arithmetic (Zero-Float-Rule)
-The core engine operates strictly on a whole-number hardware layer.
-* **Banned:** Any use of the `float` data type, decimal point declarations (e.g., `137.0` or `0.5`), and continuous or transcendental constants (such as `math.pi` or `math.e`).
-* **Required:** Explicit integer values and types (`int`, `np.int32`, `np.uint8`). Fractional relationships must be mapped via Fixed-Point Scaling.
-
-### 2. Division Protection (Analog Leakage Prevention)
-Standard analog division using the single slash operator (`/`) is strictly classified as an "Analog Leakage Exploit" and is banned from the active codebase because it forces Python to instantiate continuous fields in RAM.
-* **Banned:** `X / Y`
-* **Required:** Use the predefined Fixed-Point Scaling metric (`SCALE = 1000`). Always upscale the value in the numerator first, then apply strict integer floor division (`//`).
-* **Example:** `result = (value * SCALE) // divisor`
-
-### 3. Pure Integer Output Layer (No Decimal Formatting)
-All terminal logs, outputs, and visualization steps must reflect the discrete ontology of the system.
-* **Banned:** Printing log strings containing decimal dots, commas, or artificially split substrings designed to mimic continuous decimals.
-* **Required:** Map display variables natively to discrete, unsharable sub-units (e.g., `"Milli-Units"`, `"Milli-Hubble-Units"`, `"Nanoseconds"`), and print the scaled integers directly.
-
-### 4. Strict Deterministic Reversibility
-* **Banned:** Continuous random sampling methods like `np.random.rand()` or time benchmarks tracking standard float seconds.
-* **Required:** Deploy strict, integer-bounded pseudorandom generation via `np.random.randint()`. Time-tracking benchmarks must run exclusively via undivisible CPU nanoseconds using `time.time_ns()`.
+Thank you for your interest in contributing to **p-Adic Takt Resonance Cosmology (pTRC)**. Because this repository investigates deterministic, non-Archimedean integer physics ($\mathbb{Z} \setminus \{0\}$) and side-channel-resistant cryptography, every contribution must adhere strictly to our zero-floating-point, deterministic engineering invariants.
 
 ---
 
-## 📂 Repository Structure & Submission Boundaries
+## Core Architectural Invariants (Mandatory Rules)
 
-When submitting changes, ensure your modifications strictly respect our decoupled directory map without mixing methodologies:
-* **`src/`:** Reserved exclusively for production-ready, 100% integer-compliant core simulation modules.
-* **`experimental/`:** Advanced informational space research, non-linear parametric resonance, or open-system energy surplus calculations must remain isolated here. Never merge experimental open-system code into the stable `src/` core.
+1. **Strict Zero-Float Rule ($\mathbb{Z} \setminus \{0\}$):**
+   * Production physics, lattice, Edge-AI, and cryptographic code (`src/`, `embedded/`) **must not** use `float`, `double`, `math.sin`, `math.cos`, `math.sqrt`, or IEEE-754 floating-point approximations.
+   * All scaling, rotations, and wave lookups must execute via fixed integer scales (`SCALE = 1000`), integer floor division (`//`), or discrete residue rings ($\mathbb{Z}/210\mathbb{Z}$, $\mathbb{Z}/24\mathbb{Z}$, $P_{15}$).
+   * Floating-point math is permitted **only** inside dedicated comparison benchmarks (e.g., `src/00_ptrc_fpu_drift_test.py`) or terminal human-readable summary metrics.
 
-# 🤝 Contributing Guidelines & Zero-Float Engineering Standards (v3.3)
+2. **Constant-Time Execution ($O(1)$) & Zero Heap Allocation in Embedded C:**
+   * All C11 bare-metal code under `embedded/crypto/` must compile cleanly with `-std=c11 -Wall -Wextra -Werror` and cross-compile for `arm-none-eabi-gcc -mcpu=cortex-m0plus -mfloat-abi=soft`.
+   * Avoid `malloc`/`free`, secret-dependent branches, and secret-dependent memory lookups.
 
-Thank you for your interest in contributing to the **pTRC Framework** (*p-Adic Takt Resonance Cosmology*). To preserve deterministic bit-exactness across all hardware targets, every contribution must adhere to the rules below.
+3. **Bit-Exact C11 $\leftrightarrow$ Python Parity:**
+   * Any change to the v4.0 512-bit Primorial AEAD (`embedded/crypto/ptrc_crystal.c`) must maintain 100% bit-exact parity with the Python reference (`src/ptrc_crystal_aead.py`), verified across 512-bit key, 128-bit nonce, and 192-bit SLIP-MAC test vectors.
+
+4. **AGPLv3 License Header Compliance:**
+   * Every new `.py`, `.c`, `.h`, `.yml`, or `.md` file must include the standard pTRC AGPLv3 copyright header at the top of the file.
 
 ---
 
-## 1. The Zero-Float & Non-Zero Domain Covenant
-* **No Floating-Point Math:** Never introduce `float`, `double`, `math.sin`, `math.cos`, `math.pi`, or standard division (`/`) in core `src/` or `embedded/` modules.
-* **Integer Scaling & Floor Division:** Use explicit integer scaling (`SCALE = 1000`) paired with floor division (`//`) in Python and explicit integer widths (`uint8_t`, `int16_t`, `int32_t`, `uint32_t`) in C99.
-* **Zero-Singularity Avoidance ($\mathbb{Z} \setminus \{0\}$):** Where symmetric sign inversion is required, apply the bijective **Crossed Plichta-Mirror** across `-1` (`{-128..-1, +1..+128}`) rather than allowing states to collapse onto zero.
-* **Multiplier-Free Edge-AI:** New neural or inference layers under `embedded/ai/` must avoid floating-point dot products and hardware multipliers, utilizing Modulo-24 phase masks and coprime totient sieve rays ($\varphi(210) = 48$).
+## Local Verification Checklist Before Opening a Pull Request
 
----
-
-## 2. Mandatory Pre-Submission Verification Checklist
-Before opening a Pull Request, run the full local verification suite from the repository root:
+Run the complete local verification suite from the repository root before submitting changes:
 
 ```bash
-# 1. Verify C vs. Python Cryptographic Bit-Parity & Zero-Float Hygiene
-python3 src/test_ptrc_crypt_parity.py
-
-# 2. Verify Strict Avalanche Criterion (SAC ~ 50.00%) & Byte Uniformity
-python3 src/test_ptrc_crypt_metrics.py
-
-# 3. Verify Edge-AI Interference Sieve Bit-Parity (C vs. Python)
-python3 src/test_ptrc_ai_parity.py
-
-# 4. Run the 20-Module First-Principles Audit Pipeline
+# 1. Core 20-Module Physics, Cosmology & Edge-AI Verification
 python3 src/00_ptrc_first_principles_engine.py
+python3 embedded/ai/00_ptrc_neural_network_demo.py
 
-# 5. Regenerate the Unified Context Bundle
-python3 src/00_ptrc_repo_bundler.py
+# 2. C11 Build & Standalone 512-Bit Hardware Demo
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+./build/ptrc_hardware_demo
+
+# 3. Cross-Language Bit-Parity, Avalanche Metrics & Terminal Demo
+python3 src/00_test_ptrc_crypt_parity.py
+python3 src/00_test_ptrc_crypt_metrics.py
+python3 src/00_ptrc_crypt_demo.py
 ```
 
-* All C code must compile cleanly with `-O3 -Wall -Wextra -Wpedantic -Wconversion` and cross-compile for `arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft` without warnings or `libm` dependencies.
-
 ---
 
-## 3. Licensing & Attribution
-* All accepted contributions are distributed under the **GNU Affero General Public License v3 (AGPLv3)**.
-* By submitting a Pull Request, you confirm that your code is your own original work, contains no proprietary third-party code or patented primitives, and may be licensed under the repository's dual-licensing framework (AGPLv3 / individual commercial research waivers administered by Kurt Guido Wirminghaus).
+## Licensing & Contributor Agreement
 
-By opening a Pull Request, you certify that you have successfully validated your code locally using the master engine script (`python src/00_ptrc_first_principles_engine.py`) and agree to publish your contributions under the GNU Affero General Public License version 3 (AGPLv3).
-
----
-
-*Document Classification: Academic Defense Protocol / Peer-Review Verification Matrix.*  
-*Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
+By submitting a pull request to this repository, you agree that your contributions are licensed under the **GNU Affero General Public License v3.0 (AGPLv3)** and that the author retains the right to offer separate commercial infrastructure exemptions under the dual-licensing model described in `README.md`.
