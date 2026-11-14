@@ -94,34 +94,42 @@ class PTRCHardenedCrystalAEAD:
         self.macro_mod = [ptrc_decode_macro_ring(key[s * 8:(s + 1) * 8], s) for s in range(4)]
         self.macro_state = []
         for s in range(4):
+            k_word = 0
+            for b in range(8):
+                k_word = (k_word << 8) | key[s * 8 + b]
             n_part = (nonce[s * 4] << 24) | (nonce[s * 4 + 1] << 16) | (nonce[s * 4 + 2] << 8) | nonce[s * 4 + 3]
-            self.macro_state.append(n_part % self.macro_mod[s])
+            mixed_seed = (
+                ((k_word ^ ((n_part * 0x9E3779B97F4A7C15) & 0xFFFFFFFFFFFFFFFF)) * 6364136223846793005
+                 + 1442695040888963407)
+                & 0xFFFFFFFFFFFFFFFF
+            )
+            self.macro_state.append(mixed_seed % self.macro_mod[s])
 
         self.junctions = np.zeros(CONTROL_TAKT, dtype=np.uint8)
         self.outer_facets = np.zeros(FREE_FACETS, dtype=np.uint8)
         self.takt_counter = 0
 
         c_key = key[32:64]
-        idx1 = (c_key[0] ^ c_key[16]) & 0x0F
-        idx2 = (idx1 + 1 + ((c_key[1] ^ c_key[17]) % 15)) & 0x0F
-        idx3 = (idx2 + 1 + ((c_key[2] ^ c_key[18]) % 14)) & 0x0F
+        idx1 = (c_key[0] ^ c_key[16] ^ key[0]) & 0x0F
+        idx2 = (idx1 + 1 + ((c_key[1] ^ c_key[17] ^ key[8]) % 15)) & 0x0F
+        idx3 = (idx2 + 1 + ((c_key[2] ^ c_key[18] ^ key[16]) % 14)) & 0x0F
 
         self.dyn_ring_1 = PRIME_RING_POOL[idx1]
         self.dyn_ring_2 = PRIME_RING_POOL[idx2]
         self.dyn_ring_3 = PRIME_RING_POOL[idx3]
 
         for i in range(CONTROL_TAKT):
-            self.junctions[i] = (c_key[i] ^ c_key[(i + 8) & 31] ^ INVARIANT_LIMIT) & 0xFF
+            self.junctions[i] = (c_key[i] ^ c_key[(i + 8) & 31] ^ key[i] ^ key[(i + 8) & 31] ^ INVARIANT_LIMIT) & 0xFF
 
         for i in range(FREE_FACETS):
-            k_byte = c_key[(i * 7) & 31]
+            k_byte = (c_key[(i * 7) & 31] ^ key[(i * 11) & 31]) & 0xFF
             n_byte = nonce[(i * 5) & 15]
             raw_seed = (k_byte * 13 + n_byte * 17 + i) & 0xFF
             self.outer_facets[i] = plichta_crossed_mirror(raw_seed, i)
 
-        self.crt_phase_1 = (c_key[3] ^ nonce[0]) % self.dyn_ring_1
-        self.crt_phase_2 = (c_key[4] ^ nonce[1]) % self.dyn_ring_2
-        self.crt_phase_3 = (c_key[5] ^ nonce[2]) % self.dyn_ring_3
+        self.crt_phase_1 = (c_key[3] ^ key[24] ^ nonce[0]) % self.dyn_ring_1
+        self.crt_phase_2 = (c_key[4] ^ key[25] ^ nonce[1]) % self.dyn_ring_2
+        self.crt_phase_3 = (c_key[5] ^ key[26] ^ nonce[2]) % self.dyn_ring_3
 
         for _ in range(CONTROL_TAKT * CONTROL_TAKT):
             self._lattice_takt_step()
