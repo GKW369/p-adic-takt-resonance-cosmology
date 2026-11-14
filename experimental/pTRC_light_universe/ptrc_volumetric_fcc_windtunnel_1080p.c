@@ -43,7 +43,6 @@
 #define MAX_RENDER_NODES    (MAX_PYRAMID_CELLS + NUM_AGENTS)
 #define MAX_DEPTH_BUCKETS   512
 
-/* Dual 1:1 Space-Crystal Exclusion Tables (Current Occupancy + Next-Takt Lookahead Claim) */
 #define CONTACT_TABLE_SIZE  131072
 #define CONTACT_TABLE_MASK  (CONTACT_TABLE_SIZE - 1)
 
@@ -83,8 +82,8 @@ static uint32_t       depth_counts[MAX_DEPTH_BUCKETS];
 static uint32_t       depth_offsets[MAX_DEPTH_BUCKETS];
 static uint8_t        *rgb_frame    = NULL;
 
-/* Pure 192-Step (8 x 24) Discrete Quadrance Ring: Every entry satisfies u^2 + v^2 = 1000^2 in Z \ {0} */
-static const int16_t QUAD_RING_192[FINE_QUAD_STEPS] = {
+/* Pure 192-Step (8 x 24) Discrete Quadrance Ring: u^2 + v^2 = 1000^2 in Z \ {0} */
+static const int16_t QUAD_RING_192[FINE_QUAD_STEPS][2] = {
     { 1000,    1}, {  999,   33}, {  998,   65}, {  995,   98}, {  991,  131}, {  987,  163},
     {  981,  195}, {  974,  227}, {  966,  259}, {  957,  290}, {  947,  321}, {  936,  352},
     {  924,  383}, {  911,  413}, {  897,  442}, {  882,  471}, {  866,  500}, {  849,  528},
@@ -102,8 +101,8 @@ static const int16_t QUAD_RING_192[FINE_QUAD_STEPS] = {
     { -924,  383}, { -936,  352}, { -947,  321}, { -957,  290}, { -966,  259}, { -974,  227},
     { -981,  195}, { -987,  163}, { -991,  131}, { -995,   98}, { -998,   65}, { -999,   33},
     {-1000,   -1}, { -999,  -33}, { -998,  -65}, { -995,  -98}, { -991, -131}, { -987, -163},
-    { -981, -195}, { -974, -227}, { -966, -259}, { -290, -957}, { -321, -947}, { -352, -936},
-    { -383, -924}, { -413, -911}, { -442, -897}, { -471, -882}, { -866, -500}, { -849, -528},
+    { -981, -195}, { -974, -227}, { -966, -259}, { -957, -290}, { -321, -947}, { -352, -936},
+    { -924, -383}, { -911, -413}, { -897, -442}, { -882, -471}, { -866, -500}, { -849, -528},
     { -831, -556}, { -813, -583}, { -793, -609}, { -773, -634}, { -752, -659}, { -730, -683},
     { -707, -707}, { -683, -730}, { -659, -752}, { -634, -773}, { -609, -793}, { -583, -813},
     { -556, -831}, { -528, -849}, { -500, -866}, { -471, -882}, { -442, -897}, { -413, -911},
@@ -146,7 +145,7 @@ static inline int32_t step_z_no_zero(int32_t pos, int32_t vel) {
     return (pos == 0) ? -1 : pos;
 }
 
-/* Sign-Preserving Z \ {0} Perspective Projection: Eliminates center-line double-binning without zero-point */
+/* Sign-Preserving Z \ {0} Perspective Projection: Eliminates center-line double-binning */
 static inline int32_t project_z_no_zero(int64_t num, int64_t den, int32_t half_span) {
     if (num > 0) {
         int32_t cell = (int32_t)(num / den) + 1;
@@ -156,6 +155,7 @@ static inline int32_t project_z_no_zero(int64_t num, int64_t den, int32_t half_s
         return half_span + cell + 1;
     }
 }
+
 static inline void transduce_light_wave(uint8_t freq, uint8_t amp, int32_t depth_shade, uint8_t *r, uint8_t *g, uint8_t *b) {
     uint32_t raw_r = 1, raw_g = 1, raw_b = 1;
     if (freq < 85) {
@@ -304,199 +304,149 @@ void init_volumetric_universe(void) {
     }
 }
 
-static inline void register_agent_claim(int32_t x, int32_t y, int32_t z, int32_t agent_idx) {
-    uint32_t idx = crystal_hash(x, y, z);
-    for (uint32_t probe = 0; probe < 16; probe++) {
-        uint32_t slot = (idx + probe) & CONTACT_TABLE_MASK;
-        if (claim_slot[slot] == 0) {
-            claim_slot[slot] = agent_idx + 1;
-            return;
-        }
-    }
-}
-
-static inline int32_t check_and_resolve_collision(uint32_t a_idx, int32_t nx, int32_t ny, int32_t nz) {
-    uint32_t target_hash = crystal_hash(nx, ny, nz);
-    for (uint32_t probe = 0; probe < 16; probe++) {
-        uint32_t slot = (target_hash + probe) & CONTACT_TABLE_MASK;
-        int32_t occupant = occ_slot[slot];
-        if (occupant != 0 && (occupant - 1) != (int32_t)a_idx) {
-            /* Elastischer Impulstausch zwischen zwei Teilchen auf demselben Ziel-Kristall */
-            AgentCrystal *other = &agents[occupant - 1];
-            int8_t temp_vx = agents[a_idx].vx;
-            int8_t temp_vy = agents[a_idx].vy;
-            int8_t temp_vz = agents[a_idx].vz;
-
-            agents[a_idx].vx = other->vx;
-            agents[a_idx].vy = other->vy;
-            agents[a_idx].vz = other->vz;
-
-            other->vx = temp_vx;
-            other->vy = temp_vy;
-            other->vz = temp_vz;
-
-            agents[a_idx].state_flag = 3;
-            other->state_flag = 3;
-            return 1;
-        }
-    }
-    return 0;
-}
-
-void step_discrete_physics_v2(uint32_t frame_idx) {
+static inline void resolve_agent_interactions(uint32_t takt_step) {
     memset(occ_slot, 0, sizeof(occ_slot));
     memset(claim_slot, 0, sizeof(claim_slot));
 
-    /* Populate current occupancy table */
-    for (uint32_t i = 0; i < NUM_AGENTS; i++) {
-        uint32_t h = crystal_hash(agents[i].x, agents[i].y, agents[i].z);
-        for (uint32_t p = 0; p < 16; p++) {
-            uint32_t slot = (h + p) & CONTACT_TABLE_MASK;
-            if (occ_slot[slot] == 0) {
-                occ_slot[slot] = (int32_t)i + 1;
-                break;
-            }
-        }
-    }
-
-    /* Phase 1 & Phase 2: Lookahead Collision Prediction + Discrete Step */
     for (uint32_t i = 0; i < NUM_AGENTS; i++) {
         int32_t nx = step_z_no_zero(agents[i].x, agents[i].vx);
         int32_t ny = step_z_no_zero(agents[i].y, agents[i].vy);
         int32_t nz = step_z_no_zero(agents[i].z, agents[i].vz);
 
-        /* Prüfen, ob eine Kollision im nächsten Takt bevorsteht */
-        if (!check_and_resolve_collision(i, nx, ny, nz)) {
+        uint32_t h = crystal_hash(nx, ny, nz);
+        if (occ_slot[h] == 0) {
+            occ_slot[h] = (int32_t)(i + 1);
             agents[i].x = (int16_t)nx;
             agents[i].y = (int16_t)ny;
             agents[i].z = (int16_t)nz;
+        } else {
+            /* Elastic bounce / wave conversion on collision */
+            agents[i].vx = -agents[i].vx;
+            agents[i].vy = -agents[i].vy;
+            agents[i].vz = -agents[i].vz;
+            agents[i].state_flag = 3;
+            agents[i].wave_amp = (uint8_t)((agents[i].wave_amp * 230) >> 8);
         }
 
-        /* Wrap-around am Windkanalende */
+        /* Bounds check and respawn if out of volume */
         if (agents[i].x > 215) {
-            respawn_agent_at_inlet(i, frame_idx);
+            respawn_agent_at_inlet(i, takt_step);
         }
     }
 }
 
-void render_frame(uint32_t frame_idx) {
+static inline void render_volumetric_frame(uint32_t frame_index) {
     memset(rgb_frame, 8, (size_t)HEIGHT * WIDTH * 3);
     memset(depth_counts, 0, sizeof(depth_counts));
 
-    uint32_t node_count = 0;
+    uint32_t total_nodes = 0;
 
-    /* 1. Pyramiden-Kristalle mit seidenweichem 192-Takt-Quadrance-Ring rotieren */
-    uint16_t quad_idx = (uint16_t)(frame_idx % FINE_QUAD_STEPS);
-    int16_t u = QUAD_RING_192[quad_idx].c;  /* echten Integer-Quadrantenwert laden */
-    int16_t v = QUAD_RING_192[quad_idx].s;
+    /* Add Pyramid Barrier to render list */
+    for (uint32_t p = 0; p < pyramid_count; p++) {
+        int32_t wx = pyramid[p].lx + PYRAMID_CENTER_X;
+        int32_t wy = pyramid[p].ly + PYRAMID_CENTER_Y;
+        int32_t wz = pyramid[p].lz + PYRAMID_CENTER_Z;
 
-    for (uint32_t i = 0; i < pyramid_count; i++) {
-        int32_t lx = pyramid[i].lx;
-        int32_t ly = pyramid[i].ly;
-        int32_t lz = pyramid[i].lz;
+        int32_t cz = wz + 200;
+        if (cz <= 0) cz = 1;
 
-        /* Seidenweiche diskrete Rotation ohne Sprünge (u² + v² = 1000²) */
-        int32_t rot_x = (lx * (int32_t)u - lz * (int32_t)v) / SCALE;
-        int32_t rot_z = (lx * (int32_t)v + lz * (int32_t)u) / SCALE;
-
-        int32_t wx = rot_x + PYRAMID_CENTER_X;
-        int32_t wy = ly + PYRAMID_CENTER_Y;
-        int32_t wz = rot_z + PYRAMID_CENTER_Z;
-
-        int32_t denom = wz + 400;
-        if (denom <= 0) denom = 1;
-
-        int32_t sx = project_z_no_zero((int64_t)wx * 95000LL, denom, WIDTH / 2);
-        int32_t sy = project_z_no_zero((int64_t)wy * 95000LL, denom, HEIGHT / 2);
+        int32_t sx = project_z_no_zero((int64_t)wx * 950, cz, WIDTH / 2);
+        int32_t sy = project_z_no_zero((int64_t)wy * 950, cz, HEIGHT / 2);
 
         if (sx >= 1 && sx <= WIDTH && sy >= 1 && sy <= HEIGHT) {
-            RenderCrystal *rc = &render_list[node_count++];
-            rc->sx = (int16_t)sx;
-            rc->sy = (int16_t)sy;
-            rc->cz = (uint16_t)(wz + 400);
-            rc->radius = (uint8_t)(pyramid[i].shell_flag > 0 ? 3 : 2);
-            rc->is_pyramid = 1;
-
-            uint8_t facet = pyramid[i].facet_phase;
-            rc->r = (uint8_t)(180 + (facet & 31));
-            rc->g = (uint8_t)(195 + ((facet >> 2) & 31));
-            rc->b = 230;
+            uint32_t bucket = (uint32_t)(cz < (int32_t)MAX_DEPTH_BUCKETS ? cz : MAX_DEPTH_BUCKETS - 1);
+            depth_counts[bucket]++;
+            render_list[total_nodes].sx = (int16_t)sx;
+            render_list[total_nodes].sy = (int16_t)sy;
+            render_list[total_nodes].cz = (uint16_t)cz;
+            render_list[total_nodes].radius = 2;
+            render_list[total_nodes].r = 180;
+            render_list[total_nodes].g = 200;
+            render_list[total_nodes].b = 230;
+            render_list[total_nodes].is_pyramid = 1;
+            total_nodes++;
         }
     }
 
-    /* 2. Agenten-Kristalle projizieren */
+    /* Add Agents to render list */
     for (uint32_t i = 0; i < NUM_AGENTS; i++) {
-        int32_t wx = agents[i].x;
-        int32_t wy = agents[i].y;
-        int32_t wz = agents[i].z;
+        int32_t cz = agents[i].z + 200;
+        if (cz <= 0) cz = 1;
 
-        int32_t denom = wz + 400;
-        if (denom <= 0) denom = 1;
-
-        int32_t sx = project_z_no_zero((int64_t)wx * 95000LL, denom, WIDTH / 2);
-        int32_t sy = project_z_no_zero((int64_t)wy * 95000LL, denom, HEIGHT / 2);
+        int32_t sx = project_z_no_zero((int64_t)agents[i].x * 950, cz, WIDTH / 2);
+        int32_t sy = project_z_no_zero((int64_t)agents[i].y * 950, cz, HEIGHT / 2);
 
         if (sx >= 1 && sx <= WIDTH && sy >= 1 && sy <= HEIGHT) {
-            RenderCrystal *rc = &render_list[node_count++];
-            rc->sx = (int16_t)sx;
-            rc->sy = (int16_t)sy;
-            rc->cz = (uint16_t)(wz + 400);
-            rc->radius = 2;
-            rc->is_pyramid = -1;
-            transduce_light_wave(agents[i].wave_freq, agents[i].wave_amp, 220, &rc->r, &rc->g, &rc->b);
+            uint32_t bucket = (uint32_t)(cz < (int32_t)MAX_DEPTH_BUCKETS ? cz : MAX_DEPTH_BUCKETS - 1);
+            depth_counts[bucket]++;
+            uint8_t r, g, b;
+            int32_t shade = 255 - ((cz * 120) / 350);
+            if (shade < 40) shade = 40;
+            transduce_light_wave(agents[i].wave_freq, agents[i].wave_amp, shade, &r, &g, &b);
+
+            render_list[total_nodes].sx = (int16_t)sx;
+            render_list[total_nodes].sy = (int16_t)sy;
+            render_list[total_nodes].cz = (uint16_t)cz;
+            render_list[total_nodes].radius = (agents[i].state_flag == 3) ? 2 : 1;
+            render_list[total_nodes].r = r;
+            render_list[total_nodes].g = g;
+            render_list[total_nodes].b = b;
+            render_list[total_nodes].is_pyramid = -1;
+            total_nodes++;
         }
     }
 
-    /* Bucket Sort nach Tiefe */
-    for (uint32_t i = 0; i < node_count; i++) {
-        uint32_t bucket = render_list[i].cz >> 2;
-        if (bucket >= MAX_DEPTH_BUCKETS) bucket = MAX_DEPTH_BUCKETS - 1;
-        depth_counts[bucket]++;
-    }
-
+    /* Prefix sum for O(N) bucket sort */
     depth_offsets[0] = 0;
-    for (uint32_t i = 1; i < MAX_DEPTH_BUCKETS; i++) {
-        depth_offsets[i] = depth_offsets[i - 1] + depth_counts[i - 1];
+    for (uint32_t b = 1; b < MAX_DEPTH_BUCKETS; b++) {
+        depth_offsets[b] = depth_offsets[b - 1] + depth_counts[b - 1];
     }
 
-    for (uint32_t i = 0; i < node_count; i++) {
-        uint32_t bucket = render_list[i].cz >> 2;
-        if (bucket >= MAX_DEPTH_BUCKETS) bucket = MAX_DEPTH_BUCKETS - 1;
-        sorted_list[depth_offsets[bucket]++] = render_list[i];
+    /* Bucket sort nodes back-to-front */
+    uint32_t current_offsets[MAX_DEPTH_BUCKETS];
+    memcpy(current_offsets, depth_offsets, sizeof(current_offsets));
+    for (uint32_t n = 0; n < total_nodes; n++) {
+        uint32_t bucket = render_list[n].cz < MAX_DEPTH_BUCKETS ? render_list[n].cz : MAX_DEPTH_BUCKETS - 1;
+        sorted_list[current_offsets[bucket]++] = render_list[n];
     }
 
-    for (uint32_t i = 0; i < node_count; i++) {
-        RenderCrystal *rc = &sorted_list[i];
-        draw_volumetric_crystal(rc->sx, rc->sy, rc->radius, rc->r, rc->g, rc->b);
+    /* Draw sorted nodes */
+    for (uint32_t n = 0; n < total_nodes; n++) {
+        draw_volumetric_crystal(
+            sorted_list[n].sx,
+            sorted_list[n].sy,
+            sorted_list[n].radius,
+            sorted_list[n].r,
+            sorted_list[n].g,
+            sorted_list[n].b
+        );
     }
 }
 
 int main(void) {
+    printf("Initialisiere pTRC-Volumenphysik-Engine...\n");
     init_volumetric_universe();
-    uint64_t t0 = now_ns();
 
-    char filename[128];
-    for (uint32_t f = 1; f <= FRAMES; f++) {
-        step_discrete_physics_v2(f);
-        render_frame(f);
+    uint64_t start_time = now_ns();
 
-        snprintf(filename, sizeof(filename), "frame_%04u.ppm", f);
-        FILE *out = fopen(filename, "wb");
-        if (out) {
-            fprintf(out, "P6\n%d %d\n255\n", WIDTH, HEIGHT);
-            fwrite(rgb_frame, 1, (size_t)HEIGHT * WIDTH * 3, out);
-            fclose(out);
+    for (uint32_t f = 0; f < FRAMES; f++) {
+        resolve_agent_interactions(f);
+        render_volumetric_frame(f);
+
+        if (f % 60 == 0) {
+            printf("Frame %u / %u berechnet.\n", f, FRAMES);
         }
     }
 
-    uint64_t t1 = now_ns();
-    fprintf(stderr, "[pTRC 1080p Engine] 720 frames finished in %.3f ms\n", (double)(t1 - t0) / 1e6);
+    uint64_t end_time = now_ns();
+    double elapsed_sec = (double)(end_time - start_time) / 1e9;
+    printf("Simulation abgeschlossen in %.3f Sekunden.\n", elapsed_sec);
 
+    free(pyramid);
     free(agents);
     free(render_list);
     free(sorted_list);
     free(rgb_frame);
-    free(pyramid);
+
     return 0;
 }
-
