@@ -23,52 +23,83 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define MOD_BASE            210ULL                  /* P4 Primorial Ring (2*3*5*7) */
-#define PRIMORIAL_P15       614889782588491410ULL   /* P15 Primorial (Primes 2..47) */
-#define CONTROL_TAKT        24                      /* 24 Physical Contact Junctions */
-#define FREE_FACETS         120                     /* 120 Free Outer Facets */
-#define KEY_SHIFT           48                      /* Euler-Phi Constant: phi(210)=48 */
-#define INVARIANT_LIMIT     156                     /* Wirminghaus Invariant Limit */
-#define RENDER_TAKT_137     137                     /* Fine-Structure Prime Pulse */
-#define SLIP_TAG_BYTES      24                      /* 24-Byte (192-Bit) SLIP-MAC */
-#define PTRC_KEY_BYTES      64                      /* 512-Bit Master/Session Key */
-#define PTRC_NONCE_BYTES    16                      /* 128-Bit Nonce */
+#define MOD_BASE            210
+#define PRIMORIAL_P15       614889782588491410ULL
+#define CONTROL_TAKT        24
+#define FREE_FACETS         120
+#define TOTAL_FACETS        144
+#define KEY_SHIFT           48
+#define INVARIANT_LIMIT     156
+#define RENDER_TAKT_137     137
+#define SLIP_TAG_BYTES      24
+#define PTRC_KEY_BYTES      64
+#define PTRC_NONCE_BYTES    16
 
 typedef struct {
-    uint64_t macro_mod[4];          /* 4 pTRC-encoded 64-bit Primorial Cascade Moduli */
-    uint64_t macro_state[4];        /* 4 Macro-Cascade Running Phases */
-    uint8_t junctions[CONTROL_TAKT];
-    uint8_t outer_facets[FREE_FACETS];
-    uint32_t takt_counter;
+    uint64_t macro_mod[4];
+    uint64_t macro_state[4];
+    uint8_t  junctions[CONTROL_TAKT];
+    uint8_t  outer_facets[FREE_FACETS];
     uint16_t dyn_ring_1;
     uint16_t dyn_ring_2;
     uint16_t dyn_ring_3;
     uint16_t crt_phase_1;
     uint16_t crt_phase_2;
     uint16_t crt_phase_3;
+    uint32_t takt_counter;
 } ptrc_crystal_ctx_t;
 
-void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES], const uint8_t nonce[PTRC_NONCE_BYTES]);
-void ptrc_crystal_wipe(ptrc_crystal_ctx_t *ctx);
-
-void ptrc_kdf_derive(
-    const uint8_t *master_seed, size_t seed_len,
-    const uint8_t *context_info, size_t info_len,
-    uint8_t out_key[PTRC_KEY_BYTES], uint8_t out_nonce[PTRC_NONCE_BYTES]
+/* Initializes the 4-stage Primorial Macro-Cascade & 144-Facet Crystal Sponge */
+void ptrc_crystal_init(
+    ptrc_crystal_ctx_t *ctx,
+    const uint8_t key[PTRC_KEY_BYTES],
+    const uint8_t nonce[PTRC_NONCE_BYTES]
 );
 
+/* Deterministic 8-Prime CRT Ring Generator for 512-Bit Key & 128-Bit Nonce (Zero TRNG) */
+void ptrc_primorial_keygen(
+    uint64_t session_takt,
+    const uint8_t *domain_seed,
+    size_t seed_len,
+    uint8_t out_key[PTRC_KEY_BYTES],
+    uint8_t out_nonce[PTRC_NONCE_BYTES]
+);
+
+/* Derives a 512-bit session key and 128-bit nonce from arbitrary seed & context */
+void ptrc_kdf_derive(
+    const uint8_t *master_seed,
+    size_t seed_len,
+    const uint8_t *context_info,
+    size_t info_len,
+    uint8_t out_key[PTRC_KEY_BYTES],
+    uint8_t out_nonce[PTRC_NONCE_BYTES]
+);
+
+/* Authenticated Encryption with Associated Data (512-bit Key, 192-bit SLIP-MAC) */
 void ptrc_aead_encrypt(
-    const uint8_t key[PTRC_KEY_BYTES], const uint8_t nonce[PTRC_NONCE_BYTES],
-    const uint8_t *aad, size_t aad_len,
-    const uint8_t *plaintext, uint8_t *ciphertext, size_t length,
+    const uint8_t key[PTRC_KEY_BYTES],
+    const uint8_t nonce[PTRC_NONCE_BYTES],
+    const uint8_t *aad,
+    size_t aad_len,
+    const uint8_t *plaintext,
+    uint8_t *ciphertext,
+    size_t length,
     uint8_t tag_out[SLIP_TAG_BYTES]
 );
 
+/* Fail-Closed Authenticated Decryption (Returns 1 if authentic, 0 if tampered & wipes plaintext) */
 int ptrc_aead_decrypt(
-    const uint8_t key[PTRC_KEY_BYTES], const uint8_t nonce[PTRC_NONCE_BYTES],
-    const uint8_t *aad, size_t aad_len,
-    const uint8_t *ciphertext, uint8_t *plaintext, size_t length,
+    const uint8_t key[PTRC_KEY_BYTES],
+    const uint8_t nonce[PTRC_NONCE_BYTES],
+    const uint8_t *aad,
+    size_t aad_len,
+    const uint8_t *ciphertext,
+    uint8_t *plaintext,
+    size_t length,
     const uint8_t expected_tag[SLIP_TAG_BYTES]
 );
+
+/* Volatile SRAM register zeroization (prevents compiler dead-store elimination) */
+void ptrc_crystal_wipe(ptrc_crystal_ctx_t *ctx);
 
 #endif /* PTRC_CRYSTAL_H */
