@@ -36,8 +36,8 @@
 #define PTRC_NONCE_BYTES    16
 
 typedef struct {
-    uint64_t macro_mod[4];
-    uint64_t macro_state[4];
+    uint64_t macro_mod;
+    uint64_t macro_state;
     uint8_t  junctions[CONTROL_TAKT];
     uint8_t  outer_facets[FREE_FACETS];
     uint16_t dyn_ring_1;
@@ -51,16 +51,16 @@ typedef struct {
 
 void ptrc_crystal_init(
     ptrc_crystal_ctx_t *ctx,
-    const uint8_t key[PTRC_KEY_BYTES],
-    const uint8_t nonce[PTRC_NONCE_BYTES]
+    const uint8_t *key,
+    const uint8_t *nonce
 );
 
 void ptrc_primorial_keygen(
     uint64_t session_takt,
     const uint8_t *domain_seed,
     size_t seed_len,
-    uint8_t out_key[PTRC_KEY_BYTES],
-    uint8_t out_nonce[PTRC_NONCE_BYTES]
+    uint8_t *out_key,
+    uint8_t *out_nonce
 );
 
 void ptrc_kdf_derive(
@@ -68,30 +68,30 @@ void ptrc_kdf_derive(
     size_t seed_len,
     const uint8_t *context_info,
     size_t info_len,
-    uint8_t out_key[PTRC_KEY_BYTES],
-    uint8_t out_nonce[PTRC_NONCE_BYTES]
+    uint8_t *out_key,
+    uint8_t *out_nonce
 );
 
 void ptrc_aead_encrypt(
-    const uint8_t key[PTRC_KEY_BYTES],
-    const uint8_t nonce[PTRC_NONCE_BYTES],
+    const uint8_t *key,
+    const uint8_t *nonce,
     const uint8_t *aad,
     size_t aad_len,
     const uint8_t *plaintext,
     uint8_t *ciphertext,
     size_t length,
-    uint8_t tag_out[SLIP_TAG_BYTES]
+    uint8_t *tag_out
 );
 
 int ptrc_aead_decrypt(
-    const uint8_t key[PTRC_KEY_BYTES],
-    const uint8_t nonce[PTRC_NONCE_BYTES],
+    const uint8_t *key,
+    const uint8_t *nonce,
     const uint8_t *aad,
     size_t aad_len,
     const uint8_t *ciphertext,
     uint8_t *plaintext,
     size_t length,
-    const uint8_t expected_tag[SLIP_TAG_BYTES]
+    const uint8_t *expected_tag
 );
 
 void ptrc_crystal_wipe(ptrc_crystal_ctx_t *ctx);
