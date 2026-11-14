@@ -33,6 +33,7 @@ PTRC_KEY_BYTES = 64
 PTRC_NONCE_BYTES = 16
 
 PRIME_RING_POOL = (11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71)
+KEYGEN_PRIME_RINGS = (251, 241, 239, 233, 229, 227, 223, 211)
 
 
 def rotl8(value: int, shift: int) -> int:
@@ -110,9 +111,9 @@ class PTRCHardenedCrystalAEAD:
         self.takt_counter = 0
 
         c_key = key[32:64]
-        idx1 = (c_key[0] ^ c_key[16] ^ key[0]) & 0x0F
-        idx2 = (idx1 + 1 + ((c_key[1] ^ c_key[17] ^ key[8]) % 15)) & 0x0F
-        idx3 = (idx2 + 1 + ((c_key[2] ^ c_key[18] ^ key[16]) % 14)) & 0x0F
+        idx1 = (c_key ^ c_key ^ key) & 0x0F
+        idx2 = (idx1 + 1 + ((c_key ^ c_key ^ key) % 15)) & 0x0F
+        idx3 = (idx2 + 1 + ((c_key ^ c_key ^ key) % 14)) & 0x0F
 
         self.dyn_ring_1 = PRIME_RING_POOL[idx1]
         self.dyn_ring_2 = PRIME_RING_POOL[idx2]
@@ -127,9 +128,9 @@ class PTRCHardenedCrystalAEAD:
             raw_seed = (k_byte * 13 + n_byte * 17 + i) & 0xFF
             self.outer_facets[i] = plichta_crossed_mirror(raw_seed, i)
 
-        self.crt_phase_1 = (c_key[3] ^ key[24] ^ nonce[0]) % self.dyn_ring_1
-        self.crt_phase_2 = (c_key[4] ^ key[25] ^ nonce[1]) % self.dyn_ring_2
-        self.crt_phase_3 = (c_key[5] ^ key[26] ^ nonce[2]) % self.dyn_ring_3
+        self.crt_phase_1 = (c_key ^ key ^ nonce) % self.dyn_ring_1
+        self.crt_phase_2 = (c_key ^ key ^ nonce) % self.dyn_ring_2
+        self.crt_phase_3 = (c_key ^ key ^ nonce) % self.dyn_ring_3
 
         for _ in range(CONTROL_TAKT * CONTROL_TAKT):
             self._lattice_takt_step()
@@ -211,7 +212,7 @@ class PTRCHardenedCrystalAEAD:
     def wipe(self) -> None:
         self.junctions.fill(0)
         self.outer_facets.fill(0)
-        self.macro_state = [0, 0, 0, 0]
+        self.macro_state =
         self.takt_counter = 0
 
     @classmethod
@@ -238,6 +239,24 @@ class PTRCHardenedCrystalAEAD:
 
         ctx.wipe()
         return bytes(out_key), bytes(out_nonce)
+
+    @classmethod
+    def generate_primorial_keypair(cls, session_takt: int, domain_seed: bytes = b"") -> tuple[bytes, bytes]:
+        """Deterministic 8-Prime CRT Ring Generator for 512-Bit Key & 128-Bit Nonce (Zero TRNG)."""
+        ring_state = bytearray(8)
+        takt_buf = bytearray(8)
+        for r, p in enumerate(KEYGEN_PRIME_RINGS):
+            res = (session_takt + (r * 137)) % p
+            for i, sb in enumerate(domain_seed):
+                res = (res * 13 + sb + i) % p
+            ring_state[r] = plichta_crossed_mirror(res, r)
+            takt_buf[r] = (session_takt >> (r * 8)) & 0xFF
+
+        out_key, raw_nonce = cls.derive_key_and_nonce(bytes(ring_state), domain_seed)
+        out_nonce = bytearray(PTRC_NONCE_BYTES)
+        for i in range(PTRC_NONCE_BYTES):
+            out_nonce[i] = (raw_nonce[i] ^ ring_state[i & 7] ^ takt_buf[i & 7]) & 0xFF
+        return out_key, bytes(out_nonce)
 
     @classmethod
     def encrypt(cls, key: bytes, nonce: bytes, plaintext: bytes, aad: bytes = b"") -> tuple[bytes, bytes]:
