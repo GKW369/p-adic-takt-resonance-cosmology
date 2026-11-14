@@ -49,14 +49,12 @@ typedef struct {
     uint32_t takt_counter;
 } ptrc_crystal_ctx_t;
 
-/* Initializes the 4-stage Primorial Macro-Cascade & 144-Facet Crystal Sponge */
 void ptrc_crystal_init(
     ptrc_crystal_ctx_t *ctx,
     const uint8_t key[PTRC_KEY_BYTES],
     const uint8_t nonce[PTRC_NONCE_BYTES]
 );
 
-/* Deterministic 8-Prime CRT Ring Generator for 512-Bit Key & 128-Bit Nonce (Zero TRNG) */
 void ptrc_primorial_keygen(
     uint64_t session_takt,
     const uint8_t *domain_seed,
@@ -65,7 +63,6 @@ void ptrc_primorial_keygen(
     uint8_t out_nonce[PTRC_NONCE_BYTES]
 );
 
-/* Derives a 512-bit session key and 128-bit nonce from arbitrary seed & context */
 void ptrc_kdf_derive(
     const uint8_t *master_seed,
     size_t seed_len,
@@ -75,7 +72,6 @@ void ptrc_kdf_derive(
     uint8_t out_nonce[PTRC_NONCE_BYTES]
 );
 
-/* Authenticated Encryption with Associated Data (512-bit Key, 192-bit SLIP-MAC) */
 void ptrc_aead_encrypt(
     const uint8_t key[PTRC_KEY_BYTES],
     const uint8_t nonce[PTRC_NONCE_BYTES],
@@ -87,7 +83,6 @@ void ptrc_aead_encrypt(
     uint8_t tag_out[SLIP_TAG_BYTES]
 );
 
-/* Fail-Closed Authenticated Decryption (Returns 1 if authentic, 0 if tampered & wipes plaintext) */
 int ptrc_aead_decrypt(
     const uint8_t key[PTRC_KEY_BYTES],
     const uint8_t nonce[PTRC_NONCE_BYTES],
@@ -99,7 +94,6 @@ int ptrc_aead_decrypt(
     const uint8_t expected_tag[SLIP_TAG_BYTES]
 );
 
-/* Volatile SRAM register zeroization (prevents compiler dead-store elimination) */
 void ptrc_crystal_wipe(ptrc_crystal_ctx_t *ctx);
 
 #endif /* PTRC_CRYSTAL_H */
