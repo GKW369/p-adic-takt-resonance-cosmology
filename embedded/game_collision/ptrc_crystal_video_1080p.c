@@ -1,5 +1,4 @@
-/*
- * ==============================================================================
+/* ==============================================================================
  * pTRC Framework - Discrete 1-Bit Integer Physics Engine
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
  *
@@ -16,8 +15,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program (see the LICENSE file in the root directory).
  * If not, see <https://gnu.org>.
- * ==============================================================================
- */
+ * ============================================================================== */
+
 
 #include <stdio.h>
 #include <stdlib.h>
