@@ -1,82 +1,79 @@
 <!--
-==============================================================================
-pTRC Framework - Discrete 1-Bit Integer Physics Engine
-Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
-
-LICENSE & LIABILITY NOTICE:
-Academic, non-commercial research and evaluation is permitted strictly under 
-the terms of the GNU Affero General Public License version 3 (AGPLv3).
-For the complete, unedited license text see: https://gnu.org
-
-ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
-integration requires a separate, individually negotiated commercial infrastructure 
-waiver issued directly by the author.
-
-WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
-==============================================================================
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# LICENSE & LIABILITY NOTICE:
+# Academic, non-commercial research and evaluation is permitted strictly under 
+# the terms of the GNU Affero General Public License version 3 (AGPLv3).
+# For the complete, unedited license text see: https://gnu.org
+#
+# ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
+# integration requires a separate, individually negotiated commercial infrastructure 
+# waiver issued directly by the author.
+#
+# WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
+# ==============================================================================
 -->
-# Security Policy & Architectural Symmetrical Boundaries
 
-## 1. Definition of Architectural Vulnerabilities
-Within the pTRC framework, security is defined as the maintenance of absolute integer bit-invariance. This system operates strictly within the boundaries of discrete arithmetic (\(\mathbb{Z}\)). 
+# Security & Cryptographic Disclosure Policy
 
-The intentional or accidental introduction of continuous floating-point fields (\(\mathbb{R}\)), decimal variables (`floats`), or transcendental approximations (π, e) is classified as **Phase Dissipation and Analog Leakage**. 
+## Scope & Supported Versions
 
-Any modification or pull request that breaks the modulo-24/210 invariant lattice rules will be discarded immediately at the compiler pipeline layer.
+The **pTRC Framework** (`p-adic-takt-resonance-cosmology`) implements experimental non-Archimedean integer arithmetic ($\mathbb{Z} \setminus \{0\}$) across discrete physics, Edge-AI, and the **v4.0 512-Bit Primorial AEAD & SLIP-MAC** cryptographic inference core (`embedded/crypto/` and `src/ptrc_crystal_aead.py`).
 
-## ⚖️ 2. Commercial Compliance & Warranty Void
-While the open-source evaluation branch (AGPLv3) allows academic modifications, notice is hereby given to all corporate entities:
-*   Any introduction of floating-point arithmetic or continuous physics models into the core engine components instantly violates the structural integrity of the pTRC framework.
-*   Modifications causing **Analog Leakage** will immediately void all commercial support agreements, architectural consulting certificates, and corporate licensing claims.
-
-## 📧 3. Reporting Process
-If you identify an calculation boundary bypass or a potential division-by-zero vulnerability that evades the rigid integer safety floors (such as the minimum 1-pixel constraint), do **NOT** open a public GitHub Issue. 
-
-# 🛡️ Security Policy & Architectural Integrity (v3.3)
-
-## 1. Supported Versions & Cryptographic Baseline
-Security updates, Zero-Float hygiene audits, and cross-language bit-parity verifications apply strictly to the current **v3.3** architecture:
-
-| Module / Component | Version | Status | Verification Gate |
-| :--- | :--- | :--- | :--- |
-| **144-Facet Crystalline AEAD & KDF** (`ptrc_crystal.c/.h`, `ptrc_crystal_aead.py`) | `v3.3.x` | **Active** | `src/test_ptrc_crypt_parity.py` & `src/test_ptrc_crypt_metrics.py` |
-| **Prime-Lattice Interference Sieve AI** (`ptrc_interference_nn.c/.py`) | `v3.3.x` | **Active** | `src/test_ptrc_ai_parity.py` |
-| **Core Simulation Modules** (`src/*.py`) | `v2.x / v3.x` | **Active** | `src/00_ptrc_first_principles_engine.py` |
-| Legacy Unauthenticated Stream Prototypes | `< v3.0` | **Deprecated** | Superseded by 192-bit SLIP-MAC AEAD |
+| Component / Version | Status | Support & Audit Level |
+| :--- | :--- | :--- |
+| **v4.0 (`main` branch)** — 512-Bit Primorial AEAD + `pTRC-KDF` + 192-Bit SLIP-MAC | **Active** | Full constant-time & cross-language parity audit |
+| **v3.x (`main` branch)** — Holographic 4-Quadrant AEAD + 137-Takt Pulse | **Superseded** | Replaced by v4.0 Primorial Macro-Cascade |
+| **v2.x and earlier** | **Unsupported** | Historical research prototypes only |
 
 ---
 
-## 2. Core Security Invariants (Mandatory Compliance)
-Any vulnerability or pull request violating the following systemic invariants is classified as a critical architectural defect:
+## Cryptographic Security Guarantees & Boundaries
 
-1. **Zero Analog Leakage (Strict $\mathbb{Z} \setminus \{0\}$ Domain):**
-   * Floating-point data types (`float`, `double`) and standard floating-point division (`/`) are strictly prohibited across all cryptographic, AI, and physics execution paths.
-   * All transformations must execute via deterministic integer arithmetic, fixed-point scaling (`SCALE = 1000` with floor division `//`), or native 1-byte register truncation (`uint8_t` / `& 0xFF`).
-2. **Side-Channel & Timing Immunity ($O(1)$ Constant Execution):**
-   * Cryptographic data paths must remain strictly **branchless**—no secret-dependent `if`/`else` conditions or table lookups indexed by unmasked secrets.
-   * Authentication tags (**192-bit SLIP-MAC**) must be verified exclusively via constant-time bitwise accumulation (`diff |= a[i] ^ b[i]`), failing closed with immediate output buffer zeroization on mismatch.
-   * Sensitive 144-facet lattice states must be scrubbed post-execution via `volatile` register writes (`ptrc_crystal_wipe`).
-3. **Nonce Uniqueness & Key Derivation Discipline (`pTRC-KDF`):**
-   * Never reuse an identical `(256-bit key, 96-bit nonce)` pair across two distinct messages.
-   * Always derive fresh session keys and nonces via `ptrc_kdf_derive` / `derive_key_and_nonce` using unique domain context strings or monotonic counters.
-4. **Experimental Research Classification:**
-   * The v3.3 Crystalline AEAD engine is an independent non-Archimedean cryptographic architecture intended for research, telemetry, and resource-constrained embedded prototyping. Production deployments in regulated sectors require independent external cryptanalytic review.
+1. **Zero-Float & Constant-Time Execution ($O(1)$):**
+   All cryptographic state transitions execute exclusively in discrete integer registers (`int8_t` to `uint64_t`) without floating-point instructions, lookup tables in Flash/RAM, or secret-dependent memory indexing.
+2. **Fail-Closed Authentication (`192-bit SLIP-MAC`):**
+   `ptrc_aead_decrypt` verifies the 24-byte authentication tag in constant time (`ptrc_verify_tag_ct`) and immediately wipes output buffers upon any 1-bit modification to ciphertext, nonce, or Associated Data (AAD).
+3. **Volatile Register Zeroization (`ptrc_crystal_wipe`):**
+   Internal 144-facet sponge states and Primorial ring accumulators are erased via `volatile` pointer writes to prevent compiler dead-store elimination.
+4. **Research Evaluation Notice:**
+   This software is provided under **GNU AGPLv3** as independent scientific research. Before deploying any cryptographic primitive into safety-critical or regulated production systems, conduct an independent third-party cryptographic review and side-channel power/EM measurement on your target silicon.
 
 ---
 
-## 3. Reporting a Vulnerability
-If you identify a side-channel leak, bit-parity discrepancy between C and Python, or an integer overflow vector:
+## Reporting a Vulnerability or Cryptographic Finding
 
-* **Do not** disclose exploit payloads in public GitHub issues prior to coordination.
-* **Contact the Author directly:** `g.wirminghaus@gmx.de` (Kurt Guido Wirminghaus).
-* Please include reproduction steps, target architecture details (e.g., x86_64, ARM Cortex-M0+), and output from `src/test_ptrc_crypt_parity.py`.
+Please **do not** open public GitHub issues for suspected cryptographic weaknesses, timing leaks, buffer boundary issues, or tag-forgery vectors.
 
-Please report the mathematical anomaly privately to protect current commercial deployments:
-📩 **g.wirminghaus@gmx.de**
+Instead, report findings privately via one of the following channels:
+
+* **Direct Email:** `g.wirminghaus@gmx.de` (Subject: `[SECURITY / pTRC-Crypto] <Short Summary>`)
+* **GitHub Private Vulnerability Reporting:** Use the **Security → Advisories → Report a vulnerability** tab in this repository.
+
+### What to Include in Your Report
+* Affected file(s) and line numbers (e.g., `embedded/crypto/ptrc_crystal.c` or `src/ptrc_crystal_aead.py`).
+* Exact test vectors (hex-encoded 512-bit key, 128-bit nonce, AAD, plaintext/ciphertext, and 192-bit tag) reproducing the issue.
+* Target compiler, optimization flags, and CPU architecture (e.g., `arm-none-eabi-gcc -O3 -mcpu=cortex-m0plus`).
+
+### Response Timeline
+* **Acknowledgment:** Within **72 hours** of receipt.
+* **Initial Triage & Reproducibility Assessment:** Within **7 days**.
+* **Patch & Coordinated Disclosure:** Upon verification via `src/00_test_ptrc_crypt_parity.py` and `src/00_test_ptrc_crypt_metrics.py`, a fix and credit note will be published on `main`.
 
 ---
 
-*Document Classification: Academic Defense Protocol / Security & Compliance Matrix.*  
-*Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
+## Automated Verification Commands
+
+Before submitting a security patch or pull request affecting cryptographic code, verify that all automated gates pass:
+
+```bash
+cmake -B build -S . && cmake --build build
+./build/ptrc_hardware_demo
+python3 src/00_test_ptrc_crypt_parity.py
+python3 src/00_test_ptrc_crypt_metrics.py
+python3 src/00_ptrc_crypt_demo.py
+```
