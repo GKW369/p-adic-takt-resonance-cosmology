@@ -1,4 +1,3 @@
-<!--
 # ==============================================================================
 # pTRC Framework - Discrete 1-Bit Integer Physics Engine
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
@@ -18,9 +17,6 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
-# -*- coding: utf-8 -*-
--->
-
 cmake_minimum_required(VERSION 3.16)
 project(pTRC_Crystal_Crypto C)
 
@@ -29,9 +25,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
 set(CRYPTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/embedded/crypto")
-set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-# Output shared library directly to build/ for Python ctypes auto-discovery
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
@@ -50,19 +44,18 @@ else()
     target_compile_options(ptrc_crystal PRIVATE -O3 -Wall -Wextra -Wpedantic)
 endif()
 
-# 2. Standalone C11 512-bit AEAD & KDF demonstration executable (located in src/)
-add_executable(ptrc_crypt_demo
-    "${SRC_DIR}/ptrc_crypt_demo.c"
+# 2. Standalone C11 v4.0 512-bit AEAD & KDF demonstration executable
+add_executable(ptrc_hardware_demo
+    "${CRYPTO_DIR}/ptrc_crypt_demo.c"
     "${CRYPTO_DIR}/ptrc_crystal.c"
 )
 
-target_include_directories(ptrc_crypt_demo PRIVATE
+target_include_directories(ptrc_hardware_demo PRIVATE
     "${CRYPTO_DIR}"
 )
 
 if(MSVC)
-    target_compile_options(ptrc_crypt_demo PRIVATE /W4 /O2)
+    target_compile_options(ptrc_hardware_demo PRIVATE /W4 /O2)
 else()
-    target_compile_options(ptrc_crypt_demo PRIVATE -O3 -Wall -Wextra -Wpedantic)
+    target_compile_options(ptrc_hardware_demo PRIVATE -O3 -Wall -Wextra -Wpedantic)
 endif()
-
