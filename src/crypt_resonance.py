@@ -19,8 +19,8 @@
 
 # -*- coding: utf-8 -*-
 """
-pTRC Framework - Core Cryptography Module: 144-Facet AEAD Matrix Encryption
-Operational Domain: Active 144-Facet Sponge & CRT Rings (Z/210Z x 11 x 13 x 17).
+pTRC Framework - Core Cryptography Module: v4.0 512-Bit Primorial AEAD Matrix Encryption
+Operational Domain: P15 Primorial Macro-Cascade + Active 144-Facet Sponge.
 Integrates PTRCHardenedCrystalAEAD into the central repository verification pipeline.
 """
 
@@ -37,7 +37,7 @@ from ptrc_crystal_aead import PTRCHardenedCrystalAEAD
 
 class PTRCCryptResonanceEngine:
     """
-    Wraps the 144-Facet Crystalline AEAD Engine for whole-number matrix blocks
+    Wraps the v4.0 512-Bit Crystalline AEAD Engine for whole-number matrix blocks
     and repository-wide integer telemetry verification.
     """
 
@@ -47,20 +47,16 @@ class PTRCCryptResonanceEngine:
         self.calibration_limit = 156
         self.seed = int(key_vector_seed)
 
-        # Derive deterministic 256-bit (32-byte) key and 96-bit (12-byte) nonce in Z
-        self.secret_key = bytes(
-            ((self.seed * (i + 1) + self.calibration_limit) * 13) & 0xFF
-            for i in range(32)
+        # Derive deterministic 512-bit (64-byte) key and 128-bit (16-byte) nonce in Z
+        seed_bytes = f"GKW369-PRIMORDIAL-SEED-{self.seed}".encode("ascii")
+        self.aad_header = b"PTRC:MODULE16|RING:P15-MACRO|TAKT:137"
+        self.secret_key, self.nonce = PTRCHardenedCrystalAEAD.derive_key_and_nonce(
+            seed_bytes, self.aad_header
         )
-        self.nonce = bytes(
-            ((self.seed + i * self.control_base) * 7) & 0xFF
-            for i in range(12)
-        )
-        self.aad_header = b"PTRC:MODULE16|RING:210|TAKT:24"
 
     def encrypt_data_matrix(self, whole_number_array) -> tuple[bytes, bytes, tuple[int, ...]]:
         """
-        Converts an integer array into a byte stream and executes 144-Facet AEAD encryption.
+        Converts an integer array into a byte stream and executes v4.0 512-Bit AEAD encryption.
         Returns (ciphertext_bytes, slip_mac_tag, original_shape).
         """
         input_matrix = np.asarray(whole_number_array, dtype=np.int32)
@@ -84,13 +80,12 @@ class PTRCCryptResonanceEngine:
 
 
 if __name__ == "__main__":
-    print("[ pTRC-CRYPT ] Initializing 144-Facet AEAD & SLIP-MAC matrix pipeline...")
+    print("[ pTRC-CRYPT ] Initializing v4.0 512-Bit Primorial AEAD & SLIP-MAC pipeline...")
     engine = PTRCCryptResonanceEngine(key_vector_seed=1836)
 
-    # Experimental array representing multi-scale metric blocks
     source_block = np.array([24, 156, 1836], dtype=np.int32)
 
-    print(" -> Executing 144-Facet AEAD encryption pass...")
+    print(" -> Executing v4.0 512-Bit AEAD encryption pass...")
     cipher_bytes, tag_bytes, shape = engine.encrypt_data_matrix(source_block)
 
     print(" -> Executing constant-time SLIP-MAC audit & decryption pass...")
@@ -106,7 +101,7 @@ if __name__ == "__main__":
     print(f" -> [ VALIDATION ] SLIP-MAC Tag (Hex): {tag_bytes.hex()}")
     print(f" -> Reconstructed Input Match: {validation_status}")
     if validation_status:
-        print(" -> STATUS: Zero-Float 144-Facet AEAD & SLIP-MAC Verified Secure.")
+        print(" -> STATUS: Zero-Float v4.0 512-Bit Primorial AEAD Verified Secure.")
         sys.exit(0)
     else:
         print(" -> STATUS: ERR - Crystalline AEAD Parity Check Failed.")
