@@ -20,13 +20,12 @@
 #include "ptrc_crystal.h"
 #include <string.h>
 
-static const uint16_t PRIME_RING_POOL = {
+static const uint16_t PRIME_RING_POOL[16] = {
     11, 13, 17, 19, 23, 29, 31, 37,
     41, 43, 47, 53, 59, 61, 67, 71
 };
 
-/* 8 pairwise coprime primes < 256 (all coprime to 210 & 137 -> CRT period > 1.09e19) */
-static const uint8_t KEYGEN_PRIME_RINGS = {
+static const uint8_t KEYGEN_PRIME_RINGS[8] = {
     251, 241, 239, 233, 229, 227, 223, 211
 };
 
@@ -154,10 +153,10 @@ void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES
         ctx->macro_state[s] = mixed_seed % ctx->macro_mod[s];
     }
 
-    const uint8_t *c_key = &key;
-    uint8_t idx1 = (uint8_t)((c_key ^ c_key ^ key) & 0x0F);
-    uint8_t idx2 = (uint8_t)((idx1 + 1 + ((c_key ^ c_key ^ key) % 15)) & 0x0F);
-    uint8_t idx3 = (uint8_t)((idx2 + 1 + ((c_key ^ c_key ^ key) % 14)) & 0x0F);
+    const uint8_t *c_key = &key[32];
+    uint8_t idx1 = (uint8_t)((c_key[0] ^ c_key[16] ^ key[0]) & 0x0F);
+    uint8_t idx2 = (uint8_t)((idx1 + 1 + ((c_key[1] ^ c_key[17] ^ key[1]) % 15)) & 0x0F);
+    uint8_t idx3 = (uint8_t)((idx2 + 1 + ((c_key[2] ^ c_key[18] ^ key[2]) % 14)) & 0x0F);
 
     ctx->dyn_ring_1 = PRIME_RING_POOL[idx1];
     ctx->dyn_ring_2 = PRIME_RING_POOL[idx2];
@@ -172,9 +171,9 @@ void ptrc_crystal_init(ptrc_crystal_ctx_t *ctx, const uint8_t key[PTRC_KEY_BYTES
         ctx->outer_facets[i] = plichta_crossed_mirror((uint8_t)(k_byte * 13 + n_byte * 17 + (uint8_t)i), (uint8_t)i);
     }
 
-    ctx->crt_phase_1 = (uint16_t)((c_key ^ key ^ nonce) % ctx->dyn_ring_1);
-    ctx->crt_phase_2 = (uint16_t)((c_key ^ key ^ nonce) % ctx->dyn_ring_2);
-    ctx->crt_phase_3 = (uint16_t)((c_key ^ key ^ nonce) % ctx->dyn_ring_3);
+    ctx->crt_phase_1 = (uint16_t)((c_key[3] ^ key[3] ^ nonce[0]) % ctx->dyn_ring_1);
+    ctx->crt_phase_2 = (uint16_t)((c_key[4] ^ key[4] ^ nonce[1]) % ctx->dyn_ring_2);
+    ctx->crt_phase_3 = (uint16_t)((c_key[5] ^ key[5] ^ nonce[2]) % ctx->dyn_ring_3);
 
     for (size_t w = 0; w < (CONTROL_TAKT * CONTROL_TAKT); w++) {
         ptrc_lattice_takt_step(ctx);
@@ -192,7 +191,7 @@ static void ptrc_absorb_aad(ptrc_crystal_ctx_t *ctx, const uint8_t *aad, size_t 
 }
 
 static void ptrc_finalize_slip_tag(ptrc_crystal_ctx_t *ctx, size_t aad_len, size_t payload_len, uint8_t tag_out[SLIP_TAG_BYTES]) {
-    uint8_t len_block = {
+    uint8_t len_block[8] = {
         (uint8_t)(aad_len & 0xFF), (uint8_t)((aad_len >> 8) & 0xFF),
         (uint8_t)((aad_len >> 16) & 0xFF), (uint8_t)((aad_len >> 24) & 0xFF),
         (uint8_t)(payload_len & 0xFF), (uint8_t)((payload_len >> 8) & 0xFF),
@@ -255,8 +254,8 @@ void ptrc_primorial_keygen(
     uint8_t out_key[PTRC_KEY_BYTES],
     uint8_t out_nonce[PTRC_NONCE_BYTES]
 ) {
-    uint8_t ring_state;
-    uint8_t takt_buf;
+    uint8_t ring_state[8];
+    uint8_t takt_buf[8];
 
     for (uint8_t r = 0; r < 8; r++) {
         uint8_t p = KEYGEN_PRIME_RINGS[r];
