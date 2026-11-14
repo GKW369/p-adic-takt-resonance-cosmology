@@ -43,13 +43,13 @@ from ptrc_crystal_aead import PTRCHardenedCrystalAEAD
 
 def find_shared_library() -> Path | None:
     """Locates the compiled C11 shared library across Linux, macOS, and Windows."""
-    candidates = [
+    candidates = (
         BUILD_DIR / "libptrc_crystal.so",
         BUILD_DIR / "libptrc_crystal.dylib",
         BUILD_DIR / "ptrc_crystal.dll",
         BUILD_DIR / "Release" / "ptrc_crystal.dll",
         BUILD_DIR / "Debug" / "ptrc_crystal.dll",
-    ]
+    )
     for path in candidates:
         if path.is_file():
             return path
@@ -58,12 +58,12 @@ def find_shared_library() -> Path | None:
 
 def find_demo_executable() -> Path | None:
     """Locates the standalone C11 demo executable."""
-    candidates = [
+    candidates = (
         BUILD_DIR / "ptrc_hardware_demo",
         BUILD_DIR / "ptrc_hardware_demo.exe",
         BUILD_DIR / "Release" / "ptrc_hardware_demo.exe",
         CRYPTO_DIR / "ptrc_hardware_demo",
-    ]
+    )
     for path in candidates:
         if path.is_file():
             return path
@@ -74,29 +74,26 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
     """Direct C11 <-> Python ABI parity check via ctypes for 8-Prime Keygen, KDF & 512-bit AEAD."""
     lib = ctypes.CDLL(str(lib_path))
 
-    # void ptrc_primorial_keygen(uint64_t session_takt, const uint8_t *domain_seed, size_t seed_len, uint8_t out_key, uint8_t out_nonce)
-    lib.ptrc_primorial_keygen.argtypes = [
+    lib.ptrc_primorial_keygen.argtypes = (
         ctypes.c_uint64,
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
-    ]
+    )
     lib.ptrc_primorial_keygen.restype = None
 
-    # void ptrc_kdf_derive(const uint8_t *master_seed, size_t seed_len, const uint8_t *context_info, size_t info_len, uint8_t out_key, uint8_t out_nonce)
-    lib.ptrc_kdf_derive.argtypes = [
+    lib.ptrc_kdf_derive.argtypes = (
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
-    ]
+    )
     lib.ptrc_kdf_derive.restype = None
 
-    # void ptrc_aead_encrypt(const uint8_t key, const uint8_t nonce, const uint8_t *aad, size_t aad_len, const uint8_t *plaintext, uint8_t *ciphertext, size_t length, uint8_t tag_out)
-    lib.ptrc_aead_encrypt.argtypes = [
+    lib.ptrc_aead_encrypt.argtypes = (
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
@@ -105,11 +102,10 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
-    ]
+    )
     lib.ptrc_aead_encrypt.restype = None
 
-    # int ptrc_aead_decrypt(const uint8_t key, const uint8_t nonce, const uint8_t *aad, size_t aad_len, const uint8_t *ciphertext, uint8_t *plaintext, size_t length, const uint8_t expected_tag)
-    lib.ptrc_aead_decrypt.argtypes = [
+    lib.ptrc_aead_decrypt.argtypes = (
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.POINTER(ctypes.c_uint8),
@@ -118,7 +114,7 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
         ctypes.POINTER(ctypes.c_uint8),
         ctypes.c_size_t,
         ctypes.POINTER(ctypes.c_uint8),
-    ]
+    )
     lib.ptrc_aead_decrypt.restype = ctypes.c_int
 
     # 1. Verify Deterministic 8-Prime CRT Key & Nonce Generator (Zero TRNG)
@@ -180,7 +176,7 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
         return False
 
     c_ct_tampered = (ctypes.c_uint8 * len(plaintext)).from_buffer_copy(bytes(c_ct))
-    c_ct_tampered ^= 0x01
+    ctypes.cast(c_ct_tampered, ctypes.POINTER(ctypes.c_uint8)).contents.value ^= 0x01
     c_dec_wiped = (ctypes.c_uint8 * len(plaintext)).from_buffer_copy(b"\xAA" * len(plaintext))
     rc_bad = lib.ptrc_aead_decrypt(
         c_key, c_nonce, c_aad, len(aad), c_ct_tampered, c_dec_wiped, len(plaintext), c_tag
@@ -194,7 +190,7 @@ def verify_ctypes_parity(lib_path: Path) -> bool:
 
 def verify_cli_demo_parity(exe_path: Path) -> bool:
     """Verifies standalone C11 demo binary output against Python v4.0 reference."""
-    proc = subprocess.run([str(exe_path)], capture_output=True, text=True, check=False)
+    proc = subprocess.run((str(exe_path),), capture_output=True, text=True, check=False)
     if proc.returncode != 0:
         print(f"[ FAIL ] Demo executable exited with code {proc.returncode}")
         print(proc.stderr)
