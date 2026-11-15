@@ -1,5 +1,5 @@
 /* ==============================================================================
- * pTRC Framework - Discrete 1-Bit Integer Physics Engine
+ * pTRC Framework - Discrete 1-Bit Integer Physics & Cryptographic Engine v4.0
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,62 +17,65 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
+/* File: embedded/crypto/ptrc_crypt_demo.c */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include "ptrc_crystal.h"
 
+#define DEMO_BUF_MAX 256U
+
 int main(void) {
-    const char *master_seed = "GKW369-PRIMORDIAL-SEED-1836";
-    const char *kdf_context = "SESSION:01|NODE:ALPHA";
-    const char *header_aad  = "NODE:01|RING:P15-MACRO|TAKT:137";
-    const char *plaintext   = "MINT-Matrix-Core-Initialized: True. 512-Bit Primorial Macro-Cascade v4.0 Active.";
+    const uint8_t domain_seed[] = "pTRC-v4.0-BARE-METAL-PRIMORIAL-DOMAIN-210";
+    uint8_t key[PTRC_CRYPT_KEY_BYTES];
+    uint8_t nonce[PTRC_CRYPT_NONCE_BYTES];
 
-    uint8_t derived_key[PTRC_KEY_BYTES] = {0};
-    uint8_t derived_nonce[PTRC_NONCE_BYTES] = {0};
-    uint8_t encrypted[256] = {0};
-    uint8_t decrypted[256] = {0};
-    uint8_t slip_tag[SLIP_TAG_BYTES] = {0};
+    if (ptrc_primorial_keygen(137210144ULL, domain_seed, sizeof(domain_seed) - 1U, key, nonce) != PTRC_CRYPT_OK) {
+        printf("ERROR: Keygen failed.\n");
+        return 1;
+    }
 
-    size_t len = strlen(plaintext);
-    size_t aad_len = strlen(header_aad);
+    const uint8_t aad[] = "HDR:pTRC-AEAD-v4.0|512BIT|192MAC";
+    const uint8_t msg[] = "Discrete Integer Physics Z \\ {0}: Zero-Table Primorial Macro-Cascade AEAD.";
+    const size_t  msg_len = sizeof(msg) - 1U;
 
-    printf("\n===========================================================================\n");
-    printf("  pTRC FRAMEWORK // v4.0 512-BIT PRIMORIAL MACRO-CASCADE AEAD & KDF        \n");
-    printf("===========================================================================\n\n");
+    uint8_t ciphertext[DEMO_BUF_MAX];
+    uint8_t decrypted[DEMO_BUF_MAX];
+    uint8_t tag[PTRC_CRYPT_TAG_BYTES];
 
-    ptrc_kdf_derive((const uint8_t *)master_seed, strlen(master_seed),
-                    (const uint8_t *)kdf_context, strlen(kdf_context),
-                    derived_key, derived_nonce);
+    ptrc_crystal_ctx_t inspect_ctx;
+    ptrc_crystal_init(&inspect_ctx, key, nonce);
 
-    printf("512-BIT KEY (Hex): ");
-    for (size_t i = 0; i < PTRC_KEY_BYTES; i++) printf("%02x", derived_key[i]);
-    printf("\n128-BIT NONCE    : ");
-    for (size_t i = 0; i < PTRC_NONCE_BYTES; i++) printf("%02x", derived_nonce[i]);
-    printf("\n");
+    printf("===============================================================================\n");
+    printf("  pTRC CRYPTO ENGINE v4.0 — BARE-METAL C11 512-BIT PRIMORIAL AEAD VERIFICATION\n");
+    printf("  Context RAM  : %zu bytes static stack | 144 Facets | Zero malloc | Z \\ {0}\n", sizeof(inspect_ctx));
+    printf("  Macro-Rings  : M0=%llu | M1=%llu\n",
+           (unsigned long long)(*(inspect_ctx.macro_mod + 0)),
+           (unsigned long long)(*(inspect_ctx.macro_mod + 1)));
+    printf("===============================================================================\n");
+    ptrc_crystal_wipe(&inspect_ctx);
 
-    ptrc_aead_encrypt(derived_key, derived_nonce, (const uint8_t *)header_aad, aad_len,
-                      (const uint8_t *)plaintext, encrypted, len, slip_tag);
+    if (ptrc_aead_encrypt(key, nonce, aad, sizeof(aad) - 1U, msg, msg_len, ciphertext, tag) != PTRC_CRYPT_OK) {
+        printf("ERROR: AEAD encryption failed.\n");
+        return 1;
+    }
 
-    printf("ENCRYPTED   (Hex): ");
-    for (size_t i = 0; i < len; i++) printf("%02x", encrypted[i]);
-    printf("\nSLIP-MAC    (Hex): ");
-    for (size_t i = 0; i < SLIP_TAG_BYTES; i++) printf("%02x", slip_tag[i]);
-    printf("\n\n");
+    int dec_ok = ptrc_aead_decrypt(key, nonce, aad, sizeof(aad) - 1U, ciphertext, msg_len, tag, decrypted);
+    int match_ok = (dec_ok == PTRC_CRYPT_OK && memcmp(msg, decrypted, msg_len) == 0) ? PTRC_CRYPT_OK : PTRC_CRYPT_ERR;
+    printf(" + Authentic Decryption & 192-Bit SLIP-MAC : %s\n", (match_ok == PTRC_CRYPT_OK) ? "PASS" : "FAIL");
 
-    int ok = ptrc_aead_decrypt(derived_key, derived_nonce, (const uint8_t *)header_aad, aad_len,
-                               encrypted, decrypted, len, slip_tag);
-    decrypted[len] = '\0';
+    /* Tamper test: flip 1 bit in tag -> must reject with PTRC_CRYPT_ERR (-1) */
+    uint8_t bad_tag[PTRC_CRYPT_TAG_BYTES];
+    memcpy(bad_tag, tag, PTRC_CRYPT_TAG_BYTES);
+    *(bad_tag + 0) ^= 0x01U;
+    int tamper_rc = ptrc_aead_decrypt(key, nonce, aad, sizeof(aad) - 1U, ciphertext, msg_len, bad_tag, decrypted);
+    int tamper_ok = (tamper_rc == PTRC_CRYPT_ERR) ? PTRC_CRYPT_OK : PTRC_CRYPT_ERR;
+    printf(" + Tampered Tag Rejection (Constant-Time)  : %s\n", (tamper_ok == PTRC_CRYPT_OK) ? "PASS" : "FAIL");
 
-    printf("RESTORED OUTPUT  : '%s'\n", (char *)decrypted);
-    printf("SLIP-MAC AUDIT   : %s\n", ok ? "[ AUTHENTIC - 100% BIT-EXACT ]" : "[ TAMPER DETECTED ]");
-
-    encrypted[0] ^= 0x01;
-    int tamper_ok = ptrc_aead_decrypt(derived_key, derived_nonce, (const uint8_t *)header_aad, aad_len,
-                                      encrypted, decrypted, len, slip_tag);
-    printf("1-BIT TAMPER     : %s\n", (!tamper_ok) ? "[ REJECTED & BUFFER WIPED ]" : "[ FAILED ]");
-    printf("===========================================================================\n\n");
-
-    return 0;
+    printf("-------------------------------------------------------------------------------\n");
+    printf("  CRYPTO v4.0 VERIFICATION: %s | SRAM Restored to -1\n",
+           (match_ok == PTRC_CRYPT_OK && tamper_ok == PTRC_CRYPT_OK) ? "ALL CHECKS PASSED" : "FAILED");
+    printf("===============================================================================\n");
+    return (match_ok == PTRC_CRYPT_OK && tamper_ok == PTRC_CRYPT_OK) ? 0 : 1;
 }
-
