@@ -1,3 +1,4 @@
+cat << 'EOF' > src/00_ptrc_bitnet_demo.c
 /* ==============================================================================
  * pTRC Framework - Discrete 1-Bit Integer Physics & AI Inference Engine
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
@@ -37,7 +38,6 @@ int main(void) {
             uint32_t bit = ((r ^ (r >> 1U)) >> c) & 1U;
             *(hidden_weights + (r * DEMO_IN_DIM + c)) = bit ? 1 : -1;
         }
-        /* 5th input is the Z \ {0} phase anchor (+1) breaking antipodal symmetry */
         *(hidden_weights + (r * DEMO_IN_DIM + 4U)) = ((r & 1U) == 0U) ? 1 : -1;
     }
 
@@ -55,7 +55,6 @@ int main(void) {
         return 1;
     }
 
-    /* Flat 1D arrays accessed strictly via pointer arithmetic *(ptr + offset) */
     const int8_t patterns[DEMO_SAMPLES * DEMO_IN_DIM] = {
         -1, -1, -1, -1,  1,
         -1,  1, -1,  1,  1,
@@ -75,7 +74,6 @@ int main(void) {
     printf("  Context RAM  : %zu bytes static stack | 144 Facets | 137-Takt Sync\n", sizeof(ctx));
     printf("===============================================================================\n");
 
-    /* Discrete Integer Hebbian Plasticity Training on Output Resonance Layer */
     for (uint32_t epoch = 1U; epoch <= 16U; epoch++) {
         int32_t total_err = 0;
         for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
@@ -92,7 +90,6 @@ int main(void) {
         }
     }
 
-    /* Forward 2-Layer 1-Bit XNOR + POPCOUNT Inference Verification */
     int32_t passed = 0;
     for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
         int8_t  hidden_act[DEMO_HIDDEN_DIM];
@@ -120,3 +117,5 @@ int main(void) {
     printf("===============================================================================\n");
     return (passed == 4) ? 0 : 1;
 }
+EOF
+mkdir -p build && gcc -O3 -std=c11 -fPIC -shared -Wall -Wextra -Wpedantic -Iembedded/ai embedded/ai/ptrc_bitnet_engine.c -o build/libptrc_bitnet.so && gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -Iembedded/ai src/00_ptrc_bitnet_demo.c embedded/ai/ptrc_bitnet_engine.c -o build/00_ptrc_bitnet_demo && ./build/00_ptrc_bitnet_demo && PYTHONPATH=src python3 src/test_ptrc_bitnet.py && PYTHONPATH=src python3 src/00_test_ptrc_bitnet_metrics.py && PYTHONPATH=src python3 src/00_ptrc_bitnet_demo.py
