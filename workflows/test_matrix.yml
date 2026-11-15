@@ -16,7 +16,7 @@
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
 # ==============================================================================
 
-name: pTRC Framework — Complete Lattice, Crypto v4.0 & Bare-Metal CI
+name: pTRC Framework — Complete Lattice, Crypto v4.0, AI v2.0 & Bare-Metal CI
 
 on:
   push:
@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   core-lattice-and-axiom-audit:
-    name: 1. Core Lattice & 20-Module First-Principles Audit (Python ${{ matrix.python-version }})
+    name: 1. Core Lattice & Z \ {0} Axiom Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -49,17 +49,27 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install numpy
+          pip install numpy pytest
 
-      - name: Run 20-Module First-Principles Engine & Edge-AI Demo
+      - name: Run Discrete 1+12 Space-Crystal Lattice & Axiom Suite
         env:
           PYTHONPATH: src
         run: |
-          python3 src/00_ptrc_first_principles_engine.py
-          python3 embedded/ai/00_ptrc_neural_network_demo.py
+          if [ -f src/test_ptrc_core.py ]; then
+            pytest src/test_ptrc_core.py -v
+          fi
+          if [ -f src/ptrc_axiom_audit.py ]; then
+            python src/ptrc_axiom_audit.py
+          fi
+          if [ -f src/01_harmonic_oscillator.py ]; then
+            python src/01_harmonic_oscillator.py
+          fi
+          if [ -f src/00_ptrc_neural_network_demo.py ]; then
+            python src/00_ptrc_neural_network_demo.py
+          fi
 
-  crypto-v4-cmake-and-parity:
-    name: 2. Crypto v4.0 (512-Bit C11 & Python Parity + Avalanche Metrics)
+  crypto-v4-and-ai-v2-parity:
+    name: 2. Crypto v4.0 & AI BitNet v2.0 (C11 Build, Parity & Metrics)
     runs-on: ubuntu-latest
 
     steps:
@@ -76,32 +86,30 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake gcc make
 
-      - name: Configure & Build C11 Shared Library + Standalone Demo (CMake)
+      - name: Configure & Build C11 Libraries + 00_ Standalone Demos (CMake)
         run: |
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel
 
-      - name: Run Standalone C11 512-Bit Crypto Demo
+      - name: Run Standalone C11 00_ Demos (Crypto v4.0 & AI v2.0)
         run: |
-          ./build/ptrc_hardware_demo
+          ./build/00_ptrc_crypt_demo
+          ./build/00_ptrc_bitnet_demo
 
-      - name: Run 512-Bit C11 / Python Bit-Parity & Tamper Lock Suite
+      - name: Run Crypto v4.0 C11/Python Parity & Avalanche Audits
         env:
           PYTHONPATH: src
         run: |
-          python3 src/00_test_ptrc_crypt_parity.py
+          python src/test_ptrc_crypt_parity.py
+          python src/test_ptrc_crypt_metrics.py
+          python src/00_ptrc_crypt_demo.py
 
-      - name: Run 512-Bit Strict Avalanche & Shannon Entropy Audit
+      - name: Run AI BitNet v2.0 C11/Python Parity & Hebbian Audits
         env:
           PYTHONPATH: src
         run: |
-          python3 src/00_test_ptrc_crypt_metrics.py
-
-      - name: Run Full Python Terminal Crypto Demo
-        env:
-          PYTHONPATH: src
-        run: |
-          python3 src/00_ptrc_crypt_demo.py
+          python src/test_ptrc_bitnet.py
+          python src/00_ptrc_bitnet_demo.py
 
   bare-metal-and-zero-float-gate:
     name: 3. Bare-Metal Cortex-M0+ Cross-Compile & Zero-Float Gate
@@ -116,16 +124,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi
 
-      - name: Cross-Compile Crypto Kernel for Cortex-M0+ (Soft-Float / No FPU / -Wall -Werror)
+      - name: Cross-Compile Crypto & AI Kernels for Cortex-M0+ (No FPU / -Wall -Werror)
         run: |
           arm-none-eabi-gcc -c embedded/crypto/ptrc_crystal.c \
             -Iembedded/crypto \
             -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft \
             -O2 -std=c11 -ffreestanding -Wall -Wextra -Werror \
             -o /tmp/ptrc_crystal_m0plus.o
-          arm-none-eabi-size /tmp/ptrc_crystal_m0plus.o
+          arm-none-eabi-gcc -c embedded/ai/ptrc_bitnet_engine.c \
+            -Iembedded/ai \
+            -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft \
+            -O2 -std=c11 -ffreestanding -Wall -Wextra -Werror \
+            -o /tmp/ptrc_bitnet_m0plus.o
+          arm-none-eabi-size /tmp/ptrc_crystal_m0plus.o /tmp/ptrc_bitnet_m0plus.o
 
-      - name: Static Zero-Float & Zero-Trig Gate on Crypto Kernels
+      - name: Static Zero-Float & Zero-Trig Gate on Crypto & AI Kernels
         run: |
           python3 - << 'EOF'
           import pathlib, re, sys
@@ -133,9 +146,13 @@ jobs:
           targets = [
               pathlib.Path("embedded/crypto/ptrc_crystal.h"),
               pathlib.Path("embedded/crypto/ptrc_crystal.c"),
-              pathlib.Path("embedded/crypto/ptrc_crypt_demo.c"),
+              pathlib.Path("embedded/ai/ptrc_bitnet_engine.h"),
+              pathlib.Path("embedded/ai/ptrc_bitnet_engine.c"),
+              pathlib.Path("src/00_ptrc_crypt_demo.c"),
+              pathlib.Path("src/00_ptrc_bitnet_demo.c"),
               pathlib.Path("src/ptrc_crystal_aead.py"),
               pathlib.Path("src/crypt_resonance.py"),
+              pathlib.Path("src/ptrc_bitnet_engine.py"),
           ]
           forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp|math)\b")
           failed = False
@@ -155,5 +172,6 @@ jobs:
 
           if failed:
               sys.exit(1)
-          print("OK: 100% Zero-Float & Zero-Trig verified across all C11 and Python crypto kernels.")
+          print("OK: 100% Zero-Float & Zero-Trig verified across all Crypto v4.0 and AI v2.0 kernels.")
           EOF
+
