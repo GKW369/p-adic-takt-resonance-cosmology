@@ -20,7 +20,7 @@
 """
 pTRC Resonant BitNet AI Engine v2.0 (Pure Z \\ {0} Integer Reference & C11 ctypes Bridge).
 
-Strictly zero-float, zero-trigonometry, and bit-identical to embedded/ai/ptrc_bitnet_engine.c.
+Strictly pure integer, zero-trigonometry, and bit-identical to embedded/ai/ptrc_bitnet_engine.c.
 """
 
 from __future__ import annotations
