@@ -1,21 +1,3 @@
-# ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics Engine
-# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
-#
-# LICENSE & LIABILITY NOTICE:
-# Academic, non-commercial research and evaluation is permitted strictly under 
-# the terms of the GNU Affero General Public License version 3 (AGPLv3).
-# For the complete, unedited license text see: https://gnu.org
-#
-# ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
-# integration requires a separate, individually negotiated commercial infrastructure 
-# waiver issued directly by the author.
-#
-# WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
-# ==============================================================================
-
 name: pTRC Framework — Complete Lattice, Crypto v4.0, AI v2.0 & Bare-Metal CI
 
 on:
@@ -104,11 +86,12 @@ jobs:
           python src/test_ptrc_crypt_metrics.py
           python src/00_ptrc_crypt_demo.py
 
-      - name: Run AI BitNet v2.0 C11/Python Parity & Hebbian Audits
+      - name: Run AI BitNet v2.0 C11/Python Parity, Hebbian & Throughput Audits
         env:
           PYTHONPATH: src
         run: |
           python src/test_ptrc_bitnet.py
+          python src/test_ptrc_bitnet_metrics.py
           python src/00_ptrc_bitnet_demo.py
 
   bare-metal-and-zero-float-gate:
@@ -153,6 +136,7 @@ jobs:
               pathlib.Path("src/ptrc_crystal_aead.py"),
               pathlib.Path("src/crypt_resonance.py"),
               pathlib.Path("src/ptrc_bitnet_engine.py"),
+              pathlib.Path("src/test_ptrc_bitnet_metrics.py"),
           ]
           forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp|math)\b")
           failed = False
@@ -174,4 +158,3 @@ jobs:
               sys.exit(1)
           print("OK: 100% Zero-Float & Zero-Trig verified across all Crypto v4.0 and AI v2.0 kernels.")
           EOF
-
