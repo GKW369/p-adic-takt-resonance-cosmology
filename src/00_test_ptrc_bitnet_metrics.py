@@ -67,7 +67,7 @@ def _get_crystal_xor_dataset() -> tuple[list[list[int]], list[list[int]], list[i
 def audit_convergence_and_stability() -> int:
     ctx = PtrcBitNetContext(seed=137210144)
     patterns, targets, hidden_weights, out_weights = _get_crystal_xor_dataset()
-    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=4)
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=3)
     out_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     converged_epoch = 0
@@ -82,19 +82,20 @@ def audit_convergence_and_stability() -> int:
 
     assert converged_epoch > 0, "Hebbian plasticity failed to converge within 24 epochs!"
 
-    # Verify 1,000 continuous takts across seven 137-takt mirror sync pulses
+    # Verify 1,000 continuous takts across seven 137-takt mirror sync pulses with zero drift
     mismatches = 0
     for takt in range(1000):
         idx = takt & 3
         hidden_act, _ = hidden_layer.forward(ctx, patterns[idx])
-        err = out_layer.hebbian_step(ctx, hidden_act, targets[idx], plasticity_gain=16)
-        if err > 0:
+        out, _ = out_layer.forward(ctx, hidden_act)
+        if out != targets[idx]:
             mismatches += 1
         assert all(v != 0 for v in ctx.sponge), f"Zero state detected in sponge at takt {takt}!"
 
-    assert mismatches <= 16, f"Excessive post-convergence drift detected ({mismatches} mismatches over 1,000 takts)!"
-    print(f" + [METRIC 1] Hebbian Convergence : Epoch {converged_epoch} | 1,000-Takt Online Adaptations: {mismatches}")
+    assert mismatches == 0, f"Post-convergence drift detected ({mismatches} mismatches over 1,000 takts)!"
+    print(f" + [METRIC 1] Hebbian Convergence : Epoch {converged_epoch} | 1,000-Takt Drift: 0 errors")
     return converged_epoch
+
 
 
 def audit_invariant_156_and_resonance() -> None:
