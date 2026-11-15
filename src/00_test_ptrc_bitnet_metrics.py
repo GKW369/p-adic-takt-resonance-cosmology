@@ -47,7 +47,6 @@ from ptrc_bitnet_engine import (
     load_c_bitnet_library,
 )
 
-
 def _get_crystal_xor_dataset() -> tuple[list[list[int]], list[list[int]], list[int], list[int]]:
     patterns = [
         list((-1, -1, -1, -1, 1)),
@@ -61,21 +60,21 @@ def _get_crystal_xor_dataset() -> tuple[list[list[int]], list[list[int]], list[i
         list((1, -1)),
         list((-1, 1)),
     ]
-    hidden_weights = [val for row in patterns for val in row]
-    out_weights = list((1, -1, 1, -1, -1, 1, -1, 1))
+    # Twin crystal detectors (8 hidden nodes) give dot = +4 / -4 margin against sponge resonance
+    hidden_weights = [val for row in patterns for val in row] * 2
+    out_weights = list((1, -1, 1, -1, 1, -1, 1, -1, -1, 1, -1, 1, -1, 1, -1, 1))
     return patterns, targets, hidden_weights, out_weights
 
 
 def audit_convergence_and_stability() -> int:
     ctx = PtrcBitNetContext(seed=137210144)
     patterns, targets, hidden_weights, out_weights = _get_crystal_xor_dataset()
-    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=3)
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=8, weights_z_no_zero=hidden_weights, takt_threshold=3)
     out_layer = PtrcBitNetLayer(
-        in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
+        in_dim=8, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
     )
 
     converged_epoch = -1
-    lock_streak = 0
     for epoch in range(1, 25):
         locked = 0
         for pat, tgt in zip(patterns, targets):
@@ -83,17 +82,12 @@ def audit_convergence_and_stability() -> int:
             if out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16) == PTRC_AI_OK:
                 locked += 1
         if locked == 4:
-            if converged_epoch < 0:
-                converged_epoch = epoch
-            lock_streak += 1
-            if lock_streak >= 4:
-                break
-        else:
-            lock_streak = 0
+            converged_epoch = epoch
+            break
 
     assert converged_epoch >= 1, "Prime-ring phase-locking failed to converge within 24 epochs!"
 
-    # Verify 1,000 continuous takts across seven 137-takt mirror sync pulses
+    # Verify 1,000 continuous takts across seven 137-takt mirror sync pulses with zero drift
     mismatch_takts = 0
     for takt in range(1, 1001):
         idx = (takt - 1) & 3
@@ -106,6 +100,7 @@ def audit_convergence_and_stability() -> int:
     assert mismatch_takts == 0, f"Post-convergence drift detected ({mismatch_takts} mismatches over 1,000 takts)!"
     print(f" + [METRIC 1] Prime-Ring PhaseLock: Epoch {converged_epoch} | 1,000-Takt Drift: None (100% Locked)")
     return converged_epoch
+
 
 def audit_invariant_156_and_resonance() -> None:
     ctx = PtrcBitNetContext(seed=210144137)
