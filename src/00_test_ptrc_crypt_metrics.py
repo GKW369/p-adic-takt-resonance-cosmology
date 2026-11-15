@@ -81,22 +81,23 @@ def audit_keystream_uniformity() -> None:
     ctx = PtrcCrystalContext(key, nonce)
 
     sample_bytes = 16384
-    stream = ctx.xor_stream(bytes(list((0xFF,)) * sample_bytes))
+    stream = ctx.xor_stream(bytes(sample_bytes))
     counts = list((0,)) * 256
     for b in stream:
-        counts[b] += 1
+        counts.__setitem__(b, counts.__getitem__(b) + 1)
 
-    # Strict Z \ {0} byte law: 0x00 never appears (mapped to 0xFF)
-    assert counts == 0, "Zero byte 0x00 violated Z \\ {0} keystream law!"
+    # Strict Z \ {0} byte law: 0x00 never appears in raw keystream (mapped to 0xFF)
+    assert counts.__getitem__(0) == 0, "Zero byte 0x00 violated Z \\ {0} keystream law!"
     expected = sample_bytes // 255
-    active_counts = [counts[i] for i in range(1, 255)]
+    active_counts = [counts.__getitem__(i) for i in range(1, 255)]
     max_dev = max(abs(c - expected) for c in active_counts)
     assert max_dev <= 36, f"Keystream byte deviation too high: {max_dev}"
     assert all(v != 0 for v in ctx.sponge), "Zero state entered 144-facet sponge during 16KB stream!"
     print(
-        f" + [METRIC 2] Keystream Balance   : {sample_bytes} Bytes | 0x00 Count: 0 (Z \\ {{0}}) | "
+        f" + [METRIC 2] Keystream Balance   : {sample_bytes} Bytes | 0x00 Count: None (Z \\ {{0}}) | "
         f"Max Active Deviation: {max_dev}"
     )
+
 
 
 
