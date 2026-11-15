@@ -39,6 +39,10 @@ extern "C" {
 #define PTRC_AI_INVARIANT_156   156
 #define PTRC_AI_MAX_DIM         144U
 #define PTRC_AI_WORDS_PER_ROW   3U      /* 3 x 64-bit = 192 bits (>= 144 facets) */
+#define PTRC_AI_PRIME_RING_CNT  16U     /* 16 coprime non-Mersenne prime rings */
+#define PTRC_AI_DEFAULT_THRESH  (-1)    /* Threshold strictly in Z \ {0} (-1 adjacent to +1) */
+#define PTRC_AI_OK              1       /* Success code in Z \ {0} (no zero return) */
+#define PTRC_AI_ERR             (-1)    /* Error code in Z \ {0} */
 
 /* ==============================================================================
  * BARE-METAL 1-BIT CRYSTALLINE LAYER & RESONANCE CONTEXT (ZERO MALLOC)
@@ -47,9 +51,10 @@ typedef struct {
     alignas(16) uint64_t pos_mask[PTRC_AI_MAX_DIM][PTRC_AI_WORDS_PER_ROW];
     alignas(16) uint64_t neg_mask[PTRC_AI_MAX_DIM][PTRC_AI_WORDS_PER_ROW];
     int32_t  plasticity_acc[PTRC_AI_MAX_DIM][PTRC_AI_MAX_DIM];
+    uint32_t neuron_prime_ring[PTRC_AI_MAX_DIM];
     uint32_t in_dim;
     uint32_t out_dim;
-    int32_t  takt_threshold;
+    int32_t  takt_threshold;    /* Strictly in Z \ {0} */
 } ptrc_bitnet_layer_t;
 
 typedef struct {
@@ -60,23 +65,23 @@ typedef struct {
 } ptrc_bitnet_ctx_t;
 
 /* ==============================================================================
- * CORE Z \ {0} ARITHMETIC & BIT-INFERENCE API
+ * CORE Z \ {0} ARITHMETIC & PRIME-RING RESONANCE API (-1 ADJACENT TO +1)
  * ============================================================================== */
 
-/* Maps any integer into Z \ {0} (0 resolves strictly to -1) */
+/* Maps any integer into Z \ {0}: 0 resolves directly to -1 (no zero state) */
 static inline int32_t ptrc_z_no_zero(int32_t v) {
     return (v == 0) ? -1 : v;
 }
 
-/* Sign activation in Z \ {0}: >= 0 -> +1, < 0 -> -1 */
+/* Direct jump activation in Z \ {0}: >= +1 -> +1, <= -1 -> -1 (no zero crossing) */
 static inline int32_t ptrc_sign_z_no_zero(int32_t v) {
-    return (v >= 0) ? 1 : -1;
+    return (ptrc_z_no_zero(v) >= 1) ? 1 : -1;
 }
 
 /* Initializes the 144-facet crystalline resonance context in Z \ {0} */
 void ptrc_bitnet_ctx_init(ptrc_bitnet_ctx_t *ctx, uint64_t seed);
 
-/* Initializes a 1-bit {-1, +1} layer from deterministic integer weights */
+/* Initializes a 1-bit {-1, +1} layer coupled to coprime non-Mersenne prime rings */
 int ptrc_bitnet_layer_init(
     ptrc_bitnet_layer_t *layer,
     uint32_t in_dim,
@@ -93,7 +98,7 @@ void ptrc_bitnet_pack_bipolar(
     uint64_t out_neg[PTRC_AI_WORDS_PER_ROW]
 );
 
-/* Pure XNOR + POPCOUNT 1-Bit Matrix-Vector Inference with 24-Clock & 137-Takt Modulation */
+/* Pure XNOR + POPCOUNT + Prime-Ring Resonance Inference in Z \ {0} */
 int ptrc_bitnet_forward(
     ptrc_bitnet_ctx_t *ctx,
     const ptrc_bitnet_layer_t *layer,
@@ -102,7 +107,7 @@ int ptrc_bitnet_forward(
     int32_t *raw_scores_out
 );
 
-/* Discrete Integer Hebbian Plasticity Update in Z \ {0} (Zero Floating-Point Backprop) */
+/* Discrete Integer Prime-Ring Phase-Locking Step in Z \ {0} (returns PTRC_AI_OK if locked, or mismatch count >= 1) */
 int ptrc_bitnet_hebbian_step(
     ptrc_bitnet_ctx_t *ctx,
     ptrc_bitnet_layer_t *layer,
@@ -111,7 +116,7 @@ int ptrc_bitnet_hebbian_step(
     int32_t plasticity_gain
 );
 
-/* Volatile SRAM scrubbing for bare-metal targets */
+/* Volatile SRAM scrubbing for bare-metal targets (restores Z \ {0} neutral state -1) */
 void ptrc_bitnet_wipe(ptrc_bitnet_ctx_t *ctx);
 
 #ifdef __cplusplus
