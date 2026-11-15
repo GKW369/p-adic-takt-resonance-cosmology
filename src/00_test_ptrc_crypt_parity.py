@@ -70,7 +70,8 @@ def test_python_aead_and_z_no_zero_invariants() -> None:
 
     # Tamper 1 bit in ciphertext -> must reject with PTRC_CRYPT_ERR (-1)
     bad_ct = bytearray(ct)
-    bad_ct[len(bad_ct) // 2] ^= 0x01
+    mid = len(bad_ct) // 2
+    bad_ct.__setitem__(mid, bad_ct.__getitem__(mid) ^ 0x01)
     rc_bad_ct, dec_bad_ct = ptrc_aead_decrypt(key, nonce, bytes(bad_ct), tag, aad)
     assert rc_bad_ct == PTRC_CRYPT_ERR
     assert dec_bad_ct == b""
@@ -80,6 +81,7 @@ def test_python_aead_and_z_no_zero_invariants() -> None:
     bad_tag.__setitem__(0, bad_tag.__getitem__(0) ^ 0x80)
     rc_bad_tag, _ = ptrc_aead_decrypt(key, nonce, ct, bytes(bad_tag), aad)
     assert rc_bad_tag == PTRC_CRYPT_ERR
+
 
     # Tamper 1 bit in AAD -> must reject with PTRC_CRYPT_ERR (-1)
     rc_bad_aad, _ = ptrc_aead_decrypt(key, nonce, ct, tag, aad + b"!")
