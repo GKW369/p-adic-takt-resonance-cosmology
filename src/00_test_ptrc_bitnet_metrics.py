@@ -18,14 +18,14 @@
 # ==============================================================================
 
 """
-Cryptographic-Grade Statistical, Invariant & Throughput Metrics for pTRC BitNet AI v2.0.
+Statistical, Invariant & Throughput Metrics for pTRC BitNet AI v2.0.
 File: src/00_test_ptrc_bitnet_metrics.py
 
-Strictly pure integer (integer microseconds & takts/sec), verifying:
-1. (4+1) -> 4 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
+Strictly pure integer (-1 adjacent to +1, no zero point), verifying:
+1. (4+1) -> 4 -> 2 Prime-ring phase-lock speed & 1,000-takt stability
 2. Strict Z \\ {0} domain integrity & 156 Wirminghaus invariant saturation bounds
 3. 144-facet sponge resonance dispersion across multiple 137-takt mirror pulses
-4. Native C11 vs. Python integer inference throughput (takts/sec & us/inference)
+4. Native C11 vs. Python integer inference throughput (takts/sec)
 """
 
 from __future__ import annotations
@@ -35,8 +35,10 @@ import sys
 import time
 
 from ptrc_bitnet_engine import (
+    PTRC_AI_DEFAULT_THRESH,
     PTRC_AI_FACETS,
     PTRC_AI_INVARIANT_156,
+    PTRC_AI_OK,
     PTRC_AI_TAKT_137,
     PtrcBitNetContext,
     PtrcBitNetLayer,
@@ -68,53 +70,57 @@ def audit_convergence_and_stability() -> int:
     ctx = PtrcBitNetContext(seed=137210144)
     patterns, targets, hidden_weights, out_weights = _get_crystal_xor_dataset()
     hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=3)
-    out_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
+    out_layer = PtrcBitNetLayer(
+        in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
+    )
 
-    converged_epoch = 0
+    converged_epoch = -1
     for epoch in range(1, 25):
-        err = 0
+        locked = 0
         for pat, tgt in zip(patterns, targets):
             hidden_act, _ = hidden_layer.forward(ctx, pat)
-            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16)
-        if err == 0:
+            if out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16) == PTRC_AI_OK:
+                locked += 1
+        if locked == 4:
             converged_epoch = epoch
             break
 
-    assert converged_epoch > 0, "Hebbian plasticity failed to converge within 24 epochs!"
+    assert converged_epoch >= 1, "Prime-ring phase-locking failed to converge within 24 epochs!"
 
-    # Verify 1,000 continuous takts across seven 137-takt mirror sync pulses with zero drift
-    mismatches = 0
-    for takt in range(1000):
-        idx = takt & 3
+    # Verify 1,000 continuous takts across seven 137-takt mirror sync pulses
+    mismatch_takts = 0
+    for takt in range(1, 1001):
+        idx = (takt - 1) & 3
         hidden_act, _ = hidden_layer.forward(ctx, patterns[idx])
         out, _ = out_layer.forward(ctx, hidden_act)
         if out != targets[idx]:
-            mismatches += 1
+            mismatch_takts += 1
         assert all(v != 0 for v in ctx.sponge), f"Zero state detected in sponge at takt {takt}!"
 
-    assert mismatches == 0, f"Post-convergence drift detected ({mismatches} mismatches over 1,000 takts)!"
-    print(f" + [METRIC 1] Hebbian Convergence : Epoch {converged_epoch} | 1,000-Takt Drift: 0 errors")
+    assert mismatch_takts == 0, f"Post-convergence drift detected ({mismatch_takts} mismatches over 1,000 takts)!"
+    print(f" + [METRIC 1] Prime-Ring PhaseLock: Epoch {converged_epoch} | 1,000-Takt Drift: None (100% Locked)")
     return converged_epoch
-
 
 def audit_invariant_156_and_resonance() -> None:
     ctx = PtrcBitNetContext(seed=210144137)
     weights = [1 if ((i * 7 + 3) % 3) != 0 else -1 for i in range(16 * 8)]
-    layer = PtrcBitNetLayer(in_dim=16, out_dim=8, weights_z_no_zero=weights, takt_threshold=0)
+    layer = PtrcBitNetLayer(
+        in_dim=16, out_dim=8, weights_z_no_zero=weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
+    )
 
     inp_a = [1 if (i & 1) == 0 else -1 for i in range(16)]
     inp_b = [-1 if (i & 1) == 0 else 1 for i in range(16)]
     tgt_a = list((1, -1, 1, -1, 1, -1, 1, -1))
     tgt_b = list((-1, 1, -1, 1, -1, 1, -1, 1))
 
-    max_acc_seen = 0
-    min_acc_seen = 0
+    max_acc_seen = 1
+    min_acc_seen = -1
     sync_pulses = 0
 
-    for step in range(PTRC_AI_TAKT_137 * 4):
+    for step in range(1, PTRC_AI_TAKT_137 * 4 + 1):
         if (ctx.takt_counter % PTRC_AI_TAKT_137) == 0:
             sync_pulses += 1
-        if (step & 1) == 0:
+        if (step & 1) == 1:
             layer.hebbian_step(ctx, inp_a, tgt_a, plasticity_gain=8)
         else:
             layer.hebbian_step(ctx, inp_b, tgt_b, plasticity_gain=8)
@@ -146,7 +152,9 @@ def benchmark_throughput() -> None:
     iters = 5000
 
     py_ctx = PtrcBitNetContext(seed=137210144)
-    py_layer = PtrcBitNetLayer(in_dim=in_dim, out_dim=out_dim, weights_z_no_zero=weights, takt_threshold=0)
+    py_layer = PtrcBitNetLayer(
+        in_dim=in_dim, out_dim=out_dim, weights_z_no_zero=weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
+    )
 
     t0 = time.perf_counter_ns()
     for _ in range(iters):
@@ -154,7 +162,7 @@ def benchmark_throughput() -> None:
     t1 = time.perf_counter_ns()
 
     py_us = (t1 - t0) // 1000
-    py_tps = (iters * 1_000_000) // (py_us if py_us > 0 else 1)
+    py_tps = (iters * 1_000_000) // (py_us if py_us >= 1 else 1)
     print(f" + [METRIC 3] Python 1-Bit Engine : {iters} takts (64x32) in {py_us} us (~{py_tps} takts/sec)")
 
     lib = load_c_bitnet_library()
@@ -163,7 +171,7 @@ def benchmark_throughput() -> None:
         lib.ptrc_bitnet_ctx_init(ctypes.byref(c_ctx), 137210144)
         c_layer = _CLayer()
         c_w = (ctypes.c_int8 * len(weights))(*weights)
-        lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), in_dim, out_dim, c_w, 0)
+        lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), in_dim, out_dim, c_w, PTRC_AI_DEFAULT_THRESH)
         c_in = (ctypes.c_int8 * in_dim)(*inp)
         c_out = (ctypes.c_int8 * out_dim)()
         c_scores = (ctypes.c_int32 * out_dim)()
@@ -175,7 +183,7 @@ def benchmark_throughput() -> None:
         ct1 = time.perf_counter_ns()
 
         c_us = (ct1 - ct0) // 1000
-        c_tps = (c_iters * 1_000_000) // (c_us if c_us > 0 else 1)
+        c_tps = (c_iters * 1_000_000) // (c_us if c_us >= 1 else 1)
         print(
             f" + [METRIC 4] Native C11 Engine   : {c_iters} takts (64x32) in {c_us} us "
             f"(~{c_tps} takts/sec | Context: {ctypes.sizeof(c_ctx)}B SRAM)"
@@ -193,7 +201,7 @@ def main() -> None:
     audit_invariant_156_and_resonance()
     benchmark_throughput()
     print("-------------------------------------------------------------------------------")
-    print("  ALL AI BITNET v2.0 METRICS & INVARIANTS VERIFIED (100% PURE INTEGER).")
+    print("  ALL AI BITNET v2.0 METRICS & INVARIANTS VERIFIED (100% PURE INTEGER Z \\ {0}).")
     print("===============================================================================")
 
 
