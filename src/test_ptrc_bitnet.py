@@ -18,7 +18,8 @@
 # ==============================================================================
 
 """
-Bit-Parity, Z \\ {0} Invariant, 137-Takt Sync & Hebbian Plasticity Audit for AI v2.0.
+Bit-Parity, Z \\ {0} Invariant, Prime-Ring Resonance & 137-Takt Audit for AI v2.0.
+File: src/test_ptrc_bitnet.py
 """
 
 from __future__ import annotations
@@ -29,6 +30,8 @@ import re
 import sys
 
 from ptrc_bitnet_engine import (
+    PTRC_AI_DEFAULT_THRESH,
+    PTRC_AI_OK,
     PTRC_AI_TAKT_137,
     PtrcBitNetContext,
     PtrcBitNetLayer,
@@ -56,37 +59,42 @@ def _get_crystal_xor_dataset() -> tuple[list[list[int]], list[list[int]], list[i
     return patterns, targets, hidden_weights, out_weights
 
 
-def test_z_no_zero_and_hebbian_convergence() -> None:
+def test_z_no_zero_and_prime_ring_convergence() -> None:
     ctx = PtrcBitNetContext(seed=137210144)
     assert all(v != 0 for v in ctx.sponge), "Zero found in initial 144-facet sponge!"
 
     patterns, targets, hidden_weights, out_weights = _get_crystal_xor_dataset()
-    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=4)
-    out_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=3)
+    out_layer = PtrcBitNetLayer(
+        in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
+    )
 
-    converged_epoch = 0
+    converged_epoch = -1
     for epoch in range(1, 17):
-        err = 0
+        locked = 0
         for pat, tgt in zip(patterns, targets):
             hidden_act, _ = hidden_layer.forward(ctx, pat)
-            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16)
-        if err == 0:
+            if out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16) == PTRC_AI_OK:
+                locked += 1
+        if locked == 4:
             converged_epoch = epoch
             break
 
-    assert converged_epoch > 0, "Hebbian integer plasticity failed to converge!"
+    assert converged_epoch >= 1, "Prime-ring phase-locking failed to converge!"
     for pat, tgt in zip(patterns, targets):
         hidden_act, _ = hidden_layer.forward(ctx, pat)
         out, _ = out_layer.forward(ctx, hidden_act)
         assert out == tgt, f"Prediction mismatch for {pat}: {out} != {tgt}"
         assert all(v in (-1, 1) for v in out)
-    assert all(v != 0 for v in ctx.sponge), "Zero entered sponge after Hebbian steps!"
-    print(f"[PASS] 1. Z \\ {{0}} Invariant & (4+1)->4->2 Integer Hebbian Convergence (Epoch {converged_epoch})")
+    assert all(v != 0 for v in ctx.sponge), "Zero entered sponge after prime-ring steps!"
+    print(f"[PASS] 1. Z \\ {{0}} Invariant & Prime-Ring Phase-Lock Convergence (Epoch {converged_epoch})")
 
 
 def test_137_takt_crossed_mirror_pulse() -> None:
     ctx = PtrcBitNetContext(seed=210144137)
-    layer = PtrcBitNetLayer(in_dim=4, out_dim=1, weights_z_no_zero=list((1, 1, -1, -1)), takt_threshold=0)
+    layer = PtrcBitNetLayer(
+        in_dim=4, out_dim=1, weights_z_no_zero=list((1, 1, -1, -1)), takt_threshold=PTRC_AI_DEFAULT_THRESH
+    )
     inp = list((1, -1, 1, -1))
 
     for _ in range(PTRC_AI_TAKT_137):
@@ -95,7 +103,6 @@ def test_137_takt_crossed_mirror_pulse() -> None:
     assert ctx.takt_counter == PTRC_AI_TAKT_137 + 1
     assert all(v != 0 for v in ctx.sponge), "137-takt ~x reflection produced zero!"
     print("[PASS] 2. 137-Takt Fine-Structure Pulse & Crossed Mirror Reflection (~x)")
-
 
 def test_c11_python_bit_parity() -> None:
     lib = load_c_bitnet_library()
@@ -111,11 +118,13 @@ def test_c11_python_bit_parity() -> None:
     assert list(c_ctx.sponge) == py_ctx.sponge, "Initial 144-facet sponge mismatch between C11 and Python!"
 
     weights = list((1, -1, 1, -1, -1, 1, -1, 1))
-    py_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=weights, takt_threshold=0)
+    py_layer = PtrcBitNetLayer(
+        in_dim=4, out_dim=2, weights_z_no_zero=weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
+    )
     c_layer = _CLayer()
     c_weights = (ctypes.c_int8 * len(weights))(*weights)
-    rc = lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), 4, 2, c_weights, 0)
-    assert rc == 0
+    rc = lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), 4, 2, c_weights, PTRC_AI_DEFAULT_THRESH)
+    assert rc == PTRC_AI_OK
 
     patterns = [
         list((-1, -1, -1, -1)),
@@ -137,23 +146,23 @@ def test_c11_python_bit_parity() -> None:
         c_tgt = (ctypes.c_int8 * 2)(*tgt)
 
         if step % 3 == 0:
-            py_err = py_layer.hebbian_step(py_ctx, pat, tgt, plasticity_gain=4)
-            c_err = lib.ptrc_bitnet_hebbian_step(ctypes.byref(c_ctx), ctypes.byref(c_layer), c_in, c_tgt, 4)
-            assert py_err == c_err, f"Hebbian error count mismatch at step {step}: {py_err} != {c_err}"
+            py_res = py_layer.hebbian_step(py_ctx, pat, tgt, plasticity_gain=4)
+            c_res = lib.ptrc_bitnet_hebbian_step(ctypes.byref(c_ctx), ctypes.byref(c_layer), c_in, c_tgt, 4)
+            assert py_res == c_res, f"Phase-lock result mismatch at step {step}: {py_res} != {c_res}"
         else:
             py_out, py_scores = py_layer.forward(py_ctx, pat)
             c_out = (ctypes.c_int8 * 2)()
             c_scores = (ctypes.c_int32 * 2)()
             rc = lib.ptrc_bitnet_forward(ctypes.byref(c_ctx), ctypes.byref(c_layer), c_in, c_out, c_scores)
-            assert rc == 0
+            assert rc == PTRC_AI_OK
             assert list(c_out) == py_out, f"Output mismatch at step {step}"
             assert list(c_scores) == py_scores, f"Score mismatch at step {step}"
 
         assert list(c_ctx.sponge) == py_ctx.sponge, f"Sponge state diverged at step {step}!"
 
     lib.ptrc_bitnet_wipe(ctypes.byref(c_ctx))
-    assert all(v == 0 for v in c_ctx.sponge), "Volatile SRAM wipe failed!"
-    print("[PASS] 3. 100% C11 / Python Bit-Parity over 200 Takts (incl. 137-Takt Sync & Wipe)")
+    assert all(v == -1 for v in c_ctx.sponge), "Volatile SRAM wipe to -1 failed!"
+    print("[PASS] 3. 100% C11 / Python Bit-Parity over 200 Takts (incl. Prime-Rings, 137-Sync & -1 Wipe)")
 
 
 def test_zero_float_compliance() -> None:
@@ -180,7 +189,7 @@ def test_zero_float_compliance() -> None:
 
 
 if __name__ == "__main__":
-    test_z_no_zero_and_hebbian_convergence()
+    test_z_no_zero_and_prime_ring_convergence()
     test_137_takt_crossed_mirror_pulse()
     test_c11_python_bit_parity()
     test_zero_float_compliance()
