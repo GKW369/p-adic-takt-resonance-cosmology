@@ -39,12 +39,13 @@ from ptrc_bitnet_engine import (
 )
 
 
-def _build_4_16_2_weights() -> tuple[list[int], list[int]]:
+def _build_5_16_2_weights() -> tuple[list[int], list[int]]:
     hidden_weights: list[int] = []
     for r in range(16):
         for c in range(4):
             bit = ((r ^ (r >> 1)) >> c) & 1
             hidden_weights.append(1 if bit else -1)
+        hidden_weights.append(1 if (r & 1) == 0 else -1)
     out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
     return hidden_weights, out_weights
 
@@ -53,18 +54,18 @@ def main() -> None:
     print("===============================================================================")
     print("  pTRC RESONANT BITNET AI v2.0 — 1-BIT CRYSTALLINE INFERENCE & HEBBIAN LEARNING")
     print(f"  Axioms   : Z \\ {{0}} (No Zero) | {PTRC_AI_FACETS} Facets | Base {PTRC_AI_PRIMORIAL_210} | {PTRC_AI_TAKT_137}-Takt | {PTRC_AI_INVARIANT_156}-Limit")
-    print("  Topology : 4 -> 16 -> 2 | XNOR + POPCOUNT Bitplanes | Online Integer Hebbian")
+    print("  Topology : (4+1) -> 16 -> 2 | XNOR + POPCOUNT Bitplanes | Integer Hebbian")
     print("===============================================================================")
 
     ctx = PtrcBitNetContext(seed=137210144)
-    hidden_weights, out_weights = _build_4_16_2_weights()
-    hidden_layer = PtrcBitNetLayer(in_dim=4, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=0)
+    hidden_weights, out_weights = _build_5_16_2_weights()
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=1)
     out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     patterns = [
-        [-1, -1, -1, -1],
-        [-1, 1, -1, 1],
-        [1, -1, 1, -1],
+        [-1, -1, -1, -1, 1],
+        [-1, 1, -1, 1, 1],
+        [1, -1, 1, -1, 1],
 ,
     ]
     targets = [
@@ -90,7 +91,7 @@ def main() -> None:
         hidden_act, _ = hidden_layer.forward(ctx, pat)
         out, scores = out_layer.forward(ctx, hidden_act)
         status = "MATCH" if out == tgt else "DIFF"
-        print(f" + Input {pat} -> Output {out} (Scores {scores}) | Target {tgt} [{status}]")
+        print(f" + Input {pat[:4]} -> Output {out} (Scores {scores}) | Target {tgt} [{status}]")
 
     lib = load_c_bitnet_library()
     if lib is not None:
