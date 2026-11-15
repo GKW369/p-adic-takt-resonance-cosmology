@@ -117,6 +117,7 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
 }
 
 /* File: embedded/graphics/ptrc_light_universe.c (Part 2 of 2) */
+/* File: embedded/graphics/ptrc_light_universe.c (Part 2 of 2) */
 
 int ptrc_gfx_render_frame_rgb24(
     ptrc_gfx_ctx_t *ctx,
@@ -135,17 +136,21 @@ int ptrc_gfx_render_frame_rgb24(
     int32_t rot_v = *(PTRC_CLOCK24_V + phase_idx);
     uint32_t hit_counter = 1U;
 
+    /* Scale screen coordinates to normalized focal plane (focal = 1024) */
+    int32_t scale_x = (1024 / half_w) >= 1 ? (1024 / half_w) : 1;
+    int32_t scale_y = (576 / half_h) >= 1 ? (576 / half_h) : 1;
+
     for (uint32_t py = 0U; py < height; py++) {
-        int32_t dy = ptrc_gfx_z_no_zero((int32_t)py - half_h);
+        int32_t dy = ptrc_gfx_z_no_zero(((int32_t)py - half_h) * scale_y);
         size_t row_offset = (size_t)py * (size_t)width * 3U;
 
         for (uint32_t px = 0U; px < width; px++) {
-            int32_t dx = ptrc_gfx_z_no_zero((int32_t)px - half_w);
+            int32_t dx = ptrc_gfx_z_no_zero(((int32_t)px - half_w) * scale_x);
 
-            /* 24-Clock rotated ray direction (integer shift >> 10, zero division) */
-            int32_t dir_x = ptrc_gfx_z_no_zero(((dx * rot_u - half_h * rot_v) >> 10) * 68);
-            int32_t dir_y = ptrc_gfx_z_no_zero(-dy * 68);
-            int32_t dir_z = ptrc_gfx_z_no_zero(((dx * rot_v + half_h * rot_u) >> 10) * 68);
+            /* 24-Clock centered camera ray (forward = (-rot_u, -140, -rot_v), right = (rot_v, 0, -rot_u)) */
+            int32_t dir_x = ptrc_gfx_z_no_zero(((-1024 * rot_u + dx * rot_v) >> 10) * 64);
+            int32_t dir_y = ptrc_gfx_z_no_zero((-140 - dy) * 64);
+            int32_t dir_z = ptrc_gfx_z_no_zero(((-1024 * rot_v - dx * rot_u) >> 10) * 64);
 
             int32_t ray_x = ctx->cam_x;
             int32_t ray_y = ctx->cam_y;
@@ -170,9 +175,9 @@ int ptrc_gfx_render_frame_rgb24(
 
                 /* 1. Central Golden 1+12 Octahedral Crystal Pyramid (manhattan <= 14) */
                 if (manhattan <= 14 && (vy & 1) != 0 && ((ptrc_gfx_abs32(vx + vz + (facet_val & 7)) % 3U) != 0U)) {
-                    uint32_t shade = 248U - (step * 6U);
-                    if (shade < 48U) {
-                        shade = 48U;
+                    uint32_t shade = 248U - (step * 5U);
+                    if (shade < 64U) {
+                        shade = 64U;
                     }
                     out_r = (uint8_t)shade;
                     out_g = (uint8_t)((shade * 195U) >> 8U);
@@ -188,17 +193,15 @@ int ptrc_gfx_render_frame_rgb24(
                 uint32_t sig = (uint32_t)ptrc_gfx_abs32(vx * 137 + vy * 211 + vz * 157 + facet_val);
                 if ((sig % 11U) == 1U && (sig % 13U) == 1U && (sig % 17U) == 1U) {
                     uint32_t ring_sel = sig % PTRC_GFX_PRIME_RINGS;
-                    uint32_t lum = 235U - (step * 5U);
-                    if (lum < 64U) {
-                        lum = 64U;
+                    uint32_t lum = 240U - (step * 4U);
+                    if (lum < 72U) {
+                        lum = 72U;
                     }
                     if ((ring_sel & 1U) == 0U) {
-                        /* Cyan Resonance Node */
                         out_r = 24U;
                         out_g = (uint8_t)((lum * 220U) >> 8U);
                         out_b = (uint8_t)lum;
                     } else {
-                        /* Violet Resonance Node */
                         out_r = (uint8_t)((lum * 210U) >> 8U);
                         out_g = 42U;
                         out_b = (uint8_t)lum;
@@ -223,9 +226,9 @@ void ptrc_gfx_wipe(ptrc_gfx_ctx_t *ctx) {
     if (!ctx) {
         return;
     }
-    /* Scrub SRAM back to Z \ {0} ground state (-1 / 0xFF) instead of zero */
     volatile uint8_t *p = (volatile uint8_t *)ctx;
     for (size_t i = 0U; i < sizeof(*ctx); i++) {
         *(p + i) = 0xFFU;
     }
 }
+
