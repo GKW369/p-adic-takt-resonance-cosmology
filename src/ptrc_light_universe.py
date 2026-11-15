@@ -150,6 +150,9 @@ class PtrcGfxContext:
         rot_v = PTRC_CLOCK24_V.__getitem__(phase_idx)
         hit_counter = 1
 
+        scale_x = (1024 // half_w) if (1024 // half_w) >= 1 else 1
+        scale_y = (576 // half_h) if (576 // half_h) >= 1 else 1
+
         out = bytearray(width * height * 3)
         sponge = self.sponge
         cam_x = self.cam_x
@@ -157,15 +160,15 @@ class PtrcGfxContext:
         cam_z = self.cam_z
 
         for py in range(height):
-            dy = ptrc_gfx_z_no_zero(py - half_h)
+            dy = ptrc_gfx_z_no_zero((py - half_h) * scale_y)
             row_offset = py * width * 3
 
             for px in range(width):
-                dx = ptrc_gfx_z_no_zero(px - half_w)
+                dx = ptrc_gfx_z_no_zero((px - half_w) * scale_x)
 
-                dir_x = ptrc_gfx_z_no_zero(_c_shr_i32(dx * rot_u - half_h * rot_v, 10) * 68)
-                dir_y = ptrc_gfx_z_no_zero(-dy * 68)
-                dir_z = ptrc_gfx_z_no_zero(_c_shr_i32(dx * rot_v + half_h * rot_u, 10) * 68)
+                dir_x = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_u + dx * rot_v, 10) * 64)
+                dir_y = ptrc_gfx_z_no_zero((-140 - dy) * 64)
+                dir_z = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_v - dx * rot_u, 10) * 64)
 
                 ray_x = cam_x
                 ray_y = cam_y
@@ -190,9 +193,9 @@ class PtrcGfxContext:
 
                     # 1. Central Golden 1+12 Octahedral Crystal Pyramid (manhattan <= 14)
                     if manhattan <= 14 and (vy & 1) != 0 and ((abs(vx + vz + (facet_val & 7)) % 3) != 0):
-                        shade = 248 - (step * 6)
-                        if shade < 48:
-                            shade = 48
+                        shade = 248 - (step * 5)
+                        if shade < 64:
+                            shade = 64
                         out_r = shade
                         out_g = (shade * 195) >> 8
                         out_b = (shade * 52) >> 8
@@ -205,9 +208,9 @@ class PtrcGfxContext:
                     sig = abs(vx * 137 + vy * 211 + vz * 157 + facet_val)
                     if (sig % 11) == 1 and (sig % 13) == 1 and (sig % 17) == 1:
                         ring_sel = sig % PTRC_GFX_PRIME_RINGS
-                        lum = 235 - (step * 5)
-                        if lum < 64:
-                            lum = 64
+                        lum = 240 - (step * 4)
+                        if lum < 72:
+                            lum = 72
                         if (ring_sel & 1) == 0:
                             out_r = 24
                             out_g = (lum * 220) >> 8
@@ -226,54 +229,3 @@ class PtrcGfxContext:
 
         self.active_hits = hit_counter
         return bytes(out)
-
-
-def write_ppm_rgb24(filepath: pathlib.Path, width: int, height: int, rgb_bytes: bytes) -> None:
-    """Writes a pure binary P6 PPM image file without external dependencies."""
-    header = f"P6\n{width} {height}\n255\n".encode("ascii")
-    filepath.write_bytes(header + rgb_bytes)
-
-
-class _CGfxCtx(ctypes.Structure):
-    _fields_ = [
-        ("sponge", ctypes.c_int32 * PTRC_GFX_FACETS),
-        ("prime_rings", ctypes.c_uint32 * PTRC_GFX_PRIME_RINGS),
-        ("takt_counter", ctypes.c_uint64),
-        ("clock_phase_24", ctypes.c_uint32),
-        ("cam_x", ctypes.c_int32),
-        ("cam_y", ctypes.c_int32),
-        ("cam_z", ctypes.c_int32),
-        ("active_hits", ctypes.c_uint32),
-        ("mirror_pulses", ctypes.c_uint32),
-    ]
-
-
-def load_c_gfx_library(search_root: Optional[pathlib.Path] = None) -> Optional[ctypes.CDLL]:
-    root = search_root or pathlib.Path(__file__).resolve().parent.parent
-    candidates = [
-        root / "build" / "libptrc_light_universe.so",
-        root / "build" / "libptrc_light_universe.dylib",
-        root / "build" / "ptrc_light_universe.dll",
-        root / "build" / "Release" / "ptrc_light_universe.dll",
-    ]
-    for cand in candidates:
-        if cand.exists():
-            lib = ctypes.CDLL(str(cand))
-            lib.ptrc_gfx_init.argtypes = [ctypes.POINTER(_CGfxCtx), ctypes.c_uint64]
-            lib.ptrc_gfx_init.restype = ctypes.c_int
-
-            lib.ptrc_gfx_step_takt.argtypes = [ctypes.POINTER(_CGfxCtx)]
-            lib.ptrc_gfx_step_takt.restype = ctypes.c_int
-
-            lib.ptrc_gfx_render_frame_rgb24.argtypes = [
-                ctypes.POINTER(_CGfxCtx),
-                ctypes.c_uint32,
-                ctypes.c_uint32,
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_gfx_render_frame_rgb24.restype = ctypes.c_int
-
-            lib.ptrc_gfx_wipe.argtypes = [ctypes.POINTER(_CGfxCtx)]
-            lib.ptrc_gfx_wipe.restype = None
-            return lib
-    return None
