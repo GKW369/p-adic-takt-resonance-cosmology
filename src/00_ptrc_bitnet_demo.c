@@ -1,4 +1,3 @@
-cat << 'EOF' > src/00_ptrc_bitnet_demo.c
 /* ==============================================================================
  * pTRC Framework - Discrete 1-Bit Integer Physics & AI Inference Engine
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
@@ -117,5 +116,4 @@ int main(void) {
     printf("===============================================================================\n");
     return (passed == 4) ? 0 : 1;
 }
-EOF
-mkdir -p build && gcc -O3 -std=c11 -fPIC -shared -Wall -Wextra -Wpedantic -Iembedded/ai embedded/ai/ptrc_bitnet_engine.c -o build/libptrc_bitnet.so && gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -Iembedded/ai src/00_ptrc_bitnet_demo.c embedded/ai/ptrc_bitnet_engine.c -o build/00_ptrc_bitnet_demo && ./build/00_ptrc_bitnet_demo && PYTHONPATH=src python3 src/test_ptrc_bitnet.py && PYTHONPATH=src python3 src/00_test_ptrc_bitnet_metrics.py && PYTHONPATH=src python3 src/00_ptrc_bitnet_demo.py
+
