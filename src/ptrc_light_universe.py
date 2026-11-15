@@ -227,3 +227,54 @@ class PtrcGfxContext:
 
         self.active_hits = hit_counter
         return bytes(out)
+
+
+def write_ppm_rgb24(filepath: pathlib.Path, width: int, height: int, rgb_bytes: bytes) -> None:
+    """Writes a pure binary P6 PPM image file without external dependencies."""
+    header = f"P6\n{width} {height}\n255\n".encode("ascii")
+    filepath.write_bytes(header + rgb_bytes)
+
+
+class _CGfxCtx(ctypes.Structure):
+    _fields_ = [
+        ("sponge", ctypes.c_int32 * PTRC_GFX_FACETS),
+        ("prime_rings", ctypes.c_uint32 * PTRC_GFX_PRIME_RINGS),
+        ("takt_counter", ctypes.c_uint64),
+        ("clock_phase_24", ctypes.c_uint32),
+        ("cam_x", ctypes.c_int32),
+        ("cam_y", ctypes.c_int32),
+        ("cam_z", ctypes.c_int32),
+        ("active_hits", ctypes.c_uint32),
+        ("mirror_pulses", ctypes.c_uint32),
+    ]
+
+
+def load_c_gfx_library(search_root: Optional[pathlib.Path] = None) -> Optional[ctypes.CDLL]:
+    root = search_root or pathlib.Path(__file__).resolve().parent.parent
+    candidates = [
+        root / "build" / "libptrc_light_universe.so",
+        root / "build" / "libptrc_light_universe.dylib",
+        root / "build" / "ptrc_light_universe.dll",
+        root / "build" / "Release" / "ptrc_light_universe.dll",
+    ]
+    for cand in candidates:
+        if cand.exists():
+            lib = ctypes.CDLL(str(cand))
+            lib.ptrc_gfx_init.argtypes = [ctypes.POINTER(_CGfxCtx), ctypes.c_uint64]
+            lib.ptrc_gfx_init.restype = ctypes.c_int
+
+            lib.ptrc_gfx_step_takt.argtypes = [ctypes.POINTER(_CGfxCtx)]
+            lib.ptrc_gfx_step_takt.restype = ctypes.c_int
+
+            lib.ptrc_gfx_render_frame_rgb24.argtypes = [
+                ctypes.POINTER(_CGfxCtx),
+                ctypes.c_uint32,
+                ctypes.c_uint32,
+                ctypes.POINTER(ctypes.c_uint8),
+            ]
+            lib.ptrc_gfx_render_frame_rgb24.restype = ctypes.c_int
+
+            lib.ptrc_gfx_wipe.argtypes = [ctypes.POINTER(_CGfxCtx)]
+            lib.ptrc_gfx_wipe.restype = None
+            return lib
+    return None
