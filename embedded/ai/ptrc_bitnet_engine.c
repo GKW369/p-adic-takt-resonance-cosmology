@@ -20,8 +20,14 @@
 #include "ptrc_bitnet_engine.h"
 #include <string.h>
 
-/* Pure 24-Clock Discrete Quadrance Basis (Zero sin/cos: u^2 + v^2 = 1000^2 in Z \ {0}) */
-static const int16_t PTRC_AI_QUAD_24[PTRC_AI_MODULO_24][2] = {
+/* 16 Coprime Non-Mersenne Prime Rings (gcd(p, 210) == 1, Mersenne primes 3, 7, 31, 127 excluded) */
+static const uint32_t PTRC_AI_PRIME_RINGS[PTRC_AI_PRIME_RING_CNT] = {
+    11U, 13U, 17U, 19U, 23U, 29U, 37U, 41U,
+    43U, 47U, 53U, 59U, 61U, 67U, 71U, 73U
+};
+
+/* Pure 24-Clock Discrete Quadrance Basis (u^2 + v^2 = 1000^2 in Z \ {0}, no zero) */
+static const int16_t PTRC_AI_QUAD_24[PTRC_AI_MODULO_24] = {
     { 1000,    1}, {  966,  259}, {  866,  500}, {  707,  707},
     {  500,  866}, {  259,  966}, {   -1, 1000}, { -259,  966},
     { -500,  866}, { -707,  707}, { -866,  500}, { -966,  259},
@@ -52,7 +58,7 @@ static inline void ptrc_sync_layer_bitplanes(ptrc_bitnet_layer_t *layer) {
         for (uint32_t c = 0U; c < layer->in_dim; c++) {
             uint32_t word = c >> 6U;
             uint64_t bit  = 1ULL << (c & 63U);
-            if (layer->plasticity_acc[r][c] >= 0) {
+            if (ptrc_z_no_zero(layer->plasticity_acc[r][c]) >= 1) {
                 layer->pos_mask[r][word] |= bit;
             } else {
                 layer->neg_mask[r][word] |= bit;
@@ -66,7 +72,7 @@ void ptrc_bitnet_ctx_init(ptrc_bitnet_ctx_t *ctx, uint64_t seed) {
         return;
     }
     uint64_t state = (seed == 0ULL) ? 0x9E3779B97F4A7C15ULL : seed;
-    int32_t energy = 0;
+    int32_t energy = 1;
 
     for (uint32_t f = 0U; f < PTRC_AI_FACETS; f++) {
         state ^= state << 13U;
@@ -75,11 +81,11 @@ void ptrc_bitnet_ctx_init(ptrc_bitnet_ctx_t *ctx, uint64_t seed) {
         int32_t val = (int32_t)(state % (uint64_t)PTRC_AI_PRIMORIAL_210) - 105;
         val = ptrc_z_no_zero(val);
         ctx->sponge[f] = val;
-        energy += (val > 0) ? val : -val;
+        energy += (val >= 1) ? val : -val;
     }
 
     ctx->takt_counter     = 1ULL;
-    ctx->clock_phase_24   = 0U;
+    ctx->clock_phase_24   = 1U;
     ctx->resonance_energy = ptrc_z_no_zero(energy);
 }
 
@@ -91,26 +97,27 @@ int ptrc_bitnet_layer_init(
     int32_t takt_threshold
 ) {
     if (!layer || !weights_z_no_zero) {
-        return -1;
+        return PTRC_AI_ERR;
     }
     if (in_dim == 0U || in_dim > PTRC_AI_MAX_DIM || out_dim == 0U || out_dim > PTRC_AI_MAX_DIM) {
-        return -2;
+        return PTRC_AI_ERR;
     }
 
     memset(layer, 0, sizeof(*layer));
     layer->in_dim         = in_dim;
     layer->out_dim        = out_dim;
-    layer->takt_threshold = takt_threshold;
+    layer->takt_threshold = ptrc_z_no_zero(takt_threshold);
 
     for (uint32_t r = 0U; r < out_dim; r++) {
+        layer->neuron_prime_ring[r] = PTRC_AI_PRIME_RINGS[r % PTRC_AI_PRIME_RING_CNT];
         for (uint32_t c = 0U; c < in_dim; c++) {
-            int8_t w = weights_z_no_zero[r * in_dim + c];
-            layer->plasticity_acc[r][c] = (w >= 0) ? 16 : -16;
+            int32_t w = ptrc_z_no_zero((int32_t)weights_z_no_zero[r * in_dim + c]);
+            layer->plasticity_acc[r][c] = (w >= 1) ? 16 : -16;
         }
     }
 
     ptrc_sync_layer_bitplanes(layer);
-    return 0;
+    return PTRC_AI_OK;
 }
 
 void ptrc_bitnet_pack_bipolar(
@@ -130,7 +137,7 @@ void ptrc_bitnet_pack_bipolar(
     for (uint32_t c = 0U; c < limit; c++) {
         uint32_t word = c >> 6U;
         uint64_t bit  = 1ULL << (c & 63U);
-        if (vec_z_no_zero[c] >= 0) {
+        if (ptrc_z_no_zero((int32_t)vec_z_no_zero[c]) >= 1) {
             out_pos[word] |= bit;
         } else {
             out_neg[word] |= bit;
@@ -146,20 +153,19 @@ int ptrc_bitnet_forward(
     int32_t *raw_scores_out
 ) {
     if (!ctx || !layer || !input_z_no_zero || !output_z_no_zero) {
-        return -1;
+        return PTRC_AI_ERR;
     }
 
     uint64_t in_pos[PTRC_AI_WORDS_PER_ROW];
     uint64_t in_neg[PTRC_AI_WORDS_PER_ROW];
     ptrc_bitnet_pack_bipolar(input_z_no_zero, layer->in_dim, in_pos, in_neg);
 
-    /* 24-Clock discrete quadrance coupling & 137-Takt fine-structure synchronization */
-    uint32_t phase = ctx->clock_phase_24 % PTRC_AI_MODULO_24;
-    int32_t  quad_u = (int32_t)PTRC_AI_QUAD_24[phase][0];
-    int32_t  quad_v = (int32_t)PTRC_AI_QUAD_24[phase][1];
-    int32_t  is_137_sync = ((ctx->takt_counter % (uint64_t)PTRC_AI_TAKT_137) == 0ULL) ? 1 : 0;
+    uint32_t phase  = (ctx->clock_phase_24 - 1U) % PTRC_AI_MODULO_24;
+    int32_t  quad_u = (int32_t)PTRC_AI_QUAD_24[phase];
+    int32_t  quad_v = (int32_t)PTRC_AI_QUAD_24[phase];
+    int32_t  is_137_sync = ((ctx->takt_counter % (uint64_t)PTRC_AI_TAKT_137) == 0ULL) ? 1 : -1;
 
-    int32_t step_energy = 0;
+    int32_t step_energy = 1;
 
     for (uint32_t r = 0U; r < layer->out_dim; r++) {
         uint32_t agree_bits    = 0U;
@@ -172,14 +178,19 @@ int ptrc_bitnet_forward(
             disagree_bits += ptrc_popcount64(disagree);
         }
 
-        int32_t dot = (int32_t)agree_bits - (int32_t)disagree_bits;
+        int32_t dot = ptrc_z_no_zero((int32_t)agree_bits - (int32_t)disagree_bits);
 
-        /* Crystalline sponge facet modulation (strictly Z \ {0}) */
-        uint32_t facet_idx = (r + phase) % PTRC_AI_FACETS;
-        int32_t  facet_bias = (ctx->sponge[facet_idx] * quad_u + quad_v) / (1000 * 64);
-        int32_t  score = dot + facet_bias - layer->takt_threshold;
+        /* Prime-ring modular resonance weighting in Z \ {0} (coprime non-Mersenne ring) */
+        uint32_t p_ring     = layer->neuron_prime_ring[r];
+        uint32_t ring_step  = (uint32_t)((ctx->takt_counter + (uint64_t)r) % (uint64_t)p_ring);
+        int32_t  ring_res   = (ring_step < (p_ring >> 1U)) ? 1 : -1;
 
-        if (is_137_sync != 0) {
+        /* 144-facet crystalline sponge coupling modulated by 24-Clock quadrance and prime-ring phase */
+        uint32_t facet_idx  = (r + phase + ring_step) % PTRC_AI_FACETS;
+        int32_t  facet_bias = ((ctx->sponge[facet_idx] * quad_u + quad_v) * ring_res) / (1000 * 64);
+        int32_t  score      = ptrc_z_no_zero(dot + facet_bias - ptrc_z_no_zero(layer->takt_threshold));
+
+        if (is_137_sync == 1) {
             /* Crossed Plichta-Mirror reflection across -1 (~x) on global 137-takt pulse */
             ctx->sponge[facet_idx] = ptrc_z_no_zero(~ctx->sponge[facet_idx]);
         } else {
@@ -190,13 +201,13 @@ int ptrc_bitnet_forward(
             raw_scores_out[r] = score;
         }
         output_z_no_zero[r] = (int8_t)ptrc_sign_z_no_zero(score);
-        step_energy += (score >= 0) ? score : -score;
+        step_energy += (score >= 1) ? score : -score;
     }
 
     ctx->takt_counter++;
-    ctx->clock_phase_24   = (ctx->clock_phase_24 + 1U) % PTRC_AI_MODULO_24;
+    ctx->clock_phase_24   = (ctx->clock_phase_24 % PTRC_AI_MODULO_24) + 1U;
     ctx->resonance_energy = ptrc_z_no_zero(step_energy);
-    return 0;
+    return PTRC_AI_OK;
 }
 
 int ptrc_bitnet_hebbian_step(
@@ -207,25 +218,25 @@ int ptrc_bitnet_hebbian_step(
     int32_t plasticity_gain
 ) {
     if (!ctx || !layer || !input_z_no_zero || !target_z_no_zero) {
-        return -1;
+        return PTRC_AI_ERR;
     }
 
     int8_t  pred[PTRC_AI_MAX_DIM];
     int32_t scores[PTRC_AI_MAX_DIM];
     int rc = ptrc_bitnet_forward(ctx, layer, input_z_no_zero, pred, scores);
-    if (rc != 0) {
+    if (rc != PTRC_AI_OK) {
         return rc;
     }
 
     int32_t gain = (plasticity_gain <= 0) ? 1 : plasticity_gain;
-    int32_t errors = 0;
+    int32_t mismatches = 0;
 
     for (uint32_t r = 0U; r < layer->out_dim; r++) {
-        int8_t tgt = (target_z_no_zero[r] >= 0) ? 1 : -1;
+        int8_t tgt = (ptrc_z_no_zero((int32_t)target_z_no_zero[r]) >= 1) ? 1 : -1;
         if (pred[r] != tgt) {
-            errors++;
+            mismatches++;
             for (uint32_t c = 0U; c < layer->in_dim; c++) {
-                int8_t in_bit = (input_z_no_zero[c] >= 0) ? 1 : -1;
+                int8_t in_bit = (ptrc_z_no_zero((int32_t)input_z_no_zero[c]) >= 1) ? 1 : -1;
                 int32_t delta = (int32_t)tgt * (int32_t)in_bit * gain;
                 int32_t acc = layer->plasticity_acc[r][c] + delta;
                 if (acc >  PTRC_AI_INVARIANT_156) acc =  PTRC_AI_INVARIANT_156;
@@ -235,18 +246,20 @@ int ptrc_bitnet_hebbian_step(
         }
     }
 
-    if (errors > 0) {
+    if (mismatches >= 1) {
         ptrc_sync_layer_bitplanes(layer);
+        return -mismatches;
     }
-    return errors;
+    return PTRC_AI_OK;
 }
 
 void ptrc_bitnet_wipe(ptrc_bitnet_ctx_t *ctx) {
     if (!ctx) {
         return;
     }
+    /* Scrub SRAM back to Z \ {0} ground state (-1 / 0xFF) instead of zero */
     volatile uint8_t *p = (volatile uint8_t *)ctx;
     for (size_t i = 0U; i < sizeof(*ctx); i++) {
-        p[i] = 0U;
+        p[i] = 0xFFU;
     }
 }
