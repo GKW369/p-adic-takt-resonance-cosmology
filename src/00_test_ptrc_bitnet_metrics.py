@@ -19,9 +19,10 @@
 
 """
 Cryptographic-Grade Statistical, Invariant & Throughput Metrics for pTRC BitNet AI v2.0.
+File: src/00_test_ptrc_bitnet_metrics.py
 
 Strictly zero-float (integer microseconds & takts/sec), verifying:
-1. Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
+1. 4 -> 16 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
 2. Strict Z \\ {0} domain integrity & 156 Wirminghaus invariant saturation bounds
 3. 144-facet sponge resonance dispersion across multiple 137-takt mirror pulses
 4. Native C11 vs. Python integer inference throughput (takts/sec & us/inference)
@@ -45,10 +46,21 @@ from ptrc_bitnet_engine import (
 )
 
 
+def _build_4_16_2_weights() -> tuple[list[int], list[int]]:
+    hidden_weights: list[int] = []
+    for r in range(16):
+        for c in range(4):
+            bit = ((r ^ (r >> 1)) >> c) & 1
+            hidden_weights.append(1 if bit else -1)
+    out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
+    return hidden_weights, out_weights
+
+
 def audit_convergence_and_stability() -> int:
     ctx = PtrcBitNetContext(seed=137210144)
-    init_weights = [1, -1, 1, -1, -1, 1, -1, 1]
-    layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=init_weights, takt_threshold=0)
+    hidden_weights, out_weights = _build_4_16_2_weights()
+    hidden_layer = PtrcBitNetLayer(in_dim=4, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=0)
+    out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     patterns = [
         [-1, -1, -1, -1],
@@ -67,7 +79,8 @@ def audit_convergence_and_stability() -> int:
     for epoch in range(1, 25):
         err = 0
         for pat, tgt in zip(patterns, targets):
-            err += layer.hebbian_step(ctx, pat, tgt, plasticity_gain=4)
+            hidden_act, _ = hidden_layer.forward(ctx, pat)
+            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=4)
         if err == 0:
             converged_epoch = epoch
             break
@@ -78,7 +91,8 @@ def audit_convergence_and_stability() -> int:
     mismatches = 0
     for takt in range(1000):
         idx = takt & 3
-        out, _ = layer.forward(ctx, patterns[idx])
+        hidden_act, _ = hidden_layer.forward(ctx, patterns[idx])
+        out, _ = out_layer.forward(ctx, hidden_act)
         if out != targets[idx]:
             mismatches += 1
         assert all(v != 0 for v in ctx.sponge), f"Zero state detected in sponge at takt {takt}!"
@@ -174,7 +188,7 @@ def benchmark_throughput() -> None:
         )
         lib.ptrc_bitnet_wipe(ctypes.byref(c_ctx))
     else:
-        print(" + [METRIC 4] Native C11 Engine   : Skipped (build via CMake to benchmark libptrc_bitnet.so)")
+        print(" + [METRIC 4] Native C11 Engine   : Skipped (build via CMake/gcc to benchmark libptrc_bitnet.so)")
 
 
 def main() -> None:
