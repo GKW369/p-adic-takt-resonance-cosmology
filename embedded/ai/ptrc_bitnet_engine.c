@@ -40,7 +40,6 @@ static const int16_t PTRC_AI_QUAD_24[PTRC_AI_QUAD_PAIR_CNT] = {
       500, -866,   707, -707,   866, -500,   966, -259
 };
 
-
 static inline uint32_t ptrc_popcount64(uint64_t x) {
 #if defined(__GNUC__) || defined(__clang__)
     return (uint32_t)__builtin_popcountll(x);
