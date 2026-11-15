@@ -68,7 +68,7 @@ int main(void) {
 
     printf("===============================================================================\n");
     printf("  pTRC BITNET AI ENGINE v2.0 — BARE-METAL C11 1-BIT CRYSTALLINE INFERENCE\n");
-    printf("  Topology     : (4+1) -> 4 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Zero float)\n");
+    printf("  Topology     : (4+1) -> 4 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Pure Integer)\n");
     printf("  Context RAM  : %zu bytes static stack | 144 Facets | 137-Takt Sync\n", sizeof(ctx));
     printf("===============================================================================\n");
 
