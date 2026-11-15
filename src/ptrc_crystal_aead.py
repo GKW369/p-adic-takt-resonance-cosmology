@@ -167,9 +167,10 @@ class PtrcCrystalContext:
         f1 = (f0 + 37) % PTRC_CRYPT_FACETS
         f2 = (f0 + 73) % PTRC_CRYPT_FACETS
 
-        r0 = ((self.sponge[f0] & U32_MASK) ^ (macro_out & U32_MASK)) % self.inner_mod[0]
-        r1 = ((self.sponge[f1] & U32_MASK) ^ ((macro_out >> 16) & U32_MASK)) % self.inner_mod[1]
-        r2 = ((self.sponge[f2] & U32_MASK) ^ ((macro_out >> 32) & U32_MASK)) % self.inner_mod[2]
+        m0, m1, m2 = self.inner_mod
+        r0 = ((self.sponge[f0] & U32_MASK) ^ (macro_out & U32_MASK)) % m0
+        r1 = ((self.sponge[f1] & U32_MASK) ^ ((macro_out >> 16) & U32_MASK)) % m1
+        r2 = ((self.sponge[f2] & U32_MASK) ^ ((macro_out >> 32) & U32_MASK)) % m2
 
         combined = ptrc_crypt_z_no_zero((r0 ^ (r1 << 5) ^ (r2 << 11) ^ self.session_salt) & 0x7FFFFFFF)
 
