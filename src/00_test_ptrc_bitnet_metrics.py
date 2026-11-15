@@ -22,7 +22,7 @@ Cryptographic-Grade Statistical, Invariant & Throughput Metrics for pTRC BitNet 
 File: src/00_test_ptrc_bitnet_metrics.py
 
 Strictly zero-float (integer microseconds & takts/sec), verifying:
-1. 4 -> 16 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
+1. (4+1) -> 16 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
 2. Strict Z \\ {0} domain integrity & 156 Wirminghaus invariant saturation bounds
 3. 144-facet sponge resonance dispersion across multiple 137-takt mirror pulses
 4. Native C11 vs. Python integer inference throughput (takts/sec & us/inference)
@@ -46,26 +46,27 @@ from ptrc_bitnet_engine import (
 )
 
 
-def _build_4_16_2_weights() -> tuple[list[int], list[int]]:
+def _build_5_16_2_weights() -> tuple[list[int], list[int]]:
     hidden_weights: list[int] = []
     for r in range(16):
         for c in range(4):
             bit = ((r ^ (r >> 1)) >> c) & 1
             hidden_weights.append(1 if bit else -1)
+        hidden_weights.append(1 if (r & 1) == 0 else -1)
     out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
     return hidden_weights, out_weights
 
 
 def audit_convergence_and_stability() -> int:
     ctx = PtrcBitNetContext(seed=137210144)
-    hidden_weights, out_weights = _build_4_16_2_weights()
-    hidden_layer = PtrcBitNetLayer(in_dim=4, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=0)
+    hidden_weights, out_weights = _build_5_16_2_weights()
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=1)
     out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     patterns = [
-        [-1, -1, -1, -1],
-        [-1, 1, -1, 1],
-        [1, -1, 1, -1],
+        [-1, -1, -1, -1, 1],
+        [-1, 1, -1, 1, 1],
+        [1, -1, 1, -1, 1],
 ,
     ]
     targets = [
