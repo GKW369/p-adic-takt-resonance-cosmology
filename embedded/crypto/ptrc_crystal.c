@@ -45,25 +45,25 @@ static uint64_t ptrc_gcd_u64(uint64_t a, uint64_t b) {
 }
 
 static uint64_t ptrc_read_le64(const uint8_t *p) {
-    return ((uint64_t)p)
-         | ((uint64_t)p << 8U)
-         | ((uint64_t)p << 16U)
-         | ((uint64_t)p << 24U)
-         | ((uint64_t)p << 32U)
-         | ((uint64_t)p << 40U)
-         | ((uint64_t)p << 48U)
-         | ((uint64_t)p << 56U);
+    return ((uint64_t)(*(p + 0U)))
+         | ((uint64_t)(*(p + 1U)) << 8U)
+         | ((uint64_t)(*(p + 2U)) << 16U)
+         | ((uint64_t)(*(p + 3U)) << 24U)
+         | ((uint64_t)(*(p + 4U)) << 32U)
+         | ((uint64_t)(*(p + 5U)) << 40U)
+         | ((uint64_t)(*(p + 6U)) << 48U)
+         | ((uint64_t)(*(p + 7U)) << 56U);
 }
 
 static void ptrc_write_le64(uint8_t *p, uint64_t v) {
-    p = (uint8_t)(v & 0xFFULL);
-    p = (uint8_t)((v >> 8U) & 0xFFULL);
-    p = (uint8_t)((v >> 16U) & 0xFFULL);
-    p = (uint8_t)((v >> 24U) & 0xFFULL);
-    p = (uint8_t)((v >> 32U) & 0xFFULL);
-    p = (uint8_t)((v >> 40U) & 0xFFULL);
-    p = (uint8_t)((v >> 48U) & 0xFFULL);
-    p = (uint8_t)((v >> 56U) & 0xFFULL);
+    *(p + 0U) = (uint8_t)(v & 0xFFULL);
+    *(p + 1U) = (uint8_t)((v >> 8U) & 0xFFULL);
+    *(p + 2U) = (uint8_t)((v >> 16U) & 0xFFULL);
+    *(p + 3U) = (uint8_t)((v >> 24U) & 0xFFULL);
+    *(p + 4U) = (uint8_t)((v >> 32U) & 0xFFULL);
+    *(p + 5U) = (uint8_t)((v >> 40U) & 0xFFULL);
+    *(p + 6U) = (uint8_t)((v >> 48U) & 0xFFULL);
+    *(p + 7U) = (uint8_t)((v >> 56U) & 0xFFULL);
 }
 
 /* Holographic Crossed Plichta-Mirror reflection across -1 in Z \ {0} */
@@ -86,10 +86,10 @@ static uint64_t ptrc_macro_cascade_step(ptrc_crystal_ctx_t *ctx, uint64_t step_s
     uint64_t stride = ptrc_u64_no_zero(step_stride);
 
     for (uint32_t s = 0U; s < PTRC_MACRO_CASCADE_STAGES; s++) {
-        uint64_t mod_s = ctx->macro_mod[s];
-        uint64_t st    = (ctx->macro_state[s] + stride + (uint64_t)(s + 1U)) % mod_s;
+        uint64_t mod_s = *(ctx->macro_mod + s);
+        uint64_t st    = (*(ctx->macro_state + s) + stride + (uint64_t)(s + 1U)) % mod_s;
         st = ptrc_u64_no_zero(st);
-        ctx->macro_state[s] = st;
+        *(ctx->macro_state + s) = st;
         acc ^= (st * (211ULL + (uint64_t)(s * 12U)));
         acc = (acc << 13U) | (acc >> 51U);
     }
@@ -115,10 +115,10 @@ int ptrc_crystal_init(
         while (ptrc_gcd_u64(mod_s, PTRC_PRIMORIAL_210) != 1ULL) {
             mod_s += 2ULL;
         }
-        ctx->macro_mod[s] = mod_s;
+        *(ctx->macro_mod + s) = mod_s;
 
         uint64_t seed_s = ptrc_read_le64(key + (((s + 4U) & 7U) * 8U)) ^ n1 ^ PTRC_PRIMORIAL_P15;
-        ctx->macro_state[s] = ptrc_u64_no_zero(seed_s % mod_s);
+        *(ctx->macro_state + s) = ptrc_u64_no_zero(seed_s % mod_s);
     }
 
     /* 2. Dynamic Coprime Inner CRT Ring Selection from Key[32..63] */
@@ -127,7 +127,7 @@ int ptrc_crystal_init(
         while (ptrc_gcd_u64((uint64_t)cand, PTRC_PRIMORIAL_210) != 1ULL) {
             cand += 2U;
         }
-        ctx->inner_mod[r] = cand;
+        *(ctx->inner_mod + r) = cand;
     }
 
     ctx->takt_counter   = 1ULL;
@@ -138,7 +138,7 @@ int ptrc_crystal_init(
     for (uint32_t f = 0U; f < PTRC_CRYPT_FACETS; f++) {
         uint64_t mix = ptrc_macro_cascade_step(ctx, (uint64_t)(f + 1U) * 137ULL);
         int32_t val = (int32_t)(mix % PTRC_PRIMORIAL_210) - 105;
-        ctx->sponge[f] = ptrc_crypt_z_no_zero(val);
+        *(ctx->sponge + f) = ptrc_crypt_z_no_zero(val);
     }
 
     /* 4. 576-Step Warm-Up Cascade (4 x 144 Facets) */
@@ -146,7 +146,7 @@ int ptrc_crystal_init(
         uint64_t m = ptrc_macro_cascade_step(ctx, (uint64_t)(w + 1U));
         uint32_t idx = w % PTRC_CRYPT_FACETS;
         int32_t delta = ptrc_crypt_z_no_zero((int32_t)(m % 211ULL) - 105);
-        ctx->sponge[idx] = ptrc_crypt_z_no_zero(ctx->sponge[idx] ^ delta);
+        *(ctx->sponge + idx) = ptrc_crypt_z_no_zero((*(ctx->sponge + idx)) ^ delta);
         ctx->takt_counter++;
     }
 
@@ -163,18 +163,22 @@ static uint8_t ptrc_next_keystream_byte(ptrc_crystal_ctx_t *ctx) {
     uint32_t f1 = (f0 + 37U) % PTRC_CRYPT_FACETS;
     uint32_t f2 = (f0 + 73U) % PTRC_CRYPT_FACETS;
 
-    uint32_t r0 = (uint32_t)((uint32_t)ctx->sponge[f0] ^ (uint32_t)macro_out) % ctx->inner_mod;
-    uint32_t r1 = (uint32_t)((uint32_t)ctx->sponge[f1] ^ (uint32_t)(macro_out >> 16U)) % ctx->inner_mod;
-    uint32_t r2 = (uint32_t)((uint32_t)ctx->sponge[f2] ^ (uint32_t)(macro_out >> 32U)) % ctx->inner_mod;
+    uint32_t m0 = *(ctx->inner_mod + 0U);
+    uint32_t m1 = *(ctx->inner_mod + 1U);
+    uint32_t m2 = *(ctx->inner_mod + 2U);
+
+    uint32_t r0 = (uint32_t)((uint32_t)(*(ctx->sponge + f0)) ^ (uint32_t)macro_out) % m0;
+    uint32_t r1 = (uint32_t)((uint32_t)(*(ctx->sponge + f1)) ^ (uint32_t)(macro_out >> 16U)) % m1;
+    uint32_t r2 = (uint32_t)((uint32_t)(*(ctx->sponge + f2)) ^ (uint32_t)(macro_out >> 32U)) % m2;
 
     int32_t combined = ptrc_crypt_z_no_zero((int32_t)((r0 ^ (r1 << 5U) ^ (r2 << 11U) ^ ctx->session_salt) & 0x7FFFFFFFU));
 
     if ((ctx->takt_counter % PTRC_TAKT_137) == 0ULL) {
-        ctx->sponge[f0] = ptrc_crypt_z_no_zero(~ctx->sponge[f0]);
-        ctx->sponge[f1] = ptrc_crypt_z_no_zero(~ctx->sponge[f1]);
+        *(ctx->sponge + f0) = ptrc_crypt_z_no_zero(~(*(ctx->sponge + f0)));
+        *(ctx->sponge + f1) = ptrc_crypt_z_no_zero(~(*(ctx->sponge + f1)));
     } else {
-        ctx->sponge[f0] = ptrc_crypt_z_no_zero(ctx->sponge[f0] + ((combined & 1) ? 1 : -1));
-        ctx->sponge[f2] = ptrc_crypt_z_no_zero(ctx->sponge[f2] ^ combined);
+        *(ctx->sponge + f0) = ptrc_crypt_z_no_zero((*(ctx->sponge + f0)) + ((combined & 1) ? 1 : -1));
+        *(ctx->sponge + f2) = ptrc_crypt_z_no_zero((*(ctx->sponge + f2)) ^ combined);
     }
 
     uint8_t raw_byte = (uint8_t)((combined ^ (combined >> 8U) ^ (combined >> 16U) ^ (uint32_t)(macro_out >> 48U)) & 0xFFU);
@@ -196,7 +200,7 @@ int ptrc_crystal_xor_stream(
     }
     for (size_t i = 0U; i < len; i++) {
         uint8_t ks = ptrc_next_keystream_byte(ctx);
-        output[i] = (uint8_t)(input[i] ^ ks);
+        *(output + i) = (uint8_t)((*(input + i)) ^ ks);
     }
     return PTRC_CRYPT_OK;
 }
@@ -216,38 +220,38 @@ int ptrc_kdf_derive(
     uint8_t init_k[PTRC_CRYPT_KEY_BYTES];
     uint8_t init_n[PTRC_CRYPT_NONCE_BYTES];
     for (size_t i = 0U; i < PTRC_CRYPT_KEY_BYTES; i++) {
-        uint8_t sb = master_seed[i % seed_len];
-        uint8_t ib = (context_info && info_len > 0U) ? context_info[i % info_len] : (uint8_t)(i + 1U);
-        init_k[i] = plichta_crossed_mirror((uint8_t)(sb ^ ib ^ (uint8_t)(i * 137U + 1U)), (uint32_t)i);
+        uint8_t sb = *(master_seed + (i % seed_len));
+        uint8_t ib = (context_info && info_len > 0U) ? (*(context_info + (i % info_len))) : (uint8_t)(i + 1U);
+        *(init_k + i) = plichta_crossed_mirror((uint8_t)(sb ^ ib ^ (uint8_t)(i * 137U + 1U)), (uint32_t)i);
     }
     for (size_t i = 0U; i < PTRC_CRYPT_NONCE_BYTES; i++) {
-        uint8_t sb = master_seed[(i * 7U) % seed_len];
-        init_n[i] = plichta_crossed_mirror((uint8_t)(sb ^ (uint8_t)(i * 211U + 1U)), (uint32_t)(i + 1U));
+        uint8_t sb = *(master_seed + ((i * 7U) % seed_len));
+        *(init_n + i) = plichta_crossed_mirror((uint8_t)(sb ^ (uint8_t)(i * 211U + 1U)), (uint32_t)(i + 1U));
     }
 
     ptrc_crystal_ctx_t ctx;
     ptrc_crystal_init(&ctx, init_k, init_n);
 
     for (size_t i = 0U; i < seed_len; i++) {
-        uint8_t b = master_seed[i];
+        uint8_t b = *(master_seed + i);
         uint32_t idx = (uint32_t)(i % PTRC_CRYPT_FACETS);
-        ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ (int32_t)(b | 1U));
+        *(ctx.sponge + idx) = ptrc_crypt_z_no_zero((*(ctx.sponge + idx)) ^ (int32_t)(b | 1U));
         ptrc_next_keystream_byte(&ctx);
     }
     if (context_info && info_len > 0U) {
         for (size_t i = 0U; i < info_len; i++) {
-            uint8_t b = context_info[i];
+            uint8_t b = *(context_info + i);
             uint32_t idx = (uint32_t)((i + 37U) % PTRC_CRYPT_FACETS);
-            ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ (int32_t)(b | 1U));
+            *(ctx.sponge + idx) = ptrc_crypt_z_no_zero((*(ctx.sponge + idx)) ^ (int32_t)(b | 1U));
             ptrc_next_keystream_byte(&ctx);
         }
     }
 
     for (size_t i = 0U; i < PTRC_CRYPT_KEY_BYTES; i++) {
-        out_key[i] = ptrc_next_keystream_byte(&ctx);
+        *(out_key + i) = ptrc_next_keystream_byte(&ctx);
     }
     for (size_t i = 0U; i < PTRC_CRYPT_NONCE_BYTES; i++) {
-        out_nonce[i] = ptrc_next_keystream_byte(&ctx);
+        *(out_nonce + i) = ptrc_next_keystream_byte(&ctx);
     }
 
     ptrc_crystal_wipe(&ctx);
@@ -270,20 +274,20 @@ int ptrc_primorial_keygen(
     uint8_t takt_buf[PTRC_KEYGEN_PRIME_RINGS];
 
     for (uint32_t r = 0U; r < PTRC_KEYGEN_PRIME_RINGS; r++) {
-        uint8_t prime_r = PTRC_KEYGEN_PRIMES[r];
+        uint8_t prime_r = *(PTRC_KEYGEN_PRIMES + r);
         uint8_t res = (uint8_t)((takt + (uint64_t)(r * 137U)) % (uint64_t)prime_r);
         if (res == 0U) {
             res = 1U;
         }
-        ring_state[r] = plichta_crossed_mirror(res, r);
-        takt_buf[r]   = (uint8_t)((takt >> (r * 8U)) & 0xFFULL);
+        *(ring_state + r) = plichta_crossed_mirror(res, r);
+        *(takt_buf + r)   = (uint8_t)((takt >> (r * 8U)) & 0xFFULL);
     }
 
     ptrc_kdf_derive(ring_state, PTRC_KEYGEN_PRIME_RINGS, domain_seed, seed_len, out_key, out_nonce);
 
     for (size_t i = 0U; i < PTRC_CRYPT_NONCE_BYTES; i++) {
         size_t idx = i & 7U;
-        out_nonce[i] = (uint8_t)(out_nonce[i] ^ ring_state[idx] ^ takt_buf[idx]);
+        *(out_nonce + i) = (uint8_t)((*(out_nonce + i)) ^ (*(ring_state + idx)) ^ (*(takt_buf + idx)));
     }
     return PTRC_CRYPT_OK;
 }
@@ -302,12 +306,12 @@ static void ptrc_compute_slip_mac(
 
     for (size_t i = 0U; i < aad_len; i++) {
         uint32_t f = (uint32_t)(i % PTRC_CRYPT_FACETS);
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ (int32_t)(aad[i] | 1U));
+        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)((*(aad + i)) | 1U));
         ptrc_next_keystream_byte(&mac_ctx);
     }
     for (size_t i = 0U; i < ct_len; i++) {
         uint32_t f = (uint32_t)((i + 73U) % PTRC_CRYPT_FACETS);
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ (int32_t)(ciphertext[i] | 1U));
+        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)((*(ciphertext + i)) | 1U));
         ptrc_next_keystream_byte(&mac_ctx);
     }
 
@@ -316,12 +320,12 @@ static void ptrc_compute_slip_mac(
     ptrc_write_le64(len_block + 8U, ptrc_u64_no_zero((uint64_t)ct_len));
     for (size_t i = 0U; i < PTRC_CRYPT_NONCE_BYTES; i++) {
         uint32_t f = (uint32_t)((i + 137U) % PTRC_CRYPT_FACETS);
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ (int32_t)(len_block[i] | 1U));
+        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)((*(len_block + i)) | 1U));
         ptrc_next_keystream_byte(&mac_ctx);
     }
 
     for (size_t t = 0U; t < PTRC_CRYPT_TAG_BYTES; t++) {
-        out_tag[t] = ptrc_next_keystream_byte(&mac_ctx);
+        *(out_tag + t) = ptrc_next_keystream_byte(&mac_ctx);
     }
     ptrc_crystal_wipe(&mac_ctx);
 }
@@ -355,7 +359,7 @@ int ptrc_ct_memcmp(const uint8_t *a, const uint8_t *b, size_t len) {
     }
     uint8_t diff = 0U;
     for (size_t i = 0U; i < len; i++) {
-        diff |= (uint8_t)(a[i] ^ b[i]);
+        diff |= (uint8_t)((*(a + i)) ^ (*(b + i)));
     }
     return (diff == 0U) ? PTRC_CRYPT_OK : PTRC_CRYPT_ERR;
 }
@@ -381,7 +385,7 @@ int ptrc_aead_decrypt(
         if (plaintext && ct_len > 0U) {
             volatile uint8_t *vp = (volatile uint8_t *)plaintext;
             for (size_t i = 0U; i < ct_len; i++) {
-                vp[i] = 0xFFU;
+                *(vp + i) = 0xFFU;
             }
         }
         return PTRC_CRYPT_ERR;
@@ -401,6 +405,6 @@ void ptrc_crystal_wipe(ptrc_crystal_ctx_t *ctx) {
     /* Scrub SRAM back to Z \ {0} ground state (-1 / 0xFF) instead of zero */
     volatile uint8_t *p = (volatile uint8_t *)ctx;
     for (size_t i = 0U; i < sizeof(*ctx); i++) {
-        p[i] = 0xFFU;
+        *(p + i) = 0xFFU;
     }
 }
