@@ -99,8 +99,6 @@ def audit_keystream_uniformity() -> None:
     )
 
 
-
-
 def benchmark_crypto_throughput() -> None:
     seed = b"pTRC-v4.0-THROUGHPUT-BENCHMARK-156"
     key, nonce = ptrc_primorial_keygen(156144137, seed)
