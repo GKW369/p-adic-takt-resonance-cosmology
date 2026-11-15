@@ -236,14 +236,14 @@ int ptrc_kdf_derive(
     for (size_t i = 0U; i < seed_len; i++) {
         uint8_t b = *(master_seed + i);
         uint32_t idx = (uint32_t)(i % PTRC_CRYPT_FACETS);
-        *(ctx.sponge + idx) = ptrc_crypt_z_no_zero((*(ctx.sponge + idx)) ^ (int32_t)(b | 1U));
+        *(ctx.sponge + idx) = ptrc_crypt_z_no_zero((*(ctx.sponge + idx)) ^ (int32_t)(((uint32_t)b << 1U) | 1U));
         ptrc_next_keystream_byte(&ctx);
     }
     if (context_info && info_len > 0U) {
         for (size_t i = 0U; i < info_len; i++) {
             uint8_t b = *(context_info + i);
             uint32_t idx = (uint32_t)((i + 37U) % PTRC_CRYPT_FACETS);
-            *(ctx.sponge + idx) = ptrc_crypt_z_no_zero((*(ctx.sponge + idx)) ^ (int32_t)(b | 1U));
+            *(ctx.sponge + idx) = ptrc_crypt_z_no_zero((*(ctx.sponge + idx)) ^ (int32_t)(((uint32_t)b << 1U) | 1U));
             ptrc_next_keystream_byte(&ctx);
         }
     }
@@ -305,14 +305,15 @@ static void ptrc_compute_slip_mac(
     ptrc_crystal_ctx_t mac_ctx;
     ptrc_crystal_init(&mac_ctx, key, nonce);
 
+    /* In ptrc_compute_slip_mac: */
     for (size_t i = 0U; i < aad_len; i++) {
         uint32_t f = (uint32_t)(i % PTRC_CRYPT_FACETS);
-        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)((*(aad + i)) | 1U));
+        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)(((uint32_t)(*(aad + i)) << 1U) | 1U));
         ptrc_next_keystream_byte(&mac_ctx);
     }
     for (size_t i = 0U; i < ct_len; i++) {
         uint32_t f = (uint32_t)((i + 73U) % PTRC_CRYPT_FACETS);
-        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)((*(ciphertext + i)) | 1U));
+        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)(((uint32_t)(*(ciphertext + i)) << 1U) | 1U));
         ptrc_next_keystream_byte(&mac_ctx);
     }
 
@@ -321,7 +322,7 @@ static void ptrc_compute_slip_mac(
     ptrc_write_le64(len_block + 8U, ptrc_u64_no_zero((uint64_t)ct_len));
     for (size_t i = 0U; i < PTRC_CRYPT_NONCE_BYTES; i++) {
         uint32_t f = (uint32_t)((i + 137U) % PTRC_CRYPT_FACETS);
-        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)((*(len_block + i)) | 1U));
+        *(mac_ctx.sponge + f) = ptrc_crypt_z_no_zero((*(mac_ctx.sponge + f)) ^ (int32_t)(((uint32_t)(*(len_block + i)) << 1U) | 1U));
         ptrc_next_keystream_byte(&mac_ctx);
     }
 
