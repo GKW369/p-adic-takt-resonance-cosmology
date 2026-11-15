@@ -21,7 +21,7 @@
 pTRC v4.0 512-Bit Zero-Table Primorial Macro-Cascade & 144-Facet AEAD (Python Reference).
 File: src/ptrc_crystal_aead.py
 
-Strictly pure integer (-1 adjacent to +1, no zero point), zero-float, zero-trigonometry,
+Strictly pure integer (-1 adjacent to +1, no zero point), zero-trigonometry,
 and bit-identical to embedded/crypto/ptrc_crystal.c.
 """
 
@@ -146,7 +146,7 @@ class PtrcCrystalContext:
             delta = ptrc_crypt_z_no_zero(int(m % 211) - 105)
             self.sponge[idx] = ptrc_crypt_z_no_zero(self.sponge[idx] ^ delta)
             self.takt_counter += 1
-            
+
     def _macro_cascade_step(self, step_stride: int) -> int:
         acc = (PTRC_PRIMORIAL_P15 ^ self.takt_counter) & U64_MASK
         stride = ptrc_u64_no_zero(step_stride)
@@ -227,7 +227,6 @@ def ptrc_kdf_derive(master_seed: bytes, context_info: bytes = b"") -> Tuple[byte
         ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ ((b << 1) | 1))
         ctx.next_keystream_byte()
 
-
     out_key = bytes(ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_KEY_BYTES))
     out_nonce = bytes(ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_NONCE_BYTES))
     return out_key, out_nonce
@@ -277,7 +276,6 @@ def _compute_slip_mac(key: bytes, nonce: bytes, aad: bytes, ciphertext: bytes) -
         mac_ctx.next_keystream_byte()
 
     return bytes(mac_ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_TAG_BYTES))
-
 
 
 def ptrc_ct_memcmp(a: bytes, b: bytes) -> int:
