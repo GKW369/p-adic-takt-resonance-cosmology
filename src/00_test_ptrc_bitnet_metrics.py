@@ -22,7 +22,7 @@ Cryptographic-Grade Statistical, Invariant & Throughput Metrics for pTRC BitNet 
 File: src/00_test_ptrc_bitnet_metrics.py
 
 Strictly pure integer (integer microseconds & takts/sec), verifying:
-1. (4+1) -> 4 -> 2 Hebbian convergence speed & 1,000-takt online resonance stability
+1. (4+1) -> 4 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
 2. Strict Z \\ {0} domain integrity & 156 Wirminghaus invariant saturation bounds
 3. 144-facet sponge resonance dispersion across multiple 137-takt mirror pulses
 4. Native C11 vs. Python integer inference throughput (takts/sec & us/inference)
@@ -95,7 +95,6 @@ def audit_convergence_and_stability() -> int:
     assert mismatches == 0, f"Post-convergence drift detected ({mismatches} mismatches over 1,000 takts)!"
     print(f" + [METRIC 1] Hebbian Convergence : Epoch {converged_epoch} | 1,000-Takt Drift: 0 errors")
     return converged_epoch
-
 
 
 def audit_invariant_156_and_resonance() -> None:
