@@ -266,19 +266,28 @@ def _compute_slip_mac(key: bytes, nonce: bytes, aad: bytes, ciphertext: bytes) -
     mac_ctx = PtrcCrystalContext(key, nonce)
 
     for i, b in enumerate(aad):
+        v = (b << 1) | 1
         f = i % PTRC_CRYPT_FACETS
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ ((b << 1) | 1))
+        s = (((mac_ctx.session_salt << 7) | (mac_ctx.session_salt >> 25)) ^ v) & U32_MASK
+        mac_ctx.session_salt = 1 if s == 0 else s
+        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ v)
         mac_ctx.next_keystream_byte()
 
     for i, b in enumerate(ciphertext):
+        v = (b << 1) | 1
         f = (i + 73) % PTRC_CRYPT_FACETS
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ ((b << 1) | 1))
+        s = (((mac_ctx.session_salt << 7) | (mac_ctx.session_salt >> 25)) ^ v) & U32_MASK
+        mac_ctx.session_salt = 1 if s == 0 else s
+        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ v)
         mac_ctx.next_keystream_byte()
 
     len_block = _write_le64(ptrc_u64_no_zero(len(aad))) + _write_le64(ptrc_u64_no_zero(len(ciphertext)))
     for i, b in enumerate(len_block):
+        v = (b << 1) | 1
         f = (i + 137) % PTRC_CRYPT_FACETS
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ ((b << 1) | 1))
+        s = (((mac_ctx.session_salt << 7) | (mac_ctx.session_salt >> 25)) ^ v) & U32_MASK
+        mac_ctx.session_salt = 1 if s == 0 else s
+        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ v)
         mac_ctx.next_keystream_byte()
 
     return bytes(mac_ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_TAG_BYTES))
