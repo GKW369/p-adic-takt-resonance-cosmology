@@ -60,7 +60,7 @@ def main() -> None:
     t1 = time.perf_counter_ns()
 
     tampered_tag = bytearray(tag)
-    tampered_tag[7] ^= 0x01
+    tampered_tag.__setitem__(0, tampered_tag.__getitem__(0) ^ 0x01)
     rc_tamper, _ = ptrc_aead_decrypt(key, nonce, ciphertext, bytes(tampered_tag), aad)
 
     print(f" + Macro-Moduli (64-bit): M0={ctx.macro_mod} | M1={ctx.macro_mod}")
