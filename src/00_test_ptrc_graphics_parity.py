@@ -46,33 +46,32 @@ from ptrc_light_universe import (
 
 
 def test_python_universe_invariants() -> None:
-    # Verify 24-Clock Discrete Quadrance law: u^2 + v^2 ~ 1000^2, no zeros
     for idx in range(PTRC_GFX_JUNCTIONS):
         u = PTRC_CLOCK24_U.__getitem__(idx)
         v = PTRC_CLOCK24_V.__getitem__(idx)
-        assert u != 0 and v != 0, "Zero coordinate in 24-Clock table!"
+        assert u != 0 and v != 0
         quad = u * u + v * v
-        assert 999000 <= quad <= 1001000, f"Quadrance out of integer tolerance: {quad}"
+        assert 999000 <= quad <= 1001000
 
     ctx = PtrcGfxContext(seed=137210144)
     assert len(ctx.sponge) == PTRC_GFX_FACETS
     assert all(x != 0 for x in ctx.sponge)
-    assert ctx.cam_x != 0 and ctx.cam_y != 0 and ctx.cam_z != 0
+    assert all(x != 0 for x in ctx.agent_x)
+    assert all(y != 0 for y in ctx.agent_y)
 
-    # Advance 140 takts across the 137-takt mirror pulse
-    for _ in range(140):
-        rc = ctx.step_takt()
-        assert rc == PTRC_GFX_OK
-        assert all(x != 0 for x in ctx.sponge)
-        assert ctx.cam_x != 0 and ctx.cam_y != 0 and ctx.cam_z != 0
+    # Advance 1 full 137-takt Observer Epoch
+    rc = ctx.advance_observer_epoch()
+    assert rc == PTRC_GFX_OK
+    assert ctx.mirror_pulses == 2
+    assert all(x != 0 for x in ctx.sponge)
+    assert all(x != 0 for x in ctx.agent_x)
+    assert all(y != 0 for y in ctx.agent_y)
 
-    assert ctx.mirror_pulses == 2, f"Expected 137-takt mirror pulse, got {ctx.mirror_pulses}"
-
-    frame = ctx.render_frame_rgb24(96, 54)
-    assert len(frame) == 96 * 54 * 3
-    assert 0 not in frame, "Zero byte 0x00 violated Z \\ {0} pixel invariant!"
-    assert ctx.active_hits > 1, "Expected active crystal/starfield hits in rendered frame"
-    print("[PASS] 1. Z \\ {0} Universe Invariants, 24-Clock Quadrance & 137-Takt Mirror Pulse")
+    frame = ctx.render_frame_rgb24(160, 90)
+    assert len(frame) == 160 * 90 * 3
+    assert 0 not in frame
+    assert ctx.active_hits > 1000
+    print("[PASS] 1. Z \\ {0} 60,000-Agent Windtunnel, 1+12 Crystal & 137-Takt Observer Pulse")
 
 
 def test_c_python_graphics_parity() -> None:
@@ -84,32 +83,35 @@ def test_c_python_graphics_parity() -> None:
     seed = 210144137
     py_ctx = PtrcGfxContext(seed=seed)
     c_ctx = _CGfxCtx()
-    rc = lib.ptrc_gfx_init(ctypes.byref(c_ctx), seed)
-    assert rc == PTRC_GFX_OK
+    assert lib.ptrc_gfx_init(ctypes.byref(c_ctx), seed) == PTRC_GFX_OK
 
-    for _ in range(PTRC_GFX_TAKT_137 + 5):
+    # Advance 142 light-speed takts across the 137-takt observer render pulse
+    py_ctx.advance_observer_epoch()
+    lib.ptrc_gfx_advance_observer_epoch(ctypes.byref(c_ctx))
+    for _ in range(5):
         py_ctx.step_takt()
         lib.ptrc_gfx_step_takt(ctypes.byref(c_ctx))
 
     assert list(c_ctx.sponge) == py_ctx.sponge
-    assert c_ctx.cam_x == py_ctx.cam_x
-    assert c_ctx.cam_y == py_ctx.cam_y
-    assert c_ctx.cam_z == py_ctx.cam_z
+    assert list(c_ctx.crystal_state) == py_ctx.crystal_state
+    assert list(c_ctx.agent_x) == py_ctx.agent_x
+    assert list(c_ctx.agent_y) == py_ctx.agent_y
+    assert c_ctx.pyramid_cx == py_ctx.pyramid_cx
+    assert c_ctx.pyramid_cy == py_ctx.pyramid_cy
     assert c_ctx.mirror_pulses == py_ctx.mirror_pulses
 
-    w, h = 128, 72
+    w, h = 240, 135
     py_frame = py_ctx.render_frame_rgb24(w, h)
     c_buf = (ctypes.c_uint8 * (w * h * 3))()
-    rc_ren = lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), w, h, c_buf)
-    assert rc_ren == PTRC_GFX_OK
-    assert bytes(c_buf) == py_frame, "Pixel mismatch between C11 and Python Light Universe!"
+    assert lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), w, h, c_buf) == PTRC_GFX_OK
+    assert bytes(c_buf) == py_frame
     assert c_ctx.active_hits == py_ctx.active_hits
 
-    # Verify volatile SRAM wipe restores context to -1 (0xFF)
     lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
     raw_bytes = ctypes.string_at(ctypes.byref(c_ctx), ctypes.sizeof(c_ctx))
-    assert all(b == 0xFF for b in raw_bytes), "SRAM wipe did not restore all bytes to -1 (0xFF)!"
-    print("[PASS] 2. 100% C11 / Python Pixel-for-Pixel Bit-Parity & -1 SRAM Wipe")
+    assert all(b == 0xFF for b in raw_bytes)
+    print("[PASS] 2. 100% C11 / Python Pixel-for-Pixel Bit-Parity (60,000 Agents) & -1 SRAM Wipe")
+
 
 def test_zero_float_compliance() -> None:
     root = pathlib.Path(__file__).resolve().parent.parent
