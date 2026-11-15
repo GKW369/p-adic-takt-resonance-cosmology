@@ -1,5 +1,5 @@
 /* ==============================================================================
- * pTRC Framework - Discrete 1-Bit Integer Physics & Light Universe Engine v4.0
+ * pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.1
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,38 +30,45 @@ extern "C" {
 #endif
 
 #define PTRC_GFX_FACETS         144U
+#define PTRC_GFX_FREE_FACETS    120U
 #define PTRC_GFX_JUNCTIONS      24U
+#define PTRC_GFX_CRYSTAL_RAD    9
 #define PTRC_GFX_PRIME_RINGS    16U
 #define PTRC_GFX_PRIMORIAL_210  210U
 #define PTRC_GFX_TAKT_137       137U
-#define PTRC_GFX_LIMIT_156      156
-#define PTRC_GFX_VOXEL_SHIFT    16U
-#define PTRC_GFX_VOXEL_STEP     65536
-#define PTRC_GFX_MAX_STEPS      28U
+#define PTRC_GFX_AGENT_COUNT    60000U
 
 #define PTRC_GFX_OK             1
 #define PTRC_GFX_ERR            (-1)
 
-/* Static stack context for Z \ {0} Light Universe rendering (zero malloc) */
+/* Static stack context for Z \ {0} Observer Universe & 60,000-Agent Windtunnel */
 typedef struct {
     int32_t  sponge[PTRC_GFX_FACETS];
+    uint8_t  crystal_state[PTRC_GFX_FACETS];
     uint32_t prime_rings[PTRC_GFX_PRIME_RINGS];
+    int32_t  agent_x[PTRC_GFX_AGENT_COUNT];
+    int32_t  agent_y[PTRC_GFX_AGENT_COUNT];
+    int32_t  agent_vx[PTRC_GFX_AGENT_COUNT];
+    int32_t  agent_vy[PTRC_GFX_AGENT_COUNT];
+    uint8_t  agent_state[PTRC_GFX_AGENT_COUNT];
     uint64_t takt_counter;
     uint32_t clock_phase_24;
-    int32_t  cam_x;
-    int32_t  cam_y;
-    int32_t  cam_z;
+    int32_t  pyramid_cx;
+    int32_t  pyramid_cy;
     uint32_t active_hits;
     uint32_t mirror_pulses;
 } ptrc_gfx_ctx_t;
 
-/* Initialize universe state strictly inside Z \ {0} (no zero point) */
+/* Initialize 1+12 crystal lattice and 60,000 agents strictly inside Z \ {0} */
 int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed);
 
-/* Advance one discrete universe takt (137-takt mirror pulse + 24-clock orbit) */
+/* Advance one discrete light-speed takt (lattice interaction + agent flow) */
 int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx);
 
-/* Render one RGB24 frame (width * height * 3 bytes) without float or division */
+/* Advance 137 light-speed takts up to the Observer Render Pulse */
+int ptrc_gfx_advance_observer_epoch(ptrc_gfx_ctx_t *ctx);
+
+/* Render Full-HD / arbitrary RGB24 Observer View without float or zero point */
 int ptrc_gfx_render_frame_rgb24(
     ptrc_gfx_ctx_t *ctx,
     uint32_t width,
