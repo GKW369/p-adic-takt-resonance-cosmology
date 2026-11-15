@@ -73,19 +73,23 @@ def main() -> None:
         fps = (frames * 1_000_000) // (elapsed_us if elapsed_us >= 1 else 1)
         px_per_sec = (frames * bw * bh * 1_000_000) // (elapsed_us if elapsed_us >= 1 else 1)
 
-        # Render 1280x720 HD showcase frame
-        hd_w, hd_h = 1280, 720
-        hd_buf = (ctypes.c_uint8 * (hd_w * hd_h * 3))()
-        lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), hd_w, hd_h, hd_buf)
-        hd_bytes = bytes(hd_buf)
-        ppm_path = out_dir / "ptrc_light_universe_720p.ppm"
-        write_ppm_rgb24(ppm_path, hd_w, hd_h, hd_bytes)
+        # Render 1920x1080 Full-HD showcase frame
+        fhd_w, fhd_h = 1920, 1080
+        fhd_buf = (ctypes.c_uint8 * (fhd_w * fhd_h * 3))()
+        t_fhd0 = time.perf_counter_ns()
+        lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), fhd_w, fhd_h, fhd_buf)
+        t_fhd1 = time.perf_counter_ns()
+        fhd_us = (t_fhd1 - t_fhd0) // 1000
+        fhd_bytes = bytes(fhd_buf)
+        ppm_path = out_dir / "ptrc_light_universe_1080p.ppm"
+        write_ppm_rgb24(ppm_path, fhd_w, fhd_h, fhd_bytes)
 
         print(f" + Native C11 Kernel    : ACTIVE (sizeof(ctx)={ctypes.sizeof(c_ctx)} bytes, Zero malloc)")
         print(f" + 640x360 Throughput   : {frames} frames in {elapsed_us} us (~{fps} FPS | ~{px_per_sec} px/sec)")
-        print(f" + HD Frame Export      : {ppm_path} ({hd_w}x{hd_h}, 0x00 bytes: {hd_bytes.count(0)})")
+        print(f" + Full-HD 1080p Render : {fhd_w}x{fhd_h} in {fhd_us} us -> {ppm_path} (0x00 bytes: {fhd_bytes.count(0)})")
         print(f" + Active Crystal Hits  : {c_ctx.active_hits} | Base Primorial: {PTRC_GFX_PRIMORIAL_210}")
         lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
+
     else:
         py_ctx = PtrcGfxContext(seed=seed)
         for _ in range(18):
