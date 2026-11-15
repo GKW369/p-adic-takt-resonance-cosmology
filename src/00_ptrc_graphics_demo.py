@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Light Universe Engine v4.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Universe v4.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 # ==============================================================================
 
 r"""
-Interactive Terminal Benchmark & HD Frame Export for pTRC Light Universe v4.0.
+Observer Universe Full-HD 1080p Render & 137-Takt Epoch Demo.
 File: src/00_ptrc_graphics_demo.py
 """
 
@@ -29,10 +29,12 @@ import pathlib
 import time
 
 from ptrc_light_universe import (
+    PTRC_GFX_CRYSTAL_RAD,
     PTRC_GFX_FACETS,
+    PTRC_GFX_FREE_FACETS,
     PTRC_GFX_JUNCTIONS,
+    PTRC_GFX_NEIGHBORS,
     PTRC_GFX_OK,
-    PTRC_GFX_PRIMORIAL_210,
     PTRC_GFX_TAKT_137,
     PtrcGfxContext,
     _CGfxCtx,
@@ -43,8 +45,9 @@ from ptrc_light_universe import (
 
 def main() -> None:
     print("===============================================================================")
-    print("  pTRC LIGHT UNIVERSE v4.0 — PURE INTEGER 1+12 RAY-MARCHING ENGINE")
-    print(f"  Axioms   : Z \\ {{0}} (No Zero) | {PTRC_GFX_FACETS} Facets | {PTRC_GFX_JUNCTIONS}-Clock | {PTRC_GFX_TAKT_137}-Takt Mirror")
+    print("  pTRC OBSERVER UNIVERSE v4.0 — 1+12 INTEGER CRYSTAL LATTICE (Z \\ {0})")
+    print(f"  Crystal  : {PTRC_GFX_FACETS} Facets (Radius {PTRC_GFX_CRYSTAL_RAD}) | 1+{PTRC_GFX_NEIGHBORS} Neighbors | {PTRC_GFX_JUNCTIONS} Junctions | {PTRC_GFX_FREE_FACETS} Memory")
+    print(f"  Dynamics : 1 Takt = Light Speed | Observer View Rendered Every {PTRC_GFX_TAKT_137} Takts")
     print("===============================================================================")
 
     seed = 137210144
@@ -56,51 +59,40 @@ def main() -> None:
     if lib is not None:
         c_ctx = _CGfxCtx()
         lib.ptrc_gfx_init(ctypes.byref(c_ctx), seed)
-        for _ in range(18):
-            lib.ptrc_gfx_step_takt(ctypes.byref(c_ctx))
 
-        # Benchmark 120 frames at 640x360 in bare-metal C11
-        bw, bh, frames = 640, 360, 120
-        b_buf = (ctypes.c_uint8 * (bw * bh * 3))()
-        t0 = time.perf_counter_ns()
-        for _ in range(frames):
-            lib.ptrc_gfx_step_takt(ctypes.byref(c_ctx))
-            rc = lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), bw, bh, b_buf)
-            assert rc == PTRC_GFX_OK
-        t1 = time.perf_counter_ns()
+        # Advance 1 full Observer Epoch (137 light-speed takts)
+        t_ep0 = time.perf_counter_ns()
+        rc_ep = lib.ptrc_gfx_advance_observer_epoch(ctypes.byref(c_ctx))
+        t_ep1 = time.perf_counter_ns()
+        assert rc_ep == PTRC_GFX_OK
+        epoch_us = (t_ep1 - t_ep0) // 1000
 
-        elapsed_us = (t1 - t0) // 1000
-        fps = (frames * 1_000_000) // (elapsed_us if elapsed_us >= 1 else 1)
-        px_per_sec = (frames * bw * bh * 1_000_000) // (elapsed_us if elapsed_us >= 1 else 1)
-
-        # Render 1920x1080 Full-HD showcase frame
+        # Render Full-HD 1920x1080 Observer View at 137-Takt Pulse
         fhd_w, fhd_h = 1920, 1080
         fhd_buf = (ctypes.c_uint8 * (fhd_w * fhd_h * 3))()
-        t_fhd0 = time.perf_counter_ns()
-        lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), fhd_w, fhd_h, fhd_buf)
-        t_fhd1 = time.perf_counter_ns()
-        fhd_us = (t_fhd1 - t_fhd0) // 1000
+        t_ren0 = time.perf_counter_ns()
+        rc_ren = lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), fhd_w, fhd_h, fhd_buf)
+        t_ren1 = time.perf_counter_ns()
+        assert rc_ren == PTRC_GFX_OK
+
+        ren_us = (t_ren1 - t_ren0) // 1000
         fhd_bytes = bytes(fhd_buf)
         ppm_path = out_dir / "ptrc_light_universe_1080p.ppm"
         write_ppm_rgb24(ppm_path, fhd_w, fhd_h, fhd_bytes)
 
         print(f" + Native C11 Kernel    : ACTIVE (sizeof(ctx)={ctypes.sizeof(c_ctx)} bytes, Zero malloc)")
-        print(f" + 640x360 Throughput   : {frames} frames in {elapsed_us} us (~{fps} FPS | ~{px_per_sec} px/sec)")
-        print(f" + Full-HD 1080p Render : {fhd_w}x{fhd_h} in {fhd_us} us -> {ppm_path} (0x00 bytes: {fhd_bytes.count(0)})")
-        print(f" + Active Crystal Hits  : {c_ctx.active_hits} | Base Primorial: {PTRC_GFX_PRIMORIAL_210}")
+        print(f" + 137-Takt Light Epoch : Computed in {epoch_us} us (Mirror Pulses: {c_ctx.mirror_pulses})")
+        print(f" + Full-HD 1080p Render : {fhd_w}x{fhd_h} in {ren_us} us -> {ppm_path} (0x00 bytes: {fhd_bytes.count(0)})")
+        print(f" + Active Crystal Hits  : {c_ctx.active_hits} (Central + 12 Shell + 24 Junctions)")
         lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
-
     else:
         py_ctx = PtrcGfxContext(seed=seed)
-        for _ in range(18):
-            py_ctx.step_takt()
-        w, h = 320, 180
-        t0 = time.perf_counter_ns()
+        py_ctx.advance_observer_epoch()
+        w, h = 640, 360
         frame = py_ctx.render_frame_rgb24(w, h)
-        t1 = time.perf_counter_ns()
         ppm_path = out_dir / "ptrc_light_universe_preview.ppm"
         write_ppm_rgb24(ppm_path, w, h, frame)
-        print(f" + Python Reference     : {w}x{h} rendered in {(t1 - t0) // 1000} us -> {ppm_path}")
+        print(f" + Python Reference     : 137-Takt Epoch -> {ppm_path}")
 
     print("===============================================================================")
 
