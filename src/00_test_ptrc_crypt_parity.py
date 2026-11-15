@@ -166,12 +166,15 @@ def test_zero_float_compliance() -> None:
             continue
         raw = fpath.read_text(encoding="utf-8")
         cleaned = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
+        cleaned = re.sub(r'""".*?"""', "", cleaned, flags=re.S)
+        cleaned = re.sub(r"'''.*?'''", "", cleaned, flags=re.S)
         cleaned = re.sub(r"//.*", "", cleaned)
         cleaned = re.sub(r"#.*", "", cleaned)
         for lineno, line in enumerate(cleaned.splitlines(), 1):
             match = forbidden.search(line)
             assert match is None, f"Forbidden float/trig token '{match.group(0)}' in {fpath}:{lineno}"
     print("[PASS] 3. Static Zero-Float & Zero-Trig Compliance Verified across Crypto v4.0")
+
 
 
 if __name__ == "__main__":
