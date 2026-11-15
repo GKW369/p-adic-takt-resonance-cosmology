@@ -219,13 +219,14 @@ def ptrc_kdf_derive(master_seed: bytes, context_info: bytes = b"") -> Tuple[byte
 
     for i, b in enumerate(master_seed):
         idx = i % PTRC_CRYPT_FACETS
-        ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ (b | 1))
+        ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ ((b << 1) | 1))
         ctx.next_keystream_byte()
 
     for i, b in enumerate(context_info):
         idx = (i + 37) % PTRC_CRYPT_FACETS
-        ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ (b | 1))
+        ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ ((b << 1) | 1))
         ctx.next_keystream_byte()
+
 
     out_key = bytes(ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_KEY_BYTES))
     out_nonce = bytes(ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_NONCE_BYTES))
@@ -261,21 +262,22 @@ def _compute_slip_mac(key: bytes, nonce: bytes, aad: bytes, ciphertext: bytes) -
 
     for i, b in enumerate(aad):
         f = i % PTRC_CRYPT_FACETS
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ (b | 1))
+        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ ((b << 1) | 1))
         mac_ctx.next_keystream_byte()
 
     for i, b in enumerate(ciphertext):
         f = (i + 73) % PTRC_CRYPT_FACETS
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ (b | 1))
+        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ ((b << 1) | 1))
         mac_ctx.next_keystream_byte()
 
     len_block = _write_le64(ptrc_u64_no_zero(len(aad))) + _write_le64(ptrc_u64_no_zero(len(ciphertext)))
     for i, b in enumerate(len_block):
         f = (i + 137) % PTRC_CRYPT_FACETS
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ (b | 1))
+        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ ((b << 1) | 1))
         mac_ctx.next_keystream_byte()
 
     return bytes(mac_ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_TAG_BYTES))
+
 
 
 def ptrc_ct_memcmp(a: bytes, b: bytes) -> int:
