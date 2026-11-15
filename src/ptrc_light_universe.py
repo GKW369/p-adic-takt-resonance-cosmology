@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Light Universe Engine v4.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Universe v4.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,11 +18,12 @@
 # ==============================================================================
 
 r"""
-pTRC v4.0 Discrete 1-Bit Integer Physics & Light Universe Engine (Python Reference).
+pTRC v4.0 Discrete 1-Bit Integer Physics & Observer Universe (Python Reference).
 File: src/ptrc_light_universe.py
 
-Strictly pure integer (-1 adjacent to +1, no zero point), zero-trigonometry,
-and bit-identical to embedded/graphics/ptrc_light_universe.c.
+Pure information-state lattice in Z \ {0}: 144-facet integer crystals (radius 9),
+1+12 cuboctahedral topology, 24 contact junctions, 120 free memory facets,
+1 takt = 1 light-speed step, Observer View rendered every 137 takts.
 """
 
 from __future__ import annotations
@@ -32,14 +33,17 @@ import pathlib
 from typing import List, Optional, Tuple
 
 PTRC_GFX_FACETS = 144
+PTRC_GFX_FREE_FACETS = 120
 PTRC_GFX_JUNCTIONS = 24
+PTRC_GFX_NEIGHBORS = 12
+PTRC_GFX_CRYSTAL_RAD = 9
+PTRC_GFX_CRYSTAL_STEP = 18
 PTRC_GFX_PRIME_RINGS = 16
 PTRC_GFX_PRIMORIAL_210 = 210
 PTRC_GFX_TAKT_137 = 137
 PTRC_GFX_LIMIT_156 = 156
 PTRC_GFX_VOXEL_SHIFT = 16
-PTRC_GFX_VOXEL_STEP = 65536
-PTRC_GFX_MAX_STEPS = 28
+PTRC_GFX_MAX_STEPS = 44
 
 PTRC_GFX_OK = 1
 PTRC_GFX_ERR = -1
@@ -47,13 +51,28 @@ PTRC_GFX_ERR = -1
 U64_MASK = 0xFFFFFFFFFFFFFFFF
 U32_MASK = 0xFFFFFFFF
 
-# 16 Coprime Non-Mersenne Prime Rings (gcd(p, 210) == 1)
 PTRC_GFX_RINGS: Tuple[int, ...] = (
     11, 13, 17, 19, 23, 29, 37, 41,
     43, 47, 53, 59, 61, 67, 71, 73,
 )
 
-# 24-Clock Discrete Quadrance Orbit Table (u^2 + v^2 = 1000^2, zero trig)
+PTRC_NEIGHBOR_DX: Tuple[int, ...] = (18, 18, -18, -18, 18, 18, -18, -18, 0, 0, 0, 0)
+PTRC_NEIGHBOR_DY: Tuple[int, ...] = (18, -18, 18, -18, 0, 0, 0, 0, 18, 18, -18, -18)
+PTRC_NEIGHBOR_DZ: Tuple[int, ...] = (0, 0, 0, 0, 18, -18, 18, -18, 18, -18, 18, -18)
+
+PTRC_JUNCTION_X: Tuple[int, ...] = (
+     9,  9,  9,  9, -9, -9, -9, -9,  9,  9,  9,  9,
+    -9, -9, -9, -9,  1, -1,  1, -1,  1, -1,  1, -1,
+)
+PTRC_JUNCTION_Y: Tuple[int, ...] = (
+     9,  9, -9, -9,  9,  9, -9, -9,  1, -1,  1, -1,
+     1, -1,  1, -1,  9,  9,  9,  9, -9, -9, -9, -9,
+)
+PTRC_JUNCTION_Z: Tuple[int, ...] = (
+     1, -1,  1, -1,  1, -1,  1, -1,  9,  9, -9, -9,
+     9,  9, -9, -9,  9,  9, -9, -9,  9,  9, -9, -9,
+)
+
 PTRC_CLOCK24_U: Tuple[int, ...] = (
     1000,  966,  866,  707,  500,  259,
       -1, -259, -500, -707, -866, -966,
@@ -70,7 +89,6 @@ PTRC_CLOCK24_V: Tuple[int, ...] = (
 
 
 def ptrc_gfx_z_no_zero(v: int) -> int:
-    """Maps signed 32-bit integer into Z \\ {0}: 0 resolves directly to -1."""
     v32 = v & U32_MASK
     if v32 & 0x80000000:
         v32 -= 0x100000000
@@ -78,65 +96,87 @@ def ptrc_gfx_z_no_zero(v: int) -> int:
 
 
 def ptrc_gfx_u64_no_zero(v: int) -> int:
-    """Maps unsigned 64-bit integer away from zero: 0 resolves to 1."""
     v64 = v & U64_MASK
     return 1 if v64 == 0 else v64
 
 
 def _c_shr_i32(val: int, shift: int) -> int:
-    """Arithmetic right shift matching signed 32-bit C11 semantics."""
     v32 = val & U32_MASK
     if v32 & 0x80000000:
         v32 -= 0x100000000
     return v32 >> shift
 
 
+def _crystal_facet_metric(lx: int, ly: int, lz: int) -> int:
+    ax = abs(lx)
+    ay = abs(ly)
+    az = abs(lz)
+    max_axis = max(ax, ay, az)
+    oct_val = (ax + ay + az) >> 1
+    return max_axis if max_axis > oct_val else oct_val
+
+
 class PtrcGfxContext:
-    """Pure Python reference matching ptrc_gfx_ctx_t in embedded/graphics/ptrc_light_universe.c."""
+    """Bit-exact Python reference for ptrc_gfx_ctx_t in embedded/graphics/ptrc_light_universe.c."""
 
     def __init__(self, seed: int = 137210144) -> None:
         state = ptrc_gfx_u64_no_zero((seed ^ 614889782588491410) & U64_MASK)
         self.prime_rings: List[int] = list(PTRC_GFX_RINGS)
         self.sponge: List[int] = list((1,)) * PTRC_GFX_FACETS
+        self.crystal_state: List[int] = list((1,)) * PTRC_GFX_FACETS
 
         for f in range(PTRC_GFX_FACETS):
             state = (((state * 137 + (f + 1) * 211) & U64_MASK) ^ (state >> 13)) & U64_MASK
             state = ptrc_gfx_u64_no_zero(state)
             raw = int(state % PTRC_GFX_PRIMORIAL_210) - 105
             self.sponge.__setitem__(f, ptrc_gfx_z_no_zero(raw))
+            st8 = int(state & 0xFF)
+            self.crystal_state.__setitem__(f, 0xFF if st8 == 0 else st8)
 
         self.takt_counter: int = 1
         self.clock_phase_24: int = 1
         u0 = PTRC_CLOCK24_U.__getitem__(0)
         v0 = PTRC_CLOCK24_V.__getitem__(0)
-        self.cam_x: int = ptrc_gfx_z_no_zero(u0 * 920)
-        self.cam_y: int = ptrc_gfx_z_no_zero(110000)
-        self.cam_z: int = ptrc_gfx_z_no_zero(v0 * 920)
+        self.cam_x: int = ptrc_gfx_z_no_zero(u0 * 2750)
+        self.cam_y: int = ptrc_gfx_z_no_zero(780000)
+        self.cam_z: int = ptrc_gfx_z_no_zero(v0 * 2750)
         self.active_hits: int = 1
         self.mirror_pulses: int = 1
 
     def step_takt(self) -> int:
         phase_idx = (self.clock_phase_24 - 1) % PTRC_GFX_JUNCTIONS
-        u = PTRC_CLOCK24_U.__getitem__(phase_idx)
-        v = PTRC_CLOCK24_V.__getitem__(phase_idx)
+        p_ring = self.prime_rings.__getitem__(phase_idx & 15)
 
-        self.cam_x = ptrc_gfx_z_no_zero(u * 920)
-        self.cam_y = ptrc_gfx_z_no_zero(110000 + v * 16)
-        self.cam_z = ptrc_gfx_z_no_zero(v * 920)
+        for j in range(PTRC_GFX_JUNCTIONS):
+            j_facet = PTRC_GFX_FREE_FACETS + j
+            mem_facet = (j * 5 + phase_idx) % PTRC_GFX_FREE_FACETS
+            coupled = self.sponge.__getitem__(j_facet) ^ self.sponge.__getitem__(mem_facet)
+            self.sponge.__setitem__(j_facet, ptrc_gfx_z_no_zero(coupled + p_ring))
+
+            s_prev = self.crystal_state.__getitem__(mem_facet)
+            s_next = ((s_prev ^ (coupled & 0xFF)) + p_ring) & 0xFF
+            self.crystal_state.__setitem__(mem_facet, 0xFF if s_next == 0 else s_next)
 
         if (self.takt_counter % PTRC_GFX_TAKT_137) == 0:
             for f in range(PTRC_GFX_FACETS):
                 self.sponge.__setitem__(f, ptrc_gfx_z_no_zero(~self.sponge.__getitem__(f)))
+                inv = (~self.crystal_state.__getitem__(f)) & 0xFF
+                self.crystal_state.__setitem__(f, 0xFF if inv == 0 else inv)
             self.mirror_pulses += 1
-        else:
-            f0 = (self.takt_counter * 37) % PTRC_GFX_FACETS
-            f1 = (f0 + 73) % PTRC_GFX_FACETS
-            p_val = self.prime_rings.__getitem__(phase_idx & 15)
-            self.sponge.__setitem__(f0, ptrc_gfx_z_no_zero(self.sponge.__getitem__(f0) + p_val))
-            self.sponge.__setitem__(f1, ptrc_gfx_z_no_zero(self.sponge.__getitem__(f1) ^ p_val))
+
+        u = PTRC_CLOCK24_U.__getitem__(phase_idx)
+        v = PTRC_CLOCK24_V.__getitem__(phase_idx)
+        self.cam_x = ptrc_gfx_z_no_zero(u * 2750)
+        self.cam_y = ptrc_gfx_z_no_zero(780000 + v * 120)
+        self.cam_z = ptrc_gfx_z_no_zero(v * 2750)
 
         self.takt_counter += 1
         self.clock_phase_24 = (self.clock_phase_24 % PTRC_GFX_JUNCTIONS) + 1
+        return PTRC_GFX_OK
+
+    def advance_observer_epoch(self) -> int:
+        for _ in range(PTRC_GFX_TAKT_137):
+            self.step_takt()
         return PTRC_GFX_OK
 
     def render_frame_rgb24(self, width: int, height: int) -> bytes:
@@ -155,6 +195,7 @@ class PtrcGfxContext:
 
         out = bytearray(width * height * 3)
         sponge = self.sponge
+        cstate = self.crystal_state
         cam_x = self.cam_x
         cam_y = self.cam_y
         cam_z = self.cam_z
@@ -166,19 +207,19 @@ class PtrcGfxContext:
             for px in range(width):
                 dx = ptrc_gfx_z_no_zero((px - half_w) * scale_x)
 
-                dir_x = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_u + dx * rot_v, 10) * 64)
-                dir_y = ptrc_gfx_z_no_zero((-115 - dy) * 64)
-                dir_z = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_v - dx * rot_u, 10) * 64)
+                dir_x = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_u + dx * rot_v, 10) * 84)
+                dir_y = ptrc_gfx_z_no_zero((-280 - dy) * 84)
+                dir_z = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_v - dx * rot_u, 10) * 84)
 
                 ray_x = cam_x
                 ray_y = cam_y
                 ray_z = cam_z
 
-                out_r = 1
-                out_g = 1
-                out_b = 3
+                out_r = 2
+                out_g = 2
+                out_b = 5
 
-                for step in range(1, PTRC_GFX_MAX_STEPS + 1):
+                for _ in range(1, PTRC_GFX_MAX_STEPS + 1):
                     ray_x += dir_x
                     ray_y += dir_y
                     ray_z += dir_z
@@ -187,36 +228,72 @@ class PtrcGfxContext:
                     vy = ptrc_gfx_z_no_zero(_c_shr_i32(ray_y, PTRC_GFX_VOXEL_SHIFT))
                     vz = ptrc_gfx_z_no_zero(_c_shr_i32(ray_z, PTRC_GFX_VOXEL_SHIFT))
 
-                    manhattan = abs(vx) + abs(vy) + abs(vz)
-                    facet_idx = abs(vx * 3 + vy * 5 + vz * 7) % PTRC_GFX_FACETS
-                    facet_val = sponge.__getitem__(facet_idx)
+                    # A. 24 Contact Junctions (Active Information Bridges)
+                    hit_junction = False
+                    for j in range(PTRC_GFX_JUNCTIONS):
+                        jdx = abs(vx - PTRC_JUNCTION_X.__getitem__(j))
+                        jdy = abs(vy - PTRC_JUNCTION_Y.__getitem__(j))
+                        jdz = abs(vz - PTRC_JUNCTION_Z.__getitem__(j))
+                        if (jdx + jdy + jdz) <= 2:
+                            jf = PTRC_GFX_FREE_FACETS + j
+                            jstate = cstate.__getitem__(jf)
+                            out_r = 252
+                            out_g = (180 + (jstate & 0x3F)) & 0xFF
+                            out_b = (64 + (jstate & 0x3F)) & 0xFF
+                            hit_junction = True
+                            hit_counter += 1
+                            break
+                    if hit_junction:
+                        break
 
-                    if manhattan <= 16 and (vy & 1) != 0 and ((abs(vx + vz + (facet_val & 7)) % 3) != 0):
-                        shade = 250 - (step * 5)
-                        if shade < 64:
-                            shade = 64
-                        out_r = shade
-                        out_g = (shade * 195) >> 8
-                        out_b = (shade * 52) >> 8
-                        if out_b == 0:
-                            out_b = 1
+                    # B. Central 144-Facet Crystal (Radius = 9 units to each facet center)
+                    m_center = _crystal_facet_metric(vx, vy, vz)
+                    if m_center <= PTRC_GFX_CRYSTAL_RAD:
+                        facet_id = abs(vx * 7 + vy * 11 + vz * 13) % PTRC_GFX_FREE_FACETS
+                        elem_state = cstate.__getitem__(facet_id)
+                        sp_val = sponge.__getitem__(facet_id)
+                        edge = (abs(vx + vy) + abs(vy + vz)) % 3
+                        base_lum = 250 if edge == 0 else (155 + (elem_state & 0x3F))
+                        out_r = base_lum & 0xFF
+                        out_g = ((base_lum * 198) >> 8) & 0xFF
+                        out_b = (((base_lum * 64) >> 8) + (sp_val & 0x1F)) & 0xFF
                         hit_counter += 1
                         break
 
-                    sig = abs(vx * 137 + vy * 211 + vz * 157 + facet_val)
-                    if (sig % 11) == 1 and (sig % 23) == 1:
-                        ring_sel = sig % PTRC_GFX_PRIME_RINGS
-                        lum = 240 - (step * 4)
-                        if lum < 72:
-                            lum = 72
-                        if (ring_sel & 1) == 0:
-                            out_r = 24
-                            out_g = (lum * 220) >> 8
-                            out_b = lum
-                        else:
-                            out_r = (lum * 210) >> 8
-                            out_g = 42
-                            out_b = lum
+                    # C. 12 Surrounding 144-Facet Crystals enclosing the Central Crystal
+                    hit_shell = False
+                    for n in range(PTRC_GFX_NEIGHBORS):
+                        lx = vx - PTRC_NEIGHBOR_DX.__getitem__(n)
+                        ly = vy - PTRC_NEIGHBOR_DY.__getitem__(n)
+                        lz = vz - PTRC_NEIGHBOR_DZ.__getitem__(n)
+                        mn = _crystal_facet_metric(lx, ly, lz)
+                        if mn == PTRC_GFX_CRYSTAL_RAD or mn == (PTRC_GFX_CRYSTAL_RAD - 1):
+                            if ((abs(lx) + abs(ly) + abs(lz)) & 1) != 0:
+                                facet_id = (n * 10 + abs(lx + ly * 3 + lz * 5)) % PTRC_GFX_FREE_FACETS
+                                fstate = cstate.__getitem__(facet_id)
+                                lum = 150 + (fstate & 0x3F)
+                                if (n & 1) == 0:
+                                    out_r = 32
+                                    out_g = ((lum * 215) >> 8) & 0xFF
+                                    out_b = lum & 0xFF
+                                else:
+                                    out_r = ((lum * 195) >> 8) & 0xFF
+                                    out_g = 68
+                                    out_b = lum & 0xFF
+                                hit_shell = True
+                                hit_counter += 1
+                                break
+                    if hit_shell:
+                        break
+
+                    # D. Far-Field 120-Facet Isotropic Lattice Background Nodes
+                    sig = abs(vx * 137 + vy * 211 + vz * 157)
+                    if (sig % 17) == 1 and (sig % 29) == 1:
+                        fid = sig % PTRC_GFX_FREE_FACETS
+                        st = cstate.__getitem__(fid)
+                        out_r = (40 + (st & 0x7F)) & 0xFF
+                        out_g = (90 + ((st >> 1) & 0x7F)) & 0xFF
+                        out_b = (160 + (st & 0x5F)) & 0xFF
                         hit_counter += 1
                         break
 
@@ -230,7 +307,6 @@ class PtrcGfxContext:
 
 
 def write_ppm_rgb24(filepath: pathlib.Path, width: int, height: int, rgb_bytes: bytes) -> None:
-    """Writes a pure binary P6 PPM image file without external dependencies."""
     header = f"P6\n{width} {height}\n255\n".encode("ascii")
     filepath.write_bytes(header + rgb_bytes)
 
@@ -238,6 +314,7 @@ def write_ppm_rgb24(filepath: pathlib.Path, width: int, height: int, rgb_bytes: 
 class _CGfxCtx(ctypes.Structure):
     _fields_ = [
         ("sponge", ctypes.c_int32 * PTRC_GFX_FACETS),
+        ("crystal_state", ctypes.c_uint8 * PTRC_GFX_FACETS),
         ("prime_rings", ctypes.c_uint32 * PTRC_GFX_PRIME_RINGS),
         ("takt_counter", ctypes.c_uint64),
         ("clock_phase_24", ctypes.c_uint32),
@@ -265,6 +342,9 @@ def load_c_gfx_library(search_root: Optional[pathlib.Path] = None) -> Optional[c
 
             lib.ptrc_gfx_step_takt.argtypes = [ctypes.POINTER(_CGfxCtx)]
             lib.ptrc_gfx_step_takt.restype = ctypes.c_int
+
+            lib.ptrc_gfx_advance_observer_epoch.argtypes = [ctypes.POINTER(_CGfxCtx)]
+            lib.ptrc_gfx_advance_observer_epoch.restype = ctypes.c_int
 
             lib.ptrc_gfx_render_frame_rgb24.argtypes = [
                 ctypes.POINTER(_CGfxCtx),
