@@ -171,6 +171,7 @@ static uint8_t ptrc_next_keystream_byte(ptrc_crystal_ctx_t *ctx) {
     uint32_t r1 = (uint32_t)((uint32_t)(*(ctx->sponge + f1)) ^ (uint32_t)(macro_out >> 16U)) % m1;
     uint32_t r2 = (uint32_t)((uint32_t)(*(ctx->sponge + f2)) ^ (uint32_t)(macro_out >> 32U)) % m2;
 
+
     int32_t combined = ptrc_crypt_z_no_zero((int32_t)((r0 ^ (r1 << 5U) ^ (r2 << 11U) ^ ctx->session_salt) & 0x7FFFFFFFU));
 
     if ((ctx->takt_counter % PTRC_TAKT_137) == 0ULL) {
