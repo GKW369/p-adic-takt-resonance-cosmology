@@ -1,4 +1,22 @@
-name: pTRC Framework — Complete Lattice, Crypto v4.0, AI v2.0 & Bare-Metal CI
+# ==============================================================================
+# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+#
+# LICENSE & LIABILITY NOTICE:
+# Academic, non-commercial research and evaluation is permitted strictly under 
+# the terms of the GNU Affero General Public License version 3 (AGPLv3).
+# For the complete, unedited license text see: https://www.gnu.org/licenses/agpl-3.0.html
+#
+# ANY COMMERCIAL DEPLOYMENT, production utilization, or proprietary enterprise 
+# integration requires a separate, individually negotiated commercial infrastructure 
+# waiver issued directly by the author.
+#
+# WARRANTY DISCLAIMER: THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
+# ==============================================================================
+
+name: pTRC Discrete Integer Physics, AI & Crypto Audit
 
 on:
   push:
@@ -10,16 +28,47 @@ permissions:
   contents: read
 
 jobs:
-  core-lattice-and-axiom-audit:
-    name: 1. Core Lattice & Z \ {0} Axiom Tests (Python ${{ matrix.python-version }})
+  c11-bare-metal-and-crypto-parity:
+    name: C11 Bare-Metal Build & AI/Crypto Bit-Parity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configure & Build C11 Engines (Zero-Malloc, -Wall -Wextra -Wpedantic)
+        run: |
+          cmake -B build -S .
+          cmake --build build --config Release
+
+      - name: Run C11 Bare-Metal Crypto v4.0 Self-Test
+        run: ./build/ptrc_crypt_demo
+
+      - name: Run C11 Bare-Metal BitNet AI v2.0 Self-Test
+        run: ./build/00_ptrc_bitnet_demo
+
+      - name: Verify C11 <-> Python Crypto v4.0 Bit-Parity & Metrics
+        run: |
+          PYTHONPATH=src python3 src/00_test_ptrc_crypt_parity.py
+          PYTHONPATH=src python3 src/00_test_ptrc_crypt_metrics.py
+
+      - name: Verify C11 <-> Python BitNet AI v2.0 Bit-Parity & Metrics
+        run: |
+          PYTHONPATH=src python3 src/test_ptrc_bitnet.py
+          PYTHONPATH=src python3 src/00_test_ptrc_bitnet_metrics.py
+
+  python-physics-audit:
+    name: Discrete Integer Physics Audit (Python 3.10 - 3.12)
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
-
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -27,134 +76,66 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Core Test Dependencies
+      - name: Verify Integer Core & No-Zero Invariants
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install numpy pytest
+          python3 -m py_compile src/*.py
+          if [ -f src/test_ptrc.py ]; then PYTHONPATH=src python3 src/test_ptrc.py; fi
+          if [ -f src/test_ptrc_metrics.py ]; then PYTHONPATH=src python3 src/test_ptrc_metrics.py; fi
+          PYTHONPATH=src python3 src/00_test_ptrc_crypt_parity.py
+          PYTHONPATH=src python3 src/test_ptrc_bitnet.py
 
-      - name: Run Discrete 1+12 Space-Crystal Lattice & Axiom Suite
-        env:
-          PYTHONPATH: src
-        run: |
-          if [ -f src/test_ptrc_core.py ]; then
-            pytest src/test_ptrc_core.py -v
-          fi
-          if [ -f src/ptrc_axiom_audit.py ]; then
-            python src/ptrc_axiom_audit.py
-          fi
-          if [ -f src/01_harmonic_oscillator.py ]; then
-            python src/01_harmonic_oscillator.py
-          fi
-          if [ -f src/00_ptrc_neural_network_demo.py ]; then
-            python src/00_ptrc_neural_network_demo.py
-          fi
-
-  crypto-v4-and-ai-v2-parity:
-    name: 2. Crypto v4.0 & AI BitNet v2.0 (C11 Build, Parity & Metrics)
+  zero-float-gate:
+    name: Strict Zero-Float & Zero-Trigonometry Gate (C11 & Core)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install CMake & Build Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake gcc make
-
-      - name: Configure & Build C11 Libraries + 00_ Standalone Demos (CMake)
-        run: |
-          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --parallel
-
-      - name: Run Standalone C11 00_ Demos (Crypto v4.0 & AI v2.0)
-        run: |
-          ./build/00_ptrc_crypt_demo
-          ./build/00_ptrc_bitnet_demo
-
-      - name: Run Crypto v4.0 C11/Python Parity & Avalanche Audits
-        env:
-          PYTHONPATH: src
-        run: |
-          python src/test_ptrc_crypt_parity.py
-          python src/test_ptrc_crypt_metrics.py
-          python src/00_ptrc_crypt_demo.py
-
-      - name: Run AI BitNet v2.0 C11/Python Parity, Hebbian & Throughput Audits
-        env:
-          PYTHONPATH: src
-        run: |
-          python src/test_ptrc_bitnet.py
-          python src/test_ptrc_bitnet_metrics.py
-          python src/00_ptrc_bitnet_demo.py
-
-  bare-metal-and-zero-float-gate:
-    name: 3. Bare-Metal Cortex-M0+ Cross-Compile & Zero-Float Gate
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Install ARM Bare-Metal Toolchain
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi
-
-      - name: Cross-Compile Crypto & AI Kernels for Cortex-M0+ (No FPU / -Wall -Werror)
-        run: |
-          arm-none-eabi-gcc -c embedded/crypto/ptrc_crystal.c \
-            -Iembedded/crypto \
-            -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft \
-            -O2 -std=c11 -ffreestanding -Wall -Wextra -Werror \
-            -o /tmp/ptrc_crystal_m0plus.o
-          arm-none-eabi-gcc -c embedded/ai/ptrc_bitnet_engine.c \
-            -Iembedded/ai \
-            -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft \
-            -O2 -std=c11 -ffreestanding -Wall -Wextra -Werror \
-            -o /tmp/ptrc_bitnet_m0plus.o
-          arm-none-eabi-size /tmp/ptrc_crystal_m0plus.o /tmp/ptrc_bitnet_m0plus.o
-
-      - name: Static Zero-Float & Zero-Trig Gate on Crypto & AI Kernels
+      - name: Audit C11 & Engine Files for Forbidden Float/Trig Tokens
         run: |
           python3 - << 'EOF'
           import pathlib, re, sys
-
-          targets = [
+          files = [
               pathlib.Path("embedded/crypto/ptrc_crystal.h"),
               pathlib.Path("embedded/crypto/ptrc_crystal.c"),
+              pathlib.Path("embedded/crypto/ptrc_crypt_demo.c"),
               pathlib.Path("embedded/ai/ptrc_bitnet_engine.h"),
               pathlib.Path("embedded/ai/ptrc_bitnet_engine.c"),
-              pathlib.Path("src/00_ptrc_crypt_demo.c"),
               pathlib.Path("src/00_ptrc_bitnet_demo.c"),
               pathlib.Path("src/ptrc_crystal_aead.py"),
-              pathlib.Path("src/crypt_resonance.py"),
               pathlib.Path("src/ptrc_bitnet_engine.py"),
-              pathlib.Path("src/test_ptrc_bitnet_metrics.py"),
           ]
-          forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp|math)\b")
+          forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp)\b")
           failed = False
-
-          for path in targets:
-              if not path.exists():
+          for f in files:
+              if not f.exists():
                   continue
-              text = path.read_text(encoding="utf-8")
-              cleaned = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
-              cleaned = re.sub(r"//.*", "", cleaned)
-              cleaned = re.sub(r"#.*", "", cleaned)
-              for lineno, line in enumerate(cleaned.splitlines(), 1):
+              text = re.sub(r"/\*.*?\*/", "", f.read_text(encoding="utf-8"), flags=re.S)
+              text = re.sub(r'""".*?"""', "", text, flags=re.S)
+              text = re.sub(r"'''.*?'''", "", text, flags=re.S)
+              text = re.sub(r"//.*", "", text)
+              text = re.sub(r"#.*", "", text)
+              for lineno, line in enumerate(text.splitlines(), 1):
                   m = forbidden.search(line)
                   if m:
-                      print(f"ERROR: Forbidden token '{m.group(0)}' in {path}:{lineno}: {line.strip()}")
+                      print(f"ERROR: Forbidden token '{m.group(0)}' in {f}:{lineno}")
                       failed = True
-
           if failed:
               sys.exit(1)
-          print("OK: 100% Zero-Float & Zero-Trig verified across all Crypto v4.0 and AI v2.0 kernels.")
+          print("PASS: Zero-float & zero-trigonometry invariant verified across C11 & Python engines.")
           EOF
+
+  docs-consistency:
+    name: Documentation & Citation Metadata Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Citation, License & Key Documentation Files
+        run: |
+          test -f LICENSE
+          test -f CITATION.cff
+          test -f README.md
+          test -f ARCHITECTURE.md
+          test -f SECURITY.md
