@@ -29,7 +29,6 @@ import re
 import sys
 
 from ptrc_bitnet_engine import (
-    PTRC_AI_FACETS,
     PTRC_AI_TAKT_137,
     PtrcBitNetContext,
     PtrcBitNetLayer,
@@ -39,12 +38,23 @@ from ptrc_bitnet_engine import (
 )
 
 
+def _build_4_16_2_weights() -> tuple[list[int], list[int]]:
+    hidden_weights: list[int] = []
+    for r in range(16):
+        for c in range(4):
+            bit = ((r ^ (r >> 1)) >> c) & 1
+            hidden_weights.append(1 if bit else -1)
+    out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
+    return hidden_weights, out_weights
+
+
 def test_z_no_zero_and_hebbian_convergence() -> None:
     ctx = PtrcBitNetContext(seed=137210144)
     assert all(v != 0 for v in ctx.sponge), "Zero found in initial 144-facet sponge!"
 
-    init_weights = [1, -1, 1, -1, -1, 1, -1, 1]
-    layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=init_weights, takt_threshold=0)
+    hidden_weights, out_weights = _build_4_16_2_weights()
+    hidden_layer = PtrcBitNetLayer(in_dim=4, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=0)
+    out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     patterns = [
         [-1, -1, -1, -1],
@@ -60,21 +70,23 @@ def test_z_no_zero_and_hebbian_convergence() -> None:
     ]
 
     converged_epoch = 0
-    for epoch in range(1, 16):
+    for epoch in range(1, 17):
         err = 0
         for pat, tgt in zip(patterns, targets):
-            err += layer.hebbian_step(ctx, pat, tgt, plasticity_gain=4)
+            hidden_act, _ = hidden_layer.forward(ctx, pat)
+            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=4)
         if err == 0:
             converged_epoch = epoch
             break
 
     assert converged_epoch > 0, "Hebbian integer plasticity failed to converge!"
     for pat, tgt in zip(patterns, targets):
-        out, _ = layer.forward(ctx, pat)
+        hidden_act, _ = hidden_layer.forward(ctx, pat)
+        out, _ = out_layer.forward(ctx, hidden_act)
         assert out == tgt, f"Prediction mismatch for {pat}: {out} != {tgt}"
         assert all(v in (-1, 1) for v in out)
     assert all(v != 0 for v in ctx.sponge), "Zero entered sponge after Hebbian steps!"
-    print(f"[PASS] 1. Z \\ {{0}} Invariant & Integer Hebbian Convergence (Epoch {converged_epoch})")
+    print(f"[PASS] 1. Z \\ {{0}} Invariant & 4->16->2 Integer Hebbian Convergence (Epoch {converged_epoch})")
 
 
 def test_137_takt_crossed_mirror_pulse() -> None:
@@ -93,7 +105,7 @@ def test_137_takt_crossed_mirror_pulse() -> None:
 def test_c11_python_bit_parity() -> None:
     lib = load_c_bitnet_library()
     if lib is None:
-        print("[SKIP] 3. C11 Shared Library not built yet (build via CMake to run C11/Python parity)")
+        print("[SKIP] 3. C11 Shared Library not built yet (build via CMake/gcc to run C11/Python parity)")
         return
 
     seed = 987654321
