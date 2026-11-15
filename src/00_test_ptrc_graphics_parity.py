@@ -111,14 +111,12 @@ def test_c_python_graphics_parity() -> None:
     assert all(b == 0xFF for b in raw_bytes), "SRAM wipe did not restore all bytes to -1 (0xFF)!"
     print("[PASS] 2. 100% C11 / Python Pixel-for-Pixel Bit-Parity & -1 SRAM Wipe")
 
-
 def test_zero_float_compliance() -> None:
     root = pathlib.Path(__file__).resolve().parent.parent
     files = [
         root / "embedded" / "graphics" / "ptrc_light_universe.h",
         root / "embedded" / "graphics" / "ptrc_light_universe.c",
         root / "src" / "ptrc_light_universe.py",
-        root / "src" / "00_test_ptrc_graphics_parity.py",
         root / "src" / "00_ptrc_graphics_demo.py",
     ]
     forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp|math)\b")
