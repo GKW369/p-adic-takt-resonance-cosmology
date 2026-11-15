@@ -1,188 +1,117 @@
-# ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & AI Inference Engine
-# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program (see the LICENSE file in the root directory).
-# If not, see <https://gnu.org>.
-# ==============================================================================
+/* ==============================================================================
+ * pTRC Framework - Discrete 1-Bit Integer Physics & AI Inference Engine
+ * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program (see the LICENSE file in the root directory).
+ * If not, see <https://gnu.org>.
+ * ============================================================================== */
 
-"""
-Bit-Parity, Z \\ {0} Invariant, 137-Takt Sync & Hebbian Plasticity Audit for AI v2.0.
-"""
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include "ptrc_bitnet_engine.h"
 
-from __future__ import annotations
+#define DEMO_SAMPLES    4U
+#define DEMO_IN_DIM     5U
+#define DEMO_HIDDEN_DIM 4U
+#define DEMO_OUT_DIM    2U
 
-import ctypes
-import pathlib
-import re
-import sys
+int main(void) {
+    ptrc_bitnet_ctx_t ctx;
+    ptrc_bitnet_ctx_init(&ctx, 137210144ULL);
 
-from ptrc_bitnet_engine import (
-    PTRC_AI_TAKT_137,
-    PtrcBitNetContext,
-    PtrcBitNetLayer,
-    _CLayer,
-    _CSpongeCtx,
-    load_c_bitnet_library,
-)
+    /* 4 pattern bits + 1 Z \ {0} phase anchor (+1) */
+    const int8_t patterns[DEMO_SAMPLES * DEMO_IN_DIM] = {
+        -1, -1, -1, -1,  1,
+        -1,  1, -1,  1,  1,
+         1, -1,  1, -1,  1,
+         1,  1,  1,  1,  1
+    };
+    const int8_t targets[DEMO_SAMPLES * DEMO_OUT_DIM] = {
+        -1,  1,
+         1, -1,
+         1, -1,
+        -1,  1
+    };
 
+    /* 4 resonant crystal detectors tuned to the 4 input states (dot = +5 vs <= +1) */
+    int8_t hidden_weights[DEMO_HIDDEN_DIM * DEMO_IN_DIM];
+    for (uint32_t i = 0U; i < DEMO_HIDDEN_DIM * DEMO_IN_DIM; i++) {
+        *(hidden_weights + i) = *(patterns + i);
+    }
 
-def _get_crystal_xor_dataset() -> tuple[list[list[int]], list[list[int]], list[int], list[int]]:
-    patterns = [
-        list((-1, -1, -1, -1, 1)),
-        list((-1, 1, -1, 1, 1)),
-        list((1, -1, 1, -1, 1)),
-        list((1, 1, 1, 1, 1)),
-    ]
-    targets = [
-        list((-1, 1)),
-        list((1, -1)),
-        list((1, -1)),
-        list((-1, 1)),
-    ]
-    hidden_weights = [val for row in patterns for val in row]
-    out_weights = list((1, -1, 1, -1, -1, 1, -1, 1))
-    return patterns, targets, hidden_weights, out_weights
+    int8_t out_weights[DEMO_OUT_DIM * DEMO_HIDDEN_DIM] = {
+         1, -1,  1, -1,
+        -1,  1, -1,  1
+    };
 
+    ptrc_bitnet_layer_t hidden_layer;
+    ptrc_bitnet_layer_t out_layer;
 
-def test_z_no_zero_and_hebbian_convergence() -> None:
-    ctx = PtrcBitNetContext(seed=137210144)
-    assert all(v != 0 for v in ctx.sponge), "Zero found in initial 144-facet sponge!"
+    /* Threshold 4 isolates exact crystal resonance (dot = +5 >= 4 -> +1; mismatch <= +1 < 4 -> -1) */
+    if (ptrc_bitnet_layer_init(&hidden_layer, DEMO_IN_DIM, DEMO_HIDDEN_DIM, hidden_weights, 4) != 0 ||
+        ptrc_bitnet_layer_init(&out_layer, DEMO_HIDDEN_DIM, DEMO_OUT_DIM, out_weights, 0) != 0) {
+        printf("ERROR: Layer initialization failed.\n");
+        return 1;
+    }
 
-    patterns, targets, hidden_weights, out_weights = _get_crystal_xor_dataset()
-    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=4)
-    out_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
+    printf("===============================================================================\n");
+    printf("  pTRC BITNET AI ENGINE v2.0 — BARE-METAL C11 1-BIT CRYSTALLINE INFERENCE\n");
+    printf("  Topology     : (4+1) -> 4 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Zero float)\n");
+    printf("  Context RAM  : %zu bytes static stack | 144 Facets | 137-Takt Sync\n", sizeof(ctx));
+    printf("===============================================================================\n");
 
-    converged_epoch = 0
-    for epoch in range(1, 17):
-        err = 0
-        for pat, tgt in zip(patterns, targets):
-            hidden_act, _ = hidden_layer.forward(ctx, pat)
-            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16)
-        if err == 0:
-            converged_epoch = epoch
-            break
+    for (uint32_t epoch = 1U; epoch <= 16U; epoch++) {
+        int32_t total_err = 0;
+        for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
+            int8_t hidden_act[DEMO_HIDDEN_DIM];
+            const int8_t *pat_ptr = patterns + (p * DEMO_IN_DIM);
+            const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
 
-    assert converged_epoch > 0, "Hebbian integer plasticity failed to converge!"
-    for pat, tgt in zip(patterns, targets):
-        hidden_act, _ = hidden_layer.forward(ctx, pat)
-        out, _ = out_layer.forward(ctx, hidden_act)
-        assert out == tgt, f"Prediction mismatch for {pat}: {out} != {tgt}"
-        assert all(v in (-1, 1) for v in out)
-    assert all(v != 0 for v in ctx.sponge), "Zero entered sponge after Hebbian steps!"
-    print(f"[PASS] 1. Z \\ {{0}} Invariant & (4+1)->4->2 Integer Hebbian Convergence (Epoch {converged_epoch})")
+            ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
+            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, tgt_ptr, 16);
+        }
+        if (total_err == 0) {
+            printf(" + Hebbian Convergence achieved at Epoch %u (0 errors across 144 facets)\n", epoch);
+            break;
+        }
+    }
 
+    int32_t passed = 0;
+    for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
+        int8_t  hidden_act[DEMO_HIDDEN_DIM];
+        int8_t  out[DEMO_OUT_DIM]    = { -1, -1 };
+        int32_t scores[DEMO_OUT_DIM] = {  0,  0 };
 
-def test_137_takt_crossed_mirror_pulse() -> None:
-    ctx = PtrcBitNetContext(seed=210144137)
-    layer = PtrcBitNetLayer(in_dim=4, out_dim=1, weights_z_no_zero=list((1, 1, -1, -1)), takt_threshold=0)
-    inp = list((1, -1, 1, -1))
+        const int8_t *pat_ptr = patterns + (p * DEMO_IN_DIM);
+        const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
 
-    for _ in range(PTRC_AI_TAKT_137):
-        layer.forward(ctx, inp)
+        ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
+        ptrc_bitnet_forward(&ctx, &out_layer, hidden_act, out, scores);
 
-    assert ctx.takt_counter == PTRC_AI_TAKT_137 + 1
-    assert all(v != 0 for v in ctx.sponge), "137-takt ~x reflection produced zero!"
-    print("[PASS] 2. 137-Takt Fine-Structure Pulse & Crossed Mirror Reflection (~x)")
+        int ok = (*(out + 0) == *(tgt_ptr + 0) && *(out + 1) == *(tgt_ptr + 1)) ? 1 : 0;
+        passed += ok;
+        printf(" + Pattern (%+d,%+d,%+d,%+d) -> Out (%+d,%+d) | Expected (%+d,%+d) | %s\n",
+               *(pat_ptr + 0), *(pat_ptr + 1), *(pat_ptr + 2), *(pat_ptr + 3),
+               *(out + 0), *(out + 1),
+               *(tgt_ptr + 0), *(tgt_ptr + 1),
+               ok ? "PASS" : "FAIL");
+    }
 
-
-def test_c11_python_bit_parity() -> None:
-    lib = load_c_bitnet_library()
-    if lib is None:
-        print("[SKIP] 3. C11 Shared Library not built yet (build via CMake/gcc to run C11/Python parity)")
-        return
-
-    seed = 987654321
-    py_ctx = PtrcBitNetContext(seed=seed)
-    c_ctx = _CSpongeCtx()
-    lib.ptrc_bitnet_ctx_init(ctypes.byref(c_ctx), seed)
-
-    assert list(c_ctx.sponge) == py_ctx.sponge, "Initial 144-facet sponge mismatch between C11 and Python!"
-
-    weights = list((1, -1, 1, -1, -1, 1, -1, 1))
-    py_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=weights, takt_threshold=0)
-    c_layer = _CLayer()
-    c_weights = (ctypes.c_int8 * len(weights))(*weights)
-    rc = lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), 4, 2, c_weights, 0)
-    assert rc == 0
-
-    patterns = [
-        list((-1, -1, -1, -1)),
-        list((-1, 1, -1, 1)),
-        list((1, -1, 1, -1)),
-        list((1, 1, 1, 1)),
-    ]
-    targets = [
-        list((-1, 1)),
-        list((1, -1)),
-        list((1, -1)),
-        list((-1, 1)),
-    ]
-
-    for step in range(200):
-        pat = patterns[step % 4]
-        tgt = targets[step % 4]
-        c_in = (ctypes.c_int8 * 4)(*pat)
-        c_tgt = (ctypes.c_int8 * 2)(*tgt)
-
-        if step % 3 == 0:
-            py_err = py_layer.hebbian_step(py_ctx, pat, tgt, plasticity_gain=4)
-            c_err = lib.ptrc_bitnet_hebbian_step(ctypes.byref(c_ctx), ctypes.byref(c_layer), c_in, c_tgt, 4)
-            assert py_err == c_err, f"Hebbian error count mismatch at step {step}: {py_err} != {c_err}"
-        else:
-            py_out, py_scores = py_layer.forward(py_ctx, pat)
-            c_out = (ctypes.c_int8 * 2)()
-            c_scores = (ctypes.c_int32 * 2)()
-            rc = lib.ptrc_bitnet_forward(ctypes.byref(c_ctx), ctypes.byref(c_layer), c_in, c_out, c_scores)
-            assert rc == 0
-            assert list(c_out) == py_out, f"Output mismatch at step {step}"
-            assert list(c_scores) == py_scores, f"Score mismatch at step {step}"
-
-        assert list(c_ctx.sponge) == py_ctx.sponge, f"Sponge state diverged at step {step}!"
-
-    lib.ptrc_bitnet_wipe(ctypes.byref(c_ctx))
-    assert all(v == 0 for v in c_ctx.sponge), "Volatile SRAM wipe failed!"
-    print("[PASS] 3. 100% C11 / Python Bit-Parity over 200 Takts (incl. 137-Takt Sync & Wipe)")
-
-
-def test_zero_float_compliance() -> None:
-    root = pathlib.Path(__file__).resolve().parent.parent
-    files = [
-        root / "embedded" / "ai" / "ptrc_bitnet_engine.h",
-        root / "embedded" / "ai" / "ptrc_bitnet_engine.c",
-        root / "src" / "00_ptrc_bitnet_demo.c",
-        root / "src" / "ptrc_bitnet_engine.py",
-        root / "src" / "00_test_ptrc_bitnet_metrics.py",
-    ]
-    forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp|math)\b")
-    for fpath in files:
-        if not fpath.exists():
-            continue
-        raw = fpath.read_text(encoding="utf-8")
-        cleaned = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
-        cleaned = re.sub(r"//.*", "", cleaned)
-        cleaned = re.sub(r"#.*", "", cleaned)
-        for lineno, line in enumerate(cleaned.splitlines(), 1):
-            match = forbidden.search(line)
-            assert match is None, f"Forbidden float/trig token '{match.group(0)}' in {fpath}:{lineno}"
-    print("[PASS] 4. Static Zero-Float & Zero-Trig Compliance Verified")
-
-
-if __name__ == "__main__":
-    test_z_no_zero_and_hebbian_convergence()
-    test_137_takt_crossed_mirror_pulse()
-    test_c11_python_bit_parity()
-    test_zero_float_compliance()
-    print("ALL 4 AI BITNET v2.0 CHECKS PASSED.")
-    sys.exit(0)
+    ptrc_bitnet_wipe(&ctx);
+    printf("-------------------------------------------------------------------------------\n");
+    printf("  VERIFICATION RESULT: %d / 4 Patterns Verified | SRAM Context Scrubbed\n", passed);
+    printf("===============================================================================\n");
+    return (passed == 4) ? 0 : 1;
+}
