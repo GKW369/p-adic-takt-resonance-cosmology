@@ -21,13 +21,11 @@
 
 #include "ptrc_light_universe.h"
 
-/* 16 Coprime Non-Mersenne Prime Rings (gcd(p, 210) == 1) */
 static const uint32_t PTRC_GFX_RINGS[PTRC_GFX_PRIME_RINGS] = {
     11U, 13U, 17U, 19U, 23U, 29U, 37U, 41U,
     43U, 47U, 53U, 59U, 61U, 67U, 71U, 73U
 };
 
-/* 24-Clock Discrete Quadrance Orbit Table (u^2 + v^2 = 1000^2, zero trig) */
 static const int32_t PTRC_CLOCK24_U[PTRC_GFX_JUNCTIONS] = {
     1000,  966,  866,  707,  500,  259,
       -1, -259, -500, -707, -866, -966,
@@ -74,9 +72,9 @@ int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed) {
 
     ctx->takt_counter   = 1ULL;
     ctx->clock_phase_24 = 1U;
-    ctx->cam_x          = ptrc_gfx_z_no_zero((*(PTRC_CLOCK24_U + 0U)) * 1200);
-    ctx->cam_y          = ptrc_gfx_z_no_zero(180000);
-    ctx->cam_z          = ptrc_gfx_z_no_zero((*(PTRC_CLOCK24_V + 0U)) * 1200);
+    ctx->cam_x          = ptrc_gfx_z_no_zero((*(PTRC_CLOCK24_U + 0U)) * 920);
+    ctx->cam_y          = ptrc_gfx_z_no_zero(110000);
+    ctx->cam_z          = ptrc_gfx_z_no_zero((*(PTRC_CLOCK24_V + 0U)) * 920);
     ctx->active_hits    = 1U;
     ctx->mirror_pulses  = 1U;
 
@@ -92,12 +90,10 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
     int32_t u = *(PTRC_CLOCK24_U + phase_idx);
     int32_t v = *(PTRC_CLOCK24_V + phase_idx);
 
-    /* Orbit camera along 24-Clock discrete quadrance ring in Z \ {0} */
-    ctx->cam_x = ptrc_gfx_z_no_zero(u * 1200 + (int32_t)((ctx->takt_counter * 17ULL) & 0x3FFULL));
-    ctx->cam_y = ptrc_gfx_z_no_zero(180000 + v * 28);
-    ctx->cam_z = ptrc_gfx_z_no_zero(v * 1200 - (int32_t)((ctx->takt_counter * 13ULL) & 0x3FFULL));
+    ctx->cam_x = ptrc_gfx_z_no_zero(u * 920);
+    ctx->cam_y = ptrc_gfx_z_no_zero(110000 + v * 16);
+    ctx->cam_z = ptrc_gfx_z_no_zero(v * 920);
 
-    /* Advance 144-facet sponge & apply global 137-takt reflection pulse */
     if ((ctx->takt_counter % PTRC_GFX_TAKT_137) == 0ULL) {
         for (uint32_t f = 0U; f < PTRC_GFX_FACETS; f++) {
             *(ctx->sponge + f) = ptrc_gfx_z_no_zero(~(*(ctx->sponge + f)));
@@ -117,7 +113,6 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
 }
 
 /* File: embedded/graphics/ptrc_light_universe.c (Part 2 of 2) */
-/* File: embedded/graphics/ptrc_light_universe.c (Part 2 of 2) */
 
 int ptrc_gfx_render_frame_rgb24(
     ptrc_gfx_ctx_t *ctx,
@@ -136,7 +131,6 @@ int ptrc_gfx_render_frame_rgb24(
     int32_t rot_v = *(PTRC_CLOCK24_V + phase_idx);
     uint32_t hit_counter = 1U;
 
-    /* Scale screen coordinates to normalized focal plane (focal = 1024) */
     int32_t scale_x = (1024 / half_w) >= 1 ? (1024 / half_w) : 1;
     int32_t scale_y = (576 / half_h) >= 1 ? (576 / half_h) : 1;
 
@@ -147,9 +141,8 @@ int ptrc_gfx_render_frame_rgb24(
         for (uint32_t px = 0U; px < width; px++) {
             int32_t dx = ptrc_gfx_z_no_zero(((int32_t)px - half_w) * scale_x);
 
-            /* 24-Clock centered camera ray (forward = (-rot_u, -140, -rot_v), right = (rot_v, 0, -rot_u)) */
             int32_t dir_x = ptrc_gfx_z_no_zero(((-1024 * rot_u + dx * rot_v) >> 10) * 64);
-            int32_t dir_y = ptrc_gfx_z_no_zero((-140 - dy) * 64);
+            int32_t dir_y = ptrc_gfx_z_no_zero((-115 - dy) * 64);
             int32_t dir_z = ptrc_gfx_z_no_zero(((-1024 * rot_v - dx * rot_u) >> 10) * 64);
 
             int32_t ray_x = ctx->cam_x;
@@ -173,9 +166,9 @@ int ptrc_gfx_render_frame_rgb24(
                 uint32_t facet_idx = (uint32_t)((ptrc_gfx_abs32(vx * 3 + vy * 5 + vz * 7)) % PTRC_GFX_FACETS);
                 int32_t facet_val = *(ctx->sponge + facet_idx);
 
-                /* 1. Central Golden 1+12 Octahedral Crystal Pyramid (manhattan <= 14) */
-                if (manhattan <= 14 && (vy & 1) != 0 && ((ptrc_gfx_abs32(vx + vz + (facet_val & 7)) % 3U) != 0U)) {
-                    uint32_t shade = 248U - (step * 5U);
+                /* 1. Central Golden 1+12 Octahedral Crystal Pyramid (manhattan <= 16) */
+                if (manhattan <= 16 && (vy & 1) != 0 && ((ptrc_gfx_abs32(vx + vz + (facet_val & 7)) % 3U) != 0U)) {
+                    uint32_t shade = 250U - (step * 5U);
                     if (shade < 64U) {
                         shade = 64U;
                     }
@@ -191,7 +184,7 @@ int ptrc_gfx_render_frame_rgb24(
 
                 /* 2. Outer Cyan & Violet Coprime Prime-Ring Resonance Starfield */
                 uint32_t sig = (uint32_t)ptrc_gfx_abs32(vx * 137 + vy * 211 + vz * 157 + facet_val);
-                if ((sig % 11U) == 1U && (sig % 13U) == 1U && (sig % 17U) == 1U) {
+                if ((sig % 11U) == 1U && (sig % 23U) == 1U) {
                     uint32_t ring_sel = sig % PTRC_GFX_PRIME_RINGS;
                     uint32_t lum = 240U - (step * 4U);
                     if (lum < 72U) {
@@ -231,4 +224,3 @@ void ptrc_gfx_wipe(ptrc_gfx_ctx_t *ctx) {
         *(p + i) = 0xFFU;
     }
 }
-
