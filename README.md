@@ -117,8 +117,8 @@ The telemetry and execution profile can be observed directly via Python or raw c
 ```bash
 # Python Interface Verification & Production Audits (v4.0 512-Bit Primorial AEAD)
 PYTHONPATH=src python3 src/00_ptrc_crypt_demo.py
-PYTHONPATH=src python3 src/test_ptrc_crypt_parity.py
-PYTHONPATH=src python3 src/test_ptrc_crypt_metrics.py
+PYTHONPATH=src python3 src/ßß_test_ptrc_crypt_parity.py
+PYTHONPATH=src python3 src/00_test_ptrc_crypt_metrics.py
 
 # CMake Build & Standalone Bare-Metal C11 Verification
 cmake -B build -S . && cmake --build build && ./build/00_ptrc_crypt_demo
