@@ -63,7 +63,9 @@ def main() -> None:
     tampered_tag.__setitem__(0, tampered_tag.__getitem__(0) ^ 0x01)
     rc_tamper, _ = ptrc_aead_decrypt(key, nonce, ciphertext, bytes(tampered_tag), aad)
 
-    print(f" + Macro-Moduli (64-bit): M0={ctx.macro_mod} | M1={ctx.macro_mod}")
+    m0 = ctx.macro_mod.__getitem__(0)
+    m1 = ctx.macro_mod.__getitem__(1)
+    print(f" + Macro-Moduli (64-bit): M0={m0} | M1={m1}")
     print(f" + Ciphertext (Hex 24B) : {ciphertext[:24].hex()}...")
     print(f" + 192-Bit SLIP-MAC Tag : {tag.hex()}")
     print(f" + Authentic Decryption : {'PASS' if (rc_ok == PTRC_CRYPT_OK and recovered == plaintext) else 'FAIL'}")
@@ -77,7 +79,7 @@ def main() -> None:
         print(" + C11 Native Kernel    : Build libptrc_crystal.so via CMake/gcc")
 
     elapsed_us = (t1 - t0) // 1000
-    print(f" + End-to-End Latency   : {elapsed_us} us (Pure Integer Z \\ {{0}}, Zero Float)")
+    print(f" + End-to-End Latency   : {elapsed_us} us (Pure Integer Z \\ {{0}}, No Zero Point)")
     print("===============================================================================")
 
 
