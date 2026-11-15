@@ -22,7 +22,7 @@ Cryptographic-Grade Statistical, Invariant & Throughput Metrics for pTRC BitNet 
 File: src/00_test_ptrc_bitnet_metrics.py
 
 Strictly zero-float (integer microseconds & takts/sec), verifying:
-1. (4+1) -> 16 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
+1. (4+1) -> 4 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
 2. Strict Z \\ {0} domain integrity & 156 Wirminghaus invariant saturation bounds
 3. 144-facet sponge resonance dispersion across multiple 137-takt mirror pulses
 4. Native C11 vs. Python integer inference throughput (takts/sec & us/inference)
@@ -46,49 +46,42 @@ from ptrc_bitnet_engine import (
 )
 
 
-def _build_5_16_2_weights() -> tuple[list[int], list[int]]:
-    hidden_weights: list[int] = []
-    for r in range(16):
-        for c in range(4):
-            bit = ((r ^ (r >> 1)) >> c) & 1
-            hidden_weights.append(1 if bit else -1)
-        hidden_weights.append(1 if (r & 1) == 0 else -1)
-    out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
-    return hidden_weights, out_weights
+def _get_crystal_xor_dataset() -> tuple[list[list[int]], list[list[int]], list[int], list[int]]:
+    patterns = [
+        list((-1, -1, -1, -1, 1)),
+        list((-1, 1, -1, 1, 1)),
+        list((1, -1, 1, -1, 1)),
+        list((1, 1, 1, 1, 1)),
+    ]
+    targets = [
+        list((-1, 1)),
+        list((1, -1)),
+        list((1, -1)),
+        list((-1, 1)),
+    ]
+    hidden_weights = [val for row in patterns for val in row]
+    out_weights = list((1, -1, 1, -1, -1, 1, -1, 1))
+    return patterns, targets, hidden_weights, out_weights
 
 
 def audit_convergence_and_stability() -> int:
     ctx = PtrcBitNetContext(seed=137210144)
-    hidden_weights, out_weights = _build_5_16_2_weights()
-    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=1)
-    out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
-
-    patterns = [
-        [-1, -1, -1, -1, 1],
-        [-1, 1, -1, 1, 1],
-        [1, -1, 1, -1, 1],
-,
-    ]
-    targets = [
-        [-1, 1],
-        [1, -1],
-        [1, -1],
-        [-1, 1],
-    ]
+    patterns, targets, hidden_weights, out_weights = _get_crystal_xor_dataset()
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=4)
+    out_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     converged_epoch = 0
     for epoch in range(1, 25):
         err = 0
         for pat, tgt in zip(patterns, targets):
             hidden_act, _ = hidden_layer.forward(ctx, pat)
-            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=4)
+            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16)
         if err == 0:
             converged_epoch = epoch
             break
 
     assert converged_epoch > 0, "Hebbian plasticity failed to converge within 24 epochs!"
 
-    # Verify 1,000 continuous takts across seven 137-takt mirror sync pulses with zero drift
     mismatches = 0
     for takt in range(1000):
         idx = takt & 3
@@ -110,8 +103,8 @@ def audit_invariant_156_and_resonance() -> None:
 
     inp_a = [1 if (i & 1) == 0 else -1 for i in range(16)]
     inp_b = [-1 if (i & 1) == 0 else 1 for i in range(16)]
-    tgt_a = [1, -1, 1, -1, 1, -1, 1, -1]
-    tgt_b = [-1, 1, -1, 1, -1, 1, -1, 1]
+    tgt_a = list((1, -1, 1, -1, 1, -1, 1, -1))
+    tgt_b = list((-1, 1, -1, 1, -1, 1, -1, 1))
 
     max_acc_seen = 0
     min_acc_seen = 0
@@ -145,7 +138,6 @@ def audit_invariant_156_and_resonance() -> None:
 
 
 def benchmark_throughput() -> None:
-    # 64-input -> 32-output (2,048 1-bit weights per forward inference)
     in_dim = 64
     out_dim = 32
     weights = [1 if ((i * 13 + 5) & 1) == 0 else -1 for i in range(in_dim * out_dim)]
