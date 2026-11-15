@@ -141,10 +141,16 @@ class PtrcCrystalContext:
             self.sponge[f] = ptrc_crypt_z_no_zero(val)
 
         for w in range(PTRC_CRYPT_FACETS * 4):
-            m = self._macro_cascade_step(w + 1)
-            idx = w % PTRC_CRYPT_FACETS
-            delta = ptrc_crypt_z_no_zero(int(m % 211) - 105)
-            self.sponge[idx] = ptrc_crypt_z_no_zero(self.sponge[idx] ^ delta)
+            m = self._macro_cascade_step((w + 1) * 137)
+            idx0 = w % PTRC_CRYPT_FACETS
+            idx1 = (idx0 + 37) % PTRC_CRYPT_FACETS
+            idx2 = (idx0 + 73) % PTRC_CRYPT_FACETS
+            d0 = ptrc_crypt_z_no_zero(m & 0x7FFFFFFF)
+            d1 = ptrc_crypt_z_no_zero((m >> 17) & 0x7FFFFFFF)
+            d2 = ptrc_crypt_z_no_zero((m >> 33) & 0x7FFFFFFF)
+            self.sponge[idx0] = ptrc_crypt_z_no_zero(self.sponge[idx0] ^ d0)
+            self.sponge[idx1] = ptrc_crypt_z_no_zero(self.sponge[idx1] + (1 if (d1 & 1) else -1))
+            self.sponge[idx2] = ptrc_crypt_z_no_zero(self.sponge[idx2] ^ d2)
             self.takt_counter += 1
 
     def _macro_cascade_step(self, step_stride: int) -> int:
@@ -152,12 +158,13 @@ class PtrcCrystalContext:
         stride = ptrc_u64_no_zero(step_stride)
         for s in range(PTRC_MACRO_CASCADE_STAGES):
             mod_s = self.macro_mod[s]
-            st = (self.macro_state[s] + stride + (s + 1)) % mod_s
+            st = (self.macro_state[s] + stride + (acc & U32_MASK) + (s + 1)) % mod_s
             st = ptrc_u64_no_zero(st)
             self.macro_state[s] = st
             acc = (acc ^ ((st * (211 + s * 12)) & U64_MASK)) & U64_MASK
             acc = _rotl64(acc, 13)
         return ptrc_u64_no_zero(acc)
+
 
     def next_keystream_byte(self) -> int:
         phase = (self.clock_phase_24 - 1) % PTRC_CRYPT_JUNCTIONS
