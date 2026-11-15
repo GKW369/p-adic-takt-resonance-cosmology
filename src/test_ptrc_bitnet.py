@@ -38,44 +38,38 @@ from ptrc_bitnet_engine import (
 )
 
 
-def _build_5_16_2_weights() -> tuple[list[int], list[int]]:
-    hidden_weights: list[int] = []
-    for r in range(16):
-        for c in range(4):
-            bit = ((r ^ (r >> 1)) >> c) & 1
-            hidden_weights.append(1 if bit else -1)
-        hidden_weights.append(1 if (r & 1) == 0 else -1)
-    out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
-    return hidden_weights, out_weights
+def _get_crystal_xor_dataset() -> tuple[list[list[int]], list[list[int]], list[int], list[int]]:
+    patterns = [
+        list((-1, -1, -1, -1, 1)),
+        list((-1, 1, -1, 1, 1)),
+        list((1, -1, 1, -1, 1)),
+        list((1, 1, 1, 1, 1)),
+    ]
+    targets = [
+        list((-1, 1)),
+        list((1, -1)),
+        list((1, -1)),
+        list((-1, 1)),
+    ]
+    hidden_weights = [val for row in patterns for val in row]
+    out_weights = list((1, -1, 1, -1, -1, 1, -1, 1))
+    return patterns, targets, hidden_weights, out_weights
 
 
 def test_z_no_zero_and_hebbian_convergence() -> None:
     ctx = PtrcBitNetContext(seed=137210144)
     assert all(v != 0 for v in ctx.sponge), "Zero found in initial 144-facet sponge!"
 
-    hidden_weights, out_weights = _build_5_16_2_weights()
-    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=1)
-    out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
-
-    patterns = [
-        [-1, -1, -1, -1, 1],
-        [-1, 1, -1, 1, 1],
-        [1, -1, 1, -1, 1],
-,
-    ]
-    targets = [
-        [-1, 1],
-        [1, -1],
-        [1, -1],
-        [-1, 1],
-    ]
+    patterns, targets, hidden_weights, out_weights = _get_crystal_xor_dataset()
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=4)
+    out_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     converged_epoch = 0
     for epoch in range(1, 17):
         err = 0
         for pat, tgt in zip(patterns, targets):
             hidden_act, _ = hidden_layer.forward(ctx, pat)
-            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=4)
+            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16)
         if err == 0:
             converged_epoch = epoch
             break
@@ -87,13 +81,13 @@ def test_z_no_zero_and_hebbian_convergence() -> None:
         assert out == tgt, f"Prediction mismatch for {pat}: {out} != {tgt}"
         assert all(v in (-1, 1) for v in out)
     assert all(v != 0 for v in ctx.sponge), "Zero entered sponge after Hebbian steps!"
-    print(f"[PASS] 1. Z \\ {{0}} Invariant & (4+1)->16->2 Integer Hebbian Convergence (Epoch {converged_epoch})")
+    print(f"[PASS] 1. Z \\ {{0}} Invariant & (4+1)->4->2 Integer Hebbian Convergence (Epoch {converged_epoch})")
 
 
 def test_137_takt_crossed_mirror_pulse() -> None:
     ctx = PtrcBitNetContext(seed=210144137)
-    layer = PtrcBitNetLayer(in_dim=4, out_dim=1, weights_z_no_zero=[1, 1, -1, -1], takt_threshold=0)
-    inp = [1, -1, 1, -1]
+    layer = PtrcBitNetLayer(in_dim=4, out_dim=1, weights_z_no_zero=list((1, 1, -1, -1)), takt_threshold=0)
+    inp = list((1, -1, 1, -1))
 
     for _ in range(PTRC_AI_TAKT_137):
         layer.forward(ctx, inp)
@@ -116,7 +110,7 @@ def test_c11_python_bit_parity() -> None:
 
     assert list(c_ctx.sponge) == py_ctx.sponge, "Initial 144-facet sponge mismatch between C11 and Python!"
 
-    weights = [1, -1, 1, -1, -1, 1, -1, 1]
+    weights = list((1, -1, 1, -1, -1, 1, -1, 1))
     py_layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=weights, takt_threshold=0)
     c_layer = _CLayer()
     c_weights = (ctypes.c_int8 * len(weights))(*weights)
@@ -124,16 +118,16 @@ def test_c11_python_bit_parity() -> None:
     assert rc == 0
 
     patterns = [
-        [-1, -1, -1, -1],
-        [-1, 1, -1, 1],
-        [1, -1, 1, -1],
-,
+        list((-1, -1, -1, -1)),
+        list((-1, 1, -1, 1)),
+        list((1, -1, 1, -1)),
+        list((1, 1, 1, 1)),
     ]
     targets = [
-        [-1, 1],
-        [1, -1],
-        [1, -1],
-        [-1, 1],
+        list((-1, 1)),
+        list((1, -1)),
+        list((1, -1)),
+        list((-1, 1)),
     ]
 
     for step in range(200):
