@@ -19,7 +19,7 @@
 
 
 # -*- coding: utf-8 -*-
-"""
+r"""
 pTRC Framework - Core Simulation Module: Quantum Neural Network State Processor
 Operational Domain: Discrete Threshold Weighting (\mathbb{Z}) inside modular layers.
 Processes non-linear network state updates drift-free without floating-point weights.
