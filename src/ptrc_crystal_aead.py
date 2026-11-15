@@ -165,7 +165,6 @@ class PtrcCrystalContext:
             acc = _rotl64(acc, 13)
         return ptrc_u64_no_zero(acc)
 
-
     def next_keystream_byte(self) -> int:
         phase = (self.clock_phase_24 - 1) % PTRC_CRYPT_JUNCTIONS
         macro_out = self._macro_cascade_step((phase + 1) * 156)
