@@ -75,6 +75,7 @@ def audit_convergence_and_stability() -> int:
     )
 
     converged_epoch = -1
+    lock_streak = 0
     for epoch in range(1, 25):
         locked = 0
         for pat, tgt in zip(patterns, targets):
@@ -82,8 +83,13 @@ def audit_convergence_and_stability() -> int:
             if out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16) == PTRC_AI_OK:
                 locked += 1
         if locked == 4:
-            converged_epoch = epoch
-            break
+            if converged_epoch < 0:
+                converged_epoch = epoch
+            lock_streak += 1
+            if lock_streak >= 4:
+                break
+        else:
+            lock_streak = 0
 
     assert converged_epoch >= 1, "Prime-ring phase-locking failed to converge within 24 epochs!"
 
