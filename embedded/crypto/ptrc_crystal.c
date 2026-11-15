@@ -87,7 +87,7 @@ static uint64_t ptrc_macro_cascade_step(ptrc_crystal_ctx_t *ctx, uint64_t step_s
 
     for (uint32_t s = 0U; s < PTRC_MACRO_CASCADE_STAGES; s++) {
         uint64_t mod_s = *(ctx->macro_mod + s);
-        uint64_t st    = (*(ctx->macro_state + s) + stride + (uint64_t)(s + 1U)) % mod_s;
+        uint64_t st    = (*(ctx->macro_state + s) + stride + (acc & 0xFFFFFFFFULL) + (uint64_t)(s + 1U)) % mod_s;
         st = ptrc_u64_no_zero(st);
         *(ctx->macro_state + s) = st;
         acc ^= (st * (211ULL + (uint64_t)(s * 12U)));
@@ -95,6 +95,7 @@ static uint64_t ptrc_macro_cascade_step(ptrc_crystal_ctx_t *ctx, uint64_t step_s
     }
     return ptrc_u64_no_zero(acc);
 }
+
 
 int ptrc_crystal_init(
     ptrc_crystal_ctx_t *ctx,
@@ -141,12 +142,18 @@ int ptrc_crystal_init(
         *(ctx->sponge + f) = ptrc_crypt_z_no_zero(val);
     }
 
-    /* 4. 576-Step Warm-Up Cascade (4 x 144 Facets) */
+    /* 4. 576-Step Coupled Tri-Facet Warm-Up Cascade (4 x 144 Facets) */
     for (uint32_t w = 0U; w < PTRC_CRYPT_FACETS * 4U; w++) {
-        uint64_t m = ptrc_macro_cascade_step(ctx, (uint64_t)(w + 1U));
-        uint32_t idx = w % PTRC_CRYPT_FACETS;
-        int32_t delta = ptrc_crypt_z_no_zero((int32_t)(m % 211ULL) - 105);
-        *(ctx->sponge + idx) = ptrc_crypt_z_no_zero((*(ctx->sponge + idx)) ^ delta);
+        uint64_t m = ptrc_macro_cascade_step(ctx, (uint64_t)(w + 1U) * 137ULL);
+        uint32_t idx0 = w % PTRC_CRYPT_FACETS;
+        uint32_t idx1 = (idx0 + 37U) % PTRC_CRYPT_FACETS;
+        uint32_t idx2 = (idx0 + 73U) % PTRC_CRYPT_FACETS;
+        int32_t d0 = ptrc_crypt_z_no_zero((int32_t)(m & 0x7FFFFFFFULL));
+        int32_t d1 = ptrc_crypt_z_no_zero((int32_t)((m >> 17U) & 0x7FFFFFFFULL));
+        int32_t d2 = ptrc_crypt_z_no_zero((int32_t)((m >> 33U) & 0x7FFFFFFFULL));
+        *(ctx->sponge + idx0) = ptrc_crypt_z_no_zero((*(ctx->sponge + idx0)) ^ d0);
+        *(ctx->sponge + idx1) = ptrc_crypt_z_no_zero((*(ctx->sponge + idx1)) + ((d1 & 1) ? 1 : -1));
+        *(ctx->sponge + idx2) = ptrc_crypt_z_no_zero((*(ctx->sponge + idx2)) ^ d2);
         ctx->takt_counter++;
     }
 
