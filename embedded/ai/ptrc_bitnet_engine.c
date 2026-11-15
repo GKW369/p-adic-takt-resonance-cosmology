@@ -17,8 +17,12 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
+/* File: embedded/ai/ptrc_bitnet_engine.c (Part 1 of 2) */
+
 #include "ptrc_bitnet_engine.h"
 #include <string.h>
+
+#define PTRC_AI_QUAD_PAIR_CNT (PTRC_AI_MODULO_24 * 2U)
 
 /* 16 Coprime Non-Mersenne Prime Rings (gcd(p, 210) == 1, Mersenne primes 3, 7, 31, 127 excluded) */
 static const uint32_t PTRC_AI_PRIME_RINGS[PTRC_AI_PRIME_RING_CNT] = {
@@ -26,14 +30,14 @@ static const uint32_t PTRC_AI_PRIME_RINGS[PTRC_AI_PRIME_RING_CNT] = {
     43U, 47U, 53U, 59U, 61U, 67U, 71U, 73U
 };
 
-/* Pure 24-Clock Discrete Quadrance Basis (u^2 + v^2 = 1000^2 in Z \ {0}, no zero) */
-static const int16_t PTRC_AI_QUAD_24[PTRC_AI_MODULO_24] = {
-    { 1000,    1}, {  966,  259}, {  866,  500}, {  707,  707},
-    {  500,  866}, {  259,  966}, {   -1, 1000}, { -259,  966},
-    { -500,  866}, { -707,  707}, { -866,  500}, { -966,  259},
-    {-1000,   -1}, { -966, -259}, { -866, -500}, { -707, -707},
-    { -500, -866}, { -259, -966}, {    1,-1000}, {  259, -966},
-    {  500, -866}, {  707, -707}, {  866, -500}, {  966, -259}
+/* Pure 24-Clock Discrete Quadrance Basis (u^2 + v^2 = 1000^2 in Z \ {0}, flat 1D array) */
+static const int16_t PTRC_AI_QUAD_24[PTRC_AI_QUAD_PAIR_CNT] = {
+     1000,    1,   966,  259,   866,  500,   707,  707,
+      500,  866,   259,  966,    -1, 1000,  -259,  966,
+     -500,  866,  -707,  707,  -866,  500,  -966,  259,
+    -1000,   -1,  -966, -259,  -866, -500,  -707, -707,
+     -500, -866,  -259, -966,     1,-1000,   259, -966,
+      500, -866,   707, -707,   866, -500,   966, -259
 };
 
 static inline uint32_t ptrc_popcount64(uint64_t x) {
@@ -120,6 +124,8 @@ int ptrc_bitnet_layer_init(
     return PTRC_AI_OK;
 }
 
+/* File: embedded/ai/ptrc_bitnet_engine.c (Part 2 of 2) */
+
 void ptrc_bitnet_pack_bipolar(
     const int8_t *vec_z_no_zero,
     uint32_t len,
@@ -161,8 +167,8 @@ int ptrc_bitnet_forward(
     ptrc_bitnet_pack_bipolar(input_z_no_zero, layer->in_dim, in_pos, in_neg);
 
     uint32_t phase  = (ctx->clock_phase_24 - 1U) % PTRC_AI_MODULO_24;
-    int32_t  quad_u = (int32_t)PTRC_AI_QUAD_24[phase];
-    int32_t  quad_v = (int32_t)PTRC_AI_QUAD_24[phase];
+    int32_t  quad_u = (int32_t)(*(PTRC_AI_QUAD_24 + (phase * 2U)));
+    int32_t  quad_v = (int32_t)(*(PTRC_AI_QUAD_24 + (phase * 2U + 1U)));
     int32_t  is_137_sync = ((ctx->takt_counter % (uint64_t)PTRC_AI_TAKT_137) == 0ULL) ? 1 : -1;
 
     int32_t step_energy = 1;
