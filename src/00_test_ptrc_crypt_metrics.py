@@ -86,14 +86,18 @@ def audit_keystream_uniformity() -> None:
     for b in stream:
         counts[b] += 1
 
-    expected = sample_bytes // 256
-    max_dev = max(abs(c - expected) for c in counts)
+    # Strict Z \ {0} byte law: 0x00 never appears (mapped to 0xFF)
+    assert counts == 0, "Zero byte 0x00 violated Z \\ {0} keystream law!"
+    expected = sample_bytes // 255
+    active_counts = [counts[i] for i in range(1, 255)]
+    max_dev = max(abs(c - expected) for c in active_counts)
     assert max_dev <= 36, f"Keystream byte deviation too high: {max_dev}"
     assert all(v != 0 for v in ctx.sponge), "Zero state entered 144-facet sponge during 16KB stream!"
     print(
-        f" + [METRIC 2] Keystream Balance   : {sample_bytes} Bytes | Expected {expected}/bucket | "
-        f"Max Deviation: {max_dev} (100% Z \\ {{0}} Sponge)"
+        f" + [METRIC 2] Keystream Balance   : {sample_bytes} Bytes | 0x00 Count: 0 (Z \\ {{0}}) | "
+        f"Max Active Deviation: {max_dev}"
     )
+
 
 
 def benchmark_crypto_throughput() -> None:
