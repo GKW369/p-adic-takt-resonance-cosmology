@@ -26,17 +26,19 @@ int main(void) {
     ptrc_bitnet_ctx_t ctx;
     ptrc_bitnet_ctx_init(&ctx, 137210144ULL);
 
-    /* 2-Layer 1-Bit Crystalline Resonance Network: 4 -> 16 -> 2 (solves non-linear XOR) */
-    const uint32_t in_dim     = 4U;
+    /* 2-Layer 1-Bit Crystalline Resonance Network: (4 + 1 Anchor) -> 16 -> 2 */
+    const uint32_t in_dim     = 5U;
     const uint32_t hidden_dim = 16U;
     const uint32_t out_dim    = 2U;
 
-    int8_t hidden_weights[16 * 4];
+    int8_t hidden_weights[16 * 5];
     for (uint32_t r = 0U; r < hidden_dim; r++) {
-        for (uint32_t c = 0U; c < in_dim; c++) {
+        for (uint32_t c = 0U; c < 4U; c++) {
             uint32_t bit = ((r ^ (r >> 1U)) >> c) & 1U;
             hidden_weights[r * in_dim + c] = bit ? 1 : -1;
         }
+        /* 5th input is the Z \ {0} phase anchor (+1) breaking antipodal symmetry */
+        hidden_weights[r * in_dim + 4U] = ((r & 1U) == 0U) ? 1 : -1;
     }
 
     int8_t out_weights[2 * 16];
@@ -47,19 +49,20 @@ int main(void) {
     ptrc_bitnet_layer_t hidden_layer;
     ptrc_bitnet_layer_t out_layer;
 
-    if (ptrc_bitnet_layer_init(&hidden_layer, in_dim, hidden_dim, hidden_weights, 0) != 0 ||
+    if (ptrc_bitnet_layer_init(&hidden_layer, in_dim, hidden_dim, hidden_weights, 1) != 0 ||
         ptrc_bitnet_layer_init(&out_layer, hidden_dim, out_dim, out_weights, 0) != 0) {
         printf("ERROR: Layer initialization failed.\n");
         return 1;
     }
 
-    const int8_t patterns[4][4] = {
-        { -1, -1, -1, -1 },
-        { -1,  1, -1,  1 },
-        {  1, -1,  1, -1 },
-        {  1,  1,  1,  1 }
+    /* 4 pattern bits + 1 Z \ {0} phase anchor (+1) */
+    const int8_t patterns = {
+        { -1, -1, -1, -1,  1 },
+        { -1,  1, -1,  1,  1 },
+        {  1, -1,  1, -1,  1 },
+        {  1,  1,  1,  1,  1 }
     };
-    const int8_t targets[4][2] = {
+    const int8_t targets = {
         { -1,  1 },
         {  1, -1 },
         {  1, -1 },
@@ -68,7 +71,7 @@ int main(void) {
 
     printf("===============================================================================\n");
     printf("  pTRC BITNET AI ENGINE v2.0 — BARE-METAL C11 1-BIT CRYSTALLINE INFERENCE\n");
-    printf("  Topology     : 4 -> 16 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Zero float/malloc)\n");
+    printf("  Topology     : (4+1) -> 16 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Zero float)\n");
     printf("  Context RAM  : %zu bytes static stack | 144 Facets | 137-Takt Sync\n", sizeof(ctx));
     printf("===============================================================================\n");
 
@@ -76,7 +79,7 @@ int main(void) {
     for (uint32_t epoch = 1U; epoch <= 16U; epoch++) {
         int32_t total_err = 0;
         for (uint32_t p = 0U; p < 4U; p++) {
-            int8_t hidden_act[16];
+            int8_t hidden_act;
             ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
             total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, targets[p], 4);
         }
@@ -89,18 +92,18 @@ int main(void) {
     /* Forward 2-Layer 1-Bit XNOR + POPCOUNT Inference Verification */
     int32_t passed = 0;
     for (uint32_t p = 0U; p < 4U; p++) {
-        int8_t  hidden_act[16];
-        int8_t  out[2]    = { -1, -1 };
-        int32_t scores[2] = {  0,  0 };
+        int8_t  hidden_act;
+        int8_t  out    = { -1, -1 };
+        int32_t scores = {  0,  0 };
 
         ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
         ptrc_bitnet_forward(&ctx, &out_layer, hidden_act, out, scores);
 
-        int ok = (out[0] == targets[p][0] && out[1] == targets[p][1]) ? 1 : 0;
+        int ok = (out == targets[p] && out == targets[p]) ? 1 : 0;
         passed += ok;
         printf(" + Pattern [%+d,%+d,%+d,%+d] -> Out [%+d,%+d] (Expected [%+d,%+d]) | %s\n",
-               patterns[p][0], patterns[p][1], patterns[p][2], patterns[p][3],
-               out[0], out[1], targets[p][0], targets[p][1],
+               patterns[p], patterns[p], patterns[p], patterns[p],
+               out, out, targets[p], targets[p],
                ok ? "PASS" : "FAIL");
     }
 
