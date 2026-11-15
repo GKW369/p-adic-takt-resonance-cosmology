@@ -85,6 +85,7 @@ python3 src/00_ptrc_neural_network_demo.py
 # Resonant BitNet AI Engine v2.0 (1-Bit XNOR+POPCOUNT & Integer Hebbian Learning)
 PYTHONPATH=src python3 src/00_ptrc_bitnet_demo.py
 PYTHONPATH=src python3 src/test_ptrc_bitnet.py
+PYTHONPATH=src python3 src/test_ptrc_bitnet_metrics.py
 
 # CMake Build & Standalone Bare-Metal C11 BitNet Verification
 cmake -B build -S . && cmake --build build && ./build/00_ptrc_bitnet_demo
