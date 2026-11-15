@@ -63,9 +63,9 @@ def main() -> None:
     tampered_tag.__setitem__(0, tampered_tag.__getitem__(0) ^ 0x01)
     rc_tamper, _ = ptrc_aead_decrypt(key, nonce, ciphertext, bytes(tampered_tag), aad)
 
-    m0 = ctx.macro_mod.__getitem__(0)
-    m1 = ctx.macro_mod.__getitem__(1)
+    m0, m1, m2, m3 = ctx.macro_mod
     print(f" + Macro-Moduli (64-bit): M0={m0} | M1={m1}")
+    print(f" + Macro-Moduli (Tail)  : M2={m2} | M3={m3}")
     print(f" + Ciphertext (Hex 24B) : {ciphertext[:24].hex()}...")
     print(f" + 192-Bit SLIP-MAC Tag : {tag.hex()}")
     print(f" + Authentic Decryption : {'PASS' if (rc_ok == PTRC_CRYPT_OK and recovered == plaintext) else 'FAIL'}")
