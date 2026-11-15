@@ -39,16 +39,27 @@ from ptrc_bitnet_engine import (
 )
 
 
+def _build_4_16_2_weights() -> tuple[list[int], list[int]]:
+    hidden_weights: list[int] = []
+    for r in range(16):
+        for c in range(4):
+            bit = ((r ^ (r >> 1)) >> c) & 1
+            hidden_weights.append(1 if bit else -1)
+    out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
+    return hidden_weights, out_weights
+
+
 def main() -> None:
     print("===============================================================================")
     print("  pTRC RESONANT BITNET AI v2.0 — 1-BIT CRYSTALLINE INFERENCE & HEBBIAN LEARNING")
-    print(f"  Axioms : Z \\ {{0}} (No Zero) | {PTRC_AI_FACETS} Facets | Base {PTRC_AI_PRIMORIAL_210} | {PTRC_AI_TAKT_137}-Takt | {PTRC_AI_INVARIANT_156}-Limit")
-    print("  Kernel : 100% Zero-Float | XNOR + POPCOUNT Bitplanes | Online Integer Hebbian")
+    print(f"  Axioms   : Z \\ {{0}} (No Zero) | {PTRC_AI_FACETS} Facets | Base {PTRC_AI_PRIMORIAL_210} | {PTRC_AI_TAKT_137}-Takt | {PTRC_AI_INVARIANT_156}-Limit")
+    print("  Topology : 4 -> 16 -> 2 | XNOR + POPCOUNT Bitplanes | Online Integer Hebbian")
     print("===============================================================================")
 
     ctx = PtrcBitNetContext(seed=137210144)
-    init_weights = [1, -1, 1, -1, -1, 1, -1, 1]
-    layer = PtrcBitNetLayer(in_dim=4, out_dim=2, weights_z_no_zero=init_weights, takt_threshold=0)
+    hidden_weights, out_weights = _build_4_16_2_weights()
+    hidden_layer = PtrcBitNetLayer(in_dim=4, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=0)
+    out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     patterns = [
         [-1, -1, -1, -1],
@@ -64,10 +75,11 @@ def main() -> None:
     ]
 
     t0 = time.perf_counter_ns()
-    for epoch in range(1, 16):
+    for epoch in range(1, 17):
         err = 0
         for pat, tgt in zip(patterns, targets):
-            err += layer.hebbian_step(ctx, pat, tgt, plasticity_gain=4)
+            hidden_act, _ = hidden_layer.forward(ctx, pat)
+            err += out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=4)
         print(f" + Training Takt-Epoch {epoch:02d} | Mismatches: {err} | Resonance Energy: {ctx.resonance_energy}")
         if err == 0:
             break
@@ -75,7 +87,8 @@ def main() -> None:
 
     print("-------------------------------------------------------------------------------")
     for pat, tgt in zip(patterns, targets):
-        out, scores = layer.forward(ctx, pat)
+        hidden_act, _ = hidden_layer.forward(ctx, pat)
+        out, scores = out_layer.forward(ctx, hidden_act)
         status = "MATCH" if out == tgt else "DIFF"
         print(f" + Input {pat} -> Output {out} (Scores {scores}) | Target {tgt} [{status}]")
 
@@ -84,8 +97,8 @@ def main() -> None:
         c_ctx = _CSpongeCtx()
         lib.ptrc_bitnet_ctx_init(ctypes.byref(c_ctx), 137210144)
         c_layer = _CLayer()
-        c_w = (ctypes.c_int8 * len(init_weights))(*init_weights)
-        lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), 4, 2, c_w, 0)
+        c_w = (ctypes.c_int8 * len(out_weights))(*out_weights)
+        lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), 16, 2, c_w, 0)
         print(f" + C11 Native Kernel   : ACTIVE (sizeof(ctx)={ctypes.sizeof(c_ctx)} bytes, Zero malloc)")
         lib.ptrc_bitnet_wipe(ctypes.byref(c_ctx))
     else:
