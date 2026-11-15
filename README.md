@@ -67,7 +67,7 @@ By translating dynamic floating-point partial differential equations into static
 | **Gaming & Real-Time Graphics**<br>`fluid_resonance.py`<br>`pi_square_crystallization.py`<br>`ptrc_fluid_crystal_3d.c` | 100% bit-exact integer domain tracking | **Radical Gaming Industry Disruption:**<br>1. **Collision Detection in O(1):** Spatiotemporal object overlaps are read instantly via integer matrix coordinate intersections, completely bypassing iterative bounding-box tree look-ups.<br>2. **Zero-Drift Network Netcode:** Guarantees an un-compromised, synchronous global multiplayer state. Eliminates client-server de-synchronizations (*desyncs*) as rounding interpolation variance drops to absolute zero.<br>3. **Lossless Particle Subsystems:** High-density fluid, aero, and fracturing dynamics run natively via register look-ups on standard ARM/i3 chips without activating the FPU. | Triple-A Game Studios, Next-Gen Engine Developers (Unity/Unreal Alternatives), Cloud Gaming Infrastructures |
 | **Artificial Intelligence**<br>`quantum_neural_network.py` | Modulo-24 register inference without synaptic float-noise | **100% Invariant AI Inference:** Eradicates accuracy degradation during post-training float-to-integer quantization. Yields ultra-low-power, secure neural inference directly inside memory arrays. | Edge-AI Chips, Autonomous Driving, Real-Time Autonomous Robotics |
 | **Material Sciences**<br>`battery_anisotropy.py` | 144-facet vector equilibrium group mapping | **Lossless BMS Real-Time Simulation:** Simulates absolute multi-layered ion migration inside solid-state batteries on lightweight local processors without fractional differential tracking. | Electric Vehicles (EV), Battery Management Systems (BMS), Energy Storage Grid Nodes |
-| **Cryptographic Systems**<br>`crypt_resonance.py`<br>`ptrc_crystal_aead.py`<br>`ptrc_crystal.c` | Symmetric bit-transposition inside coprime residue rings (`P15` Primorial macro-cascade) | **Hardware-Level Post-Quantum Cryptography:** Ultra-low-latency cryptographic primitives that execute natively on simple logic gate steps, discarding complex arithmetic units. | Cyber-Defense, Internet of Things (IoT) Security, Military-Grade Communication Links |
+| **Cryptographic Systems**<br>`crypt_resonance.py` | Symmetric bit-transposition inside coprime residue rings | **Hardware-Level Post-Quantum Cryptography:** Ultra-low-latency cryptographic primitives that execute natively on simple logic gate steps, discarding complex arithmetic units. | Cyber-Defense, Internet of Things (IoT) Security, Military-Grade Communication Links |
 | **Hardware & Semiconductors**<br>`black_hole_information.py` | Information-theoretic invariant boundary 156 | **Side-Channel Attack Immune Silicon:** Bypasses float-dependent instruction cycles, producing flat, uniform power-draw profiles that eliminate differential power analysis vulnerabilities. | Secure Element Fabrics, Custom Silicon Vendors (ASIC/FPGA), Defense Electronics |
 | **Ballistics & Trajectory Control**<br>`gravity_edge_sharing.py` | Geometric whole-number quadrance indexing | **Instantaneous Orbital Invariance Tracking:** Trajectories are read directly from spatial register grids instead of being computed iteratively via floating-point transcendental functions (\(\sin, \cos\)). | Satellite Orbit Alignment, Kinetic Defense Interceptors, Civil Aerospace R&D, Precision Autonomous Drones |
 
@@ -79,55 +79,31 @@ To evaluate the mathematical framework of the pTRC neural network architectures 
 The live neural telemetry sweep and bit-exact threshold activations can be compiled and observed instantly inside your terminal environment. Navigate to the repository root and run:
 
 ```bash
-# Vectorized Multi-Layer Inference Verification (v1.0 Foundation)
-python3 src/00_ptrc_neural_network_demo.py
-
-# Resonant BitNet AI Engine v2.0 (1-Bit XNOR+POPCOUNT & Integer Hebbian Learning)
-PYTHONPATH=src python3 src/00_ptrc_bitnet_demo.py
-PYTHONPATH=src python3 src/test_ptrc_bitnet.py
-PYTHONPATH=src python3 src/test_ptrc_bitnet_metrics.py
-
-# CMake Build & Standalone Bare-Metal C11 BitNet Verification
-cmake -B build -S . && cmake --build build && ./build/00_ptrc_bitnet_demo
+# Vectorized Multi-Layer Inference Verification
+python3 embedded/ai/00_ptrc_neural_network_demo.py
 ```
 
 ### 🎛 Processing-In-Memory (PIM) Fabrics & Custom Vector Arrays
 Because every forward propagation takt executes through whole-number shifts and strict integer floor division layers, the neural layers completely discard fractional quantization steps. This provides a clean architectural template designed for resource-constrained **Edge-AI hardware layers** and neuromorphic engines (e.g., ESP32, ARM Cortex networks).
 
 Full technical profiles, memory allocation constraints, and hardware-level execution metrics are fully detailed under:
-* **`embedded/ai/ptrc_bitnet_architecture.md`**
-
-### 🧠 v2.0 Update: Bare-Metal C11 & Python Resonant BitNet Engine (`embedded/ai/`)
-The AI layer has been expanded to **v2.0 (`embedded/ai/ptrc_bitnet_engine.c` & `src/ptrc_bitnet_engine.py`)** with 100% C11/Python bit-parity and zero floating-point instructions ($\mathbb{Z} \setminus \{0\}$):
-
-* **64-Bit Packed `XNOR + POPCOUNT` Bitplanes:** Computes exact bipolar (`{-1, +1}`) synaptic dot products via bitwise agreement/disagreement masks without `GEMM` multipliers.
-* **144-Facet Crystalline Sponge & 137-Takt Mirror Sync:** Modulates neuron activations via a 144-facet sponge coupled to the **24-Clock Discrete Quadrance Ring** ($u^2 + v^2 = 1000^2$) and reflected across `-1` (`~x`) on every global `137`-takt pulse.
-* **Online Integer Hebbian Plasticity:** Updates synaptic accumulators on-chip within the `156` Wirminghaus Invariant Limit (`PTRC_AI_INVARIANT_156`) with zero gradient tape memory.
-* **Ultra-Compact Bare-Metal Context (`592` Bytes):** Fits inside a static `592`-byte stack context (`sizeof(ptrc_bitnet_ctx_t)`), uses zero `malloc`, compiles cleanly for ARM Cortex-M0+ (`arm-none-eabi-gcc -mfloat-abi=soft -Werror`), and scrubs SRAM via `ptrc_bitnet_wipe`.
+* **`embedded/ai/ptrc_neural_network_demo.md`**
 
 ---
 
 ## 🔐 Technical Showcase: Anti-Side-Channel Cryptographic Verification
 
-To evaluate the mathematical framework of the pTRC engine without floating-point constraints, deterministic cryptographic verification scripts are available in the repository. They demonstrate how the **Coprime Residue Symmetry (Modulo 210/24 & P15 Primorial Macro-Cascade)** handles streaming arrays with strict time-constant complexity ($O(1)$).
+To evaluate the mathematical framework of the pTRC engine without floating-point constraints, deterministic cryptographic verification scripts are available in the repository. They demonstrate how the **Coprime Residue Symmetry (Modulo 210/24)** handles streaming arrays with strict time-constant complexity ($O(1)$).
 
 ### 🚀 Evaluation (Local Verification)
 The telemetry and execution profile can be observed directly via Python or raw compiled C-code execution. Navigate to the repository root and run either:
 
 ```bash
-# Python Interface Verification & Production Audits (v4.0 512-Bit Primorial AEAD)
-PYTHONPATH=src python3 src/00_ptrc_crypt_demo.py
-PYTHONPATH=src python3 src/ßß_test_ptrc_crypt_parity.py
-PYTHONPATH=src python3 src/00_test_ptrc_crypt_metrics.py
+# Python Interface Verification
+python3 src/00_ptrc_crypt_demo.py
 
-# CMake Build & Standalone Bare-Metal C11 Verification
-cmake -B build -S . && cmake --build build && ./build/00_ptrc_crypt_demo
-```
-
-Or compile directly inside `embedded/crypto/`:
-
-```bash
-gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -Iembedded/crypto src/00_ptrc_crypt_demo.c embedded/crypto/ptrc_crystal.c -o 00_ptrc_crypt_demo && ./00_ptrc_crypt_demo
+# Native Bare-Metal C-Verification
+cd embedded/crypto && gcc ptrc_crypt_demo.c -o ptrc_hardware_demo && ./ptrc_hardware_demo
 ```
 
 ### 🎛 Embedded Hardware Architectures & Low-Power Hardware Elements
@@ -139,17 +115,6 @@ Full technical metrics, architecture cross-compilation instructions (e.g., targe
 ### 📊 Core Technical Metrics:
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic, activation, and fluid-resonance operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
 2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers, the power consumption profile remains structurally flat ($O(1)$ variance).
-
-### 🔐 v4.0 Update: 512-Bit Zero-Table Primorial Macro-Cascade & AEAD
-
-[![pTRC v4.0 Crystalline AEAD & AI CI](https://github.com)](https://github.com)
-
-The cryptographic layer has been upgraded to **v4.0 (512-Bit Key / 128-Bit Nonce)** by placing a four-stage, table-free **64-bit Primorial Macro-Cascade** ahead of the 144-facet crystal—eliminating Mersenne primes and lookup-table memory overhead while maintaining 100% Zero-Float execution ($\mathbb{Z} \setminus \{0\}$):
-
-* **Zero-Table pTRC Primorial Decoding (`P15 = 614,889,782,588,491,410`):** Decodes four coprime 64-bit ring moduli on-the-fly from the first 256 key bits using Euclidean GCD sieving (`gcd == 1` with `210`), keeping total static stack context at `~660` bytes (`< 1 KB` SRAM, zero `malloc`).
-* **Deterministic 8-Prime CRT Key & Nonce Generator (`ptrc_primorial_keygen`):** Generates unique 128-bit nonces and 512-bit keys across 8 pairwise coprime 1-byte prime rings (`251, 241, 239, 233, 229, 227, 223, 211`, CRT period $> 1.09 \times 10^{19}$ takts) without requiring an analog hardware TRNG.
-* **512-Bit `pTRC-KDF` & Dynamic Inner Rings:** Derives 512-bit session keys and 128-bit nonces via a 576-step sponge cascade while the second 256 key bits dynamically select three coprime inner CRT rings coupled with the **137-Takt Fine-Structure Render Pulse**.
-* **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, constant-time tag verification ($O(1)$ via `ptrc_ct_memcmp`), and `volatile` SRAM zeroization (`ptrc_crystal_wipe`) with 100% C11/Python bit-parity.
 
 ---
 
