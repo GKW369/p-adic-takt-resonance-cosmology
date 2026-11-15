@@ -22,51 +22,51 @@
 #include <string.h>
 #include "ptrc_bitnet_engine.h"
 
+#define DEMO_SAMPLES    4U
+#define DEMO_IN_DIM     5U
+#define DEMO_HIDDEN_DIM 16U
+#define DEMO_OUT_DIM    2U
+
 int main(void) {
     ptrc_bitnet_ctx_t ctx;
     ptrc_bitnet_ctx_init(&ctx, 137210144ULL);
 
-    /* 2-Layer 1-Bit Crystalline Resonance Network: (4 + 1 Anchor) -> 16 -> 2 */
-    const uint32_t in_dim     = 5U;
-    const uint32_t hidden_dim = 16U;
-    const uint32_t out_dim    = 2U;
-
-    int8_t hidden_weights[16 * 5];
-    for (uint32_t r = 0U; r < hidden_dim; r++) {
+    int8_t hidden_weights[DEMO_HIDDEN_DIM * DEMO_IN_DIM];
+    for (uint32_t r = 0U; r < DEMO_HIDDEN_DIM; r++) {
         for (uint32_t c = 0U; c < 4U; c++) {
             uint32_t bit = ((r ^ (r >> 1U)) >> c) & 1U;
-            hidden_weights[r * in_dim + c] = bit ? 1 : -1;
+            *(hidden_weights + (r * DEMO_IN_DIM + c)) = bit ? 1 : -1;
         }
         /* 5th input is the Z \ {0} phase anchor (+1) breaking antipodal symmetry */
-        hidden_weights[r * in_dim + 4U] = ((r & 1U) == 0U) ? 1 : -1;
+        *(hidden_weights + (r * DEMO_IN_DIM + 4U)) = ((r & 1U) == 0U) ? 1 : -1;
     }
 
-    int8_t out_weights[2 * 16];
-    for (uint32_t i = 0U; i < out_dim * hidden_dim; i++) {
-        out_weights[i] = ((i & 1U) == 0U) ? 1 : -1;
+    int8_t out_weights[DEMO_OUT_DIM * DEMO_HIDDEN_DIM];
+    for (uint32_t i = 0U; i < DEMO_OUT_DIM * DEMO_HIDDEN_DIM; i++) {
+        *(out_weights + i) = ((i & 1U) == 0U) ? 1 : -1;
     }
 
     ptrc_bitnet_layer_t hidden_layer;
     ptrc_bitnet_layer_t out_layer;
 
-    if (ptrc_bitnet_layer_init(&hidden_layer, in_dim, hidden_dim, hidden_weights, 1) != 0 ||
-        ptrc_bitnet_layer_init(&out_layer, hidden_dim, out_dim, out_weights, 0) != 0) {
+    if (ptrc_bitnet_layer_init(&hidden_layer, DEMO_IN_DIM, DEMO_HIDDEN_DIM, hidden_weights, 1) != 0 ||
+        ptrc_bitnet_layer_init(&out_layer, DEMO_HIDDEN_DIM, DEMO_OUT_DIM, out_weights, 0) != 0) {
         printf("ERROR: Layer initialization failed.\n");
         return 1;
     }
 
-    /* 4 pattern bits + 1 Z \ {0} phase anchor (+1) */
-    const int8_t patterns[4][5] = {
-        { -1, -1, -1, -1,  1 },
-        { -1,  1, -1,  1,  1 },
-        {  1, -1,  1, -1,  1 },
-        {  1,  1,  1,  1,  1 }
+    /* Flat 1D arrays accessed strictly via pointer arithmetic *(ptr + offset) */
+    const int8_t patterns[DEMO_SAMPLES * DEMO_IN_DIM] = {
+        -1, -1, -1, -1,  1,
+        -1,  1, -1,  1,  1,
+         1, -1,  1, -1,  1,
+         1,  1,  1,  1,  1
     };
-    const int8_t targets[4][2] = {
-        { -1,  1 },
-        {  1, -1 },
-        {  1, -1 },
-        { -1,  1 }
+    const int8_t targets[DEMO_SAMPLES * DEMO_OUT_DIM] = {
+        -1,  1,
+         1, -1,
+         1, -1,
+        -1,  1
     };
 
     printf("===============================================================================\n");
@@ -78,10 +78,13 @@ int main(void) {
     /* Discrete Integer Hebbian Plasticity Training on Output Resonance Layer */
     for (uint32_t epoch = 1U; epoch <= 16U; epoch++) {
         int32_t total_err = 0;
-        for (uint32_t p = 0U; p < 4U; p++) {
-            int8_t hidden_act[16];
-            ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
-            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, targets[p], 4);
+        for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
+            int8_t hidden_act[DEMO_HIDDEN_DIM];
+            const int8_t *pat_ptr = patterns + (p * DEMO_IN_DIM);
+            const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
+
+            ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
+            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, tgt_ptr, 4);
         }
         if (total_err == 0) {
             printf(" + Hebbian Convergence achieved at Epoch %u (0 errors across 144 facets)\n", epoch);
@@ -91,19 +94,23 @@ int main(void) {
 
     /* Forward 2-Layer 1-Bit XNOR + POPCOUNT Inference Verification */
     int32_t passed = 0;
-    for (uint32_t p = 0U; p < 4U; p++) {
-        int8_t  hidden_act[16];
-        int8_t  out[2]    = { -1, -1 };
-        int32_t scores[2] = {  0,  0 };
+    for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
+        int8_t  hidden_act[DEMO_HIDDEN_DIM];
+        int8_t  out[DEMO_OUT_DIM]    = { -1, -1 };
+        int32_t scores[DEMO_OUT_DIM] = {  0,  0 };
 
-        ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
+        const int8_t *pat_ptr = patterns + (p * DEMO_IN_DIM);
+        const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
+
+        ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
         ptrc_bitnet_forward(&ctx, &out_layer, hidden_act, out, scores);
 
-        int ok = (out[0] == targets[p][0] && out[1] == targets[p][1]) ? 1 : 0;
+        int ok = (*(out + 0) == *(tgt_ptr + 0) && *(out + 1) == *(tgt_ptr + 1)) ? 1 : 0;
         passed += ok;
-        printf(" + Pattern [%+d,%+d,%+d,%+d] -> Out [%+d,%+d] (Expected [%+d,%+d]) | %s\n",
-               patterns[p][0], patterns[p][1], patterns[p][2], patterns[p][3],
-               out[0], out[1], targets[p][0], targets[p][1],
+        printf(" + Pattern (%+d,%+d,%+d,%+d) -> Out (%+d,%+d) | Expected (%+d,%+d) | %s\n",
+               *(pat_ptr + 0), *(pat_ptr + 1), *(pat_ptr + 2), *(pat_ptr + 3),
+               *(out + 0), *(out + 1),
+               *(tgt_ptr + 0), *(tgt_ptr + 1),
                ok ? "PASS" : "FAIL");
     }
 
