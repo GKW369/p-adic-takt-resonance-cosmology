@@ -77,7 +77,7 @@ def test_python_aead_and_z_no_zero_invariants() -> None:
 
     # Tamper 1 bit in SLIP-MAC tag -> must reject with PTRC_CRYPT_ERR (-1)
     bad_tag = bytearray(tag)
-    bad_tag[11] ^= 0x80
+    bad_tag.__setitem__(0, bad_tag.__getitem__(0) ^ 0x80)
     rc_bad_tag, _ = ptrc_aead_decrypt(key, nonce, ct, bytes(bad_tag), aad)
     assert rc_bad_tag == PTRC_CRYPT_ERR
 
