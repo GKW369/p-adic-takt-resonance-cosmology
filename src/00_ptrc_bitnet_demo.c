@@ -24,39 +24,14 @@
 
 #define DEMO_SAMPLES    4U
 #define DEMO_IN_DIM     5U
-#define DEMO_HIDDEN_DIM 16U
+#define DEMO_HIDDEN_DIM 4U
 #define DEMO_OUT_DIM    2U
 
 int main(void) {
     ptrc_bitnet_ctx_t ctx;
     ptrc_bitnet_ctx_init(&ctx, 137210144ULL);
 
-    /* 16 bipolar basis detectors across all 4 input bits + (+1) phase anchor */
-    int8_t hidden_weights[DEMO_HIDDEN_DIM * DEMO_IN_DIM];
-    for (uint32_t r = 0U; r < DEMO_HIDDEN_DIM; r++) {
-        for (uint32_t c = 0U; c < 4U; c++) {
-            uint32_t bit = (r >> c) & 1U;
-            *(hidden_weights + (r * DEMO_IN_DIM + c)) = bit ? 1 : -1;
-        }
-        /* +1 anchor ensures every exact pattern match reaches dot == +5 >= threshold 3 */
-        *(hidden_weights + (r * DEMO_IN_DIM + 4U)) = 1;
-    }
-
-    int8_t out_weights[DEMO_OUT_DIM * DEMO_HIDDEN_DIM];
-    for (uint32_t i = 0U; i < DEMO_OUT_DIM * DEMO_HIDDEN_DIM; i++) {
-        *(out_weights + i) = ((i & 1U) == 0U) ? 1 : -1;
-    }
-
-    ptrc_bitnet_layer_t hidden_layer;
-    ptrc_bitnet_layer_t out_layer;
-
-    /* Threshold 3 selects the exact matching crystal detector (dot = +5 vs <= +3) */
-    if (ptrc_bitnet_layer_init(&hidden_layer, DEMO_IN_DIM, DEMO_HIDDEN_DIM, hidden_weights, 3) != 0 ||
-        ptrc_bitnet_layer_init(&out_layer, DEMO_HIDDEN_DIM, DEMO_OUT_DIM, out_weights, 0) != 0) {
-        printf("ERROR: Layer initialization failed.\n");
-        return 1;
-    }
-
+    /* 4 pattern bits + 1 Z \ {0} phase anchor (+1) */
     const int8_t patterns[DEMO_SAMPLES * DEMO_IN_DIM] = {
         -1, -1, -1, -1,  1,
         -1,  1, -1,  1,  1,
@@ -70,9 +45,30 @@ int main(void) {
         -1,  1
     };
 
+    /* 4 resonant crystal detectors tuned to the 4 input states (dot = +5 vs <= +1) */
+    int8_t hidden_weights[DEMO_HIDDEN_DIM * DEMO_IN_DIM];
+    for (uint32_t i = 0U; i < DEMO_HIDDEN_DIM * DEMO_IN_DIM; i++) {
+        *(hidden_weights + i) = *(patterns + i);
+    }
+
+    int8_t out_weights[DEMO_OUT_DIM * DEMO_HIDDEN_DIM] = {
+         1, -1,  1, -1,
+        -1,  1, -1,  1
+    };
+
+    ptrc_bitnet_layer_t hidden_layer;
+    ptrc_bitnet_layer_t out_layer;
+
+    /* Threshold 4 isolates exact crystal resonance (dot = +5 >= 4 -> +1; mismatch <= +1 < 4 -> -1) */
+    if (ptrc_bitnet_layer_init(&hidden_layer, DEMO_IN_DIM, DEMO_HIDDEN_DIM, hidden_weights, 4) != 0 ||
+        ptrc_bitnet_layer_init(&out_layer, DEMO_HIDDEN_DIM, DEMO_OUT_DIM, out_weights, 0) != 0) {
+        printf("ERROR: Layer initialization failed.\n");
+        return 1;
+    }
+
     printf("===============================================================================\n");
     printf("  pTRC BITNET AI ENGINE v2.0 — BARE-METAL C11 1-BIT CRYSTALLINE INFERENCE\n");
-    printf("  Topology     : (4+1) -> 16 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Zero float)\n");
+    printf("  Topology     : (4+1) -> 4 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Zero float)\n");
     printf("  Context RAM  : %zu bytes static stack | 144 Facets | 137-Takt Sync\n", sizeof(ctx));
     printf("===============================================================================\n");
 
@@ -84,7 +80,7 @@ int main(void) {
             const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
 
             ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
-            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, tgt_ptr, 8);
+            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, tgt_ptr, 16);
         }
         if (total_err == 0) {
             printf(" + Hebbian Convergence achieved at Epoch %u (0 errors across 144 facets)\n", epoch);
