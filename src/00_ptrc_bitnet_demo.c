@@ -1,111 +1,123 @@
-# ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & AI Inference Engine
-# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program (see the LICENSE file in the root directory).
-# If not, see <https://gnu.org>.
-# ==============================================================================
+/* ==============================================================================
+ * pTRC Framework - Discrete 1-Bit Integer Physics & AI Inference Engine
+ * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program (see the LICENSE file in the root directory).
+ * If not, see <https://gnu.org>.
+ * ============================================================================== */
 
-"""
-Interactive Terminal Demonstration for pTRC Resonant BitNet AI Engine v2.0.
-File: src/00_ptrc_bitnet_demo.py
-"""
+/* File: src/00_ptrc_bitnet_demo.c */
 
-from __future__ import annotations
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include "ptrc_bitnet_engine.h"
 
-import ctypes
-import time
+#define DEMO_SAMPLES    4U
+#define DEMO_IN_DIM     5U
+#define DEMO_HIDDEN_DIM 4U
+#define DEMO_OUT_DIM    2U
 
-from ptrc_bitnet_engine import (
-    PTRC_AI_DEFAULT_THRESH,
-    PTRC_AI_FACETS,
-    PTRC_AI_INVARIANT_156,
-    PTRC_AI_OK,
-    PTRC_AI_PRIMORIAL_210,
-    PTRC_AI_TAKT_137,
-    PtrcBitNetContext,
-    PtrcBitNetLayer,
-    _CLayer,
-    _CSpongeCtx,
-    load_c_bitnet_library,
-)
+int main(void) {
+    ptrc_bitnet_ctx_t ctx;
+    ptrc_bitnet_ctx_init(&ctx, 137210144ULL);
 
+    /* 4 pattern bits + 1 Z \ {0} phase anchor (+1) */
+    const int8_t patterns[DEMO_SAMPLES * DEMO_IN_DIM] = {
+        -1, -1, -1, -1,  1,
+        -1,  1, -1,  1,  1,
+         1, -1,  1, -1,  1,
+         1,  1,  1,  1,  1
+    };
+    const int8_t targets[DEMO_SAMPLES * DEMO_OUT_DIM] = {
+        -1,  1,
+         1, -1,
+         1, -1,
+        -1,  1
+    };
 
-def main() -> None:
-    print("===============================================================================")
-    print("  pTRC RESONANT BITNET AI v2.0 — PRIME-RING RESONANCE & 1-BIT INFERENCE")
-    print(f"  Axioms   : Z \\ {{0}} (No Zero) | {PTRC_AI_FACETS} Facets | Base {PTRC_AI_PRIMORIAL_210} | {PTRC_AI_TAKT_137}-Takt | {PTRC_AI_INVARIANT_156}-Limit")
-    print("  Topology : (4+1) -> 4 -> 2 | Prime-Ring Resonance | XNOR + POPCOUNT")
-    print("===============================================================================")
+    /* 4 resonant crystal detectors coupled to coprime non-Mersenne prime rings */
+    int8_t hidden_weights[DEMO_HIDDEN_DIM * DEMO_IN_DIM];
+    for (uint32_t i = 0U; i < DEMO_HIDDEN_DIM * DEMO_IN_DIM; i++) {
+        *(hidden_weights + i) = *(patterns + i);
+    }
 
-    ctx = PtrcBitNetContext(seed=137210144)
-    patterns = [
-        list((-1, -1, -1, -1, 1)),
-        list((-1, 1, -1, 1, 1)),
-        list((1, -1, 1, -1, 1)),
-        list((1, 1, 1, 1, 1)),
-    ]
-    targets = [
-        list((-1, 1)),
-        list((1, -1)),
-        list((1, -1)),
-        list((-1, 1)),
-    ]
+    int8_t out_weights[DEMO_OUT_DIM * DEMO_HIDDEN_DIM] = {
+         1, -1,  1, -1,
+        -1,  1, -1,  1
+    };
 
-    hidden_weights = [val for row in patterns for val in row]
-    out_weights = list((1, -1, 1, -1, -1, 1, -1, 1))
+    ptrc_bitnet_layer_t hidden_layer;
+    ptrc_bitnet_layer_t out_layer;
 
-    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=4, weights_z_no_zero=hidden_weights, takt_threshold=3)
-    out_layer = PtrcBitNetLayer(
-        in_dim=4, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=PTRC_AI_DEFAULT_THRESH
-    )
+    /* Thresholds strictly in Z \ {0}: +3 for crystal detector layer, -1 for output layer */
+    if (ptrc_bitnet_layer_init(&hidden_layer, DEMO_IN_DIM, DEMO_HIDDEN_DIM, hidden_weights, 3) != PTRC_AI_OK ||
+        ptrc_bitnet_layer_init(&out_layer, DEMO_HIDDEN_DIM, DEMO_OUT_DIM, out_weights, PTRC_AI_DEFAULT_THRESH) != PTRC_AI_OK) {
+        printf("ERROR: Layer initialization failed.\n");
+        return 1;
+    }
 
-    t0 = time.perf_counter_ns()
-    for epoch in range(1, 17):
-        locked = 0
-        for pat, tgt in zip(patterns, targets):
-            hidden_act, _ = hidden_layer.forward(ctx, pat)
-            if out_layer.hebbian_step(ctx, hidden_act, tgt, plasticity_gain=16) == PTRC_AI_OK:
-                locked += 1
-        print(f" + Training Takt-Epoch {epoch:02d} | Locked: {locked}/4 | Resonance Energy: {ctx.resonance_energy}")
-        if locked == 4:
-            break
-    t1 = time.perf_counter_ns()
+    printf("===============================================================================\n");
+    printf("  pTRC BITNET AI ENGINE v2.0 — BARE-METAL C11 1-BIT CRYSTALLINE INFERENCE\n");
+    printf("  Topology     : (4+1) -> 4 -> 2 (Prime-Ring Resonance | Pure Integer Z \\ {0})\n");
+    printf("  Context RAM  : %zu bytes static stack | 144 Facets | 137-Takt Sync\n", sizeof(ctx));
+    printf("===============================================================================\n");
 
-    print("-------------------------------------------------------------------------------")
-    for pat, tgt in zip(patterns, targets):
-        hidden_act, _ = hidden_layer.forward(ctx, pat)
-        out, scores = out_layer.forward(ctx, hidden_act)
-        status = "MATCH" if out == tgt else "DIFF"
-        print(f" + Input {pat[:4]} -> Output {out} (Scores {scores}) | Target {tgt} [{status}]")
+    for (uint32_t epoch = 1U; epoch <= 16U; epoch++) {
+        int32_t locked_count = 0;
+        for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
+            int8_t hidden_act[DEMO_HIDDEN_DIM];
+            const int8_t *pat_ptr = patterns + (p * DEMO_IN_DIM);
+            const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
 
-    lib = load_c_bitnet_library()
-    if lib is not None:
-        c_ctx = _CSpongeCtx()
-        lib.ptrc_bitnet_ctx_init(ctypes.byref(c_ctx), 137210144)
-        c_layer = _CLayer()
-        c_w = (ctypes.c_int8 * len(out_weights))(*out_weights)
-        lib.ptrc_bitnet_layer_init(ctypes.byref(c_layer), 4, 2, c_w, PTRC_AI_DEFAULT_THRESH)
-        print(f" + C11 Native Kernel   : ACTIVE (sizeof(ctx)={ctypes.sizeof(c_ctx)} bytes, Zero malloc)")
-        lib.ptrc_bitnet_wipe(ctypes.byref(c_ctx))
-    else:
-        print(" + C11 Native Kernel   : Build via 'cmake -B build -S . && cmake --build build'")
+            ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
+            if (ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, tgt_ptr, 16) == PTRC_AI_OK) {
+                locked_count++;
+            }
+        }
+        if (locked_count == (int32_t)DEMO_SAMPLES) {
+            printf(" + Prime-Ring Phase-Lock achieved at Epoch %u (4/4 locked across 144 facets)\n", epoch);
+            break;
+        }
+    }
 
-    elapsed_us = (t1 - t0) // 1000
-    print(f" + Convergence Time    : {elapsed_us} us (Pure Integer Z \\ {{0}} Prime-Ring Resonance)")
-    print("===============================================================================")
+    int32_t passed = 0;
+    for (uint32_t p = 0U; p < DEMO_SAMPLES; p++) {
+        int8_t  hidden_act[DEMO_HIDDEN_DIM];
+        int8_t  out[DEMO_OUT_DIM]    = { -1, -1 };
+        int32_t scores[DEMO_OUT_DIM] = { -1, -1 };
 
+        const int8_t *pat_ptr = patterns + (p * DEMO_IN_DIM);
+        const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
 
-if __name__ == "__main__":
-    main()
+        ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
+        ptrc_bitnet_forward(&ctx, &out_layer, hidden_act, out, scores);
+
+        int ok = (*(out + 0) == *(tgt_ptr + 0) && *(out + 1) == *(tgt_ptr + 1)) ? PTRC_AI_OK : PTRC_AI_ERR;
+        if (ok == PTRC_AI_OK) {
+            passed++;
+        }
+        printf(" + Pattern (%+d,%+d,%+d,%+d) -> Out (%+d,%+d) | Expected (%+d,%+d) | %s\n",
+               *(pat_ptr + 0), *(pat_ptr + 1), *(pat_ptr + 2), *(pat_ptr + 3),
+               *(out + 0), *(out + 1),
+               *(tgt_ptr + 0), *(tgt_ptr + 1),
+               (ok == PTRC_AI_OK) ? "PASS" : "FAIL");
+    }
+
+    ptrc_bitnet_wipe(&ctx);
+    printf("-------------------------------------------------------------------------------\n");
+    printf("  VERIFICATION RESULT: %d / 4 Patterns Verified | SRAM Restored to -1\n", passed);
+    printf("===============================================================================\n");
+    return (passed == 4) ? 0 : 1;
+}
