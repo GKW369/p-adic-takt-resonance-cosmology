@@ -109,9 +109,9 @@ class PtrcGfxContext:
         self.clock_phase_24: int = 1
         u0 = PTRC_CLOCK24_U.__getitem__(0)
         v0 = PTRC_CLOCK24_V.__getitem__(0)
-        self.cam_x: int = ptrc_gfx_z_no_zero(u0 * 1200)
-        self.cam_y: int = ptrc_gfx_z_no_zero(180000)
-        self.cam_z: int = ptrc_gfx_z_no_zero(v0 * 1200)
+        self.cam_x: int = ptrc_gfx_z_no_zero(u0 * 920)
+        self.cam_y: int = ptrc_gfx_z_no_zero(110000)
+        self.cam_z: int = ptrc_gfx_z_no_zero(v0 * 920)
         self.active_hits: int = 1
         self.mirror_pulses: int = 1
 
@@ -120,9 +120,9 @@ class PtrcGfxContext:
         u = PTRC_CLOCK24_U.__getitem__(phase_idx)
         v = PTRC_CLOCK24_V.__getitem__(phase_idx)
 
-        self.cam_x = ptrc_gfx_z_no_zero(u * 1200 + ((self.takt_counter * 17) & 0x3FF))
-        self.cam_y = ptrc_gfx_z_no_zero(180000 + v * 28)
-        self.cam_z = ptrc_gfx_z_no_zero(v * 1200 - ((self.takt_counter * 13) & 0x3FF))
+        self.cam_x = ptrc_gfx_z_no_zero(u * 920)
+        self.cam_y = ptrc_gfx_z_no_zero(110000 + v * 16)
+        self.cam_z = ptrc_gfx_z_no_zero(v * 920)
 
         if (self.takt_counter % PTRC_GFX_TAKT_137) == 0:
             for f in range(PTRC_GFX_FACETS):
@@ -167,7 +167,7 @@ class PtrcGfxContext:
                 dx = ptrc_gfx_z_no_zero((px - half_w) * scale_x)
 
                 dir_x = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_u + dx * rot_v, 10) * 64)
-                dir_y = ptrc_gfx_z_no_zero((-140 - dy) * 64)
+                dir_y = ptrc_gfx_z_no_zero((-115 - dy) * 64)
                 dir_z = ptrc_gfx_z_no_zero(_c_shr_i32(-1024 * rot_v - dx * rot_u, 10) * 64)
 
                 ray_x = cam_x
@@ -191,9 +191,8 @@ class PtrcGfxContext:
                     facet_idx = abs(vx * 3 + vy * 5 + vz * 7) % PTRC_GFX_FACETS
                     facet_val = sponge.__getitem__(facet_idx)
 
-                    # 1. Central Golden 1+12 Octahedral Crystal Pyramid (manhattan <= 14)
-                    if manhattan <= 14 and (vy & 1) != 0 and ((abs(vx + vz + (facet_val & 7)) % 3) != 0):
-                        shade = 248 - (step * 5)
+                    if manhattan <= 16 and (vy & 1) != 0 and ((abs(vx + vz + (facet_val & 7)) % 3) != 0):
+                        shade = 250 - (step * 5)
                         if shade < 64:
                             shade = 64
                         out_r = shade
@@ -204,9 +203,8 @@ class PtrcGfxContext:
                         hit_counter += 1
                         break
 
-                    # 2. Outer Cyan & Violet Coprime Prime-Ring Resonance Starfield
                     sig = abs(vx * 137 + vy * 211 + vz * 157 + facet_val)
-                    if (sig % 11) == 1 and (sig % 13) == 1 and (sig % 17) == 1:
+                    if (sig % 11) == 1 and (sig % 23) == 1:
                         ring_sel = sig % PTRC_GFX_PRIME_RINGS
                         lum = 240 - (step * 4)
                         if lum < 72:
