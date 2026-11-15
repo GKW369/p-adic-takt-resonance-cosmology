@@ -31,13 +31,15 @@ int main(void) {
     ptrc_bitnet_ctx_t ctx;
     ptrc_bitnet_ctx_init(&ctx, 137210144ULL);
 
+    /* 16 bipolar basis detectors across all 4 input bits + (+1) phase anchor */
     int8_t hidden_weights[DEMO_HIDDEN_DIM * DEMO_IN_DIM];
     for (uint32_t r = 0U; r < DEMO_HIDDEN_DIM; r++) {
         for (uint32_t c = 0U; c < 4U; c++) {
-            uint32_t bit = ((r ^ (r >> 1U)) >> c) & 1U;
+            uint32_t bit = (r >> c) & 1U;
             *(hidden_weights + (r * DEMO_IN_DIM + c)) = bit ? 1 : -1;
         }
-        *(hidden_weights + (r * DEMO_IN_DIM + 4U)) = ((r & 1U) == 0U) ? 1 : -1;
+        /* +1 anchor ensures every exact pattern match reaches dot == +5 >= threshold 3 */
+        *(hidden_weights + (r * DEMO_IN_DIM + 4U)) = 1;
     }
 
     int8_t out_weights[DEMO_OUT_DIM * DEMO_HIDDEN_DIM];
@@ -48,7 +50,8 @@ int main(void) {
     ptrc_bitnet_layer_t hidden_layer;
     ptrc_bitnet_layer_t out_layer;
 
-    if (ptrc_bitnet_layer_init(&hidden_layer, DEMO_IN_DIM, DEMO_HIDDEN_DIM, hidden_weights, 1) != 0 ||
+    /* Threshold 3 selects the exact matching crystal detector (dot = +5 vs <= +3) */
+    if (ptrc_bitnet_layer_init(&hidden_layer, DEMO_IN_DIM, DEMO_HIDDEN_DIM, hidden_weights, 3) != 0 ||
         ptrc_bitnet_layer_init(&out_layer, DEMO_HIDDEN_DIM, DEMO_OUT_DIM, out_weights, 0) != 0) {
         printf("ERROR: Layer initialization failed.\n");
         return 1;
@@ -81,7 +84,7 @@ int main(void) {
             const int8_t *tgt_ptr = targets + (p * DEMO_OUT_DIM);
 
             ptrc_bitnet_forward(&ctx, &hidden_layer, pat_ptr, hidden_act, NULL);
-            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, tgt_ptr, 4);
+            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, tgt_ptr, 8);
         }
         if (total_err == 0) {
             printf(" + Hebbian Convergence achieved at Epoch %u (0 errors across 144 facets)\n", epoch);
@@ -116,4 +119,3 @@ int main(void) {
     printf("===============================================================================\n");
     return (passed == 4) ? 0 : 1;
 }
-
