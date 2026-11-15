@@ -21,7 +21,7 @@
 Cryptographic-Grade Statistical, Invariant & Throughput Metrics for pTRC BitNet AI v2.0.
 File: src/00_test_ptrc_bitnet_metrics.py
 
-Strictly zero-float (integer microseconds & takts/sec), verifying:
+Strictly pure integer (integer microseconds & takts/sec), verifying:
 1. (4+1) -> 4 -> 2 Hebbian convergence speed & post-convergence zero-drift stability (1,000 takts)
 2. Strict Z \\ {0} domain integrity & 156 Wirminghaus invariant saturation bounds
 3. 144-facet sponge resonance dispersion across multiple 137-takt mirror pulses
