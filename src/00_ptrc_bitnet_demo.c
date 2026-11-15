@@ -26,16 +26,29 @@ int main(void) {
     ptrc_bitnet_ctx_t ctx;
     ptrc_bitnet_ctx_init(&ctx, 137210144ULL);
 
-    /* 4-input -> 2-output 1-bit {-1, +1} crystalline layer */
-    const uint32_t in_dim  = 4U;
-    const uint32_t out_dim = 2U;
-    int8_t init_weights[8] = {
-         1, -1,  1, -1,
-        -1,  1, -1,  1
-    };
+    /* 2-Layer 1-Bit Crystalline Resonance Network: 4 -> 16 -> 2 (solves non-linear XOR) */
+    const uint32_t in_dim     = 4U;
+    const uint32_t hidden_dim = 16U;
+    const uint32_t out_dim    = 2U;
 
-    ptrc_bitnet_layer_t layer;
-    if (ptrc_bitnet_layer_init(&layer, in_dim, out_dim, init_weights, 0) != 0) {
+    int8_t hidden_weights[16 * 4];
+    for (uint32_t r = 0U; r < hidden_dim; r++) {
+        for (uint32_t c = 0U; c < in_dim; c++) {
+            uint32_t bit = ((r ^ (r >> 1U)) >> c) & 1U;
+            hidden_weights[r * in_dim + c] = bit ? 1 : -1;
+        }
+    }
+
+    int8_t out_weights[2 * 16];
+    for (uint32_t i = 0U; i < out_dim * hidden_dim; i++) {
+        out_weights[i] = ((i & 1U) == 0U) ? 1 : -1;
+    }
+
+    ptrc_bitnet_layer_t hidden_layer;
+    ptrc_bitnet_layer_t out_layer;
+
+    if (ptrc_bitnet_layer_init(&hidden_layer, in_dim, hidden_dim, hidden_weights, 0) != 0 ||
+        ptrc_bitnet_layer_init(&out_layer, hidden_dim, out_dim, out_weights, 0) != 0) {
         printf("ERROR: Layer initialization failed.\n");
         return 1;
     }
@@ -55,15 +68,17 @@ int main(void) {
 
     printf("===============================================================================\n");
     printf("  pTRC BITNET AI ENGINE v2.0 — BARE-METAL C11 1-BIT CRYSTALLINE INFERENCE\n");
-    printf("  Context RAM  : %zu bytes static stack | Zero float/double | Zero malloc\n", sizeof(ctx));
-    printf("  Lattice Core : Z \\ {0} | 144 Facets | 24-Clock Quadrance | 137-Takt Sync\n");
+    printf("  Topology     : 4 -> 16 -> 2 (1-Bit {-1,+1} XNOR+POPCOUNT | Zero float/malloc)\n");
+    printf("  Context RAM  : %zu bytes static stack | 144 Facets | 137-Takt Sync\n", sizeof(ctx));
     printf("===============================================================================\n");
 
-    /* Discrete Integer Hebbian Plasticity Training (Zero Floating-Point Backprop) */
-    for (uint32_t epoch = 1U; epoch <= 12U; epoch++) {
+    /* Discrete Integer Hebbian Plasticity Training on Output Resonance Layer */
+    for (uint32_t epoch = 1U; epoch <= 16U; epoch++) {
         int32_t total_err = 0;
         for (uint32_t p = 0U; p < 4U; p++) {
-            total_err += ptrc_bitnet_hebbian_step(&ctx, &layer, patterns[p], targets[p], 4);
+            int8_t hidden_act[16];
+            ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
+            total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, targets[p], 4);
         }
         if (total_err == 0) {
             printf(" + Hebbian Convergence achieved at Epoch %u (0 errors across 144 facets)\n", epoch);
@@ -71,12 +86,16 @@ int main(void) {
         }
     }
 
-    /* Forward 1-Bit XNOR + POPCOUNT Inference Verification */
+    /* Forward 2-Layer 1-Bit XNOR + POPCOUNT Inference Verification */
     int32_t passed = 0;
     for (uint32_t p = 0U; p < 4U; p++) {
+        int8_t  hidden_act[16];
         int8_t  out[2]    = { -1, -1 };
         int32_t scores[2] = {  0,  0 };
-        ptrc_bitnet_forward(&ctx, &layer, patterns[p], out, scores);
+
+        ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
+        ptrc_bitnet_forward(&ctx, &out_layer, hidden_act, out, scores);
+
         int ok = (out[0] == targets[p][0] && out[1] == targets[p][1]) ? 1 : 0;
         passed += ok;
         printf(" + Pattern [%+d,%+d,%+d,%+d] -> Out [%+d,%+d] (Expected [%+d,%+d]) | %s\n",
