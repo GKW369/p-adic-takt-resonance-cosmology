@@ -1,5 +1,5 @@
 /* ==============================================================================
- * pTRC Framework - Discrete 1-Bit Integer Physics & Light Universe Engine v4.0
+ * pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.1
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,10 @@
 /* File: embedded/graphics/ptrc_light_universe.c (Part 1 of 2) */
 
 #include "ptrc_light_universe.h"
+
+/* Virtual 16.384 x 9.216 integer lattice space (16:9 exact ratio, zero-free) */
+#define VIRT_W 16384
+#define VIRT_H 9216
 
 static const uint32_t PTRC_GFX_RINGS[PTRC_GFX_PRIME_RINGS] = {
     11U, 13U, 17U, 19U, 23U, 29U, 37U, 41U,
@@ -68,13 +72,32 @@ int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed) {
         state = ptrc_gfx_u64_no_zero(state);
         int32_t raw = (int32_t)(state % PTRC_GFX_PRIMORIAL_210) - 105;
         *(ctx->sponge + f) = ptrc_gfx_z_no_zero(raw);
+        uint8_t st8 = (uint8_t)(state & 0xFFULL);
+        *(ctx->crystal_state + f) = (st8 == 0U) ? 0xFFU : st8;
+    }
+
+    /* Seed 60,000 freely distributed 1-bit information agents across Z \ {0} */
+    for (uint32_t i = 0U; i < PTRC_GFX_AGENT_COUNT; i++) {
+        state = (state * 6364136223846793005ULL + 1442695040888963407ULL);
+        state = ptrc_gfx_u64_no_zero(state);
+        int32_t ax = (int32_t)(state % (uint64_t)VIRT_W) + 1;
+        state = (state ^ (state >> 17U)) * 211ULL + 137ULL;
+        state = ptrc_gfx_u64_no_zero(state);
+        int32_t ay = (int32_t)(state % (uint64_t)VIRT_H) + 1;
+
+        *(ctx->agent_x + i) = ptrc_gfx_z_no_zero(ax);
+        *(ctx->agent_y + i) = ptrc_gfx_z_no_zero(ay);
+        *(ctx->agent_vx + i) = ptrc_gfx_z_no_zero(44 + (int32_t)(i % 19U));
+        *(ctx->agent_vy + i) = ptrc_gfx_z_no_zero((int32_t)(i % 5U) - 2);
+        uint8_t ast = (uint8_t)((state >> 8U) & 0xFFULL);
+        *(ctx->agent_state + i) = (ast == 0U) ? 0xFFU : ast;
     }
 
     ctx->takt_counter   = 1ULL;
     ctx->clock_phase_24 = 1U;
-    ctx->cam_x          = ptrc_gfx_z_no_zero((*(PTRC_CLOCK24_U + 0U)) * 920);
-    ctx->cam_y          = ptrc_gfx_z_no_zero(110000);
-    ctx->cam_z          = ptrc_gfx_z_no_zero((*(PTRC_CLOCK24_V + 0U)) * 920);
+    /* Floating rotating pyramid in the front third (~1/5 of screen width = ~3276) */
+    ctx->pyramid_cx     = ptrc_gfx_z_no_zero(4600);
+    ctx->pyramid_cy     = ptrc_gfx_z_no_zero(VIRT_H >> 1);
     ctx->active_hits    = 1U;
     ctx->mirror_pulses  = 1U;
 
@@ -87,28 +110,102 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
     }
 
     uint32_t phase_idx = (ctx->clock_phase_24 - 1U) % PTRC_GFX_JUNCTIONS;
-    int32_t u = *(PTRC_CLOCK24_U + phase_idx);
-    int32_t v = *(PTRC_CLOCK24_V + phase_idx);
+    int32_t rot_u = *(PTRC_CLOCK24_U + phase_idx);
+    int32_t rot_v = *(PTRC_CLOCK24_V + phase_idx);
+    int32_t p_ring = (int32_t)(*(ctx->prime_rings + (phase_idx & 15U)));
 
-    ctx->cam_x = ptrc_gfx_z_no_zero(u * 920);
-    ctx->cam_y = ptrc_gfx_z_no_zero(110000 + v * 16);
-    ctx->cam_z = ptrc_gfx_z_no_zero(v * 920);
+    /* 1. 24 Contact Junctions exchange state with 120 free isotropy facets */
+    for (uint32_t j = 0U; j < PTRC_GFX_JUNCTIONS; j++) {
+        uint32_t jf = PTRC_GFX_FREE_FACETS + j;
+        uint32_t mf = (j * 5U + phase_idx) % PTRC_GFX_FREE_FACETS;
+        int32_t coupled = (*(ctx->sponge + jf)) ^ (*(ctx->sponge + mf));
+        *(ctx->sponge + jf) = ptrc_gfx_z_no_zero(coupled + p_ring);
+        uint8_t sn = (uint8_t)(((*(ctx->crystal_state + mf)) ^ (uint8_t)(coupled & 0xFF)) + (uint8_t)p_ring);
+        *(ctx->crystal_state + mf) = (sn == 0U) ? 0xFFU : sn;
+    }
 
+    /* 2. Global 137-Takt Observer Mirror Pulse */
     if ((ctx->takt_counter % PTRC_GFX_TAKT_137) == 0ULL) {
         for (uint32_t f = 0U; f < PTRC_GFX_FACETS; f++) {
             *(ctx->sponge + f) = ptrc_gfx_z_no_zero(~(*(ctx->sponge + f)));
+            uint8_t inv = (uint8_t)(~(*(ctx->crystal_state + f)));
+            *(ctx->crystal_state + f) = (inv == 0U) ? 0xFFU : inv;
         }
         ctx->mirror_pulses++;
-    } else {
-        uint32_t f0 = (uint32_t)((ctx->takt_counter * 37ULL) % PTRC_GFX_FACETS);
-        uint32_t f1 = (f0 + 73U) % PTRC_GFX_FACETS;
-        int32_t p_val = (int32_t)(*(ctx->prime_rings + (phase_idx & 15U)));
-        *(ctx->sponge + f0) = ptrc_gfx_z_no_zero((*(ctx->sponge + f0)) + p_val);
-        *(ctx->sponge + f1) = ptrc_gfx_z_no_zero((*(ctx->sponge + f1)) ^ p_val);
+    }
+
+    /* 3. Pyramid bobs gently up & down in the front third (24-Clock Quadrance) */
+    int32_t py_center = (VIRT_H >> 1) + ((rot_v * 680) >> 10);
+    ctx->pyramid_cx = ptrc_gfx_z_no_zero(4600 + ((rot_u * 180) >> 10));
+    ctx->pyramid_cy = ptrc_gfx_z_no_zero(py_center);
+
+    /* Pyramid half-width ~ 1638 (total width ~ 3276 = 1/5 of 16384 screen width) */
+    const int32_t pyr_rad = 1638;
+
+    /* 4. Advance all 60,000 agents flowing from left -> right around the rotating pyramid */
+    for (uint32_t i = 0U; i < PTRC_GFX_AGENT_COUNT; i++) {
+        int32_t ax = *(ctx->agent_x + i) + *(ctx->agent_vx + i);
+        int32_t ay = *(ctx->agent_y + i) + *(ctx->agent_vy + i);
+
+        /* Respawn fresh particles on the left boundary when exiting right */
+        if (ax > VIRT_W) {
+            ax = ptrc_gfx_z_no_zero((ax % 64) + 1);
+            ay = ptrc_gfx_z_no_zero(((int32_t)((i * 137U + (uint32_t)ctx->takt_counter * 31U) % (uint32_t)VIRT_H)) + 1);
+            *(ctx->agent_vx + i) = ptrc_gfx_z_no_zero(44 + (int32_t)(i % 19U));
+            *(ctx->agent_vy + i) = ptrc_gfx_z_no_zero((int32_t)(i % 5U) - 2);
+        }
+
+        if (ay < 1) {
+            ay = 1;
+            *(ctx->agent_vy + i) = ptrc_gfx_abs32(*(ctx->agent_vy + i));
+        } else if (ay > VIRT_H) {
+            ay = VIRT_H;
+            *(ctx->agent_vy + i) = -ptrc_gfx_abs32(*(ctx->agent_vy + i));
+        }
+
+        /* Interaction with the 1+12 rotating pyramid boundary (deflection + wake vortex) */
+        int32_t dx = ax - ctx->pyramid_cx;
+        int32_t dy = ay - ctx->pyramid_cy;
+        int32_t manhattan = ptrc_gfx_abs32(dx) + ptrc_gfx_abs32(dy);
+
+        if (manhattan <= (pyr_rad + 420)) {
+            int32_t push_y = (dy >= 0) ? 18 : -18;
+            if (manhattan <= pyr_rad) {
+                /* Deflect outside crystal boundary along 24-clock tangent */
+                ay = ptrc_gfx_z_no_zero(ctx->pyramid_cy + ((dy >= 0) ? (pyr_rad - ptrc_gfx_abs32(dx) + 24) : -(pyr_rad - ptrc_gfx_abs32(dx) + 24)));
+                *(ctx->agent_vx + i) = ptrc_gfx_z_no_zero(36 + ((rot_u & 15)));
+                *(ctx->agent_vy + i) = ptrc_gfx_z_no_zero(push_y + (rot_v >> 7));
+                uint8_t st = (uint8_t)((*(ctx->agent_state + i)) ^ 0xA5U);
+                *(ctx->agent_state + i) = (st == 0U) ? 0xFFU : st;
+            } else {
+                /* Wake resonance ripple behind the pyramid */
+                *(ctx->agent_vy + i) = ptrc_gfx_z_no_zero(*(ctx->agent_vy + i) + ((dx > 0) ? ((rot_v >> 8) * ((i & 1U) ? 1 : -1)) : (push_y >> 2)));
+            }
+        } else {
+            /* Gentle laminar damping back toward horizontal stream */
+            if (*(ctx->agent_vy + i) > 3) {
+                *(ctx->agent_vy + i) -= 1;
+            } else if (*(ctx->agent_vy + i) < -3) {
+                *(ctx->agent_vy + i) += 1;
+            }
+        }
+
+        *(ctx->agent_x + i) = ptrc_gfx_z_no_zero(ax);
+        *(ctx->agent_y + i) = ptrc_gfx_z_no_zero(ay);
     }
 
     ctx->takt_counter++;
     ctx->clock_phase_24 = (ctx->clock_phase_24 % PTRC_GFX_JUNCTIONS) + 1U;
+    return PTRC_GFX_OK;
+}
+
+int ptrc_gfx_advance_observer_epoch(ptrc_gfx_ctx_t *ctx) {
+    if (!ctx) {
+        return PTRC_GFX_ERR;
+    }
+    for (uint32_t t = 0U; t < PTRC_GFX_TAKT_137; t++) {
+        ptrc_gfx_step_takt(ctx);
+    }
     return PTRC_GFX_OK;
 }
 
@@ -124,90 +221,113 @@ int ptrc_gfx_render_frame_rgb24(
         return PTRC_GFX_ERR;
     }
 
-    int32_t half_w = (int32_t)(width >> 1U);
-    int32_t half_h = (int32_t)(height >> 1U);
+    /* 1. Clear background to deep Z \ {0} cosmic navy (1, 2, 6 — zero 0x00 bytes) */
+    size_t total_pixels = (size_t)width * (size_t)height;
+    for (size_t p = 0U; p < total_pixels; p++) {
+        size_t idx = p * 3U;
+        *(rgb_out + idx + 0U) = 1U;
+        *(rgb_out + idx + 1U) = 2U;
+        *(rgb_out + idx + 2U) = 6U;
+    }
+
     uint32_t phase_idx = (ctx->clock_phase_24 - 1U) % PTRC_GFX_JUNCTIONS;
     int32_t rot_u = *(PTRC_CLOCK24_U + phase_idx);
     int32_t rot_v = *(PTRC_CLOCK24_V + phase_idx);
     uint32_t hit_counter = 1U;
 
-    int32_t scale_x = (1024 / half_w) >= 1 ? (1024 / half_w) : 1;
-    int32_t scale_y = (576 / half_h) >= 1 ? (576 / half_h) : 1;
+    /* 2. Plot all 60,000 free information agents (color-coded by velocity & 256-state register) */
+    for (uint32_t i = 0U; i < PTRC_GFX_AGENT_COUNT; i++) {
+        int32_t ax = *(ctx->agent_x + i);
+        int32_t ay = *(ctx->agent_y + i);
+        if (ax < 1 || ax > VIRT_W || ay < 1 || ay > VIRT_H) {
+            continue;
+        }
+        uint32_t px = (uint32_t)(((int64_t)(ax - 1) * (int64_t)width) >> 14);
+        uint32_t py = (uint32_t)(((int64_t)(ay - 1) * (int64_t)height) / (int64_t)VIRT_H);
+        if (px >= width) px = width - 1U;
+        if (py >= height) py = height - 1U;
 
-    for (uint32_t py = 0U; py < height; py++) {
-        int32_t dy = ptrc_gfx_z_no_zero(((int32_t)py - half_h) * scale_y);
-        size_t row_offset = (size_t)py * (size_t)width * 3U;
+        uint8_t st = *(ctx->agent_state + i);
+        int32_t vy_abs = ptrc_gfx_abs32(*(ctx->agent_vy + i));
 
-        for (uint32_t px = 0U; px < width; px++) {
-            int32_t dx = ptrc_gfx_z_no_zero(((int32_t)px - half_w) * scale_x);
+        uint8_t r_val, g_val, b_val;
+        if (vy_abs > 10) {
+            /* High-deflection vortex wake agents -> bright violet/magenta */
+            r_val = (uint8_t)(185U + (st & 0x3FU));
+            g_val = 58U;
+            b_val = (uint8_t)(210U + (st & 0x2AU));
+        } else if ((st & 1U) == 0U) {
+            /* Laminar cyan resonance agents */
+            r_val = 28U;
+            g_val = (uint8_t)(175U + (st & 0x4FU));
+            b_val = (uint8_t)(215U + (st & 0x27U));
+        } else {
+            /* Deep azure-teal agents */
+            r_val = 42U;
+            g_val = (uint8_t)(120U + (st & 0x5FU));
+            b_val = (uint8_t)(195U + (st & 0x3BU));
+        }
 
-            int32_t dir_x = ptrc_gfx_z_no_zero(((-1024 * rot_u + dx * rot_v) >> 10) * 64);
-            int32_t dir_y = ptrc_gfx_z_no_zero((-115 - dy) * 64);
-            int32_t dir_z = ptrc_gfx_z_no_zero(((-1024 * rot_v - dx * rot_u) >> 10) * 64);
+        size_t pix = ((size_t)py * (size_t)width + (size_t)px) * 3U;
+        *(rgb_out + pix + 0U) = (r_val == 0U) ? 1U : r_val;
+        *(rgb_out + pix + 1U) = (g_val == 0U) ? 1U : g_val;
+        *(rgb_out + pix + 2U) = (b_val == 0U) ? 1U : b_val;
+        hit_counter++;
+    }
 
-            int32_t ray_x = ctx->cam_x;
-            int32_t ray_y = ctx->cam_y;
-            int32_t ray_z = ctx->cam_z;
+    /* 3. Render the 3D rotating 1+12 Golden Pyramid in the front third (~1/5 screen width) */
+    int32_t pyr_cx_px = (int32_t)(((int64_t)ctx->pyramid_cx * (int64_t)width) >> 14);
+    int32_t pyr_cy_px = (int32_t)(((int64_t)ctx->pyramid_cy * (int64_t)height) / (int64_t)VIRT_H);
+    int32_t pyr_half_w = (int32_t)(width / 10U); /* Total width = width / 5 */
+    if (pyr_half_w < 8) pyr_half_w = 8;
 
-            uint8_t out_r = 1U;
-            uint8_t out_g = 1U;
-            uint8_t out_b = 3U;
+    int32_t y_min = pyr_cy_px - pyr_half_w;
+    int32_t y_max = pyr_cy_px + pyr_half_w;
+    int32_t x_min = pyr_cx_px - pyr_half_w;
+    int32_t x_max = pyr_cx_px + pyr_half_w;
+    if (y_min < 0) y_min = 0;
+    if (y_max >= (int32_t)height) y_max = (int32_t)height - 1;
+    if (x_min < 0) x_min = 0;
+    if (x_max >= (int32_t)width) x_max = (int32_t)width - 1;
 
-            for (uint32_t step = 1U; step <= PTRC_GFX_MAX_STEPS; step++) {
-                ray_x += dir_x;
-                ray_y += dir_y;
-                ray_z += dir_z;
+    for (int32_t py = y_min; py <= y_max; py++) {
+        int32_t dy = py - pyr_cy_px;
+        size_t row_off = (size_t)py * (size_t)width * 3U;
 
-                int32_t vx = ptrc_gfx_z_no_zero(ray_x >> PTRC_GFX_VOXEL_SHIFT);
-                int32_t vy = ptrc_gfx_z_no_zero(ray_y >> PTRC_GFX_VOXEL_SHIFT);
-                int32_t vz = ptrc_gfx_z_no_zero(ray_z >> PTRC_GFX_VOXEL_SHIFT);
+        for (int32_t px = x_min; px <= x_max; px++) {
+            int32_t dx = px - pyr_cx_px;
 
-                int32_t manhattan = ptrc_gfx_abs32(vx) + ptrc_gfx_abs32(vy) + ptrc_gfx_abs32(vz);
-                uint32_t facet_idx = (uint32_t)((ptrc_gfx_abs32(vx * 3 + vy * 5 + vz * 7)) % PTRC_GFX_FACETS);
-                int32_t facet_val = *(ctx->sponge + facet_idx);
+            /* Rotate local coordinates via 24-Clock Discrete Quadrance (u^2 + v^2 = 1000^2) */
+            int32_t rx = (dx * rot_u - dy * rot_v) >> 10;
+            int32_t ry = (dx * rot_v + dy * rot_u) >> 10;
 
-                /* 1. Central Golden 1+12 Octahedral Crystal Pyramid (manhattan <= 16) */
-                if (manhattan <= 16 && (vy & 1) != 0 && ((ptrc_gfx_abs32(vx + vz + (facet_val & 7)) % 3U) != 0U)) {
-                    uint32_t shade = 250U - (step * 5U);
-                    if (shade < 64U) {
-                        shade = 64U;
-                    }
-                    out_r = (uint8_t)shade;
-                    out_g = (uint8_t)((shade * 195U) >> 8U);
-                    out_b = (uint8_t)((shade * 52U) >> 8U);
-                    if (out_b == 0U) {
-                        out_b = 1U;
-                    }
-                    hit_counter++;
-                    break;
+            /* Octahedral / 4-sided pyramid profile */
+            int32_t dist = ptrc_gfx_abs32(rx) + ptrc_gfx_abs32(ry);
+            if (dist <= pyr_half_w) {
+                /* 144-facet crystalline facet shading (bright gold + facet lattice lines) */
+                uint32_t facet_id = (uint32_t)(ptrc_gfx_abs32(rx * 3 + ry * 5) % PTRC_GFX_FACETS);
+                int32_t fval = *(ctx->sponge + facet_id);
+                int32_t facet_border = ((ptrc_gfx_abs32(rx) % 9) == 0 || (ptrc_gfx_abs32(ry) % 9) == 0) ? 1 : 0;
+
+                /* Directional illumination from upper-left facet normal */
+                int32_t shade = 215 - ((rx + ry) * 65) / pyr_half_w + (fval & 15);
+                if (facet_border) {
+                    shade += 32;
                 }
+                if (shade > 255) shade = 255;
+                if (shade < 85) shade = 85;
 
-                /* 2. Outer Cyan & Violet Coprime Prime-Ring Resonance Starfield */
-                uint32_t sig = (uint32_t)ptrc_gfx_abs32(vx * 137 + vy * 211 + vz * 157 + facet_val);
-                if ((sig % 11U) == 1U && (sig % 23U) == 1U) {
-                    uint32_t ring_sel = sig % PTRC_GFX_PRIME_RINGS;
-                    uint32_t lum = 240U - (step * 4U);
-                    if (lum < 72U) {
-                        lum = 72U;
-                    }
-                    if ((ring_sel & 1U) == 0U) {
-                        out_r = 24U;
-                        out_g = (uint8_t)((lum * 220U) >> 8U);
-                        out_b = (uint8_t)lum;
-                    } else {
-                        out_r = (uint8_t)((lum * 210U) >> 8U);
-                        out_g = 42U;
-                        out_b = (uint8_t)lum;
-                    }
-                    hit_counter++;
-                    break;
-                }
+                uint8_t gr = (uint8_t)shade;
+                uint8_t gg = (uint8_t)((shade * 198) >> 8);
+                uint8_t gb = (uint8_t)((shade * 54) >> 8);
+                if (gb == 0U) gb = 1U;
+
+                size_t pix = row_off + (size_t)px * 3U;
+                *(rgb_out + pix + 0U) = gr;
+                *(rgb_out + pix + 1U) = gg;
+                *(rgb_out + pix + 2U) = gb;
+                hit_counter++;
             }
-
-            size_t pix = row_offset + (size_t)px * 3U;
-            *(rgb_out + pix + 0U) = (out_r == 0U) ? 1U : out_r;
-            *(rgb_out + pix + 1U) = (out_g == 0U) ? 1U : out_g;
-            *(rgb_out + pix + 2U) = (out_b == 0U) ? 1U : out_b;
         }
     }
 
