@@ -56,13 +56,13 @@ int main(void) {
     }
 
     /* 4 pattern bits + 1 Z \ {0} phase anchor (+1) */
-    const int8_t patterns = {
+    const int8_t patterns[4][5] = {
         { -1, -1, -1, -1,  1 },
         { -1,  1, -1,  1,  1 },
         {  1, -1,  1, -1,  1 },
         {  1,  1,  1,  1,  1 }
     };
-    const int8_t targets = {
+    const int8_t targets[4][2] = {
         { -1,  1 },
         {  1, -1 },
         {  1, -1 },
@@ -79,7 +79,7 @@ int main(void) {
     for (uint32_t epoch = 1U; epoch <= 16U; epoch++) {
         int32_t total_err = 0;
         for (uint32_t p = 0U; p < 4U; p++) {
-            int8_t hidden_act;
+            int8_t hidden_act[16];
             ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
             total_err += ptrc_bitnet_hebbian_step(&ctx, &out_layer, hidden_act, targets[p], 4);
         }
@@ -92,18 +92,18 @@ int main(void) {
     /* Forward 2-Layer 1-Bit XNOR + POPCOUNT Inference Verification */
     int32_t passed = 0;
     for (uint32_t p = 0U; p < 4U; p++) {
-        int8_t  hidden_act;
-        int8_t  out    = { -1, -1 };
-        int32_t scores = {  0,  0 };
+        int8_t  hidden_act[16];
+        int8_t  out[2]    = { -1, -1 };
+        int32_t scores[2] = {  0,  0 };
 
         ptrc_bitnet_forward(&ctx, &hidden_layer, patterns[p], hidden_act, NULL);
         ptrc_bitnet_forward(&ctx, &out_layer, hidden_act, out, scores);
 
-        int ok = (out == targets[p] && out == targets[p]) ? 1 : 0;
+        int ok = (out[0] == targets[p][0] && out[1] == targets[p][1]) ? 1 : 0;
         passed += ok;
         printf(" + Pattern [%+d,%+d,%+d,%+d] -> Out [%+d,%+d] (Expected [%+d,%+d]) | %s\n",
-               patterns[p], patterns[p], patterns[p], patterns[p],
-               out, out, targets[p], targets[p],
+               patterns[p][0], patterns[p][1], patterns[p][2], patterns[p][3],
+               out[0], out[1], targets[p][0], targets[p][1],
                ok ? "PASS" : "FAIL");
     }
 
