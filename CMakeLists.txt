@@ -18,44 +18,56 @@
 # ==============================================================================
 
 cmake_minimum_required(VERSION 3.16)
-project(pTRC_Crystal_Crypto C)
+project(pTRC_Framework_C11 C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
 set(CRYPTO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/embedded/crypto")
+set(AI_DIR     "${CMAKE_CURRENT_SOURCE_DIR}/embedded/ai")
+set(SRC_DIR    "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
+# Output shared libraries and 00_ executables directly to build/
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
-# 1. Shared C11 library (for Python ctypes parity & benchmark verification)
+# ==============================================================================
+# 1. CRYPTO v4.0 — 512-Bit Zero-Table Primorial AEAD & KDF
+# ==============================================================================
 add_library(ptrc_crystal SHARED
     "${CRYPTO_DIR}/ptrc_crystal.c"
 )
+target_include_directories(ptrc_crystal PUBLIC "${CRYPTO_DIR}")
 
-target_include_directories(ptrc_crystal PUBLIC
-    "${CRYPTO_DIR}"
-)
-
-if(MSVC)
-    target_compile_options(ptrc_crystal PRIVATE /W4 /O2)
-else()
-    target_compile_options(ptrc_crystal PRIVATE -O3 -Wall -Wextra -Wpedantic)
-endif()
-
-# 2. Standalone C11 v4.0 512-bit AEAD & KDF demonstration executable
-add_executable(ptrc_hardware_demo
-    "${CRYPTO_DIR}/ptrc_crypt_demo.c"
+add_executable(00_ptrc_crypt_demo
+    "${SRC_DIR}/00_ptrc_crypt_demo.c"
     "${CRYPTO_DIR}/ptrc_crystal.c"
 )
+target_include_directories(00_ptrc_crypt_demo PRIVATE "${CRYPTO_DIR}")
 
-target_include_directories(ptrc_hardware_demo PRIVATE
-    "${CRYPTO_DIR}"
+# ==============================================================================
+# 2. AI v2.0 — 1-Bit Resonant BitNet Crystalline Inference Engine
+# ==============================================================================
+add_library(ptrc_bitnet SHARED
+    "${AI_DIR}/ptrc_bitnet_engine.c"
 )
+target_include_directories(ptrc_bitnet PUBLIC "${AI_DIR}")
 
-if(MSVC)
-    target_compile_options(ptrc_hardware_demo PRIVATE /W4 /O2)
-else()
-    target_compile_options(ptrc_hardware_demo PRIVATE -O3 -Wall -Wextra -Wpedantic)
-endif()
+add_executable(00_ptrc_bitnet_demo
+    "${SRC_DIR}/00_ptrc_bitnet_demo.c"
+    "${AI_DIR}/ptrc_bitnet_engine.c"
+)
+target_include_directories(00_ptrc_bitnet_demo PRIVATE "${AI_DIR}")
+
+# ==============================================================================
+# STRICT COMPILER FLAGS (ZERO WARNINGS)
+# ==============================================================================
+foreach(target ptrc_crystal 00_ptrc_crypt_demo ptrc_bitnet 00_ptrc_bitnet_demo)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /W4 /O2)
+    else()
+        target_compile_options(${target} PRIVATE -O3 -Wall -Wextra -Wpedantic)
+    endif()
+endforeach()
+
