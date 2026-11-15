@@ -38,12 +38,13 @@ from ptrc_bitnet_engine import (
 )
 
 
-def _build_4_16_2_weights() -> tuple[list[int], list[int]]:
+def _build_5_16_2_weights() -> tuple[list[int], list[int]]:
     hidden_weights: list[int] = []
     for r in range(16):
         for c in range(4):
             bit = ((r ^ (r >> 1)) >> c) & 1
             hidden_weights.append(1 if bit else -1)
+        hidden_weights.append(1 if (r & 1) == 0 else -1)
     out_weights = [1 if (i & 1) == 0 else -1 for i in range(2 * 16)]
     return hidden_weights, out_weights
 
@@ -52,14 +53,14 @@ def test_z_no_zero_and_hebbian_convergence() -> None:
     ctx = PtrcBitNetContext(seed=137210144)
     assert all(v != 0 for v in ctx.sponge), "Zero found in initial 144-facet sponge!"
 
-    hidden_weights, out_weights = _build_4_16_2_weights()
-    hidden_layer = PtrcBitNetLayer(in_dim=4, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=0)
+    hidden_weights, out_weights = _build_5_16_2_weights()
+    hidden_layer = PtrcBitNetLayer(in_dim=5, out_dim=16, weights_z_no_zero=hidden_weights, takt_threshold=1)
     out_layer = PtrcBitNetLayer(in_dim=16, out_dim=2, weights_z_no_zero=out_weights, takt_threshold=0)
 
     patterns = [
-        [-1, -1, -1, -1],
-        [-1, 1, -1, 1],
-        [1, -1, 1, -1],
+        [-1, -1, -1, -1, 1],
+        [-1, 1, -1, 1, 1],
+        [1, -1, 1, -1, 1],
 ,
     ]
     targets = [
@@ -86,7 +87,7 @@ def test_z_no_zero_and_hebbian_convergence() -> None:
         assert out == tgt, f"Prediction mismatch for {pat}: {out} != {tgt}"
         assert all(v in (-1, 1) for v in out)
     assert all(v != 0 for v in ctx.sponge), "Zero entered sponge after Hebbian steps!"
-    print(f"[PASS] 1. Z \\ {{0}} Invariant & 4->16->2 Integer Hebbian Convergence (Epoch {converged_epoch})")
+    print(f"[PASS] 1. Z \\ {{0}} Invariant & (4+1)->16->2 Integer Hebbian Convergence (Epoch {converged_epoch})")
 
 
 def test_137_takt_crossed_mirror_pulse() -> None:
@@ -168,6 +169,7 @@ def test_zero_float_compliance() -> None:
         root / "embedded" / "ai" / "ptrc_bitnet_engine.c",
         root / "src" / "00_ptrc_bitnet_demo.c",
         root / "src" / "ptrc_bitnet_engine.py",
+        root / "src" / "00_test_ptrc_bitnet_metrics.py",
     ]
     forbidden = re.compile(r"\b(float|double|sin|cos|tan|sqrt|pow|log|exp|math)\b")
     for fpath in files:
