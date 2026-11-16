@@ -115,31 +115,24 @@ def test_c_python_kem_parity(
 
 
 def test_hybrid_aead_coupling(shared_secret_512: bytes) -> None:
-    root = pathlib.Path(__file__).resolve().parent.parent
-    so_path = root / "build" / "libptrc_crystal.so"
-    if not so_path.exists():
-        print("[SKIP] 3. build/libptrc_crystal.so not built yet.")
+    try:
+        from ptrc_crystal_aead import ptrc_aead_decrypt, ptrc_aead_encrypt
+    except ImportError:
+        print("[SKIP] 3. ptrc_crystal_aead not found in PYTHONPATH.")
         return
 
-    clib = ctypes.CDLL(str(so_path))
-    ctx_buf = (ctypes.c_uint8 * 1024)()
-    c_key = (ctypes.c_uint8 * 64)(*shared_secret_512)
     nonce = bytes((71 + (i * 5) % 181) for i in range(16))
-    c_nonce = (ctypes.c_uint8 * 16)(*nonce)
     aad = b"pTRC-HYBRID-KEM-v4.2-HEADER"
-    c_aad = (ctypes.c_uint8 * len(aad))(*aad)
     pt = b"Post-Quantum Asymmetric Handshake + 512-Bit Symmetrical AEAD in Z \\ {0}!"
-    c_pt = (ctypes.c_uint8 * len(pt))(*pt)
-    c_ct = (ctypes.c_uint8 * len(pt))()
-    c_dec = (ctypes.c_uint8 * len(pt))()
-    c_tag = (ctypes.c_uint8 * 24)()
 
-    assert clib.ptrc_crystal_init(ctx_buf, c_key, c_nonce) == 1
-    assert clib.ptrc_crystal_encrypt(ctx_buf, c_aad, len(aad), c_pt, c_ct, len(pt), c_tag) == 1
-    assert clib.ptrc_crystal_init(ctx_buf, c_key, c_nonce) == 1
-    assert clib.ptrc_crystal_decrypt(ctx_buf, c_aad, len(aad), c_ct, c_dec, len(pt), c_tag) == 1
-    assert bytes(c_dec) == pt, "Hybrid C11 AEAD decryption failed!"
-    print("[PASS] 3. End-to-End Hybrid Coupling (512-Bit KEM Secret -> 672B C11 Symmetrical AEAD)")
+    ct, tag = ptrc_aead_encrypt(shared_secret_512, nonce, pt, aad)
+    res = ptrc_aead_decrypt(shared_secret_512, nonce, ct, tag, aad)
+    if isinstance(res, tuple):
+        ok_flag, recovered = res
+        assert ok_flag == 1 and recovered == pt, f"Hybrid AEAD decryption failed: {ok_flag}"
+    else:
+        assert res == pt, "Hybrid AEAD decryption failed!"
+    print("[PASS] 3. End-to-End Hybrid Coupling (512-Bit KEM Secret -> 672B Symmetrical AEAD)")
 
 
 def test_zero_float_compliance() -> None:
