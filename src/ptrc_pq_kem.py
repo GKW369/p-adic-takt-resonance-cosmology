@@ -215,18 +215,26 @@ def ptrc_kem_keygen_py(seed: bytes) -> Tuple[bytes, bytes]:
 
     return bytes(pk_out), bytes(sk_out)
 
-def _derive_ss_py(msg: bytes, transcript: bytes) -> bytes:
-    combined = msg + transcript[:PTRC_KEM_SEED_BYTES]
-    kdf_ctx = _PtrcKemSponge(combined, 0x77)
+def _derive_ss_py(msg: bytes, ct: bytes) -> bytes:
+    kdf_ctx = _PtrcKemSponge(msg, 0x77)
+    for i in range(PTRC_KEM_CT_BYTES):
+        cb = ct.__getitem__(i)
+        odd_cb = ((cb << 1) | 1) & 0xFF
+        f_idx = i % PTRC_KEM_FACETS
+        cur = kdf_ctx.sponge.__getitem__(f_idx)
+        kdf_ctx.sponge.__setitem__(f_idx, ptrc_kem_z_no_zero(cur ^ (odd_cb * ((i & 31) + 1))))
+        if (i & 7) == 7:
+            kdf_ctx.next_word()
+
     for _ in range(576):
         kdf_ctx.next_word()
+
     ss_out = bytearray(PTRC_KEM_SS_BYTES)
     for i in range(PTRC_KEM_SS_BYTES):
         val = kdf_ctx.next_word()
         b = (val ^ _c_shr_i32(val, 8)) & 0xFF
         ss_out.__setitem__(i, 0xFF if b == 0 else b)
     return bytes(ss_out)
-
 
 def ptrc_kem_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
     if len(pk) != PTRC_KEM_PK_BYTES or len(coins) != PTRC_KEM_SEED_BYTES:
