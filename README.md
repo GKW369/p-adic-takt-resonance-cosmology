@@ -71,6 +71,7 @@ By translating dynamic floating-point partial differential equations into static
 | **Quantum Computing Prototypes**<br>`quantum_entanglement_144.py` | Shared-memory pointer resolution | **O(1) Quantum State Simulation:** Bypasses exponential state-vector matrix multiplications via direct memory-slot register resolution. | Quantum Software R&D, Hybrid Classical-Quantum Simulators |
 | **Cybersecurity & Post-Quantum Crypto**<br>`ptrc_crystal.c`<br>`ptrc_crystal_aead.py` | 512-bit zero-table Primorial Macro-Cascade (`P15`) & 144-facet sponge in $\mathbb{Z} \setminus \{0\}$ | **Constant-Time Side-Channel Immunity:** Executes all stream, KDF, keygen, and 192-bit SLIP-MAC operations in strict $O(1)$ integer clock cycles (`672` bytes SRAM, zero `malloc`, zero lookup tables). | Embedded Secure Elements, Automotive HSMs, Post-Quantum IoT & Edge Security |
 | **Asymmetric Post-Quantum Ring-KEM (`v4.2`)** | `embedded/crypto/ptrc_pq_kem.h`, `embedded/crypto/ptrc_pq_kem.c`, `src/ptrc_pq_kem.py`, `src/00_test_ptrc_pq_kem.py` | Non-Mersenne lattice prime $q = 7681$ ($\gcd(7681, 210) = 1$, $\mathbb{Z}_{7681} \setminus \{0\}$); zero lookup tables; `PK=1056B`, `SK=1024B`, `CT=1152B`; C11 handshake: `Keygen 561 µs`, `Encaps 870 µs`, `Decaps 293 µs`; direct 512-bit hybrid AEAD coupling |
+| **Dual-Profile Post-Quantum Ring-KEM (`v4.2`)** | `embedded/crypto/ptrc_pq_kem.h`, `embedded/crypto/ptrc_pq_kem.c`, `src/ptrc_pq_kem.py`, `src/00_test_ptrc_pq_kem.py` | Non-Mersenne prime $q = 7681$ ($\gcd(7681, 210) = 1$, $\mathbb{Z}_{7681} \setminus \{0\}$); zero lookup tables; **512-Dim Standard** (`PK=1056B`, `CT=1152B`, `1913 µs` total) & **256-Dim Ultra-Light** (`PK=544B`, `CT=640B`, `640 µs` total); direct 512-bit hybrid AEAD coupling |
 
 ---
 
@@ -141,6 +142,12 @@ To enable keyless session establishment on constrained bare-metal targets withou
 * **On-the-Fly Matrix Expansion:** Public ring polynomials are generated deterministically from a 32-byte seed through the 144-facet sponge (`0` bytes of static lookup tables).
 * **Full Ciphertext Transcript Binding & `-1` Scrubbing:** All `1,152` ciphertext bytes are absorbed into the 512-bit shared-secret derivation (rejecting any 1-bit ciphertext tamper), and all secret stack buffers are scrubbed back to `-1` (`0xFF`) via `ptrc_kem_wipe`.
 * **End-to-End Hybrid Handshake:** The negotiated 64-byte (`512-bit`) shared secret feeds directly into the `672-byte` symmetrical `ptrc_crystal` AEAD engine (`src/00_test_ptrc_pq_kem.py`).
+
+#### Dual-Profile Post-Quantum Ring-KEM & Hybrid AEAD Coupling (`v4.2`)
+To support keyless session establishment on constrained bare-metal targets without floating-point units or lookup tables, `embedded/crypto/ptrc_pq_kem.c` implements a zero-float Lattice Key Encapsulation Mechanism over the non-Mersenne prime modulus $q = 7681$ ($\gcd(7681, 210) = 1$) inside $\mathbb{Z}_{7681} \setminus \{0\}$ with two selectable hardware profiles:
+* **Profile A (`512-Dim Standard`, $k = 2, n = 256$):** `PK = 1,056 B`, `SK = 1,024 B`, `CT = 1,152 B` — native C11 handshake in `1,913 µs` (`Keygen 681 µs`, `Encaps 934 µs`, `Decaps 298 µs`).
+* **Profile B (`256-Dim Ultra-Light IoT`, $k = 1, n = 256$):** `PK = 544 B`, `SK = 512 B`, `CT = 640 B` (smaller wire footprint than ML-KEM-512) — native C11 handshake in `640 µs` (`Keygen 157 µs`, `Encaps 331 µs`, `Decaps 152 µs`).
+* **Full Transcript Binding & Hybrid Coupling:** Both profiles absorb all ciphertext bytes into the 512-bit shared-secret derivation (rejecting any 1-bit tamper), scrub secret stack buffers back to `-1` (`0xFF`), and feed the negotiated 64-byte (`512-bit`) key directly into the `672-byte` symmetrical `ptrc_crystal` AEAD engine (`src/00_test_ptrc_pq_kem.py`).
 
 ---
 
