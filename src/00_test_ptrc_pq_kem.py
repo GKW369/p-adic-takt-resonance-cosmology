@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Post-Quantum Ring-KEM v4.2
+# pTRC Framework - Discrete 1-Bit Integer Physics & CCA2 Post-Quantum Ring-KEM v4.3.1
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,9 +18,9 @@
 # ==============================================================================
 
 r"""
-Verification, Hybrid AEAD Coupling & Dual-Profile Benchmark for pTRC Ring-KEM v4.2:
-  1. Asymmetric Handshake & 1-Bit Tamper Rejection (Standard k=2 & Ultra-Light k=1)
-  2. 100% C11 <-> Python Bit-Parity & Volatile -1 (0xFF) SRAM Scrubbing
+Verification, Hybrid AEAD Coupling & Dual-Profile Benchmark for pTRC Ring-KEM v4.3.1:
+  1. FO-CCA2 Handshake & Implicit Constant-Time 1-Bit Tamper Rejection (k=2 & k=1)
+  2. 100% C11 <-> Python Bit-Parity (Valid + Tampered Reject) & -1 SRAM Scrubbing
   3. End-to-End Hybrid Coupling (512-Bit KEM Secret -> 672B Symmetrical AEAD)
   4. Static Zero-Float Compliance + Head-to-Head C11 Benchmark (512-Dim vs 256-Dim Light)
 File: src/00_test_ptrc_pq_kem.py (Part 1 of 2)
@@ -54,40 +54,42 @@ from ptrc_pq_kem import (
 )
 
 
-def test_python_dual_profiles() -> tuple[tuple[bytes, bytes, bytes, bytes], tuple[bytes, bytes, bytes, bytes]]:
+def test_python_dual_profiles() -> tuple[tuple[bytes, bytes, bytes, bytes, bytes], tuple[bytes, bytes, bytes, bytes, bytes]]:
     seed = bytes((11 + (i * 7) % 239) for i in range(PTRC_KEM_SEED_BYTES))
-    coins = bytes((29 + (i * 13) % 223) for i in range(PTRC_KEM_SEED_BYTES))
+    msg_seed = bytes((29 + (i * 13) % 223) for i in range(PTRC_KEM_SEED_BYTES))
 
     # Profile A: Standard 512-Dim (k = 2)
     pk_a, sk_a = ptrc_kem_keygen_py(seed)
-    ct_a, ss_bob_a = ptrc_kem_encaps_py(pk_a, coins)
+    assert len(pk_a) == PTRC_KEM_PK_BYTES and len(sk_a) == PTRC_KEM_SK_BYTES
+    ct_a, ss_bob_a = ptrc_kem_encaps_py(pk_a, msg_seed)
     ss_alice_a = ptrc_kem_decaps_py(ct_a, sk_a)
     assert ss_alice_a == ss_bob_a and 0 not in ss_alice_a
 
     tamper_a = bytearray(ct_a)
     tamper_a[0] ^= 0x01
-    assert ptrc_kem_decaps_py(bytes(tamper_a), sk_a) != ss_bob_a
+    ss_reject_a = ptrc_kem_decaps_py(bytes(tamper_a), sk_a)
+    assert ss_reject_a != ss_bob_a and 0 not in ss_reject_a
 
     # Profile B: Ultra-Light 256-Dim IoT (k = 1)
     pk_b, sk_b = ptrc_kem_light_keygen_py(seed)
-    assert len(pk_b) == PTRC_KEM_LIGHT_PK_BYTES
-    assert len(sk_b) == PTRC_KEM_LIGHT_SK_BYTES
-    ct_b, ss_bob_b = ptrc_kem_light_encaps_py(pk_b, coins)
+    assert len(pk_b) == PTRC_KEM_LIGHT_PK_BYTES and len(sk_b) == PTRC_KEM_LIGHT_SK_BYTES
+    ct_b, ss_bob_b = ptrc_kem_light_encaps_py(pk_b, msg_seed)
     assert len(ct_b) == PTRC_KEM_LIGHT_CT_BYTES
     ss_alice_b = ptrc_kem_light_decaps_py(ct_b, sk_b)
     assert ss_alice_b == ss_bob_b and 0 not in ss_alice_b
 
     tamper_b = bytearray(ct_b)
     tamper_b[0] ^= 0x01
-    assert ptrc_kem_light_decaps_py(bytes(tamper_b), sk_b) != ss_bob_b
+    ss_reject_b = ptrc_kem_light_decaps_py(bytes(tamper_b), sk_b)
+    assert ss_reject_b != ss_bob_b and 0 not in ss_reject_b
 
-    print("[PASS] 1. Dual-Profile Z_{7681} \\ {0} Ring-KEM (512-Dim & 256-Light) + 1-Bit Tamper Lock")
-    return (pk_a, sk_a, ct_a, ss_alice_a), (pk_b, sk_b, ct_b, ss_alice_b)
+    print("[PASS] 1. Dual-Profile FO-CCA2 Z_{7681} \\ {0} Ring-KEM & Implicit 1-Bit Tamper Lock")
+    return (pk_a, sk_a, ct_a, ss_alice_a, ss_reject_a), (pk_b, sk_b, ct_b, ss_alice_b, ss_reject_b)
 
 
 def test_c_python_dual_parity(
-    std_tuple: tuple[bytes, bytes, bytes, bytes],
-    light_tuple: tuple[bytes, bytes, bytes, bytes],
+    std_tuple: tuple[bytes, bytes, bytes, bytes, bytes],
+    light_tuple: tuple[bytes, bytes, bytes, bytes, bytes],
 ) -> None:
     lib = load_c_kem_library()
     if lib is None:
@@ -95,12 +97,12 @@ def test_c_python_dual_parity(
         return
 
     seed = bytes((11 + (i * 7) % 239) for i in range(PTRC_KEM_SEED_BYTES))
-    coins = bytes((29 + (i * 13) % 223) for i in range(PTRC_KEM_SEED_BYTES))
+    msg_seed = bytes((29 + (i * 13) % 223) for i in range(PTRC_KEM_SEED_BYTES))
     c_seed = (ctypes.c_uint8 * PTRC_KEM_SEED_BYTES)(*seed)
-    c_coins = (ctypes.c_uint8 * PTRC_KEM_SEED_BYTES)(*coins)
+    c_msg = (ctypes.c_uint8 * PTRC_KEM_SEED_BYTES)(*msg_seed)
 
-    # Check Standard k = 2
-    py_pk, py_sk, py_ct, py_ss = std_tuple
+    # Check Standard k = 2 (Valid + Implicit CCA2 Reject)
+    py_pk, py_sk, py_ct, py_ss, py_rej = std_tuple
     c_pk = (ctypes.c_uint8 * PTRC_KEM_PK_BYTES)()
     c_sk = (ctypes.c_uint8 * PTRC_KEM_SK_BYTES)()
     c_ct = (ctypes.c_uint8 * PTRC_KEM_CT_BYTES)()
@@ -108,13 +110,18 @@ def test_c_python_dual_parity(
 
     assert lib.ptrc_kem_keygen(c_pk, c_sk, c_seed) == PTRC_KEM_OK
     assert bytes(c_pk) == py_pk and bytes(c_sk) == py_sk
-    assert lib.ptrc_kem_encaps(c_ct, c_ss, c_pk, c_coins) == PTRC_KEM_OK
+    assert lib.ptrc_kem_encaps(c_ct, c_ss, c_pk, c_msg) == PTRC_KEM_OK
     assert bytes(c_ct) == py_ct and bytes(c_ss) == py_ss
     assert lib.ptrc_kem_decaps(c_ss, c_ct, c_sk) == PTRC_KEM_OK
     assert bytes(c_ss) == py_ss
 
-    # Check Ultra-Light k = 1
-    l_pk, l_sk, l_ct, l_ss = light_tuple
+    c_ct_tamper = (ctypes.c_uint8 * PTRC_KEM_CT_BYTES)(*py_ct)
+    c_ct_tamper[0] ^= 0x01
+    assert lib.ptrc_kem_decaps(c_ss, c_ct_tamper, c_sk) == PTRC_KEM_OK
+    assert bytes(c_ss) == py_rej, "C11 <-> Python CCA2 implicit reject mismatch (k=2)!"
+
+    # Check Ultra-Light k = 1 (Valid + Implicit CCA2 Reject)
+    l_pk, l_sk, l_ct, l_ss, l_rej = light_tuple
     cl_pk = (ctypes.c_uint8 * PTRC_KEM_LIGHT_PK_BYTES)()
     cl_sk = (ctypes.c_uint8 * PTRC_KEM_LIGHT_SK_BYTES)()
     cl_ct = (ctypes.c_uint8 * PTRC_KEM_LIGHT_CT_BYTES)()
@@ -122,15 +129,20 @@ def test_c_python_dual_parity(
 
     assert lib.ptrc_kem_light_keygen(cl_pk, cl_sk, c_seed) == PTRC_KEM_OK
     assert bytes(cl_pk) == l_pk and bytes(cl_sk) == l_sk
-    assert lib.ptrc_kem_light_encaps(cl_ct, cl_ss, cl_pk, c_coins) == PTRC_KEM_OK
+    assert lib.ptrc_kem_light_encaps(cl_ct, cl_ss, cl_pk, c_msg) == PTRC_KEM_OK
     assert bytes(cl_ct) == l_ct and bytes(cl_ss) == l_ss
     assert lib.ptrc_kem_light_decaps(cl_ss, cl_ct, cl_sk) == PTRC_KEM_OK
     assert bytes(cl_ss) == l_ss
 
+    cl_ct_tamper = (ctypes.c_uint8 * PTRC_KEM_LIGHT_CT_BYTES)(*l_ct)
+    cl_ct_tamper[0] ^= 0x01
+    assert lib.ptrc_kem_light_decaps(cl_ss, cl_ct_tamper, cl_sk) == PTRC_KEM_OK
+    assert bytes(cl_ss) == l_rej, "C11 <-> Python CCA2 implicit reject mismatch (k=1)!"
+
     lib.ptrc_kem_wipe(c_sk, PTRC_KEM_SK_BYTES)
     lib.ptrc_kem_wipe(cl_sk, PTRC_KEM_LIGHT_SK_BYTES)
     assert all(b == 0xFF for b in bytes(c_sk)) and all(b == 0xFF for b in bytes(cl_sk))
-    print("[PASS] 2. 100% C11 / Python Bit-Parity (Both Profiles) & Volatile -1 SRAM Wipe")
+    print("[PASS] 2. 100% C11 / Python Bit-Parity (Valid + CCA2 Reject) & -1 SRAM Wipe")
 
 # File: src/00_test_ptrc_pq_kem.py (Part 2 of 2)
 
@@ -143,8 +155,8 @@ def test_hybrid_aead_coupling(ss_std: bytes, ss_light: bytes) -> None:
         return
 
     nonce = bytes((71 + (i * 5) % 181) for i in range(16))
-    aad = b"pTRC-HYBRID-KEM-v4.2-HEADER"
-    pt = b"Post-Quantum Asymmetric Handshake + 512-Bit Symmetrical AEAD in Z \\ {0}!"
+    aad = b"pTRC-HYBRID-KEM-v4.3.1-HEADER"
+    pt = b"CCA2 Post-Quantum Handshake + 512-Bit Symmetrical AEAD in Z \\ {0}!"
 
     for ss in (ss_std, ss_light):
         ct, tag = ptrc_aead_encrypt(ss, nonce, pt, aad)
@@ -155,7 +167,7 @@ def test_hybrid_aead_coupling(ss_std: bytes, ss_light: bytes) -> None:
         else:
             assert res == pt
 
-    print("[PASS] 3. End-to-End Hybrid Coupling (Both KEM Secrets -> 672B Symmetrical AEAD)")
+    print("[PASS] 3. End-to-End Hybrid Coupling (Both CCA2 KEM Secrets -> 672B Symmetrical AEAD)")
 
 
 def test_zero_float_compliance() -> None:
@@ -178,7 +190,7 @@ def test_zero_float_compliance() -> None:
         for lineno, line in enumerate(cleaned.splitlines(), 1):
             match = forbidden.search(line)
             assert match is None, f"Forbidden float/trig token '{match.group(0)}' in {fpath}:{lineno}"
-    print("[PASS] 4. Static Zero-Float & Zero-Trig Compliance Verified across Dual-Profile KEM")
+    print("[PASS] 4. Static Zero-Float & Zero-Trig Compliance Verified across CCA2 KEM")
 
 
 def benchmark_c11_dual_kem() -> None:
@@ -187,9 +199,9 @@ def benchmark_c11_dual_kem() -> None:
         return
 
     seed = bytes((11 + (i * 7) % 239) for i in range(PTRC_KEM_SEED_BYTES))
-    coins = bytes((29 + (i * 13) % 223) for i in range(PTRC_KEM_SEED_BYTES))
+    msg_seed = bytes((29 + (i * 13) % 223) for i in range(PTRC_KEM_SEED_BYTES))
     c_seed = (ctypes.c_uint8 * PTRC_KEM_SEED_BYTES)(*seed)
-    c_coins = (ctypes.c_uint8 * PTRC_KEM_SEED_BYTES)(*coins)
+    c_msg = (ctypes.c_uint8 * PTRC_KEM_SEED_BYTES)(*msg_seed)
 
     c_pk = (ctypes.c_uint8 * PTRC_KEM_PK_BYTES)()
     c_sk = (ctypes.c_uint8 * PTRC_KEM_SK_BYTES)()
@@ -206,7 +218,7 @@ def benchmark_c11_dual_kem() -> None:
         lib.ptrc_kem_keygen(c_pk, c_sk, c_seed)
     t1 = time.perf_counter_ns()
     for _ in range(iters):
-        lib.ptrc_kem_encaps(c_ct, c_ss, c_pk, c_coins)
+        lib.ptrc_kem_encaps(c_ct, c_ss, c_pk, c_msg)
     t2 = time.perf_counter_ns()
     for _ in range(iters):
         lib.ptrc_kem_decaps(c_ss, c_ct, c_sk)
@@ -216,7 +228,7 @@ def benchmark_c11_dual_kem() -> None:
         lib.ptrc_kem_light_keygen(cl_pk, cl_sk, c_seed)
     t4 = time.perf_counter_ns()
     for _ in range(iters):
-        lib.ptrc_kem_light_encaps(cl_ct, c_ss, cl_pk, c_coins)
+        lib.ptrc_kem_light_encaps(cl_ct, c_ss, cl_pk, c_msg)
     t5 = time.perf_counter_ns()
     for _ in range(iters):
         lib.ptrc_kem_light_decaps(c_ss, cl_ct, cl_sk)
@@ -234,8 +246,8 @@ def benchmark_c11_dual_kem() -> None:
     lib.ptrc_kem_wipe(cl_sk, PTRC_KEM_LIGHT_SK_BYTES)
 
     print("===============================================================================")
-    print("  pTRC DUAL-PROFILE POST-QUANTUM RING-KEM v4.2 — BARE-METAL C11 BENCHMARK")
-    print("  Modulus  : q = 7681 (Non-Mersenne, gcd(7681, 210) == 1) | Zero Lookup Tables")
+    print("  pTRC CCA2 POST-QUANTUM RING-KEM v4.3.1 — BARE-METAL C11 BENCHMARK")
+    print("  Modulus  : q = 7681 (Non-Mersenne, gcd(7681, 210) == 1) | FO-CCA2 + O(1)")
     print("-------------------------------------------------------------------------------")
     print(f"  [PROFILE A: 512-Dim Standard] PK={PTRC_KEM_PK_BYTES}B | SK={PTRC_KEM_SK_BYTES}B | CT={PTRC_KEM_CT_BYTES}B | SS=64B")
     print(f"   -> Speed : Keygen = {kg_a} us | Encaps = {en_a} us | Decaps = {de_a} us (Total = {kg_a + en_a + de_a} us)")
