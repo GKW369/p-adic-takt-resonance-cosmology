@@ -113,3 +113,48 @@ Verified by `src/00_test_ptrc_crypt_metrics.py` and `src/00_test_ptrc_crypt_pari
 * **144-Facet Sponge Uniformity ($\mathbb{Z} \setminus \{0\}$):** **`0x00` count = `0`** across `16,384` stream bytes; maximum bucket deviation across all `255` active byte states = **`23`**.
 * **Native C11 AEAD Throughput (`libptrc_crystal.so`, `-O3 -std=c11`):** **`~2,365,232 Bytes/sec`** (`4096 KB` in `1,773,316 µs`, `672 bytes` static SRAM context, zero `malloc`).
 * **Python Reference Throughput (`src/ptrc_crystal_aead.py`):** **`~19,670 Bytes/sec`** (`64 KB` in `3,331,649 µs`).
+
+# pTRC Cryptographic Suite v4.2 — Symmetrical 512-Bit AEAD & Post-Quantum Ring-KEM
+
+**Author:** Kurt Guido Wirminghaus  
+**License:** GNU Affero General Public License v3.0 (AGPLv3)  
+**Target Architecture:** Bare-Metal ISO C11 (`-std=c11 -Wall -Wextra -Wpedantic`), ARM Cortex-M0+ (`-mfloat-abi=soft`), and Bit-Exact Python Reference
+
+---
+
+## 1. Core Design Principles ($\mathbb{Z} \setminus \{0\}$ Pure Integer Physics)
+
+* **Zero Floating-Point Arithmetic:** No `float`, `double`, or trigonometric/math libraries anywhere in the codebase.
+* **Zero-Free State Space ($\mathbb{Z} \setminus \{0\}$):** Every internal state, ring coefficient, and keystream byte avoids the zero crossing (`0` maps deterministically to `-1` / `0xFF`).
+* **Zero Dynamic Allocation (`0` bytes `malloc`):** All cryptographic contexts reside statically on the stack and are actively scrubbed back to `-1` (`0xFF`) via volatile byte writes (`ptrc_crystal_wipe`, `ptrc_kem_wipe`).
+* **100% C11 $\leftrightarrow$ Python Bit-Parity:** Every C11 routine is verified bit-for-bit against its pure-integer Python reference.
+
+---
+
+## 2. Module Overview
+
+| Component | Files | Key Parameters & Verified Metrics (Acer Aspire E1-570, 2013) |
+| :--- | :--- | :--- |
+| **Symmetrical 512-Bit Primorial AEAD & KDF** | `embedded/crypto/ptrc_crystal.h`<br>`embedded/crypto/ptrc_crystal.c`<br>`embedded/crypto/ptrc_crypt_demo.c`<br>`src/ptrc_crystal_aead.py` | • **Context Footprint:** `672 bytes` static stack SRAM (`0` bytes `malloc`)<br>• **Macro-Cascade:** $P_{15} = 614,889,782,588,491,410$ + 8-Prime CRT Keygen<br>• **Avalanche (SAC):** `475 / 1000` permille (`21,429 / 45,056` bits flipped)<br>• **Keystream Balance:** `0x00` count = `0` across `16,384` bytes<br>• **Native C11 Throughput:** `~2,372,665 Bytes/sec` (`~2.37 MB/s`) |
+| **Asymmetric Post-Quantum Ring-KEM** | `embedded/crypto/ptrc_pq_kem.h`<br>`embedded/crypto/ptrc_pq_kem.c`<br>`src/ptrc_pq_kem.py` | • **Lattice & Modulus:** $k = 2, n = 256$, non-Mersenne prime $q = 7681$ ($\gcd(7681, 210) = 1$, $\mathbb{Z}_{7681} \setminus \{0\}$)<br>• **Wire Sizes:** `PK = 1,056 B`, `SK = 1,024 B`, `CT = 1,152 B`, `SS = 64 B` (`512-bit`)<br>• **Native C11 Handshake:** `Keygen = 561 µs`, `Encaps = 870 µs`, `Decaps = 293 µs`<br>• **Security Features:** Zero lookup tables, 1,152-byte ciphertext transcript binding, 1-bit tamper rejection |
+
+---
+
+## 3. Build & Verification Commands
+
+```bash
+mkdir -p build
+
+# 1. Build C11 Shared Libraries & Standalone Demo
+gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -fPIC -shared -Iembedded/crypto embedded/crypto/ptrc_crystal.c -o build/libptrc_crystal.so
+gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -fPIC -shared -Iembedded/crypto embedded/crypto/ptrc_pq_kem.c -o build/libptrc_pq_kem.so
+gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -Iembedded/crypto embedded/crypto/ptrc_crypt_demo.c embedded/crypto/ptrc_crystal.c -o build/ptrc_hardware_demo
+
+# 2. Run Symmetrical 512-Bit AEAD Parity & Metrics Audits
+./build/ptrc_hardware_demo
+PYTHONPATH=src python3 src/00_test_ptrc_crypt_parity.py
+PYTHONPATH=src python3 src/00_test_ptrc_crypt_metrics.py
+
+# 3. Run Asymmetric Post-Quantum Ring-KEM & Hybrid AEAD Coupling Audit
+PYTHONPATH=src python3 src/00_test_ptrc_pq_kem.py
+```
