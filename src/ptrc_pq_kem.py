@@ -18,14 +18,13 @@
 # ==============================================================================
 
 r"""
-pTRC v4.2 Discrete 1-Bit Integer Physics & Post-Quantum Ring-KEM (Python Reference).
+pTRC v4.2 Discrete 1-Bit Integer Physics & Dual-Profile Post-Quantum Ring-KEM.
 File: src/ptrc_pq_kem.py
 
 Bit-exact match to embedded/crypto/ptrc_pq_kem.c:
-  - Non-Mersenne lattice prime q = 7681 (gcd(7681, 210) == 1)
-  - Strict Z_{7681} \ {0} centered ring arithmetic (zero maps to -1)
-  - Zero lookup tables, zero floats, deterministic 144-facet sponge expansion
-  - Outputs a 512-bit (64-byte) shared secret directly compatible with ptrc_crystal_aead
+  - Profile A (Standard 512-Dim, k=2): PK=1056B, SK=1024B, CT=1152B, SS=64B
+  - Profile B (Ultra-Light 256-Dim, k=1): PK=544B, SK=512B, CT=640B, SS=64B
+  - Non-Mersenne lattice prime q = 7681 (gcd(7681, 210) == 1) in Z_{7681} \ {0}
 """
 
 from __future__ import annotations
@@ -38,7 +37,6 @@ PTRC_KEM_Q = 7681
 PTRC_KEM_HALF_Q = 3840
 PTRC_KEM_QUARTER_Q = 1920
 
-PTRC_KEM_K = 2
 PTRC_KEM_N = 256
 PTRC_KEM_FACETS = 144
 PTRC_KEM_TAKT_137 = 137
@@ -47,9 +45,18 @@ PTRC_KEM_PRIMORIAL_210 = 210
 PTRC_KEM_SEED_BYTES = 32
 PTRC_KEM_MSG_BYTES = 32
 PTRC_KEM_SS_BYTES = 64
+
+# Profile A: Standard 512-Dim Module-Lattice (k = 2)
+PTRC_KEM_K = 2
 PTRC_KEM_PK_BYTES = 1056
 PTRC_KEM_SK_BYTES = 1024
 PTRC_KEM_CT_BYTES = 1152
+
+# Profile B: Ultra-Light 256-Dim IoT Ring-Lattice (k = 1)
+PTRC_KEM_LIGHT_K = 1
+PTRC_KEM_LIGHT_PK_BYTES = 544
+PTRC_KEM_LIGHT_SK_BYTES = 512
+PTRC_KEM_LIGHT_CT_BYTES = 640
 
 PTRC_KEM_OK = 1
 PTRC_KEM_ERR = -1
@@ -75,7 +82,6 @@ def ptrc_kem_z_no_zero(v: int) -> int:
 def ptrc_kem_mod_q_no_zero(x: int) -> int:
     r"""Centered modular reduction into Z_{7681} \ {0} = {-3840..-1, +1..+3840}."""
     x32 = _i32(x)
-    # C11 signed remainder semantics
     r = abs(x32) % PTRC_KEM_Q
     if x32 < 0 and r != 0:
         r = -r
@@ -134,7 +140,7 @@ class _PtrcKemSponge:
 
 
 def _expand_a_poly(seed_a: bytes, row: int, col: int) -> List[int]:
-    tag = (((row + 1) * 17) ^ ((col + 1) * 31) | 1) & 0xFF
+    tag = ((((row + 1) * 17) ^ ((col + 1) * 31)) | 1) & 0xFF
     local_ctx = _PtrcKemSponge(seed_a, tag)
     out = list((1,)) * PTRC_KEM_N
     for i in range(PTRC_KEM_N):
@@ -175,49 +181,9 @@ def _unpack_poly(src: bytes, offset: int) -> List[int]:
     return poly
 
 
-def ptrc_kem_keygen_py(seed: bytes) -> Tuple[bytes, bytes]:
-    if len(seed) != PTRC_KEM_SEED_BYTES:
-        raise ValueError("Seed must be 32 bytes")
-
-    ctx = _PtrcKemSponge(seed, 0x11)
-    pk_out = bytearray(PTRC_KEM_PK_BYTES)
-    sk_out = bytearray(PTRC_KEM_SK_BYTES)
-
-    seed_a = bytearray(PTRC_KEM_SEED_BYTES)
-    for i in range(PTRC_KEM_SEED_BYTES):
-        b = ctx.next_word() & 0xFF
-        val = 0xFF if b == 0 else b
-        seed_a.__setitem__(i, val)
-        pk_out.__setitem__(i, val)
-
-    s_vecs: List[List[int]] = list((list(), list()))
-    e_vecs: List[List[int]] = list((list(), list()))
-    for k in range(PTRC_KEM_K):
-        sk_poly = list((1,)) * PTRC_KEM_N
-        ek_poly = list((1,)) * PTRC_KEM_N
-        for i in range(PTRC_KEM_N):
-            sk_poly.__setitem__(i, ctx.sample_noise())
-            ek_poly.__setitem__(i, ctx.sample_noise())
-        s_vecs.__setitem__(k, sk_poly)
-        e_vecs.__setitem__(k, ek_poly)
-        _pack_poly(sk_out, k * PTRC_KEM_N * 2, sk_poly)
-
-    seed_a_bytes = bytes(seed_a)
-    for row in range(PTRC_KEM_K):
-        acc = list(e_vecs.__getitem__(row))
-        for col in range(PTRC_KEM_K):
-            a_poly = _expand_a_poly(seed_a_bytes, row, col)
-            _poly_mul_acc(acc, a_poly, s_vecs.__getitem__(col))
-        b_poly = list((1,)) * PTRC_KEM_N
-        for i in range(PTRC_KEM_N):
-            b_poly.__setitem__(i, ptrc_kem_mod_q_no_zero(acc.__getitem__(i)))
-        _pack_poly(pk_out, PTRC_KEM_SEED_BYTES + row * PTRC_KEM_N * 2, b_poly)
-
-    return bytes(pk_out), bytes(sk_out)
-
 def _derive_ss_py(msg: bytes, ct: bytes) -> bytes:
     kdf_ctx = _PtrcKemSponge(msg, 0x77)
-    for i in range(PTRC_KEM_CT_BYTES):
+    for i in range(len(ct)):
         cb = ct.__getitem__(i)
         odd_cb = ((cb << 1) | 1) & 0xFF
         f_idx = i % PTRC_KEM_FACETS
@@ -236,21 +202,64 @@ def _derive_ss_py(msg: bytes, ct: bytes) -> bytes:
         ss_out.__setitem__(i, 0xFF if b == 0 else b)
     return bytes(ss_out)
 
-def ptrc_kem_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
-    if len(pk) != PTRC_KEM_PK_BYTES or len(coins) != PTRC_KEM_SEED_BYTES:
-        raise ValueError("Invalid pk or coins length")
 
-    ctx = _PtrcKemSponge(coins, 0x33)
-    ct_out = bytearray(PTRC_KEM_CT_BYTES)
+def _keygen_core_py(seed: bytes, k_dim: int) -> Tuple[bytes, bytes]:
+    if len(seed) != PTRC_KEM_SEED_BYTES or k_dim not in (1, 2):
+        raise ValueError("Invalid seed or k_dim")
+
+    ctx = _PtrcKemSponge(seed, 0x10 | k_dim)
+    pk_out = bytearray(PTRC_KEM_SEED_BYTES + k_dim * PTRC_KEM_N * 2)
+    sk_out = bytearray(k_dim * PTRC_KEM_N * 2)
+
+    seed_a = bytearray(PTRC_KEM_SEED_BYTES)
+    for i in range(PTRC_KEM_SEED_BYTES):
+        b = ctx.next_word() & 0xFF
+        val = 0xFF if b == 0 else b
+        seed_a.__setitem__(i, val)
+        pk_out.__setitem__(i, val)
+
+    s_vecs: List[List[int]] = list((list(),)) * k_dim
+    e_vecs: List[List[int]] = list((list(),)) * k_dim
+    for k in range(k_dim):
+        sk_poly = list((1,)) * PTRC_KEM_N
+        ek_poly = list((1,)) * PTRC_KEM_N
+        for i in range(PTRC_KEM_N):
+            sk_poly.__setitem__(i, ctx.sample_noise())
+            ek_poly.__setitem__(i, ctx.sample_noise())
+        s_vecs.__setitem__(k, sk_poly)
+        e_vecs.__setitem__(k, ek_poly)
+        _pack_poly(sk_out, k * PTRC_KEM_N * 2, sk_poly)
+
+    seed_a_bytes = bytes(seed_a)
+    for row in range(k_dim):
+        acc = list(e_vecs.__getitem__(row))
+        for col in range(k_dim):
+            a_poly = _expand_a_poly(seed_a_bytes, row, col)
+            _poly_mul_acc(acc, a_poly, s_vecs.__getitem__(col))
+        b_poly = list((1,)) * PTRC_KEM_N
+        for i in range(PTRC_KEM_N):
+            b_poly.__setitem__(i, ptrc_kem_mod_q_no_zero(acc.__getitem__(i)))
+        _pack_poly(pk_out, PTRC_KEM_SEED_BYTES + row * PTRC_KEM_N * 2, b_poly)
+
+    return bytes(pk_out), bytes(sk_out)
+
+def _encaps_core_py(pk: bytes, coins: bytes, k_dim: int) -> Tuple[bytes, bytes]:
+    expected_pk = PTRC_KEM_SEED_BYTES + k_dim * PTRC_KEM_N * 2
+    if len(pk) != expected_pk or len(coins) != PTRC_KEM_SEED_BYTES or k_dim not in (1, 2):
+        raise ValueError("Invalid pk, coins, or k_dim")
+
+    ctx = _PtrcKemSponge(coins, 0x30 | k_dim)
+    u_bytes = k_dim * PTRC_KEM_N * 2
+    ct_out = bytearray(u_bytes + 128)
 
     msg = bytearray(PTRC_KEM_MSG_BYTES)
     for i in range(PTRC_KEM_MSG_BYTES):
         b = ctx.next_word() & 0xFF
         msg.__setitem__(i, 0xFF if b == 0 else b)
 
-    r_vecs: List[List[int]] = list((list(), list()))
-    e1_vecs: List[List[int]] = list((list(), list()))
-    for k in range(PTRC_KEM_K):
+    r_vecs: List[List[int]] = list((list(),)) * k_dim
+    e1_vecs: List[List[int]] = list((list(),)) * k_dim
+    for k in range(k_dim):
         rk = list((1,)) * PTRC_KEM_N
         e1k = list((1,)) * PTRC_KEM_N
         for i in range(PTRC_KEM_N):
@@ -264,9 +273,9 @@ def ptrc_kem_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
         e2.__setitem__(i, ctx.sample_noise())
 
     seed_a = pk[:PTRC_KEM_SEED_BYTES]
-    for col in range(PTRC_KEM_K):
+    for col in range(k_dim):
         acc = list(e1_vecs.__getitem__(col))
-        for row in range(PTRC_KEM_K):
+        for row in range(k_dim):
             a_poly = _expand_a_poly(seed_a, row, col)
             _poly_mul_acc(acc, a_poly, r_vecs.__getitem__(row))
         u_poly = list((1,)) * PTRC_KEM_N
@@ -275,11 +284,10 @@ def ptrc_kem_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
         _pack_poly(ct_out, col * PTRC_KEM_N * 2, u_poly)
 
     v_acc = list(e2)
-    for k in range(PTRC_KEM_K):
+    for k in range(k_dim):
         b_poly = _unpack_poly(pk, PTRC_KEM_SEED_BYTES + k * PTRC_KEM_N * 2)
         _poly_mul_acc(v_acc, b_poly, r_vecs.__getitem__(k))
 
-    v_offset = PTRC_KEM_K * PTRC_KEM_N * 2
     for byte_idx in range(128):
         packed_nibbles = 0
         for nib in range(2):
@@ -290,27 +298,27 @@ def ptrc_kem_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
             v_pos = v_centered + PTRC_KEM_HALF_Q
             comp4 = (((v_pos * 16) + PTRC_KEM_HALF_Q) // PTRC_KEM_Q) & 0x0F
             packed_nibbles |= comp4 << (nib * 4)
-        ct_out.__setitem__(v_offset + byte_idx, packed_nibbles)
+        ct_out.__setitem__(u_bytes + byte_idx, packed_nibbles)
 
     ct_bytes = bytes(ct_out)
     ss_bytes = _derive_ss_py(bytes(msg), ct_bytes)
     return ct_bytes, ss_bytes
 
 
-def ptrc_kem_decaps_py(ct: bytes, sk: bytes) -> bytes:
-    if len(ct) != PTRC_KEM_CT_BYTES or len(sk) != PTRC_KEM_SK_BYTES:
-        raise ValueError("Invalid ct or sk length")
+def _decaps_core_py(ct: bytes, sk: bytes, k_dim: int) -> bytes:
+    u_bytes = k_dim * PTRC_KEM_N * 2
+    if len(ct) != (u_bytes + 128) or len(sk) != u_bytes or k_dim not in (1, 2):
+        raise ValueError("Invalid ct, sk, or k_dim")
 
     su_acc = list((0,)) * PTRC_KEM_N
-    for k in range(PTRC_KEM_K):
+    for k in range(k_dim):
         s_poly = _unpack_poly(sk, k * PTRC_KEM_N * 2)
         u_poly = _unpack_poly(ct, k * PTRC_KEM_N * 2)
         _poly_mul_acc(su_acc, s_poly, u_poly)
 
     msg = bytearray(PTRC_KEM_MSG_BYTES)
-    v_offset = PTRC_KEM_K * PTRC_KEM_N * 2
     for byte_idx in range(128):
-        packed_nibbles = ct.__getitem__(v_offset + byte_idx)
+        packed_nibbles = ct.__getitem__(u_bytes + byte_idx)
         for nib in range(2):
             coeff_idx = byte_idx * 2 + nib
             comp4 = (packed_nibbles >> (nib * 4)) & 0x0F
@@ -327,6 +335,30 @@ def ptrc_kem_decaps_py(ct: bytes, sk: bytes) -> bytes:
     return _derive_ss_py(bytes(msg), ct)
 
 
+def ptrc_kem_keygen_py(seed: bytes) -> Tuple[bytes, bytes]:
+    return _keygen_core_py(seed, PTRC_KEM_K)
+
+
+def ptrc_kem_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
+    return _encaps_core_py(pk, coins, PTRC_KEM_K)
+
+
+def ptrc_kem_decaps_py(ct: bytes, sk: bytes) -> bytes:
+    return _decaps_core_py(ct, sk, PTRC_KEM_K)
+
+
+def ptrc_kem_light_keygen_py(seed: bytes) -> Tuple[bytes, bytes]:
+    return _keygen_core_py(seed, PTRC_KEM_LIGHT_K)
+
+
+def ptrc_kem_light_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
+    return _encaps_core_py(pk, coins, PTRC_KEM_LIGHT_K)
+
+
+def ptrc_kem_light_decaps_py(ct: bytes, sk: bytes) -> bytes:
+    return _decaps_core_py(ct, sk, PTRC_KEM_LIGHT_K)
+
+
 def load_c_kem_library(search_root: Optional[pathlib.Path] = None) -> Optional[ctypes.CDLL]:
     root = search_root or pathlib.Path(__file__).resolve().parent.parent
     candidates = [
@@ -338,28 +370,16 @@ def load_c_kem_library(search_root: Optional[pathlib.Path] = None) -> Optional[c
     for cand in candidates:
         if cand.exists():
             lib = ctypes.CDLL(str(cand))
-            lib.ptrc_kem_keygen.argtypes = [
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_kem_keygen.restype = ctypes.c_int
-
-            lib.ptrc_kem_encaps.argtypes = [
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_kem_encaps.restype = ctypes.c_int
-
-            lib.ptrc_kem_decaps.argtypes = [
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_kem_decaps.restype = ctypes.c_int
-
+            u8p = ctypes.POINTER(ctypes.c_uint8)
+            for fn_kg in (lib.ptrc_kem_keygen, lib.ptrc_kem_light_keygen):
+                fn_kg.argtypes = [u8p, u8p, u8p]
+                fn_kg.restype = ctypes.c_int
+            for fn_en in (lib.ptrc_kem_encaps, lib.ptrc_kem_light_encaps):
+                fn_en.argtypes = [u8p, u8p, u8p, u8p]
+                fn_en.restype = ctypes.c_int
+            for fn_de in (lib.ptrc_kem_decaps, lib.ptrc_kem_light_decaps):
+                fn_de.argtypes = [u8p, u8p, u8p]
+                fn_de.restype = ctypes.c_int
             lib.ptrc_kem_wipe.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
             lib.ptrc_kem_wipe.restype = None
             return lib
