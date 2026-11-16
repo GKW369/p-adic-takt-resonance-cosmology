@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Universe v4.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.1
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 # ==============================================================================
 
 r"""
-Observer Universe Full-HD 1080p Render & 137-Takt Epoch Demo.
+Observer Universe Windtunnel Full-HD 1080p Render & 137-Takt Epoch Demo.
 File: src/00_ptrc_graphics_demo.py
 """
 
@@ -29,11 +29,11 @@ import pathlib
 import time
 
 from ptrc_light_universe import (
+    PTRC_GFX_AGENT_COUNT,
     PTRC_GFX_CRYSTAL_RAD,
     PTRC_GFX_FACETS,
     PTRC_GFX_FREE_FACETS,
     PTRC_GFX_JUNCTIONS,
-    PTRC_GFX_NEIGHBORS,
     PTRC_GFX_OK,
     PTRC_GFX_TAKT_137,
     PtrcGfxContext,
@@ -45,9 +45,9 @@ from ptrc_light_universe import (
 
 def main() -> None:
     print("===============================================================================")
-    print("  pTRC OBSERVER UNIVERSE v4.0 — 1+12 INTEGER CRYSTAL LATTICE (Z \\ {0})")
-    print(f"  Crystal  : {PTRC_GFX_FACETS} Facets (Radius {PTRC_GFX_CRYSTAL_RAD}) | 1+{PTRC_GFX_NEIGHBORS} Neighbors | {PTRC_GFX_JUNCTIONS} Junctions | {PTRC_GFX_FREE_FACETS} Memory")
-    print(f"  Dynamics : 1 Takt = Light Speed | Observer View Rendered Every {PTRC_GFX_TAKT_137} Takts")
+    print("  pTRC OBSERVER WINDTUNNEL v4.1 — 60,000-AGENT 1+12 CRYSTAL LATTICE (Z \\ {0})")
+    print(f"  Crystal  : {PTRC_GFX_FACETS} Facets (Radius {PTRC_GFX_CRYSTAL_RAD}) | {PTRC_GFX_JUNCTIONS} Junctions | {PTRC_GFX_FREE_FACETS} Memory")
+    print(f"  Dynamics : {PTRC_GFX_AGENT_COUNT} Agents | 1 Takt = Light Speed | Render Every {PTRC_GFX_TAKT_137} Takts")
     print("===============================================================================")
 
     seed = 137210144
@@ -81,9 +81,9 @@ def main() -> None:
         write_ppm_rgb24(ppm_path, fhd_w, fhd_h, fhd_bytes)
 
         print(f" + Native C11 Kernel    : ACTIVE (sizeof(ctx)={ctypes.sizeof(c_ctx)} bytes, Zero malloc)")
-        print(f" + 137-Takt Light Epoch : Computed in {epoch_us} us (Mirror Pulses: {c_ctx.mirror_pulses})")
+        print(f" + 137-Takt Light Epoch : {PTRC_GFX_AGENT_COUNT} agents x 137 takts in {epoch_us} us (Pulses: {c_ctx.mirror_pulses})")
         print(f" + Full-HD 1080p Render : {fhd_w}x{fhd_h} in {ren_us} us -> {ppm_path} (0x00 bytes: {fhd_bytes.count(0)})")
-        print(f" + Active Crystal Hits  : {c_ctx.active_hits} (Central + 12 Shell + 24 Junctions)")
+        print(f" + Active Lattice Hits  : {c_ctx.active_hits} (60,000 Agents + Rotating 1+12 Pyramid)")
         lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
     else:
         py_ctx = PtrcGfxContext(seed=seed)
