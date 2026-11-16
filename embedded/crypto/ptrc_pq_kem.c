@@ -205,26 +205,28 @@ int ptrc_kem_keygen(
     return PTRC_KEM_OK;
 }
 
-/* File: embedded/crypto/ptrc_pq_kem.c (Part 2 of 2) */
-
 /* Squeeze a 512-bit (64-byte) shared secret in Z \ {0} from message m and context transcript */
 
-/* File: embedded/crypto/ptrc_pq_kem.c (Part 2 of 2) */
-
-/* Squeeze a 512-bit (64-byte) shared secret in Z \ {0} from message m and context transcript */
 static void ptrc_kem_derive_ss(
     uint8_t ss_out[PTRC_KEM_SS_BYTES],
     const uint8_t msg[PTRC_KEM_MSG_BYTES],
-    const uint8_t transcript[PTRC_KEM_SEED_BYTES]
+    const uint8_t ct[PTRC_KEM_CT_BYTES]
 ) {
     ptrc_kem_ctx_t kdf_ctx;
-    uint8_t combined[PTRC_KEM_MSG_BYTES + PTRC_KEM_SEED_BYTES];
-    for (uint32_t i = 0U; i < PTRC_KEM_MSG_BYTES; i++) {
-        *(combined + i) = *(msg + i);
-        *(combined + PTRC_KEM_MSG_BYTES + i) = *(transcript + i);
-    }
+    ptrc_kem_sponge_init(&kdf_ctx, msg, PTRC_KEM_MSG_BYTES, 0x77U);
 
-    ptrc_kem_sponge_init(&kdf_ctx, combined, sizeof(combined), 0x77U);
+    /* Absorb all 1152 bytes of the ciphertext into the 144-facet sponge (bit-0 sensitive) */
+    for (uint32_t i = 0U; i < PTRC_KEM_CT_BYTES; i++) {
+        uint8_t cb = *(ct + i);
+        uint8_t odd_cb = (uint8_t)((cb << 1U) | 1U);
+        uint32_t f_idx = i % PTRC_KEM_FACETS;
+        *(kdf_ctx.sponge + f_idx) = ptrc_kem_z_no_zero(
+            (*(kdf_ctx.sponge + f_idx)) ^ ((int32_t)odd_cb * (int32_t)((i & 31U) + 1U))
+        );
+        if ((i & 7U) == 7U) {
+            (void)ptrc_kem_sponge_next(&kdf_ctx);
+        }
+    }
 
     /* Diffuse across all 144 facets over 576 steps (24 x 24) */
     for (uint32_t step = 0U; step < 576U; step++) {
@@ -238,7 +240,6 @@ static void ptrc_kem_derive_ss(
     }
 
     ptrc_kem_wipe(&kdf_ctx, sizeof(kdf_ctx));
-    ptrc_kem_wipe(combined, sizeof(combined));
 }
 
 int ptrc_kem_encaps(
