@@ -70,7 +70,7 @@ By translating dynamic floating-point partial differential equations into static
 | **Ballistics & Trajectory Control**<br>`gravity_edge_sharing.py` | Geometric whole-number quadrance indexing | **Instantaneous Orbital Invariance Tracking:** Trajectories are read directly from spatial register grids instead of being computed iteratively via floating-point transcendental functions (\(\sin, \cos\)). | Satellite Orbit Alignment, Kinetic Defense Interceptors, Civil Aerospace R&D, Precision Autonomous Drones |
 | **Quantum Computing Prototypes**<br>`quantum_entanglement_144.py` | Shared-memory pointer resolution | **O(1) Quantum State Simulation:** Bypasses exponential state-vector matrix multiplications via direct memory-slot register resolution. | Quantum Software R&D, Hybrid Classical-Quantum Simulators |
 | **Cybersecurity & Post-Quantum Crypto**<br>`ptrc_crystal.c`<br>`ptrc_crystal_aead.py` | 512-bit zero-table Primorial Macro-Cascade (`P15`) & 144-facet sponge in $\mathbb{Z} \setminus \{0\}$ | **Constant-Time Side-Channel Immunity:** Executes all stream, KDF, keygen, and 192-bit SLIP-MAC operations in strict $O(1)$ integer clock cycles (`672` bytes SRAM, zero `malloc`, zero lookup tables). | Embedded Secure Elements, Automotive HSMs, Post-Quantum IoT & Edge Security |
-
+| **Asymmetric Post-Quantum Ring-KEM (`v4.2`)** | `embedded/crypto/ptrc_pq_kem.h`, `embedded/crypto/ptrc_pq_kem.c`, `src/ptrc_pq_kem.py`, `src/00_test_ptrc_pq_kem.py` | Non-Mersenne lattice prime $q = 7681$ ($\gcd(7681, 210) = 1$, $\mathbb{Z}_{7681} \setminus \{0\}$); zero lookup tables; `PK=1056B`, `SK=1024B`, `CT=1152B`; C11 handshake: `Keygen 561 µs`, `Encaps 870 µs`, `Decaps 293 µs`; direct 512-bit hybrid AEAD coupling |
 
 ---
 
@@ -136,6 +136,11 @@ The cryptographic layer has been upgraded to **v4.0 (512-Bit Key / 128-Bit Nonce
 * **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, constant-time tag verification ($O(1)$ via `ptrc_ct_memcmp`), and `volatile` SRAM scrubbing back to `-1` (`0xFF` via `ptrc_crystal_wipe`) with 100% C11/Python bit-parity.
 * **Verified Crypto v4.0 Hardware Metrics:** Strict Avalanche Criterion (SAC) at **`475 / 1000` permille** (`21,429 / 45,056` bits flipped across 64 single-bit key flips), zero `0x00` bytes across `16,384` stream bytes (max active bucket deviation `23`), and **`~2,365,232 Bytes/sec`** native C11 AEAD throughput (`4096 KB` in `1,773,316 µs`) vs. **`~19,670 Bytes/sec`** in Python (`64 KB` in `3,331,649 µs`).
 
+#### Post-Quantum Asymmetric Ring-KEM & Hybrid AEAD Coupling (`v4.2`)
+To enable keyless session establishment on constrained bare-metal targets without floating-point units or lookup tables, `embedded/crypto/ptrc_pq_kem.c` implements a zero-float Module-Lattice Key Encapsulation Mechanism ($k = 2, n = 256$) over the non-Mersenne prime modulus $q = 7681$ ($\gcd(7681, 210) = 1$) inside the zero-free domain $\mathbb{Z}_{7681} \setminus \{0\}$:
+* **On-the-Fly Matrix Expansion:** Public ring polynomials are generated deterministically from a 32-byte seed through the 144-facet sponge (`0` bytes of static lookup tables).
+* **Full Ciphertext Transcript Binding & `-1` Scrubbing:** All `1,152` ciphertext bytes are absorbed into the 512-bit shared-secret derivation (rejecting any 1-bit ciphertext tamper), and all secret stack buffers are scrubbed back to `-1` (`0xFF`) via `ptrc_kem_wipe`.
+* **End-to-End Hybrid Handshake:** The negotiated 64-byte (`512-bit`) shared secret feeds directly into the `672-byte` symmetrical `ptrc_crystal` AEAD engine (`src/00_test_ptrc_pq_kem.py`).
 
 ---
 
