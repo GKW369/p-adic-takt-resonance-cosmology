@@ -21,7 +21,7 @@
 
 #include "ptrc_crystal.h"
 
-static const uint64_t PTRC_COPRIME_ANCHORS = {
+static const uint64_t PTRC_COPRIME_ANCHORS[16] = {
     11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 37ULL, 41ULL,
     43ULL, 47ULL, 53ULL, 59ULL, 61ULL, 67ULL, 71ULL, 73ULL
 };
@@ -472,7 +472,7 @@ int ptrc_primorial_keygen(
     if (!domain_seed || seed_len == 0U || !out_key || !out_nonce) {
         return PTRC_CRYPT_ERR;
     }
-    static const uint8_t crt_moduli = { 251U, 241U, 239U, 233U, 229U, 227U, 223U, 211U };
+    static const uint8_t crt_moduli[PTRC_KEYGEN_PRIME_RINGS] = { 251U, 241U, 239U, 233U, 229U, 227U, 223U, 211U };
     uint8_t ctx_info[16];
     uint64_t t_nz = ptrc_u64_no_zero(session_takt);
     for (uint32_t i = 0U; i < 8U; i++) {
