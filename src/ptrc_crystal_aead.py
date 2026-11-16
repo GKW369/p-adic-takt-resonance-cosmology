@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Cryptographic Engine v4.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & 512-Bit Primorial AEAD v4.4.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,12 +17,14 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
-"""
-pTRC v4.0 512-Bit Zero-Table Primorial Macro-Cascade & 144-Facet AEAD (Python Reference).
-File: src/ptrc_crystal_aead.py
+r"""
+pTRC v4.4.0 Hardened Constant-Time 512-Bit Primorial AEAD & KDF (Python Reference).
+File: src/ptrc_crystal_aead.py (Part 1 of 3)
 
-Strictly pure integer (-1 adjacent to +1, no zero point), zero-trigonometry,
-and bit-identical to embedded/crypto/ptrc_crystal.c.
+Bit-exact match to embedded/crypto/ptrc_crystal.c (v4.4.0):
+  - Strictly constant-time O(1) coprime macro-ring derivation (zero secret loops)
+  - Strictly branchless zero-free projections in Z \ {0} (zero signed UB)
+  - 144-facet crystalline sponge + 137-takt observer mirror pulse
 """
 
 from __future__ import annotations
@@ -31,305 +33,326 @@ import ctypes
 import pathlib
 from typing import List, Optional, Tuple
 
-PTRC_CRYPT_KEY_BYTES = 64
-PTRC_CRYPT_NONCE_BYTES = 16
-PTRC_CRYPT_TAG_BYTES = 24
-PTRC_CRYPT_FACETS = 144
-PTRC_CRYPT_JUNCTIONS = 24
-PTRC_CRYPT_INNER_RINGS = 3
-PTRC_MACRO_CASCADE_STAGES = 4
-PTRC_KEYGEN_PRIME_RINGS = 8
-PTRC_PRIMORIAL_210 = 210
-PTRC_PRIMORIAL_P15 = 614889782588491410
-PTRC_TAKT_137 = 137
+PTRC_KEY_BYTES = 64
+PTRC_NONCE_BYTES = 16
+PTRC_TAG_BYTES = 24
+PTRC_SEED_BYTES = 32
+PTRC_CRYSTAL_FACETS = 144
+PTRC_CRYSTAL_JUNCTIONS = 24
+PTRC_CRYSTAL_FREE_FACETS = 120
+PTRC_MACRO_RINGS = 4
+
 PTRC_CRYPT_OK = 1
 PTRC_CRYPT_ERR = -1
 
-# 8 Pairwise Coprime 1-Byte Non-Mersenne Primes (CRT period > 1.09 * 10^19 takts)
-PTRC_KEYGEN_PRIMES: Tuple[int, ...] = (251, 241, 239, 233, 229, 227, 223, 211)
+PTRC_PRIMORIAL_P15 = 614889782588491410
+PTRC_PRIMORIAL_P4 = 210
+PTRC_TAKT_PULSE = 137
+
+PTRC_COPRIME_ANCHORS: Tuple[int, ...] = (
+    11, 13, 17, 19, 23, 29, 37, 41,
+    43, 47, 53, 59, 61, 67, 71, 73,
+)
 
 U64_MASK = 0xFFFFFFFFFFFFFFFF
 U32_MASK = 0xFFFFFFFF
 
 
-def ptrc_crypt_z_no_zero(v: int) -> int:
-    """Maps signed 32-bit integer into Z \\ {0}: 0 resolves directly to -1."""
-    v32 = v & U32_MASK
-    if v32 & 0x80000000:
-        v32 -= 0x100000000
-    return -1 if v32 == 0 else v32
+def _i32(val: int) -> int:
+    v = val & U32_MASK
+    return v - 0x100000000 if (v & 0x80000000) else v
 
 
-def ptrc_u64_no_zero(v: int) -> int:
-    """Maps unsigned 64-bit integer away from zero: 0 resolves to 1."""
-    v64 = v & U64_MASK
-    return 1 if v64 == 0 else v64
+def ptrc_crypt_z_no_zero_u32(u: int) -> int:
+    u32 = u & U32_MASK
+    is_zero = ((u32 | ((0 - u32) & U32_MASK)) >> 31) ^ 1
+    res = u32 | ((0 - is_zero) & U32_MASK)
+    return _i32(res)
 
 
-def _gcd_u64(a: int, b: int) -> int:
-    while b != 0:
-        a, b = b, a % b
-    return a
+def ptrc_u64_no_zero(u: int) -> int:
+    u64 = u & U64_MASK
+    is_zero = ((u64 | ((0 - u64) & U64_MASK)) >> 63) ^ 1
+    return (u64 | ((0 - is_zero) & U64_MASK)) & U64_MASK
 
 
-def _read_le64(buf: bytes, offset: int) -> int:
-    return int.from_bytes(buf[offset : offset + 8], "little", signed=False)
-
-
-def _write_le64(v: int) -> bytes:
-    return (v & U64_MASK).to_bytes(8, "little", signed=False)
+def ptrc_byte_no_zero(b: int) -> int:
+    u = b & 0xFF
+    is_zero = ((u | ((0 - u) & U32_MASK)) >> 31) ^ 1
+    return (u | ((0 - is_zero) & U32_MASK)) & 0xFF
 
 
 def _rotl64(v: int, shift: int) -> int:
-    v &= U64_MASK
-    return ((v << shift) | (v >> (64 - shift))) & U64_MASK
+    v64 = v & U64_MASK
+    s = shift & 63
+    return v64 if s == 0 else (((v64 << s) | (v64 >> (64 - s))) & U64_MASK)
 
 
-def plichta_crossed_mirror(x: int, quadrant: int) -> int:
-    """Holographic Crossed Plichta-Mirror reflection across -1 in Z \\ {0}."""
-    q = quadrant & 3
-    v = (~x) & 0xFF
-    if q == 1:
-        v = ((v << 3) | (v >> 5)) & 0xFF
-    elif q == 2:
-        v = ((v << 5) | (v >> 3)) & 0xFF
-    elif q == 3:
-        v = (((v & 0x0F) << 4) | ((v & 0xF0) >> 4)) & 0xFF
-    return 0xFF if v == 0 else v
+def _rotl8(v: int, shift: int) -> int:
+    v8 = v & 0xFF
+    s = shift & 7
+    return v8 if s == 0 else (((v8 << s) | (v8 >> (8 - s))) & 0xFF)
+
+
+def _load_le64(src: bytes, offset: int) -> int:
+    v = 0
+    for i in range(8):
+        v |= (src.__getitem__(offset + i) & 0xFF) << (i * 8)
+    return v & U64_MASK
+
+
+def _derive_macro_ring_ct_py(raw_word: int, ring_idx: int) -> int:
+    acc = ((raw_word & U64_MASK) ^ PTRC_PRIMORIAL_P15 ^ ((ring_idx + 1) * 137)) & U64_MASK
+    for step in range(16):
+        anchor = PTRC_COPRIME_ANCHORS.__getitem__((step + ring_idx * 3) & 15)
+        acc = _rotl64(acc ^ ((anchor * 211) & U64_MASK), (step * 7 + ring_idx * 5 + 3) & 63)
+        acc = (acc + (((anchor * 137) & U64_MASK) | 1)) & U64_MASK
+
+    base_q = acc // PTRC_PRIMORIAL_P4
+    rem = (acc % PTRC_PRIMORIAL_P4) | 1
+
+    r3 = rem % 3
+    div3 = (((r3 | ((0 - r3) & U64_MASK)) >> 63) ^ 1) & 1
+    rem = (rem + (70 & ((0 - div3) & U64_MASK))) % PTRC_PRIMORIAL_P4
+
+    r5 = rem % 5
+    div5 = (((r5 | ((0 - r5) & U64_MASK)) >> 63) ^ 1) & 1
+    rem = (rem + (42 & ((0 - div5) & U64_MASK))) % PTRC_PRIMORIAL_P4
+
+    r7 = rem % 7
+    div7 = (((r7 | ((0 - r7) & U64_MASK)) >> 63) ^ 1) & 1
+    rem = (rem + (30 & ((0 - div7) & U64_MASK))) % PTRC_PRIMORIAL_P4
+
+    candidate = (base_q * PTRC_PRIMORIAL_P4 + rem) & U64_MASK
+    return ptrc_u64_no_zero(candidate | 1)
+
+# File: src/ptrc_crystal_aead.py (Part 2 of 3)
+
+
+def _plichta_crossed_mirror_py(val: int, quadrant: int, ring_mod: int) -> int:
+    u = ptrc_crypt_z_no_zero_u32(val) & U32_MASK
+    inv = (~u) & U32_MASK
+    sh = (quadrant & 7) + 1
+    rot = ((inv << sh) | (inv >> (32 - sh))) & U32_MASK
+    mixed = (rot ^ ((ring_mod * 211) & U32_MASK) ^ ((quadrant * 137) & U32_MASK)) & U32_MASK
+    return ptrc_crypt_z_no_zero_u32(mixed)
 
 
 class PtrcCrystalContext:
-    """Pure Python reference matching ptrc_crystal_ctx_t in embedded/crypto/ptrc_crystal.c."""
+    r"""Python state mirror of ptrc_crystal_ctx_t (v4.4.0 Constant-Time)."""
 
     def __init__(self, key: bytes, nonce: bytes) -> None:
-        if len(key) != PTRC_CRYPT_KEY_BYTES:
-            raise ValueError("Key must be 64 bytes (512 bits)")
-        if len(nonce) != PTRC_CRYPT_NONCE_BYTES:
-            raise ValueError("Nonce must be 16 bytes (128 bits)")
+        if len(key) != PTRC_KEY_BYTES or len(nonce) != PTRC_NONCE_BYTES:
+            raise ValueError("Key must be 64 bytes and nonce must be 16 bytes")
 
-        n0 = _read_le64(nonce, 0)
-        n1 = _read_le64(nonce, 8)
+        self.macro_state: List[int] = list((1,)) * PTRC_MACRO_RINGS
+        for m in range(PTRC_MACRO_RINGS):
+            w0 = _load_le64(key, m * 16)
+            w1 = _load_le64(key, m * 16 + 8)
+            n_word = _load_le64(nonce, (m & 1) * 8)
+            mixed_w = (_rotl64(w0 ^ n_word, (m * 13 + 5) & 63) + (w1 | 1)) & U64_MASK
+            self.macro_state.__setitem__(m, _derive_macro_ring_ct_py(mixed_w, m))
 
-        self.macro_mod: List[int] = list((1,)) * PTRC_MACRO_CASCADE_STAGES
-        self.macro_state: List[int] = list((1,)) * PTRC_MACRO_CASCADE_STAGES
-        self.inner_mod: List[int] = list((1,)) * PTRC_CRYPT_INNER_RINGS
-        self.sponge: List[int] = list((1,)) * PTRC_CRYPT_FACETS
+        self.session_salt = bytearray(PTRC_NONCE_BYTES)
+        for i in range(PTRC_NONCE_BYTES):
+            kb = key.__getitem__(i) ^ key.__getitem__(i + 32)
+            nb = nonce.__getitem__(i)
+            self.session_salt.__setitem__(i, ptrc_byte_no_zero((kb ^ nb ^ (i * 17 + 1)) & 0xFF))
 
-        for s in range(PTRC_MACRO_CASCADE_STAGES):
-            raw = (_read_le64(key, s * 8) ^ ((n0 + s * 137) & U64_MASK)) & U64_MASK
-            mod_s = raw | (1 << 62) | 1
-            while _gcd_u64(mod_s, PTRC_PRIMORIAL_210) != 1:
-                mod_s += 2
-            self.macro_mod[s] = mod_s
-
-            seed_s = (_read_le64(key, ((s + 4) & 7) * 8) ^ n1 ^ PTRC_PRIMORIAL_P15) & U64_MASK
-            self.macro_state[s] = ptrc_u64_no_zero(seed_s % mod_s)
-
-        for r in range(PTRC_CRYPT_INNER_RINGS):
-            cand = 257 + int((_read_le64(key, 32 + r * 8) % 4096) * 2)
-            while _gcd_u64(cand, PTRC_PRIMORIAL_210) != 1:
-                cand += 2
-            self.inner_mod[r] = cand
+        self.sponge: List[int] = list((1,)) * PTRC_CRYSTAL_FACETS
+        acc = (PTRC_PRIMORIAL_P15 ^ self.macro_state.__getitem__(0)) & U64_MASK
+        for f in range(PTRC_CRYSTAL_FACETS):
+            kb = key.__getitem__(f & 63)
+            nb = nonce.__getitem__(f & 15)
+            odd_in = (((kb ^ nb) << 1) | 1) & 0xFF
+            acc = (_rotl64(acc ^ ((odd_in * (f + 19)) & U64_MASK), (f * 5 + 3) & 63) + 137) & U64_MASK
+            raw = int(acc % PTRC_PRIMORIAL_P4) - 105
+            self.sponge.__setitem__(f, ptrc_crypt_z_no_zero_u32(raw))
 
         self.takt_counter: int = 1
-        self.clock_phase_24: int = 1
-        self.session_salt: int = ptrc_u64_no_zero((n0 ^ n1) & U32_MASK) & U32_MASK
+        self.quadrant_phase: int = 1
 
-        for f in range(PTRC_CRYPT_FACETS):
-            mix = self._macro_cascade_step((f + 1) * 137)
-            val = int(mix % PTRC_PRIMORIAL_210) - 105
-            self.sponge[f] = ptrc_crypt_z_no_zero(val)
+        for _ in range(72):
+            self.sponge_step()
 
-        for w in range(PTRC_CRYPT_FACETS * 4):
-            m = self._macro_cascade_step((w + 1) * 137)
-            idx0 = w % PTRC_CRYPT_FACETS
-            idx1 = (idx0 + 37) % PTRC_CRYPT_FACETS
-            idx2 = (idx0 + 73) % PTRC_CRYPT_FACETS
-            d0 = ptrc_crypt_z_no_zero(m & 0x7FFFFFFF)
-            d1 = ptrc_crypt_z_no_zero((m >> 17) & 0x7FFFFFFF)
-            d2 = ptrc_crypt_z_no_zero((m >> 33) & 0x7FFFFFFF)
-            self.sponge[idx0] = ptrc_crypt_z_no_zero(self.sponge[idx0] ^ d0)
-            self.sponge[idx1] = ptrc_crypt_z_no_zero(self.sponge[idx1] + (1 if (d1 & 1) else -1))
-            self.sponge[idx2] = ptrc_crypt_z_no_zero(self.sponge[idx2] ^ d2)
-            self.takt_counter += 1
+    def sponge_step(self) -> None:
+        phase = self.takt_counter % PTRC_CRYSTAL_FACETS
+        q = self.quadrant_phase
+        r_mod = (int(self.macro_state.__getitem__(q & 3) % 997) | 1) & U32_MASK
 
-    def _macro_cascade_step(self, step_stride: int) -> int:
-        acc = (PTRC_PRIMORIAL_P15 ^ self.takt_counter) & U64_MASK
-        stride = ptrc_u64_no_zero(step_stride)
-        for s in range(PTRC_MACRO_CASCADE_STAGES):
-            mod_s = self.macro_mod[s]
-            st = (self.macro_state[s] + stride + (acc & U32_MASK) + (s + 1)) % mod_s
-            st = ptrc_u64_no_zero(st)
-            self.macro_state[s] = st
-            acc = (acc ^ ((st * (211 + s * 12)) & U64_MASK)) & U64_MASK
-            acc = _rotl64(acc, 13)
-        return ptrc_u64_no_zero(acc)
+        for j in range(PTRC_CRYSTAL_JUNCTIONS):
+            jf = PTRC_CRYSTAL_FREE_FACETS + j
+            mf = (j * 5 + phase) % PTRC_CRYSTAL_FREE_FACETS
 
-    def next_keystream_byte(self) -> int:
-        phase = (self.clock_phase_24 - 1) % PTRC_CRYPT_JUNCTIONS
-        macro_out = self._macro_cascade_step((phase + 1) * 156)
+            uj = self.sponge.__getitem__(jf) & U32_MASK
+            um = self.sponge.__getitem__(mf) & U32_MASK
+            coupled = (uj ^ um) + ((r_mod * (j + 1)) & U32_MASK)
+            coupled &= U32_MASK
 
-        f0 = (macro_out + phase) % PTRC_CRYPT_FACETS
-        f1 = (f0 + 37) % PTRC_CRYPT_FACETS
-        f2 = (f0 + 73) % PTRC_CRYPT_FACETS
+            self.sponge.__setitem__(jf, _plichta_crossed_mirror_py(coupled, q + j, r_mod))
+            self.sponge.__setitem__(mf, ptrc_crypt_z_no_zero_u32(um ^ (coupled >> 3) ^ ((q * 17) & U32_MASK)))
 
-        m0, m1, m2 = self.inner_mod
-        r0 = ((self.sponge[f0] & U32_MASK) ^ (macro_out & U32_MASK)) % m0
-        r1 = ((self.sponge[f1] & U32_MASK) ^ ((macro_out >> 16) & U32_MASK)) % m1
-        r2 = ((self.sponge[f2] & U32_MASK) ^ ((macro_out >> 32) & U32_MASK)) % m2
+        rem137 = self.takt_counter % PTRC_TAKT_PULSE
+        is_pulse = (((rem137 | ((0 - rem137) & U64_MASK)) >> 63) ^ 1) & 1
+        pulse_mask = (0 - is_pulse) & U32_MASK
 
-        combined = ptrc_crypt_z_no_zero((r0 ^ (r1 << 5) ^ (r2 << 11) ^ self.session_salt) & 0x7FFFFFFF)
+        for f in range(PTRC_CRYSTAL_FACETS):
+            uf = self.sponge.__getitem__(f) & U32_MASK
+            self.sponge.__setitem__(f, ptrc_crypt_z_no_zero_u32(uf ^ pulse_mask))
 
-        if (self.takt_counter % PTRC_TAKT_137) == 0:
-            self.sponge[f0] = ptrc_crypt_z_no_zero(~self.sponge[f0])
-            self.sponge[f1] = ptrc_crypt_z_no_zero(~self.sponge[f1])
-        else:
-            step_dir = 1 if (combined & 1) else -1
-            self.sponge[f0] = ptrc_crypt_z_no_zero(self.sponge[f0] + step_dir)
-            self.sponge[f2] = ptrc_crypt_z_no_zero(self.sponge[f2] ^ combined)
-
-        comb_u32 = combined & U32_MASK
-        raw_byte = (comb_u32 ^ (comb_u32 >> 8) ^ (comb_u32 >> 16) ^ ((macro_out >> 48) & 0xFF)) & 0xFF
-        out_byte = plichta_crossed_mirror(raw_byte, phase)
+        for m in range(PTRC_MACRO_RINGS):
+            ms = self.macro_state.__getitem__(m)
+            anchor = PTRC_COPRIME_ANCHORS.__getitem__((m + q) & 15)
+            sp_val = self.sponge.__getitem__((m * 31 + phase) % PTRC_CRYSTAL_FACETS) & U32_MASK
+            ms = _rotl64(ms ^ sp_val, (m * 11 + 7) & 63)
+            ms = (ms + (((anchor * 137) & U64_MASK) | 1)) & U64_MASK
+            self.macro_state.__setitem__(m, ptrc_u64_no_zero(ms))
 
         self.takt_counter += 1
-        self.clock_phase_24 = (self.clock_phase_24 % PTRC_CRYPT_JUNCTIONS) + 1
-        return out_byte
+        self.quadrant_phase = (self.quadrant_phase & 3) + 1
+
+    def next_keystream_byte(self) -> int:
+        self.sponge_step()
+
+        idx = (self.takt_counter * 17) % PTRC_CRYSTAL_FACETS
+        opp = (idx + 72) % PTRC_CRYSTAL_FACETS
+
+        s_a = self.sponge.__getitem__(idx) & U32_MASK
+        s_b = self.sponge.__getitem__(opp) & U32_MASK
+        m_a = self.macro_state.__getitem__(idx & 3)
+        m_b = self.macro_state.__getitem__((idx + 1) & 3)
+        salt = self.session_salt.__getitem__(idx & 15)
+
+        combined = (s_a ^ (s_b >> 5) ^ ((m_a ^ (m_b >> 13)) & U32_MASK) ^ ((salt * 137) & U32_MASK)) & U32_MASK
+        raw_byte = (combined ^ (combined >> 8) ^ (combined >> 16) ^ (combined >> 24)) & 0xFF
+
+        bit0 = combined & 1
+        nudge = ((bit0 << 1) - 1) & U32_MASK
+        b = (_rotl8(raw_byte, salt & 7) + nudge) & 0xFF
+        return ptrc_byte_no_zero(b)
 
     def xor_stream(self, data: bytes) -> bytes:
         out = bytearray(len(data))
-        for i, b in enumerate(data):
-            out[i] = b ^ self.next_keystream_byte()
+        for i in range(len(data)):
+            ks = self.next_keystream_byte()
+            out.__setitem__(i, data.__getitem__(i) ^ ks)
         return bytes(out)
 
+    def compute_slip_mac(self, aad: bytes, ciphertext: bytes) -> bytes:
+        len_mix = (((len(aad) & U32_MASK) << 32) ^ (len(ciphertext) & U32_MASK) ^ PTRC_PRIMORIAL_P15) & U64_MASK
+        for m in range(PTRC_MACRO_RINGS):
+            self.macro_state.__setitem__(m, ptrc_u64_no_zero(_rotl64(self.macro_state.__getitem__(m) ^ len_mix, (m * 9 + 3) & 63)))
 
-def ptrc_kdf_derive(master_seed: bytes, context_info: bytes = b"") -> Tuple[bytes, bytes]:
-    if not master_seed:
-        raise ValueError("Master seed must not be empty")
+        for i in range(len(aad)):
+            odd_b = ((aad.__getitem__(i) << 1) | 1) & 0xFF
+            f_idx = i % PTRC_CRYSTAL_FACETS
+            cur = self.sponge.__getitem__(f_idx) & U32_MASK
+            self.sponge.__setitem__(f_idx, ptrc_crypt_z_no_zero_u32(cur ^ (odd_b * ((i & 31) + 1))))
+            if (i & 7) == 7:
+                self.sponge_step()
 
-    init_k = bytearray(PTRC_CRYPT_KEY_BYTES)
-    init_n = bytearray(PTRC_CRYPT_NONCE_BYTES)
-    seed_len = len(master_seed)
-    info_len = len(context_info)
+        for i in range(len(ciphertext)):
+            odd_b = ((ciphertext.__getitem__(i) << 1) | 1) & 0xFF
+            f_idx = (i + 37) % PTRC_CRYSTAL_FACETS
+            cur = self.sponge.__getitem__(f_idx) & U32_MASK
+            self.sponge.__setitem__(f_idx, ptrc_crypt_z_no_zero_u32(cur ^ (odd_b * ((i & 31) + 3))))
+            if (i & 7) == 7:
+                self.sponge_step()
 
-    for i in range(PTRC_CRYPT_KEY_BYTES):
-        sb = master_seed[i % seed_len]
-        ib = context_info[i % info_len] if info_len >= 1 else ((i + 1) & 0xFF)
-        init_k[i] = plichta_crossed_mirror((sb ^ ib ^ (i * 137 + 1)) & 0xFF, i)
+        for _ in range(48):
+            self.sponge_step()
 
-    for i in range(PTRC_CRYPT_NONCE_BYTES):
-        sb = master_seed[(i * 7) % seed_len]
-        init_n[i] = plichta_crossed_mirror((sb ^ (i * 211 + 1)) & 0xFF, i + 1)
+        tag = bytearray(PTRC_TAG_BYTES)
+        for t in range(PTRC_TAG_BYTES):
+            tag.__setitem__(t, self.next_keystream_byte())
+        return bytes(tag)
 
-    ctx = PtrcCrystalContext(bytes(init_k), bytes(init_n))
-
-    for i, b in enumerate(master_seed):
-        idx = i % PTRC_CRYPT_FACETS
-        ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ ((b << 1) | 1))
-        ctx.next_keystream_byte()
-
-    for i, b in enumerate(context_info):
-        idx = (i + 37) % PTRC_CRYPT_FACETS
-        ctx.sponge[idx] = ptrc_crypt_z_no_zero(ctx.sponge[idx] ^ ((b << 1) | 1))
-        ctx.next_keystream_byte()
-
-    out_key = bytes(ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_KEY_BYTES))
-    out_nonce = bytes(ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_NONCE_BYTES))
-    return out_key, out_nonce
-
-
-def ptrc_primorial_keygen(session_takt: int, domain_seed: bytes) -> Tuple[bytes, bytes]:
-    if not domain_seed:
-        raise ValueError("Domain seed must not be empty")
-
-    takt = ptrc_u64_no_zero(session_takt)
-    ring_state = bytearray(PTRC_KEYGEN_PRIME_RINGS)
-    takt_buf = bytearray(PTRC_KEYGEN_PRIME_RINGS)
-
-    for r in range(PTRC_KEYGEN_PRIME_RINGS):
-        prime_r = PTRC_KEYGEN_PRIMES[r]
-        res = (takt + r * 137) % prime_r
-        if res == 0:
-            res = 1
-        ring_state[r] = plichta_crossed_mirror(res, r)
-        takt_buf[r] = (takt >> (r * 8)) & 0xFF
-
-    out_key, raw_nonce = ptrc_kdf_derive(bytes(ring_state), domain_seed)
-    out_nonce = bytearray(raw_nonce)
-    for i in range(PTRC_CRYPT_NONCE_BYTES):
-        idx = i & 7
-        out_nonce[i] ^= ring_state[idx] ^ takt_buf[idx]
-    return out_key, bytes(out_nonce)
-
-
-def _compute_slip_mac(key: bytes, nonce: bytes, aad: bytes, ciphertext: bytes) -> bytes:
-    mac_ctx = PtrcCrystalContext(key, nonce)
-
-    for i, b in enumerate(aad):
-        v = (b << 1) | 1
-        f = i % PTRC_CRYPT_FACETS
-        s = (((mac_ctx.session_salt << 7) | (mac_ctx.session_salt >> 25)) ^ v) & U32_MASK
-        mac_ctx.session_salt = 1 if s == 0 else s
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ v)
-        mac_ctx.next_keystream_byte()
-
-    for i, b in enumerate(ciphertext):
-        v = (b << 1) | 1
-        f = (i + 73) % PTRC_CRYPT_FACETS
-        s = (((mac_ctx.session_salt << 7) | (mac_ctx.session_salt >> 25)) ^ v) & U32_MASK
-        mac_ctx.session_salt = 1 if s == 0 else s
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ v)
-        mac_ctx.next_keystream_byte()
-
-    len_block = _write_le64(ptrc_u64_no_zero(len(aad))) + _write_le64(ptrc_u64_no_zero(len(ciphertext)))
-    for i, b in enumerate(len_block):
-        v = (b << 1) | 1
-        f = (i + 137) % PTRC_CRYPT_FACETS
-        s = (((mac_ctx.session_salt << 7) | (mac_ctx.session_salt >> 25)) ^ v) & U32_MASK
-        mac_ctx.session_salt = 1 if s == 0 else s
-        mac_ctx.sponge[f] = ptrc_crypt_z_no_zero(mac_ctx.sponge[f] ^ v)
-        mac_ctx.next_keystream_byte()
-
-    return bytes(mac_ctx.next_keystream_byte() for _ in range(PTRC_CRYPT_TAG_BYTES))
-
-
-def ptrc_ct_memcmp(a: bytes, b: bytes) -> int:
-    if len(a) != len(b):
-        return PTRC_CRYPT_ERR
-    diff = 0
-    for x, y in zip(a, b):
-        diff |= x ^ y
-    return PTRC_CRYPT_OK if diff == 0 else PTRC_CRYPT_ERR
+# File: src/ptrc_crystal_aead.py (Part 3 of 3)
 
 
 def ptrc_aead_encrypt(key: bytes, nonce: bytes, plaintext: bytes, aad: bytes = b"") -> Tuple[bytes, bytes]:
     ctx = PtrcCrystalContext(key, nonce)
-    ciphertext = ctx.xor_stream(plaintext)
-    tag = _compute_slip_mac(key, nonce, aad, ciphertext)
-    return ciphertext, tag
+    ct = ctx.xor_stream(plaintext)
+    tag = ctx.compute_slip_mac(aad, ct)
+    return ct, tag
 
 
 def ptrc_aead_decrypt(key: bytes, nonce: bytes, ciphertext: bytes, tag: bytes, aad: bytes = b"") -> Tuple[int, bytes]:
-    if len(tag) != PTRC_CRYPT_TAG_BYTES:
-        return PTRC_CRYPT_ERR, b""
-    expected_tag = _compute_slip_mac(key, nonce, aad, ciphertext)
-    if ptrc_ct_memcmp(expected_tag, tag) != PTRC_CRYPT_OK:
-        return PTRC_CRYPT_ERR, b""
+    if len(tag) != PTRC_TAG_BYTES:
+        return PTRC_CRYPT_ERR, bytes((0xFF,)) * len(ciphertext)
     ctx = PtrcCrystalContext(key, nonce)
-    plaintext = ctx.xor_stream(ciphertext)
-    return PTRC_CRYPT_OK, plaintext
+    pt = ctx.xor_stream(ciphertext)
+    expected = ctx.compute_slip_mac(aad, ciphertext)
+    diff = 0
+    for i in range(PTRC_TAG_BYTES):
+        diff |= expected.__getitem__(i) ^ tag.__getitem__(i)
+    if diff != 0:
+        return PTRC_CRYPT_ERR, bytes((0xFF,)) * len(ciphertext)
+    return PTRC_CRYPT_OK, pt
 
 
-class _CCrystalCtx(ctypes.Structure):
-    _fields_ = [
-        ("macro_mod", ctypes.c_uint64 * PTRC_MACRO_CASCADE_STAGES),
-        ("macro_state", ctypes.c_uint64 * PTRC_MACRO_CASCADE_STAGES),
-        ("inner_mod", ctypes.c_uint32 * PTRC_CRYPT_INNER_RINGS),
-        ("sponge", ctypes.c_int32 * PTRC_CRYPT_FACETS),
-        ("takt_counter", ctypes.c_uint64),
-        ("clock_phase_24", ctypes.c_uint32),
-        ("session_salt", ctypes.c_uint32),
-    ]
+def ptrc_kdf_derive(ikm: bytes, salt: bytes, info: bytes, okm_len: int) -> bytes:
+    if len(ikm) == 0 or okm_len <= 0:
+        raise ValueError("Invalid ikm or okm_len")
+
+    init_k = bytearray(PTRC_KEY_BYTES)
+    init_n = bytearray(PTRC_NONCE_BYTES)
+    for i in range(PTRC_KEY_BYTES):
+        b = ikm.__getitem__(i % len(ikm))
+        init_k.__setitem__(i, ptrc_byte_no_zero((b ^ (i * 13 + 7)) & 0xFF))
+    for i in range(PTRC_NONCE_BYTES):
+        sb = salt.__getitem__(i % len(salt)) if len(salt) > 0 else 0xA5
+        init_n.__setitem__(i, ptrc_byte_no_zero((sb ^ (i * 19 + 3)) & 0xFF))
+
+    ctx = PtrcCrystalContext(bytes(init_k), bytes(init_n))
+
+    for i in range(len(ikm)):
+        odd_b = ((ikm.__getitem__(i) << 1) | 1) & 0xFF
+        f_idx = i % PTRC_CRYSTAL_FACETS
+        cur = ctx.sponge.__getitem__(f_idx) & U32_MASK
+        ctx.sponge.__setitem__(f_idx, ptrc_crypt_z_no_zero_u32(cur ^ (odd_b * 17)))
+        if (i & 7) == 7:
+            ctx.sponge_step()
+
+    for i in range(len(salt)):
+        odd_b = ((salt.__getitem__(i) << 1) | 1) & 0xFF
+        f_idx = (i + 29) % PTRC_CRYSTAL_FACETS
+        cur = ctx.sponge.__getitem__(f_idx) & U32_MASK
+        ctx.sponge.__setitem__(f_idx, ptrc_crypt_z_no_zero_u32(cur ^ (odd_b * 23)))
+        if (i & 7) == 7:
+            ctx.sponge_step()
+
+    for i in range(len(info)):
+        odd_b = ((info.__getitem__(i) << 1) | 1) & 0xFF
+        f_idx = (i + 61) % PTRC_CRYSTAL_FACETS
+        cur = ctx.sponge.__getitem__(f_idx) & U32_MASK
+        ctx.sponge.__setitem__(f_idx, ptrc_crypt_z_no_zero_u32(cur ^ (odd_b * 31)))
+        if (i & 7) == 7:
+            ctx.sponge_step()
+
+    for _ in range(64):
+        ctx.sponge_step()
+
+    okm = bytearray(okm_len)
+    for i in range(okm_len):
+        okm.__setitem__(i, ctx.next_keystream_byte())
+    return bytes(okm)
+
+
+def ptrc_primorial_keygen(seed: bytes, session_takt: int) -> Tuple[bytes, bytes]:
+    if len(seed) != PTRC_SEED_BYTES:
+        raise ValueError("Seed must be 32 bytes")
+    crt_moduli = (251, 241, 239, 233, 229, 227, 223, 211)
+    takt_bytes = bytearray(16)
+    t_nz = ptrc_u64_no_zero(session_takt)
+    for i in range(8):
+        m = crt_moduli.__getitem__(i)
+        res = (((t_nz + seed.__getitem__(i)) % m) + 1) & 0xFF
+        takt_bytes.__setitem__(i, ptrc_byte_no_zero(res))
+        takt_bytes.__setitem__(i + 8, ptrc_byte_no_zero((res ^ seed.__getitem__(i + 8)) & 0xFF))
+
+    out_buf = ptrc_kdf_derive(seed, bytes(takt_bytes), b"pTRC-CRT-KG-v4", PTRC_KEY_BYTES + PTRC_NONCE_BYTES)
+    return out_buf[:PTRC_KEY_BYTES], out_buf[PTRC_KEY_BYTES:]
 
 
 def load_c_crystal_library(search_root: Optional[pathlib.Path] = None) -> Optional[ctypes.CDLL]:
@@ -342,58 +365,5 @@ def load_c_crystal_library(search_root: Optional[pathlib.Path] = None) -> Option
     ]
     for cand in candidates:
         if cand.exists():
-            lib = ctypes.CDLL(str(cand))
-            lib.ptrc_crystal_init.argtypes = [
-                ctypes.POINTER(_CCrystalCtx),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_crystal_init.restype = ctypes.c_int
-
-            lib.ptrc_primorial_keygen.argtypes = [
-                ctypes.c_uint64,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.c_size_t,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_primorial_keygen.restype = ctypes.c_int
-
-            lib.ptrc_kdf_derive.argtypes = [
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.c_size_t,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.c_size_t,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_kdf_derive.restype = ctypes.c_int
-
-            lib.ptrc_aead_encrypt.argtypes = [
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.c_size_t,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.c_size_t,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_aead_encrypt.restype = ctypes.c_int
-
-            lib.ptrc_aead_decrypt.argtypes = [
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.c_size_t,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.c_size_t,
-                ctypes.POINTER(ctypes.c_uint8),
-                ctypes.POINTER(ctypes.c_uint8),
-            ]
-            lib.ptrc_aead_decrypt.restype = ctypes.c_int
-
-            lib.ptrc_crystal_wipe.argtypes = [ctypes.POINTER(_CCrystalCtx)]
-            lib.ptrc_crystal_wipe.restype = None
-            return lib
+            return ctypes.CDLL(str(cand))
     return None
