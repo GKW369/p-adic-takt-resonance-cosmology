@@ -208,6 +208,10 @@ int ptrc_kem_keygen(
 /* File: embedded/crypto/ptrc_pq_kem.c (Part 2 of 2) */
 
 /* Squeeze a 512-bit (64-byte) shared secret in Z \ {0} from message m and context transcript */
+
+/* File: embedded/crypto/ptrc_pq_kem.c (Part 2 of 2) */
+
+/* Squeeze a 512-bit (64-byte) shared secret in Z \ {0} from message m and context transcript */
 static void ptrc_kem_derive_ss(
     uint8_t ss_out[PTRC_KEM_SS_BYTES],
     const uint8_t msg[PTRC_KEM_MSG_BYTES],
@@ -318,8 +322,8 @@ int ptrc_kem_encaps(
         *(v_bytes + byte_idx) = packed_nibbles;
     }
 
-    /* 5. Derive 512-bit shared secret bound to pk seed */
-    ptrc_kem_derive_ss(ss_out, msg, pk);
+    /* 5. Derive 512-bit shared secret bound to ciphertext transcript */
+    ptrc_kem_derive_ss(ss_out, msg, ct_out);
 
     ptrc_kem_wipe(&ctx, sizeof(ctx));
     ptrc_kem_wipe(msg, sizeof(msg));
