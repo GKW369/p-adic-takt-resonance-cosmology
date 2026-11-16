@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Post-Quantum Ring-KEM v4.2
+# pTRC Framework - Discrete 1-Bit Integer Physics & CCA2 Post-Quantum Ring-KEM v4.3.1
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,13 +18,14 @@
 # ==============================================================================
 
 r"""
-pTRC v4.2 Discrete 1-Bit Integer Physics & Dual-Profile Post-Quantum Ring-KEM.
-File: src/ptrc_pq_kem.py
+pTRC v4.3.1 Discrete 1-Bit Integer Physics & CCA2 Post-Quantum Ring-KEM.
+File: src/ptrc_pq_kem.py (Part 1 of 3)
 
-Bit-exact match to embedded/crypto/ptrc_pq_kem.c:
-  - Profile A (Standard 512-Dim, k=2): PK=1056B, SK=1024B, CT=1152B, SS=64B
-  - Profile B (Ultra-Light 256-Dim, k=1): PK=544B, SK=512B, CT=640B, SS=64B
-  - Non-Mersenne lattice prime q = 7681 (gcd(7681, 210) == 1) in Z_{7681} \ {0}
+Bit-exact match to embedded/crypto/ptrc_pq_kem.c (v4.3.1):
+  - Fujisaki-Okamoto (FO) CCA2 re-encryption check & implicit constant-time rejection
+  - Strictly UB-free unsigned mixing projected into Z_{7681} \ {0}
+  - Profile A (512-Dim Standard, k=2): PK=1056B, SK=2112B, CT=1152B, SS=64B
+  - Profile B (256-Dim Ultra-Light, k=1): PK=544B, SK=1088B, CT=640B, SS=64B
 """
 
 from __future__ import annotations
@@ -46,16 +47,16 @@ PTRC_KEM_SEED_BYTES = 32
 PTRC_KEM_MSG_BYTES = 32
 PTRC_KEM_SS_BYTES = 64
 
-# Profile A: Standard 512-Dim Module-Lattice (k = 2)
+# Profile A: Standard 512-Dim Module-Lattice (k = 2, FO-CCA2 SK includes PK + z)
 PTRC_KEM_K = 2
 PTRC_KEM_PK_BYTES = 1056
-PTRC_KEM_SK_BYTES = 1024
+PTRC_KEM_SK_BYTES = 2112
 PTRC_KEM_CT_BYTES = 1152
 
-# Profile B: Ultra-Light 256-Dim IoT Ring-Lattice (k = 1)
+# Profile B: Ultra-Light 256-Dim IoT Ring-Lattice (k = 1, FO-CCA2 SK includes PK + z)
 PTRC_KEM_LIGHT_K = 1
 PTRC_KEM_LIGHT_PK_BYTES = 544
-PTRC_KEM_LIGHT_SK_BYTES = 512
+PTRC_KEM_LIGHT_SK_BYTES = 1088
 PTRC_KEM_LIGHT_CT_BYTES = 640
 
 PTRC_KEM_OK = 1
@@ -70,13 +71,24 @@ def _i32(val: int) -> int:
     return v - 0x100000000 if (v & 0x80000000) else v
 
 
-def _c_shr_i32(val: int, shift: int) -> int:
-    return _i32(val) >> shift
+def ptrc_kem_z_no_zero_u32(u: int) -> int:
+    u32 = u & U32_MASK
+    is_zero = ((u32 | ((0 - u32) & U32_MASK)) >> 31) ^ 1
+    res = u32 | ((0 - is_zero) & U32_MASK)
+    return _i32(res)
 
 
-def ptrc_kem_z_no_zero(v: int) -> int:
-    v32 = _i32(v)
-    return -1 if v32 == 0 else v32
+def ptrc_kem_byte_no_zero(b: int) -> int:
+    u = b & 0xFF
+    is_zero = ((u | ((0 - u) & U32_MASK)) >> 31) ^ 1
+    return (u | ((0 - is_zero) & U32_MASK)) & 0xFF
+
+
+def ptrc_kem_ct_abs32(x: int) -> int:
+    ux = x & U32_MASK
+    mask = ux >> 31
+    neg_mask = (0 - mask) & U32_MASK
+    return ((ux ^ neg_mask) + mask) & U32_MASK
 
 
 def ptrc_kem_mod_q_no_zero(x: int) -> int:
@@ -95,7 +107,7 @@ def ptrc_kem_mod_q_no_zero(x: int) -> int:
 
 
 class _PtrcKemSponge:
-    r"""Internal 144-facet Z \ {0} sponge matching ptrc_kem_ctx_t in C11."""
+    r"""Internal 144-facet Z \ {0} sponge matching ptrc_kem_ctx_t in C11 v4.3.1."""
 
     def __init__(self, seed: bytes, domain: int) -> None:
         acc = (614889782588491410 ^ (((domain | 1) & 0xFF) * 137)) & U64_MASK
@@ -108,7 +120,7 @@ class _PtrcKemSponge:
             acc &= U64_MASK
             acc ^= (acc >> 13)
             raw = int(acc % PTRC_KEM_PRIMORIAL_210) - 105
-            self.sponge.__setitem__(f, ptrc_kem_z_no_zero(raw))
+            self.sponge.__setitem__(f, ptrc_kem_z_no_zero_u32(raw))
         self.takt_counter: int = 1
         self.quadrant_phase: int = 1
 
@@ -117,26 +129,35 @@ class _PtrcKemSponge:
         opp = (idx + 73) % PTRC_KEM_FACETS
         jnc = (idx + 24) % PTRC_KEM_FACETS
 
-        a = self.sponge.__getitem__(idx)
-        b = self.sponge.__getitem__(opp)
-        c = self.sponge.__getitem__(jnc)
+        ua = self.sponge.__getitem__(idx) & U32_MASK
+        ub = self.sponge.__getitem__(opp) & U32_MASK
+        uc = self.sponge.__getitem__(jnc) & U32_MASK
 
-        mixed = ptrc_kem_z_no_zero((~a) + (b ^ c) + (self.quadrant_phase * 11))
+        umixed = ((~ua) + (ub ^ uc) + (self.quadrant_phase * 11)) & U32_MASK
+        mixed = ptrc_kem_z_no_zero_u32(umixed)
         self.sponge.__setitem__(idx, mixed)
-        self.sponge.__setitem__(opp, ptrc_kem_z_no_zero(b + _c_shr_i32(mixed, 2)))
+
+        uopp = (ub + ((mixed & U32_MASK) >> 2)) & U32_MASK
+        self.sponge.__setitem__(opp, ptrc_kem_z_no_zero_u32(uopp))
 
         if (self.takt_counter % PTRC_KEM_TAKT_137) == 0:
             for f in range(PTRC_KEM_FACETS):
-                self.sponge.__setitem__(f, ptrc_kem_z_no_zero(~self.sponge.__getitem__(f)))
+                uf = self.sponge.__getitem__(f) & U32_MASK
+                self.sponge.__setitem__(f, ptrc_kem_z_no_zero_u32(~uf))
 
         self.takt_counter += 1
         self.quadrant_phase = (self.quadrant_phase & 3) + 1
         return mixed
 
     def sample_noise(self) -> int:
-        v = self.next_word()
-        mag = (abs(v) & 1) + 1
-        return -mag if v < 0 else mag
+        uv = self.next_word() & U32_MASK
+        mag = (uv & 1) + 1
+        sign_bit = uv >> 31
+        sign_mask = (0 - sign_bit) & U32_MASK
+        signed_mag = ((mag ^ sign_mask) + sign_bit) & U32_MASK
+        return _i32(signed_mag)
+
+# File: src/ptrc_pq_kem.py (Part 2 of 3)
 
 
 def _expand_a_poly(seed_a: bytes, row: int, col: int) -> List[int]:
@@ -144,8 +165,9 @@ def _expand_a_poly(seed_a: bytes, row: int, col: int) -> List[int]:
     local_ctx = _PtrcKemSponge(seed_a, tag)
     out = list((1,)) * PTRC_KEM_N
     for i in range(PTRC_KEM_N):
-        raw = local_ctx.next_word()
-        out.__setitem__(i, ptrc_kem_mod_q_no_zero(raw * 53 + i * 137))
+        uraw = local_ctx.next_word() & U32_MASK
+        uval = (uraw * 53 + (i * 137)) & U32_MASK
+        out.__setitem__(i, ptrc_kem_mod_q_no_zero(_i32(uval)))
     return out
 
 
@@ -174,33 +196,42 @@ def _unpack_poly(src: bytes, offset: int) -> List[int]:
     for i in range(PTRC_KEM_N):
         lo = src.__getitem__(offset + i * 2 + 0)
         hi = src.__getitem__(offset + i * 2 + 1)
-        val = lo | (hi << 8)
-        if val & 0x8000:
-            val -= 0x10000
-        poly.__setitem__(i, -1 if val == 0 else val)
+        uval = lo | (hi << 8)
+        if uval == 0:
+            uval = 0xFFFF
+        if uval & 0x8000:
+            uval -= 0x10000
+        poly.__setitem__(i, uval)
     return poly
 
 
-def _derive_ss_py(msg: bytes, ct: bytes) -> bytes:
-    kdf_ctx = _PtrcKemSponge(msg, 0x77)
-    for i in range(len(ct)):
-        cb = ct.__getitem__(i)
-        odd_cb = ((cb << 1) | 1) & 0xFF
+def _hash_pair_py(out_len: int, in1: bytes, in2: bytes, domain: int) -> bytes:
+    h_ctx = _PtrcKemSponge(in1, domain)
+    for i in range(len(in1)):
+        odd_b = ((in1.__getitem__(i) << 1) | 1) & 0xFF
         f_idx = i % PTRC_KEM_FACETS
-        cur = kdf_ctx.sponge.__getitem__(f_idx)
-        kdf_ctx.sponge.__setitem__(f_idx, ptrc_kem_z_no_zero(cur ^ (odd_cb * ((i & 31) + 1))))
+        cur = h_ctx.sponge.__getitem__(f_idx) & U32_MASK
+        h_ctx.sponge.__setitem__(f_idx, ptrc_kem_z_no_zero_u32(cur ^ (odd_b * ((i & 31) + 1))))
         if (i & 7) == 7:
-            kdf_ctx.next_word()
+            h_ctx.next_word()
+
+    for i in range(len(in2)):
+        odd_b = ((in2.__getitem__(i) << 1) | 1) & 0xFF
+        f_idx = (i + 19) % PTRC_KEM_FACETS
+        cur = h_ctx.sponge.__getitem__(f_idx) & U32_MASK
+        h_ctx.sponge.__setitem__(f_idx, ptrc_kem_z_no_zero_u32(cur ^ (odd_b * ((i & 31) + 3))))
+        if (i & 7) == 7:
+            h_ctx.next_word()
 
     for _ in range(576):
-        kdf_ctx.next_word()
+        h_ctx.next_word()
 
-    ss_out = bytearray(PTRC_KEM_SS_BYTES)
-    for i in range(PTRC_KEM_SS_BYTES):
-        val = kdf_ctx.next_word()
-        b = (val ^ _c_shr_i32(val, 8)) & 0xFF
-        ss_out.__setitem__(i, 0xFF if b == 0 else b)
-    return bytes(ss_out)
+    out = bytearray(out_len)
+    for i in range(out_len):
+        uval = h_ctx.next_word() & U32_MASK
+        b = (uval ^ (uval >> 8)) & 0xFF
+        out.__setitem__(i, ptrc_kem_byte_no_zero(b))
+    return bytes(out)
 
 
 def _keygen_core_py(seed: bytes, k_dim: int) -> Tuple[bytes, bytes]:
@@ -208,13 +239,15 @@ def _keygen_core_py(seed: bytes, k_dim: int) -> Tuple[bytes, bytes]:
         raise ValueError("Invalid seed or k_dim")
 
     ctx = _PtrcKemSponge(seed, 0x10 | k_dim)
-    pk_out = bytearray(PTRC_KEM_SEED_BYTES + k_dim * PTRC_KEM_N * 2)
-    sk_out = bytearray(k_dim * PTRC_KEM_N * 2)
+    s_bytes = k_dim * PTRC_KEM_N * 2
+    pk_bytes = PTRC_KEM_SEED_BYTES + s_bytes
+    pk_out = bytearray(pk_bytes)
+    sk_out = bytearray(s_bytes + pk_bytes + PTRC_KEM_SEED_BYTES)
 
     seed_a = bytearray(PTRC_KEM_SEED_BYTES)
     for i in range(PTRC_KEM_SEED_BYTES):
-        b = ctx.next_word() & 0xFF
-        val = 0xFF if b == 0 else b
+        b = (ctx.next_word() & U32_MASK) & 0xFF
+        val = ptrc_kem_byte_no_zero(b)
         seed_a.__setitem__(i, val)
         pk_out.__setitem__(i, val)
 
@@ -241,21 +274,21 @@ def _keygen_core_py(seed: bytes, k_dim: int) -> Tuple[bytes, bytes]:
             b_poly.__setitem__(i, ptrc_kem_mod_q_no_zero(acc.__getitem__(i)))
         _pack_poly(pk_out, PTRC_KEM_SEED_BYTES + row * PTRC_KEM_N * 2, b_poly)
 
+    for i in range(pk_bytes):
+        sk_out.__setitem__(s_bytes + i, pk_out.__getitem__(i))
+    for i in range(PTRC_KEM_SEED_BYTES):
+        zb = (ctx.next_word() & U32_MASK) & 0xFF
+        sk_out.__setitem__(s_bytes + pk_bytes + i, ptrc_kem_byte_no_zero(zb))
+
     return bytes(pk_out), bytes(sk_out)
 
-def _encaps_core_py(pk: bytes, coins: bytes, k_dim: int) -> Tuple[bytes, bytes]:
-    expected_pk = PTRC_KEM_SEED_BYTES + k_dim * PTRC_KEM_N * 2
-    if len(pk) != expected_pk or len(coins) != PTRC_KEM_SEED_BYTES or k_dim not in (1, 2):
-        raise ValueError("Invalid pk, coins, or k_dim")
+# File: src/ptrc_pq_kem.py (Part 3 of 3)
 
+
+def _pke_encrypt_det_py(pk: bytes, msg: bytes, coins: bytes, k_dim: int) -> bytes:
     ctx = _PtrcKemSponge(coins, 0x30 | k_dim)
     u_bytes = k_dim * PTRC_KEM_N * 2
     ct_out = bytearray(u_bytes + 128)
-
-    msg = bytearray(PTRC_KEM_MSG_BYTES)
-    for i in range(PTRC_KEM_MSG_BYTES):
-        b = ctx.next_word() & 0xFF
-        msg.__setitem__(i, 0xFF if b == 0 else b)
 
     r_vecs: List[List[int]] = list((list(),)) * k_dim
     e1_vecs: List[List[int]] = list((list(),)) * k_dim
@@ -300,15 +333,31 @@ def _encaps_core_py(pk: bytes, coins: bytes, k_dim: int) -> Tuple[bytes, bytes]:
             packed_nibbles |= comp4 << (nib * 4)
         ct_out.__setitem__(u_bytes + byte_idx, packed_nibbles)
 
-    ct_bytes = bytes(ct_out)
-    ss_bytes = _derive_ss_py(bytes(msg), ct_bytes)
+    return bytes(ct_out)
+
+
+def _encaps_core_py(pk: bytes, msg_seed: bytes, k_dim: int) -> Tuple[bytes, bytes]:
+    expected_pk = PTRC_KEM_SEED_BYTES + k_dim * PTRC_KEM_N * 2
+    if len(pk) != expected_pk or len(msg_seed) != PTRC_KEM_MSG_BYTES or k_dim not in (1, 2):
+        raise ValueError("Invalid pk, msg_seed, or k_dim")
+
+    msg = bytes(ptrc_kem_byte_no_zero(msg_seed.__getitem__(i)) for i in range(PTRC_KEM_MSG_BYTES))
+    coins = _hash_pair_py(PTRC_KEM_SEED_BYTES, pk, msg, 0x55)
+    ct_bytes = _pke_encrypt_det_py(pk, msg, coins, k_dim)
+    ss_bytes = _hash_pair_py(PTRC_KEM_SS_BYTES, msg, ct_bytes, 0x77)
     return ct_bytes, ss_bytes
 
 
 def _decaps_core_py(ct: bytes, sk: bytes, k_dim: int) -> bytes:
-    u_bytes = k_dim * PTRC_KEM_N * 2
-    if len(ct) != (u_bytes + 128) or len(sk) != u_bytes or k_dim not in (1, 2):
+    s_bytes = k_dim * PTRC_KEM_N * 2
+    pk_bytes = PTRC_KEM_SEED_BYTES + s_bytes
+    ct_bytes = s_bytes + 128
+    expected_sk = s_bytes + pk_bytes + PTRC_KEM_SEED_BYTES
+    if len(ct) != ct_bytes or len(sk) != expected_sk or k_dim not in (1, 2):
         raise ValueError("Invalid ct, sk, or k_dim")
+
+    pk_embedded = sk[s_bytes : s_bytes + pk_bytes]
+    z_reject = sk[s_bytes + pk_bytes : expected_sk]
 
     su_acc = list((0,)) * PTRC_KEM_N
     for k in range(k_dim):
@@ -316,31 +365,47 @@ def _decaps_core_py(ct: bytes, sk: bytes, k_dim: int) -> bytes:
         u_poly = _unpack_poly(ct, k * PTRC_KEM_N * 2)
         _poly_mul_acc(su_acc, s_poly, u_poly)
 
-    msg = bytearray(PTRC_KEM_MSG_BYTES)
+    msg_prime = bytearray(PTRC_KEM_MSG_BYTES)
     for byte_idx in range(128):
-        packed_nibbles = ct.__getitem__(u_bytes + byte_idx)
+        packed_nibbles = ct.__getitem__(s_bytes + byte_idx)
         for nib in range(2):
             coeff_idx = byte_idx * 2 + nib
             comp4 = (packed_nibbles >> (nib * 4)) & 0x0F
             v_approx = ((comp4 * PTRC_KEM_Q + 8) >> 4) - PTRC_KEM_HALF_Q
             diff = ptrc_kem_mod_q_no_zero(v_approx - su_acc.__getitem__(coeff_idx))
-            if abs(diff) > PTRC_KEM_QUARTER_Q:
-                b_idx = coeff_idx >> 3
-                msg.__setitem__(b_idx, msg.__getitem__(b_idx) | (1 << (coeff_idx & 7)))
+            abs_diff = ptrc_kem_ct_abs32(diff)
+            bit = (_i32(PTRC_KEM_QUARTER_Q - abs_diff) & U32_MASK) >> 31
+            b_idx = coeff_idx >> 3
+            msg_prime.__setitem__(b_idx, msg_prime.__getitem__(b_idx) | (bit << (coeff_idx & 7)))
 
     for i in range(PTRC_KEM_MSG_BYTES):
-        if msg.__getitem__(i) == 0:
-            msg.__setitem__(i, 0xFF)
+        msg_prime.__setitem__(i, ptrc_kem_byte_no_zero(msg_prime.__getitem__(i)))
 
-    return _derive_ss_py(bytes(msg), ct)
+    msg_prime_bytes = bytes(msg_prime)
+    coins_prime = _hash_pair_py(PTRC_KEM_SEED_BYTES, pk_embedded, msg_prime_bytes, 0x55)
+    ct_prime = _pke_encrypt_det_py(pk_embedded, msg_prime_bytes, coins_prime, k_dim)
+
+    diff_acc = 0
+    for i in range(ct_bytes):
+        diff_acc |= ct.__getitem__(i) ^ ct_prime.__getitem__(i)
+    fail_mask = 0xFF if diff_acc != 0 else 0x00
+
+    ss_real = _hash_pair_py(PTRC_KEM_SS_BYTES, msg_prime_bytes, ct, 0x77)
+    ss_reject = _hash_pair_py(PTRC_KEM_SS_BYTES, z_reject, ct, 0x99)
+
+    ss_out = bytearray(PTRC_KEM_SS_BYTES)
+    for i in range(PTRC_KEM_SS_BYTES):
+        sel = ((ss_real.__getitem__(i) & (~fail_mask)) | (ss_reject.__getitem__(i) & fail_mask)) & 0xFF
+        ss_out.__setitem__(i, sel)
+    return bytes(ss_out)
 
 
 def ptrc_kem_keygen_py(seed: bytes) -> Tuple[bytes, bytes]:
     return _keygen_core_py(seed, PTRC_KEM_K)
 
 
-def ptrc_kem_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
-    return _encaps_core_py(pk, coins, PTRC_KEM_K)
+def ptrc_kem_encaps_py(pk: bytes, msg_seed: bytes) -> Tuple[bytes, bytes]:
+    return _encaps_core_py(pk, msg_seed, PTRC_KEM_K)
 
 
 def ptrc_kem_decaps_py(ct: bytes, sk: bytes) -> bytes:
@@ -351,8 +416,8 @@ def ptrc_kem_light_keygen_py(seed: bytes) -> Tuple[bytes, bytes]:
     return _keygen_core_py(seed, PTRC_KEM_LIGHT_K)
 
 
-def ptrc_kem_light_encaps_py(pk: bytes, coins: bytes) -> Tuple[bytes, bytes]:
-    return _encaps_core_py(pk, coins, PTRC_KEM_LIGHT_K)
+def ptrc_kem_light_encaps_py(pk: bytes, msg_seed: bytes) -> Tuple[bytes, bytes]:
+    return _encaps_core_py(pk, msg_seed, PTRC_KEM_LIGHT_K)
 
 
 def ptrc_kem_light_decaps_py(ct: bytes, sk: bytes) -> bytes:
