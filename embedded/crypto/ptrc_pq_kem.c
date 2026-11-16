@@ -103,7 +103,7 @@ static void ptrc_kem_expand_a_poly(
     uint8_t col
 ) {
     ptrc_kem_ctx_t local_ctx;
-    uint8_t tag = (uint8_t)(((row + 1U) * 17U) ^ ((col + 1U) * 31U) | 1U);
+    uint8_t tag = (uint8_t)((((row + 1U) * 17U) ^ ((col + 1U) * 31U)) | 1U);
     ptrc_kem_sponge_init(&local_ctx, seed_a, PTRC_KEM_SEED_BYTES, tag);
     for (uint32_t i = 0U; i < PTRC_KEM_N; i++) {
         int32_t raw = ptrc_kem_sponge_next(&local_ctx);
