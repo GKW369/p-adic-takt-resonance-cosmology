@@ -1,5 +1,5 @@
 /* ==============================================================================
- * pTRC Framework - Discrete 1-Bit Integer Physics & Post-Quantum Ring-KEM v4.2
+ * pTRC Framework - Discrete 1-Bit Integer Physics & CCA2 Post-Quantum Ring-KEM v4.3.1
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,30 +17,59 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
-/* File: embedded/crypto/ptrc_pq_kem.c (Part 1 of 2) */
+/* File: embedded/crypto/ptrc_pq_kem.c (Part 1 of 3) */
 
 #include "ptrc_pq_kem.h"
 
-static inline int32_t ptrc_kem_z_no_zero(int32_t v) {
-    return (v == 0) ? -1 : v;
+/* Constant-time zero-free projection: maps 0 -> -1 without branches or signed UB */
+static inline int32_t ptrc_kem_z_no_zero_u32(uint32_t u) {
+    uint32_t is_zero = ((u | (0U - u)) >> 31U) ^ 1U;
+    uint32_t res = u | (0U - is_zero);
+    return (int32_t)res;
 }
 
-static inline int32_t ptrc_kem_abs32(int32_t x) {
-    return (x < 0) ? -x : x;
+static inline uint8_t ptrc_kem_byte_no_zero(uint8_t b) {
+    uint32_t u = (uint32_t)b;
+    uint32_t is_zero = ((u | (0U - u)) >> 31U) ^ 1U;
+    return (uint8_t)(u | (0U - is_zero));
 }
 
+/* Constant-time absolute value for int32_t without branch */
+static inline uint32_t ptrc_kem_ct_abs32(int32_t x) {
+    uint32_t ux = (uint32_t)x;
+    uint32_t mask = ux >> 31U;
+    uint32_t neg_mask = 0U - mask;
+    return (ux ^ neg_mask) + mask;
+}
+
+/* Constant-time centered modular reduction into Z_{7681} \ {0} = {-3840..-1, +1..+3840} */
 static inline int16_t ptrc_kem_mod_q_no_zero(int32_t x) {
     int32_t r = x % PTRC_KEM_Q;
-    if (r < 0) {
-        r += PTRC_KEM_Q;
+    uint32_t neg_mask = 0U - ((uint32_t)r >> 31U);
+    r = (int32_t)((uint32_t)r + ((uint32_t)PTRC_KEM_Q & neg_mask));
+
+    uint32_t gt_half = (uint32_t)(PTRC_KEM_HALF_Q - r) >> 31U;
+    uint32_t gt_mask = 0U - gt_half;
+    r = (int32_t)((uint32_t)r - ((uint32_t)PTRC_KEM_Q & gt_mask));
+
+    uint32_t ur = (uint32_t)r;
+    uint32_t is_zero = ((ur | (0U - ur)) >> 31U) ^ 1U;
+    ur |= (0U - is_zero);
+    return (int16_t)(int32_t)ur;
+}
+
+/* Constant-time byte comparison: returns 0 if equal, non-zero otherwise */
+static uint8_t ptrc_kem_ct_verify(const uint8_t *a, const uint8_t *b, size_t len) {
+    uint8_t diff = 0U;
+    for (size_t i = 0U; i < len; i++) {
+        diff |= (uint8_t)(*(a + i) ^ *(b + i));
     }
-    if (r > PTRC_KEM_HALF_Q) {
-        r -= PTRC_KEM_Q;
-    }
-    if (r == 0) {
-        r = -1;
-    }
-    return (int16_t)r;
+    return diff;
+}
+
+/* Constant-time conditional select: mask == 0xFF -> reject_b, mask == 0x00 -> real_b */
+static inline uint8_t ptrc_kem_ct_select_u8(uint8_t real_b, uint8_t reject_b, uint8_t mask) {
+    return (uint8_t)((real_b & (uint8_t)(~mask)) | (reject_b & mask));
 }
 
 static void ptrc_kem_sponge_init(ptrc_kem_ctx_t *ctx, const uint8_t *seed, size_t seed_len, uint8_t domain) {
@@ -51,28 +80,33 @@ static void ptrc_kem_sponge_init(ptrc_kem_ctx_t *ctx, const uint8_t *seed, size_
         acc = ((acc * 211ULL) ^ ((uint64_t)odd_b * (uint64_t)(f + 17U))) + 137ULL;
         acc ^= (acc >> 13U);
         int32_t raw = (int32_t)(acc % PTRC_KEM_PRIMORIAL_210) - 105;
-        *(ctx->sponge + f) = ptrc_kem_z_no_zero(raw);
+        *(ctx->sponge + f) = ptrc_kem_z_no_zero_u32((uint32_t)raw);
     }
     ctx->takt_counter = 1ULL;
     ctx->quadrant_phase = 1U;
 }
 
+/* Strictly UB-free unsigned mixing with constant-time projection to Z \ {0} */
 static int32_t ptrc_kem_sponge_next(ptrc_kem_ctx_t *ctx) {
     uint32_t idx = (uint32_t)((ctx->takt_counter * 37ULL) % PTRC_KEM_FACETS);
     uint32_t opp = (idx + 73U) % PTRC_KEM_FACETS;
     uint32_t jnc = (idx + 24U) % PTRC_KEM_FACETS;
 
-    int32_t a = *(ctx->sponge + idx);
-    int32_t b = *(ctx->sponge + opp);
-    int32_t c = *(ctx->sponge + jnc);
+    uint32_t ua = (uint32_t)(*(ctx->sponge + idx));
+    uint32_t ub = (uint32_t)(*(ctx->sponge + opp));
+    uint32_t uc = (uint32_t)(*(ctx->sponge + jnc));
 
-    int32_t mixed = ptrc_kem_z_no_zero((~a) + (b ^ c) + (int32_t)(ctx->quadrant_phase * 11U));
+    uint32_t umixed = (~ua) + (ub ^ uc) + (ctx->quadrant_phase * 11U);
+    int32_t mixed = ptrc_kem_z_no_zero_u32(umixed);
     *(ctx->sponge + idx) = mixed;
-    *(ctx->sponge + opp) = ptrc_kem_z_no_zero(b + (mixed >> 2));
+
+    uint32_t uopp = ub + ((uint32_t)mixed >> 2U);
+    *(ctx->sponge + opp) = ptrc_kem_z_no_zero_u32(uopp);
 
     if ((ctx->takt_counter % PTRC_KEM_TAKT_137) == 0ULL) {
         for (uint32_t f = 0U; f < PTRC_KEM_FACETS; f++) {
-            *(ctx->sponge + f) = ptrc_kem_z_no_zero(~(*(ctx->sponge + f)));
+            uint32_t uf = (uint32_t)(*(ctx->sponge + f));
+            *(ctx->sponge + f) = ptrc_kem_z_no_zero_u32(~uf);
         }
     }
 
@@ -81,11 +115,16 @@ static int32_t ptrc_kem_sponge_next(ptrc_kem_ctx_t *ctx) {
     return mixed;
 }
 
+/* Constant-time bipolar noise in {-2, -1, +1, +2} without branches */
 static int16_t ptrc_kem_sample_noise(ptrc_kem_ctx_t *ctx) {
-    int32_t v = ptrc_kem_sponge_next(ctx);
-    int32_t mag = (ptrc_kem_abs32(v) & 1) + 1;
-    return (v < 0) ? (int16_t)(-mag) : (int16_t)mag;
+    uint32_t uv = (uint32_t)ptrc_kem_sponge_next(ctx);
+    int32_t mag = (int32_t)((uv & 1U) + 1U);
+    uint32_t sign_mask = 0U - (uv >> 31U);
+    uint32_t signed_mag = ((uint32_t)mag ^ sign_mask) + (uv >> 31U);
+    return (int16_t)(int32_t)signed_mag;
 }
+
+/* File: embedded/crypto/ptrc_pq_kem.c (Part 2 of 3) */
 
 static void ptrc_kem_expand_a_poly(
     int16_t poly_out[PTRC_KEM_N],
@@ -97,8 +136,9 @@ static void ptrc_kem_expand_a_poly(
     uint8_t tag = (uint8_t)((((row + 1U) * 17U) ^ ((col + 1U) * 31U)) | 1U);
     ptrc_kem_sponge_init(&local_ctx, seed_a, PTRC_KEM_SEED_BYTES, tag);
     for (uint32_t i = 0U; i < PTRC_KEM_N; i++) {
-        int32_t raw = ptrc_kem_sponge_next(&local_ctx);
-        *(poly_out + i) = ptrc_kem_mod_q_no_zero(raw * 53 + (int32_t)(i * 137U));
+        uint32_t uraw = (uint32_t)ptrc_kem_sponge_next(&local_ctx);
+        uint32_t uval = uraw * 53U + (i * 137U);
+        *(poly_out + i) = ptrc_kem_mod_q_no_zero((int32_t)uval);
     }
     ptrc_kem_wipe(&local_ctx, sizeof(local_ctx));
 }
@@ -134,43 +174,56 @@ static void ptrc_kem_unpack_poly(int16_t poly[PTRC_KEM_N], const uint8_t *src) {
     for (uint32_t i = 0U; i < PTRC_KEM_N; i++) {
         uint16_t lo = (uint16_t)(*(src + (i * 2U) + 0U));
         uint16_t hi = (uint16_t)(*(src + (i * 2U) + 1U));
-        int16_t val = (int16_t)(lo | (hi << 8U));
-        *(poly + i) = (val == 0) ? -1 : val;
+        uint16_t uval = (uint16_t)(lo | (hi << 8U));
+        uint32_t is_zero = (((uint32_t)uval | (0U - (uint32_t)uval)) >> 31U) ^ 1U;
+        uval |= (uint16_t)(0U - is_zero);
+        *(poly + i) = (int16_t)uval;
     }
 }
 
-static void ptrc_kem_derive_ss_len(
-    uint8_t ss_out[PTRC_KEM_SS_BYTES],
-    const uint8_t msg[PTRC_KEM_MSG_BYTES],
-    const uint8_t *ct,
-    size_t ct_len
+static void ptrc_kem_hash_pair(
+    uint8_t *out,
+    size_t out_len,
+    const uint8_t *in1,
+    size_t len1,
+    const uint8_t *in2,
+    size_t len2,
+    uint8_t domain
 ) {
-    ptrc_kem_ctx_t kdf_ctx;
-    ptrc_kem_sponge_init(&kdf_ctx, msg, PTRC_KEM_MSG_BYTES, 0x77U);
+    ptrc_kem_ctx_t h_ctx;
+    ptrc_kem_sponge_init(&h_ctx, in1, len1, domain);
 
-    for (size_t i = 0U; i < ct_len; i++) {
-        uint8_t cb = *(ct + i);
-        uint8_t odd_cb = (uint8_t)((cb << 1U) | 1U);
+    for (size_t i = 0U; i < len1; i++) {
+        uint8_t odd_b = (uint8_t)(((*(in1 + i)) << 1U) | 1U);
         uint32_t f_idx = (uint32_t)(i % PTRC_KEM_FACETS);
-        *(kdf_ctx.sponge + f_idx) = ptrc_kem_z_no_zero(
-            (*(kdf_ctx.sponge + f_idx)) ^ ((int32_t)odd_cb * (int32_t)((i & 31U) + 1U))
-        );
+        uint32_t cur = (uint32_t)(*(h_ctx.sponge + f_idx));
+        *(h_ctx.sponge + f_idx) = ptrc_kem_z_no_zero_u32(cur ^ ((uint32_t)odd_b * (uint32_t)((i & 31U) + 1U)));
         if ((i & 7U) == 7U) {
-            (void)ptrc_kem_sponge_next(&kdf_ctx);
+            (void)ptrc_kem_sponge_next(&h_ctx);
+        }
+    }
+
+    for (size_t i = 0U; i < len2; i++) {
+        uint8_t odd_b = (uint8_t)(((*(in2 + i)) << 1U) | 1U);
+        uint32_t f_idx = (uint32_t)((i + 19U) % PTRC_KEM_FACETS);
+        uint32_t cur = (uint32_t)(*(h_ctx.sponge + f_idx));
+        *(h_ctx.sponge + f_idx) = ptrc_kem_z_no_zero_u32(cur ^ ((uint32_t)odd_b * (uint32_t)((i & 31U) + 3U)));
+        if ((i & 7U) == 7U) {
+            (void)ptrc_kem_sponge_next(&h_ctx);
         }
     }
 
     for (uint32_t step = 0U; step < 576U; step++) {
-        (void)ptrc_kem_sponge_next(&kdf_ctx);
+        (void)ptrc_kem_sponge_next(&h_ctx);
     }
 
-    for (uint32_t i = 0U; i < PTRC_KEM_SS_BYTES; i++) {
-        int32_t val = ptrc_kem_sponge_next(&kdf_ctx);
-        uint8_t b = (uint8_t)((val ^ (val >> 8)) & 0xFF);
-        *(ss_out + i) = (b == 0U) ? 0xFFU : b;
+    for (size_t i = 0U; i < out_len; i++) {
+        uint32_t uval = (uint32_t)ptrc_kem_sponge_next(&h_ctx);
+        uint8_t b = (uint8_t)((uval ^ (uval >> 8U)) & 0xFFU);
+        *(out + i) = ptrc_kem_byte_no_zero(b);
     }
 
-    ptrc_kem_wipe(&kdf_ctx, sizeof(kdf_ctx));
+    ptrc_kem_wipe(&h_ctx, sizeof(h_ctx));
 }
 
 static int ptrc_kem_keygen_core(
@@ -188,8 +241,8 @@ static int ptrc_kem_keygen_core(
 
     uint8_t seed_a[PTRC_KEM_SEED_BYTES];
     for (uint32_t i = 0U; i < PTRC_KEM_SEED_BYTES; i++) {
-        uint8_t b = (uint8_t)(ptrc_kem_sponge_next(&ctx) & 0xFF);
-        *(seed_a + i) = (b == 0U) ? 0xFFU : b;
+        uint8_t b = (uint8_t)((uint32_t)ptrc_kem_sponge_next(&ctx) & 0xFFU);
+        *(seed_a + i) = ptrc_kem_byte_no_zero(b);
         *(pk_out + i) = *(seed_a + i);
     }
 
@@ -220,6 +273,16 @@ static int ptrc_kem_keygen_core(
         ptrc_kem_pack_poly(pk_out + PTRC_KEM_SEED_BYTES + (row * PTRC_KEM_N * 2U), b_poly);
     }
 
+    size_t s_bytes = (size_t)k_dim * PTRC_KEM_N * 2U;
+    size_t pk_bytes = PTRC_KEM_SEED_BYTES + s_bytes;
+    for (size_t i = 0U; i < pk_bytes; i++) {
+        *(sk_out + s_bytes + i) = *(pk_out + i);
+    }
+    for (uint32_t i = 0U; i < PTRC_KEM_SEED_BYTES; i++) {
+        uint8_t zb = (uint8_t)((uint32_t)ptrc_kem_sponge_next(&ctx) & 0xFFU);
+        *(sk_out + s_bytes + pk_bytes + i) = ptrc_kem_byte_no_zero(zb);
+    }
+
     ptrc_kem_wipe(&ctx, sizeof(ctx));
     ptrc_kem_wipe(s, sizeof(s));
     ptrc_kem_wipe(e, sizeof(e));
@@ -227,27 +290,17 @@ static int ptrc_kem_keygen_core(
     return PTRC_KEM_OK;
 }
 
-/* File: embedded/crypto/ptrc_pq_kem.c (Part 2 of 2) */
+/* File: embedded/crypto/ptrc_pq_kem.c (Part 3 of 3) */
 
-static int ptrc_kem_encaps_core(
+static void ptrc_kem_pke_encrypt_det(
     uint8_t *ct_out,
-    uint8_t ss_out[PTRC_KEM_SS_BYTES],
     const uint8_t *pk,
+    const uint8_t msg[PTRC_KEM_MSG_BYTES],
     const uint8_t coins[PTRC_KEM_SEED_BYTES],
     uint32_t k_dim
 ) {
-    if (!ct_out || !ss_out || !pk || !coins || (k_dim != 1U && k_dim != 2U)) {
-        return PTRC_KEM_ERR;
-    }
-
     ptrc_kem_ctx_t ctx;
     ptrc_kem_sponge_init(&ctx, coins, PTRC_KEM_SEED_BYTES, (uint8_t)(0x30U | k_dim));
-
-    uint8_t msg[PTRC_KEM_MSG_BYTES];
-    for (uint32_t i = 0U; i < PTRC_KEM_MSG_BYTES; i++) {
-        uint8_t b = (uint8_t)(ptrc_kem_sponge_next(&ctx) & 0xFF);
-        *(msg + i) = (b == 0U) ? 0xFFU : b;
-    }
 
     int16_t r[PTRC_KEM_K][PTRC_KEM_N];
     int16_t e1[PTRC_KEM_K][PTRC_KEM_N];
@@ -296,8 +349,9 @@ static int ptrc_kem_encaps_core(
         uint8_t packed_nibbles = 0U;
         for (uint32_t nib = 0U; nib < 2U; nib++) {
             uint32_t coeff_idx = byte_idx * 2U + nib;
-            uint8_t m_bit = (uint8_t)((*(msg + (coeff_idx >> 3U)) >> (coeff_idx & 7U)) & 1U);
-            int32_t m_encode = (m_bit != 0U) ? PTRC_KEM_HALF_Q : 0;
+            uint32_t m_bit = ((uint32_t)(*(msg + (coeff_idx >> 3U))) >> (coeff_idx & 7U)) & 1U;
+            uint32_t m_mask = 0U - m_bit;
+            int32_t m_encode = (int32_t)((uint32_t)PTRC_KEM_HALF_Q & m_mask);
             int32_t v_centered = (int32_t)ptrc_kem_mod_q_no_zero(v_acc[coeff_idx] + m_encode);
 
             uint32_t v_pos = (uint32_t)(v_centered + PTRC_KEM_HALF_Q);
@@ -307,15 +361,42 @@ static int ptrc_kem_encaps_core(
         *(v_bytes + byte_idx) = packed_nibbles;
     }
 
-    ptrc_kem_derive_ss_len(ss_out, msg, ct_out, u_bytes + 128U);
-
     ptrc_kem_wipe(&ctx, sizeof(ctx));
-    ptrc_kem_wipe(msg, sizeof(msg));
     ptrc_kem_wipe(r, sizeof(r));
     ptrc_kem_wipe(e1, sizeof(e1));
     ptrc_kem_wipe(e2, sizeof(e2));
     ptrc_kem_wipe(a_poly, sizeof(a_poly));
     ptrc_kem_wipe(b_poly, sizeof(b_poly));
+    ptrc_kem_wipe(v_acc, sizeof(v_acc));
+}
+
+static int ptrc_kem_encaps_core(
+    uint8_t *ct_out,
+    uint8_t ss_out[PTRC_KEM_SS_BYTES],
+    const uint8_t *pk,
+    const uint8_t msg_seed[PTRC_KEM_MSG_BYTES],
+    uint32_t k_dim
+) {
+    if (!ct_out || !ss_out || !pk || !msg_seed || (k_dim != 1U && k_dim != 2U)) {
+        return PTRC_KEM_ERR;
+    }
+
+    size_t s_bytes = (size_t)k_dim * PTRC_KEM_N * 2U;
+    size_t pk_bytes = PTRC_KEM_SEED_BYTES + s_bytes;
+    size_t ct_bytes = s_bytes + 128U;
+
+    uint8_t msg[PTRC_KEM_MSG_BYTES];
+    for (uint32_t i = 0U; i < PTRC_KEM_MSG_BYTES; i++) {
+        *(msg + i) = ptrc_kem_byte_no_zero(*(msg_seed + i));
+    }
+
+    uint8_t coins[PTRC_KEM_SEED_BYTES];
+    ptrc_kem_hash_pair(coins, PTRC_KEM_SEED_BYTES, pk, pk_bytes, msg, PTRC_KEM_MSG_BYTES, 0x55U);
+    ptrc_kem_pke_encrypt_det(ct_out, pk, msg, coins, k_dim);
+    ptrc_kem_hash_pair(ss_out, PTRC_KEM_SS_BYTES, msg, PTRC_KEM_MSG_BYTES, ct_out, ct_bytes, 0x77U);
+
+    ptrc_kem_wipe(msg, sizeof(msg));
+    ptrc_kem_wipe(coins, sizeof(coins));
     return PTRC_KEM_OK;
 }
 
@@ -328,6 +409,13 @@ static int ptrc_kem_decaps_core(
     if (!ss_out || !ct || !sk || (k_dim != 1U && k_dim != 2U)) {
         return PTRC_KEM_ERR;
     }
+
+    size_t s_bytes = (size_t)k_dim * PTRC_KEM_N * 2U;
+    size_t pk_bytes = PTRC_KEM_SEED_BYTES + s_bytes;
+    size_t ct_bytes = s_bytes + 128U;
+
+    const uint8_t *pk_embedded = sk + s_bytes;
+    const uint8_t *z_reject = sk + s_bytes + pk_bytes;
 
     int32_t su_acc[PTRC_KEM_N];
     for (uint32_t i = 0U; i < PTRC_KEM_N; i++) {
@@ -342,13 +430,12 @@ static int ptrc_kem_decaps_core(
         ptrc_kem_poly_mul_acc(su_acc, s_poly, u_poly);
     }
 
-    uint8_t msg[PTRC_KEM_MSG_BYTES];
+    uint8_t msg_prime[PTRC_KEM_MSG_BYTES];
     for (uint32_t i = 0U; i < PTRC_KEM_MSG_BYTES; i++) {
-        *(msg + i) = 0U;
+        *(msg_prime + i) = 0U;
     }
 
-    size_t u_bytes = (size_t)k_dim * PTRC_KEM_N * 2U;
-    const uint8_t *v_bytes = ct + u_bytes;
+    const uint8_t *v_bytes = ct + s_bytes;
     for (uint32_t byte_idx = 0U; byte_idx < 128U; byte_idx++) {
         uint8_t packed_nibbles = *(v_bytes + byte_idx);
         for (uint32_t nib = 0U; nib < 2U; nib++) {
@@ -357,23 +444,42 @@ static int ptrc_kem_decaps_core(
             int32_t v_approx = (int32_t)(((uint32_t)comp4 * (uint32_t)PTRC_KEM_Q + 8U) >> 4U) - PTRC_KEM_HALF_Q;
 
             int32_t diff = (int32_t)ptrc_kem_mod_q_no_zero(v_approx - su_acc[coeff_idx]);
-            if (ptrc_kem_abs32(diff) > PTRC_KEM_QUARTER_Q) {
-                *(msg + (coeff_idx >> 3U)) |= (uint8_t)(1U << (coeff_idx & 7U));
-            }
+            uint32_t abs_diff = ptrc_kem_ct_abs32(diff);
+            uint32_t bit = ((uint32_t)(PTRC_KEM_QUARTER_Q - (int32_t)abs_diff)) >> 31U;
+            *(msg_prime + (coeff_idx >> 3U)) |= (uint8_t)(bit << (coeff_idx & 7U));
         }
     }
 
     for (uint32_t i = 0U; i < PTRC_KEM_MSG_BYTES; i++) {
-        if (*(msg + i) == 0U) {
-            *(msg + i) = 0xFFU;
-        }
+        *(msg_prime + i) = ptrc_kem_byte_no_zero(*(msg_prime + i));
     }
 
-    ptrc_kem_derive_ss_len(ss_out, msg, ct, u_bytes + 128U);
+    uint8_t coins_prime[PTRC_KEM_SEED_BYTES];
+    uint8_t ct_prime[PTRC_KEM_CT_BYTES];
+    ptrc_kem_hash_pair(coins_prime, PTRC_KEM_SEED_BYTES, pk_embedded, pk_bytes, msg_prime, PTRC_KEM_MSG_BYTES, 0x55U);
+    ptrc_kem_pke_encrypt_det(ct_prime, pk_embedded, msg_prime, coins_prime, k_dim);
 
+    uint8_t diff_acc = ptrc_kem_ct_verify(ct, ct_prime, ct_bytes);
+    uint32_t is_neq = ((uint32_t)diff_acc | (0U - (uint32_t)diff_acc)) >> 31U;
+    uint8_t fail_mask = (uint8_t)(0U - is_neq);
+
+    uint8_t ss_real[PTRC_KEM_SS_BYTES];
+    uint8_t ss_reject[PTRC_KEM_SS_BYTES];
+    ptrc_kem_hash_pair(ss_real, PTRC_KEM_SS_BYTES, msg_prime, PTRC_KEM_MSG_BYTES, ct, ct_bytes, 0x77U);
+    ptrc_kem_hash_pair(ss_reject, PTRC_KEM_SS_BYTES, z_reject, PTRC_KEM_SEED_BYTES, ct, ct_bytes, 0x99U);
+
+    for (uint32_t i = 0U; i < PTRC_KEM_SS_BYTES; i++) {
+        *(ss_out + i) = ptrc_kem_ct_select_u8(*(ss_real + i), *(ss_reject + i), fail_mask);
+    }
+
+    ptrc_kem_wipe(su_acc, sizeof(su_acc));
     ptrc_kem_wipe(s_poly, sizeof(s_poly));
     ptrc_kem_wipe(u_poly, sizeof(u_poly));
-    ptrc_kem_wipe(msg, sizeof(msg));
+    ptrc_kem_wipe(msg_prime, sizeof(msg_prime));
+    ptrc_kem_wipe(coins_prime, sizeof(coins_prime));
+    ptrc_kem_wipe(ct_prime, sizeof(ct_prime));
+    ptrc_kem_wipe(ss_real, sizeof(ss_real));
+    ptrc_kem_wipe(ss_reject, sizeof(ss_reject));
     return PTRC_KEM_OK;
 }
 
@@ -381,8 +487,8 @@ int ptrc_kem_keygen(uint8_t pk_out[PTRC_KEM_PK_BYTES], uint8_t sk_out[PTRC_KEM_S
     return ptrc_kem_keygen_core(pk_out, sk_out, seed, PTRC_KEM_K);
 }
 
-int ptrc_kem_encaps(uint8_t ct_out[PTRC_KEM_CT_BYTES], uint8_t ss_out[PTRC_KEM_SS_BYTES], const uint8_t pk[PTRC_KEM_PK_BYTES], const uint8_t coins[PTRC_KEM_SEED_BYTES]) {
-    return ptrc_kem_encaps_core(ct_out, ss_out, pk, coins, PTRC_KEM_K);
+int ptrc_kem_encaps(uint8_t ct_out[PTRC_KEM_CT_BYTES], uint8_t ss_out[PTRC_KEM_SS_BYTES], const uint8_t pk[PTRC_KEM_PK_BYTES], const uint8_t msg_seed[PTRC_KEM_MSG_BYTES]) {
+    return ptrc_kem_encaps_core(ct_out, ss_out, pk, msg_seed, PTRC_KEM_K);
 }
 
 int ptrc_kem_decaps(uint8_t ss_out[PTRC_KEM_SS_BYTES], const uint8_t ct[PTRC_KEM_CT_BYTES], const uint8_t sk[PTRC_KEM_SK_BYTES]) {
@@ -393,8 +499,8 @@ int ptrc_kem_light_keygen(uint8_t pk_out[PTRC_KEM_LIGHT_PK_BYTES], uint8_t sk_ou
     return ptrc_kem_keygen_core(pk_out, sk_out, seed, PTRC_KEM_LIGHT_K);
 }
 
-int ptrc_kem_light_encaps(uint8_t ct_out[PTRC_KEM_LIGHT_CT_BYTES], uint8_t ss_out[PTRC_KEM_SS_BYTES], const uint8_t pk[PTRC_KEM_LIGHT_PK_BYTES], const uint8_t coins[PTRC_KEM_SEED_BYTES]) {
-    return ptrc_kem_encaps_core(ct_out, ss_out, pk, coins, PTRC_KEM_LIGHT_K);
+int ptrc_kem_light_encaps(uint8_t ct_out[PTRC_KEM_LIGHT_CT_BYTES], uint8_t ss_out[PTRC_KEM_SS_BYTES], const uint8_t pk[PTRC_KEM_LIGHT_PK_BYTES], const uint8_t msg_seed[PTRC_KEM_MSG_BYTES]) {
+    return ptrc_kem_encaps_core(ct_out, ss_out, pk, msg_seed, PTRC_KEM_LIGHT_K);
 }
 
 int ptrc_kem_light_decaps(uint8_t ss_out[PTRC_KEM_SS_BYTES], const uint8_t ct[PTRC_KEM_LIGHT_CT_BYTES], const uint8_t sk[PTRC_KEM_LIGHT_SK_BYTES]) {
