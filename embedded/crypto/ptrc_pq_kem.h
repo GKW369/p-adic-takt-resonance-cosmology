@@ -1,5 +1,5 @@
 /* ==============================================================================
- * pTRC Framework - Discrete 1-Bit Integer Physics & Post-Quantum Ring-KEM v4.2
+ * pTRC Framework - Discrete 1-Bit Integer Physics & CCA2 Post-Quantum Ring-KEM v4.3.1
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,16 +43,16 @@ extern "C" {
 #define PTRC_KEM_MSG_BYTES      32U
 #define PTRC_KEM_SS_BYTES       64U     /* 512-Bit Shared Secret for ptrc_crystal_init */
 
-/* Profile A: Standard 512-Dim Module-Lattice (k = 2, n = 256) */
+/* Profile A: Standard 512-Dim Module-Lattice (k = 2, n = 256, FO-CCA2 SK includes PK + z) */
 #define PTRC_KEM_K              2U
 #define PTRC_KEM_PK_BYTES       1056U   /* 32B seed_a + 2 * 256 * 2B */
-#define PTRC_KEM_SK_BYTES       1024U   /* 2 * 256 * 2B */
+#define PTRC_KEM_SK_BYTES       2112U   /* 1024B s + 1056B pk + 32B implicit reject seed z */
 #define PTRC_KEM_CT_BYTES       1152U   /* 2 * 256 * 2B + 128B compressed v */
 
-/* Profile B: Ultra-Light 256-Dim IoT Ring-Lattice (k = 1, n = 256 — smaller than ML-KEM-512) */
+/* Profile B: Ultra-Light 256-Dim IoT Ring-Lattice (k = 1, n = 256, FO-CCA2 SK includes PK + z) */
 #define PTRC_KEM_LIGHT_K        1U
 #define PTRC_KEM_LIGHT_PK_BYTES 544U    /* 32B seed_a + 1 * 256 * 2B */
-#define PTRC_KEM_LIGHT_SK_BYTES 512U    /* 1 * 256 * 2B */
+#define PTRC_KEM_LIGHT_SK_BYTES 1088U   /* 512B s + 544B pk + 32B implicit reject seed z */
 #define PTRC_KEM_LIGHT_CT_BYTES 640U    /* 1 * 256 * 2B + 128B compressed v */
 
 #define PTRC_KEM_OK             1
@@ -64,7 +64,7 @@ typedef struct {
     uint32_t quadrant_phase;
 } ptrc_kem_ctx_t;
 
-/* Profile A (512-Dim Standard) API */
+/* Profile A (512-Dim Standard CCA2) API */
 int ptrc_kem_keygen(
     uint8_t pk_out[PTRC_KEM_PK_BYTES],
     uint8_t sk_out[PTRC_KEM_SK_BYTES],
@@ -75,7 +75,7 @@ int ptrc_kem_encaps(
     uint8_t ct_out[PTRC_KEM_CT_BYTES],
     uint8_t ss_out[PTRC_KEM_SS_BYTES],
     const uint8_t pk[PTRC_KEM_PK_BYTES],
-    const uint8_t coins[PTRC_KEM_SEED_BYTES]
+    const uint8_t msg_seed[PTRC_KEM_MSG_BYTES]
 );
 
 int ptrc_kem_decaps(
@@ -84,7 +84,7 @@ int ptrc_kem_decaps(
     const uint8_t sk[PTRC_KEM_SK_BYTES]
 );
 
-/* Profile B (256-Dim Ultra-Light IoT) API */
+/* Profile B (256-Dim Ultra-Light IoT CCA2) API */
 int ptrc_kem_light_keygen(
     uint8_t pk_out[PTRC_KEM_LIGHT_PK_BYTES],
     uint8_t sk_out[PTRC_KEM_LIGHT_SK_BYTES],
@@ -95,7 +95,7 @@ int ptrc_kem_light_encaps(
     uint8_t ct_out[PTRC_KEM_LIGHT_CT_BYTES],
     uint8_t ss_out[PTRC_KEM_SS_BYTES],
     const uint8_t pk[PTRC_KEM_LIGHT_PK_BYTES],
-    const uint8_t coins[PTRC_KEM_SEED_BYTES]
+    const uint8_t msg_seed[PTRC_KEM_MSG_BYTES]
 );
 
 int ptrc_kem_light_decaps(
