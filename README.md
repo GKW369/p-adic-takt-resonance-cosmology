@@ -94,17 +94,18 @@ To evaluate the mathematical framework of the pTRC engine without floating-point
 The telemetry and execution profile can be observed directly via Python or raw compiled C-code execution. Navigate to the repository root and run either:
 
 ```bash
-# Python Interface Verification & Production Audits (v4.0 512-Bit Primorial AEAD)
+# Python Interface Verification & Production Audits (v4.4.0 512-Bit Constant-Time AEAD & v4.3.1 Ring-KEM)
 PYTHONPATH=src python3 src/00_ptrc_crypt_demo.py
 PYTHONPATH=src python3 src/00_test_ptrc_crypt_parity.py
 PYTHONPATH=src python3 src/00_test_ptrc_crypt_metrics.py
+PYTHONPATH=src python3 src/00_test_ptrc_pq_kem.py
 
 # Python Interface Verification & Production Audits (v2.0 Resonant BitNet AI)
 PYTHONPATH=src python3 src/00_ptrc_bitnet_demo.py
 PYTHONPATH=src python3 src/test_ptrc_bitnet.py
 PYTHONPATH=src python3 src/00_test_ptrc_bitnet_metrics.py
 
-# CMake Build & Standalone Bare-Metal C11 Verification (Crypto v4.0 + AI v2.0)
+# CMake Build & Standalone Bare-Metal C11 Verification (Crypto v4.4.0 + AI v2.0)
 cmake -B build -S . && cmake --build build --config Release && ./build/ptrc_crypt_demo && ./build/00_ptrc_bitnet_demo
 ```
 
@@ -123,31 +124,25 @@ Full technical metrics, architecture cross-compilation instructions (e.g., targe
 
 ### 📊 Core Technical Metrics:
 1. **Elimination of Pipeline Stalls:** Conventional cryptographic, activation, and fluid-resonance operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
-2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers, the power consumption profile remains structurally flat ($O(1)$ variance).
+2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers without secret-dependent branches or loops, the power consumption profile remains structurally flat ($O(1)$ variance).
 
-### 🔐 v4.0 Update: 512-Bit Zero-Table Primorial Macro-Cascade & AEAD
+### 🔐 v4.4.0 Update: Constant-Time 512-Bit Zero-Table Primorial Macro-Cascade & AEAD
 
-[![pTRC v4.0 Crystalline AEAD & AI CI](https://github.com)](https://github.com)
+[![pTRC v4.4.0 Crystalline AEAD & AI CI](https://github.com)](https://github.com)
 
-The cryptographic layer has been upgraded to **v4.0 (512-Bit Key / 128-Bit Nonce)** by placing a four-stage, table-free **64-bit Primorial Macro-Cascade** ahead of the 144-facet crystal—eliminating Mersenne primes and lookup-table memory overhead while maintaining 100% pure integer execution ($\mathbb{Z} \setminus \{0\}$, no zero point):
+The cryptographic layer has been upgraded to **v4.4.0 (512-Bit Key / 128-Bit Nonce)** with strict constant-time ($O(1)$) execution across all key-dependent operations—placing a four-stage, table-free **64-bit Primorial Macro-Cascade** ahead of the 144-facet crystal while maintaining 100% pure integer execution ($\mathbb{Z} \setminus \{0\}$, no zero point):
 
-* **Zero-Table pTRC Primorial Decoding (`P15 = 614,889,782,588,491,410`):** Decodes four coprime 64-bit ring moduli on-the-fly from the first 256 key bits using Euclidean GCD sieving (`gcd == 1` with `210`), keeping total static stack context at **`672` bytes** (`< 1 KB` SRAM, zero `malloc`).
+* **Zero-Table Constant-Time Primorial Decoding (`P15 = 614,889,782,588,491,410`):** Derives four coprime 64-bit ring moduli in deterministic $O(1)$ bit-mask steps from the first 256 key bits without secret-dependent `while`-loops, keeping total static stack context at **`672` bytes** (`< 1 KB` SRAM, zero `malloc`).
 * **Deterministic 8-Prime CRT Key & Nonce Generator (`ptrc_primorial_keygen`):** Generates unique 128-bit nonces and 512-bit keys across 8 pairwise coprime 1-byte prime rings (`251, 241, 239, 233, 229, 227, 223, 211`, CRT period $> 1.09 \times 10^{19}$ takts) without requiring an analog hardware TRNG.
-* **512-Bit `pTRC-KDF` & Dynamic Inner Rings:** Derives 512-bit session keys and 128-bit nonces via a 576-step coupled tri-facet sponge cascade while the second 256 key bits dynamically select three coprime inner CRT rings coupled with the **137-Takt Fine-Structure Render Pulse**.
-* **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, constant-time tag verification ($O(1)$ via `ptrc_ct_memcmp`), and `volatile` SRAM scrubbing back to `-1` (`0xFF` via `ptrc_crystal_wipe`) with 100% C11/Python bit-parity.
-* **Verified Crypto v4.0 Hardware Metrics:** Strict Avalanche Criterion (SAC) at **`475 / 1000` permille** (`21,429 / 45,056` bits flipped across 64 single-bit key flips), zero `0x00` bytes across `16,384` stream bytes (max active bucket deviation `23`), and **`~2,365,232 Bytes/sec`** native C11 AEAD throughput (`4096 KB` in `1,773,316 µs`) vs. **`~19,670 Bytes/sec`** in Python (`64 KB` in `3,331,649 µs`).
+* **512-Bit `pTRC-KDF` & Dynamic Inner Rings:** Derives 512-bit session keys and 128-bit nonces via a 576-step coupled tri-facet sponge cascade while the second 256 key bits branchlessly select three coprime inner CRT rings coupled with the **137-Takt Fine-Structure Render Pulse**.
+* **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, branchless constant-time tag verification ($O(1)$ via `ptrc_ct_memcmp`), and complete `volatile` SRAM scrubbing of all secret states and temporary stack buffers back to `-1` (`0xFF` via `ptrc_crystal_wipe`) with 100% C11/Python bit-parity.
+* **Verified Crypto Hardware Metrics:** Strict Avalanche Criterion (SAC) at **`475 / 1000` permille** (`21,429 / 45,056` bits flipped across 64 single-bit key flips), zero `0x00` bytes across `16,384` stream bytes (max active bucket deviation `23`), and **`~2,365,232 Bytes/sec`** native C11 AEAD throughput (`4096 KB` in `1,773,316 µs`) vs. **`~19,670 Bytes/sec`** in Python (`64 KB` in `3,331,649 µs`).
 
-#### Post-Quantum Asymmetric Ring-KEM & Hybrid AEAD Coupling (`v4.2`)
-To enable keyless session establishment on constrained bare-metal targets without floating-point units or lookup tables, `embedded/crypto/ptrc_pq_kem.c` implements a zero-float Module-Lattice Key Encapsulation Mechanism ($k = 2, n = 256$) over the non-Mersenne prime modulus $q = 7681$ ($\gcd(7681, 210) = 1$) inside the zero-free domain $\mathbb{Z}_{7681} \setminus \{0\}$:
-* **On-the-Fly Matrix Expansion:** Public ring polynomials are generated deterministically from a 32-byte seed through the 144-facet sponge (`0` bytes of static lookup tables).
-* **Full Ciphertext Transcript Binding & `-1` Scrubbing:** All `1,152` ciphertext bytes are absorbed into the 512-bit shared-secret derivation (rejecting any 1-bit ciphertext tamper), and all secret stack buffers are scrubbed back to `-1` (`0xFF`) via `ptrc_kem_wipe`.
-* **End-to-End Hybrid Handshake:** The negotiated 64-byte (`512-bit`) shared secret feeds directly into the `672-byte` symmetrical `ptrc_crystal` AEAD engine (`src/00_test_ptrc_pq_kem.py`).
-
-#### Dual-Profile Post-Quantum Ring-KEM & Hybrid AEAD Coupling (`v4.2`)
-To support keyless session establishment on constrained bare-metal targets without floating-point units or lookup tables, `embedded/crypto/ptrc_pq_kem.c` implements a zero-float Lattice Key Encapsulation Mechanism over the non-Mersenne prime modulus $q = 7681$ ($\gcd(7681, 210) = 1$) inside $\mathbb{Z}_{7681} \setminus \{0\}$ with two selectable hardware profiles:
-* **Profile A (`512-Dim Standard`, $k = 2, n = 256$):** `PK = 1,056 B`, `SK = 1,024 B`, `CT = 1,152 B` — native C11 handshake in `1,913 µs` (`Keygen 681 µs`, `Encaps 934 µs`, `Decaps 298 µs`).
-* **Profile B (`256-Dim Ultra-Light IoT`, $k = 1, n = 256$):** `PK = 544 B`, `SK = 512 B`, `CT = 640 B` (smaller wire footprint than ML-KEM-512) — native C11 handshake in `640 µs` (`Keygen 157 µs`, `Encaps 331 µs`, `Decaps 152 µs`).
-* **Full Transcript Binding & Hybrid Coupling:** Both profiles absorb all ciphertext bytes into the 512-bit shared-secret derivation (rejecting any 1-bit tamper), scrub secret stack buffers back to `-1` (`0xFF`), and feed the negotiated 64-byte (`512-bit`) key directly into the `672-byte` symmetrical `ptrc_crystal` AEAD engine (`src/00_test_ptrc_pq_kem.py`).
+#### Dual-Profile Post-Quantum Ring-KEM (`v4.3.1`, FO-CCA2 Hardened) & Hybrid AEAD Coupling
+To support keyless session establishment on constrained bare-metal targets without floating-point units or lookup tables, `embedded/crypto/ptrc_pq_kem.c` implements a zero-float, branchless Lattice Key Encapsulation Mechanism over the non-Mersenne prime modulus $q = 7681$ ($\gcd(7681, 210) = 1$) inside $\mathbb{Z}_{7681} \setminus \{0\}$ with **Fujisaki-Okamoto (FO) CCA2 implicit rejection** and two selectable hardware profiles:
+* **Profile A (`512-Dim Standard`, $k = 2, n = 256$):** `PK = 1,056 B`, `SK = 2,112 B`, `CT = 1,152 B` — native C11 handshake in `1,913 µs` (`Keygen 681 µs`, `Encaps 934 µs`, `Decaps 298 µs`).
+* **Profile B (`256-Dim Ultra-Light IoT`, $k = 1, n = 256$):** `PK = 544 B`, `SK = 1,088 B`, `CT = 640 B` (smaller wire footprint than ML-KEM-512) — native C11 handshake in `640 µs` (`Keygen 157 µs`, `Encaps 331 µs`, `Decaps 152 µs`).
+* **FO-CCA2 Re-Encryption, Implicit Rejection & Hybrid Coupling:** `ptrc_kem_decaps` performs full deterministic ciphertext re-encryption (`ct' == ct`) in constant time, seamlessly falls back to a pseudorandom reject key (`H_pTRC(z_reject, ct)`) upon any 1-bit tamper, scrubs all secret stack buffers back to `-1` (`0xFF`), and feeds the negotiated 64-byte (`512-bit`) key directly into the `672-byte` symmetrical `ptrc_crystal` AEAD engine (`src/00_test_ptrc_pq_kem.py`).
 
 ---
 
@@ -210,7 +205,7 @@ For these scenarios, individual evaluation exemptions or collaborative research 
 *   **Inquiries & Licensing Contact:** g.wirminghaus@gmx.de | https://www.linkedin.com/in/kurt-guido-wirminghaus/ | https://x.com/GKW369
 
 ---
-*Certified for Version 2.0.0-Alpha System Coherence. Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
+Certified for Version 4.4.0 System Coherence (Constant-Time Crypto v4.4.0, CCA2 Ring-KEM v4.3.1, BitNet AI v2.0, Light Universe v4.1). Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.*
 
 ---
 
