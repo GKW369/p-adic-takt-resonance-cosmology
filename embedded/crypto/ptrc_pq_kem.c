@@ -26,6 +26,12 @@ typedef struct {
     int32_t coeffs[PTRC_KEM_N];
 } ptrc_poly_t;
 
+static inline uint8_t ptrc_kem_byte_no_zero(uint8_t b) {
+    uint32_t u = (uint32_t)b;
+    uint32_t is_zero = ((u | (0U - u)) >> 31U) ^ 1U;
+    return (uint8_t)(u | (0U - is_zero));
+}
+
 /* Constant-time Z \ {0} zero-guard for 32-bit signed integers: maps 0 -> -1 */
 static inline int32_t ptrc_kem_z_no_zero(uint32_t u) {
     uint32_t is_zero = ((u | (0U - u)) >> 31U) ^ 1U;
@@ -90,7 +96,7 @@ static void ptrc_kem_hash_transcript(
         for (size_t i = 0U; i < len_a; i++) {
             uint32_t idx = (uint32_t)(i & 63U);
             uint8_t v = (uint8_t)(*(seed_buf + idx) ^ *(in_a + i) ^ (uint8_t)((i >> 6U) * 19U));
-            *(seed_buf + idx) = (v == 0U) ? 0xFFU : v;
+            *(seed_buf + idx) = ptrc_kem_byte_no_zero(v);
         }
     }
 
@@ -102,7 +108,7 @@ static void ptrc_kem_hash_transcript(
         for (size_t i = 0U; i < len_b; i++) {
             uint32_t idx = (uint32_t)(i & 63U);
             uint8_t v = (uint8_t)(*(info_buf + idx) ^ *(in_b + i) ^ (uint8_t)((i >> 6U) * 31U));
-            *(info_buf + idx) = (v == 0U) ? 0xFFU : v;
+            *(info_buf + idx) = ptrc_kem_byte_no_zero(v);
         }
     }
     *(info_buf + 0U) ^= (uint8_t)(len_a & 0xFFU);
@@ -127,12 +133,12 @@ static void ptrc_kem_expand_uniform_poly(
     for (uint32_t i = 0U; i < PTRC_CRYPT_KEY_BYTES; i++) {
         uint8_t sb = *(seed + (i & 31U));
         uint8_t v = (uint8_t)(sb ^ (uint8_t)(i * 23U + (uint32_t)row * 71U + (uint32_t)col * 137U));
-        *(key + i) = (v == 0U) ? 0xFFU : v;
+        *(key + i) = ptrc_kem_byte_no_zero(v);
     }
     for (uint32_t i = 0U; i < PTRC_CRYPT_NONCE_BYTES; i++) {
         uint8_t sb = *(seed + ((i + 11U) & 31U));
         uint8_t v = (uint8_t)(sb ^ (uint8_t)(i * 17U + (uint32_t)row * 13U + (uint32_t)col * 41U));
-        *(nonce + i) = (v == 0U) ? 0xFFU : v;
+        *(nonce + i) = ptrc_kem_byte_no_zero(v);
     }
 
     ptrc_crystal_ctx_t ctx;
@@ -174,12 +180,12 @@ static void ptrc_kem_sample_noise_poly(
     for (uint32_t i = 0U; i < PTRC_CRYPT_KEY_BYTES; i++) {
         uint8_t cb = *(coins + (i & 31U));
         uint8_t v = (uint8_t)(cb ^ (uint8_t)(i * 37U + (uint32_t)nonce_tag * 97U));
-        *(key + i) = (v == 0U) ? 0xFFU : v;
+        *(key + i) = ptrc_kem_byte_no_zero(v);
     }
     for (uint32_t i = 0U; i < PTRC_CRYPT_NONCE_BYTES; i++) {
         uint8_t cb = *(coins + ((i + 7U) & 31U));
         uint8_t v = (uint8_t)(cb ^ (uint8_t)(i * 29U + (uint32_t)nonce_tag * 53U));
-        *(nonce + i) = (v == 0U) ? 0xFFU : v;
+        *(nonce + i) = ptrc_kem_byte_no_zero(v);
     }
 
     ptrc_crystal_ctx_t ctx;
