@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics Engine
+# pTRC Framework - Discrete 1-Bit Integer Physics & Cryptographic Engine v4.5.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,92 +17,98 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
-# -*- coding: utf-8 -*-
+r"""
+Module 16: Cryptographic Resonance (Anti-Side-Channel Integer Stream & AEAD).
+File: src/crypt_resonance.py (Complete)
+
+Integrates the v4.5.0 512-bit constant-time Primorial AEAD engine into the
+17-module pTRC First-Principles Verification Suite without floating-point ops.
 """
-pTRC Framework - Core Cryptography Module: v4.0 512-Bit Primorial AEAD Matrix Encryption
-Operational Domain: P15 Primorial Macro-Cascade + Active 144-Facet Sponge.
-Integrates PTRCHardenedCrystalAEAD into the central repository verification pipeline.
-"""
 
-import os
-import sys
-import numpy as np
+from __future__ import annotations
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-if SCRIPT_DIR not in sys.path:
-    sys.path.insert(0, SCRIPT_DIR)
+from dataclasses import dataclass
+from typing import Dict
 
-from ptrc_crystal_aead import PTRCHardenedCrystalAEAD
+from ptrc_crystal_aead import (
+    PTRC_CRYPT_KEY_BYTES,
+    PTRC_CRYPT_NONCE_BYTES,
+    PTRC_CRYPT_OK,
+    PTRC_CRYPT_TAG_BYTES,
+    PtrcCrystalContext,
+    ptrc_aead_decrypt,
+    ptrc_aead_encrypt,
+    ptrc_primorial_keygen,
+)
 
 
-class PTRCCryptResonanceEngine:
-    """
-    Wraps the v4.0 512-Bit Crystalline AEAD Engine for whole-number matrix blocks
-    and repository-wide integer telemetry verification.
-    """
+@dataclass(frozen=True)
+class CryptResonanceMetrics:
+    key_bits: int
+    nonce_bits: int
+    tag_bits: int
+    zero_states_internal: int
+    roundtrip_verified: bool
+    tamper_rejected: bool
+    sram_context_bytes: int
 
-    def __init__(self, key_vector_seed: int = 1836):
-        self.primorial_base = 210
-        self.control_base = 24
-        self.calibration_limit = 156
-        self.seed = int(key_vector_seed)
 
-        # Derive deterministic 512-bit (64-byte) key and 128-bit (16-byte) nonce in Z
-        seed_bytes = f"GKW369-PRIMORDIAL-SEED-{self.seed}".encode("ascii")
-        self.aad_header = b"PTRC:MODULE16|RING:P15-MACRO|TAKT:137"
-        self.secret_key, self.nonce = PTRCHardenedCrystalAEAD.derive_key_and_nonce(
-            seed_bytes, self.aad_header
-        )
+def run_crypt_resonance_verification() -> Dict[str, object]:
+    """Executes deterministic v4.5.0 AEAD & Primorial Keygen verification."""
+    domain_seed = b"pTRC_MODULE_16_FIRST_PRINCIPLES_SEED_2026"
+    key, nonce = ptrc_primorial_keygen(137210, domain_seed)
 
-    def encrypt_data_matrix(self, whole_number_array) -> tuple[bytes, bytes, tuple[int, ...]]:
-        """
-        Converts an integer array into a byte stream and executes v4.0 512-Bit AEAD encryption.
-        Returns (ciphertext_bytes, slip_mac_tag, original_shape).
-        """
-        input_matrix = np.asarray(whole_number_array, dtype=np.int32)
-        raw_bytes = input_matrix.tobytes()
-        ciphertext, slip_tag = PTRCHardenedCrystalAEAD.encrypt(
-            self.secret_key, self.nonce, raw_bytes, aad=self.aad_header
-        )
-        return ciphertext, slip_tag, input_matrix.shape
+    assert len(key) == PTRC_CRYPT_KEY_BYTES
+    assert len(nonce) == PTRC_CRYPT_NONCE_BYTES
 
-    def decrypt_data_matrix(
-        self, ciphertext: bytes, slip_tag: bytes, original_shape: tuple[int, ...]
-    ) -> tuple[bool, np.ndarray]:
-        """
-        Verifies the 192-bit SLIP-MAC tag in constant time and restores the integer matrix.
-        """
-        authentic, raw_bytes = PTRCHardenedCrystalAEAD.decrypt(
-            self.secret_key, self.nonce, ciphertext, slip_tag, aad=self.aad_header
-        )
-        restored = np.frombuffer(raw_bytes, dtype=np.int32).reshape(original_shape).copy()
-        return authentic, restored
+    ctx = PtrcCrystalContext(key, nonce)
+    zero_internal = 0
+    for _ in range(1024):
+        st = ctx.next_keystream_state()
+        if st <= 0 or st > 256:
+            zero_internal += 1
+
+    plaintext = b"pTRC v4.5.0: Zero-Float Coprime Resonance Stream in Z \\ {0}!"
+    aad = b"HEADER_MOD_210_TAKT_24_PULSE_137"
+
+    ciphertext, tag = ptrc_aead_encrypt(key, nonce, plaintext, aad=aad)
+    assert len(tag) == PTRC_CRYPT_TAG_BYTES
+
+    rc_ok, recovered = ptrc_aead_decrypt(key, nonce, ciphertext, tag, aad=aad)
+    roundtrip_ok = (rc_ok == PTRC_CRYPT_OK) and (recovered == plaintext)
+
+    tampered_ct = bytearray(ciphertext)
+    tampered_ct ^= 0x01
+    rc_bad, _ = ptrc_aead_decrypt(key, nonce, bytes(tampered_ct), tag, aad=aad)
+    tamper_rejected = rc_bad != PTRC_CRYPT_OK
+
+    metrics = CryptResonanceMetrics(
+        key_bits=PTRC_CRYPT_KEY_BYTES * 8,
+        nonce_bits=PTRC_CRYPT_NONCE_BYTES * 8,
+        tag_bits=PTRC_CRYPT_TAG_BYTES * 8,
+        zero_states_internal=zero_internal,
+        roundtrip_verified=roundtrip_ok,
+        tamper_rejected=tamper_rejected,
+        sram_context_bytes=672,
+    )
+
+    assert metrics.zero_states_internal == 0, "Zero state leaked into Z \\ {0} crystal"
+    assert metrics.roundtrip_verified, "AEAD roundtrip decryption failed"
+    assert metrics.tamper_rejected, "AEAD failed to reject tampered ciphertext"
+
+    return {
+        "module": "16_crypt_resonance",
+        "version": "4.5.0",
+        "key_bits": metrics.key_bits,
+        "nonce_bits": metrics.nonce_bits,
+        "tag_bits": metrics.tag_bits,
+        "zero_states_internal": metrics.zero_states_internal,
+        "roundtrip_verified": metrics.roundtrip_verified,
+        "tamper_rejected": metrics.tamper_rejected,
+        "sram_context_bytes": metrics.sram_context_bytes,
+    }
 
 
 if __name__ == "__main__":
-    print("[ pTRC-CRYPT ] Initializing v4.0 512-Bit Primorial AEAD & SLIP-MAC pipeline...")
-    engine = PTRCCryptResonanceEngine(key_vector_seed=1836)
-
-    source_block = np.array([24, 156, 1836], dtype=np.int32)
-
-    print(" -> Executing v4.0 512-Bit AEAD encryption pass...")
-    cipher_bytes, tag_bytes, shape = engine.encrypt_data_matrix(source_block)
-
-    print(" -> Executing constant-time SLIP-MAC audit & decryption pass...")
-    is_authentic, decrypted_block = engine.decrypt_data_matrix(cipher_bytes, tag_bytes, shape)
-
-    # 1-Bit Tamper Check
-    tampered_cipher = bytearray(cipher_bytes)
-    tampered_cipher[0] ^= 0x01
-    tamper_rejected, _ = engine.decrypt_data_matrix(bytes(tampered_cipher), tag_bytes, shape)
-
-    validation_status = is_authentic and (not tamper_rejected) and np.array_equal(source_block, decrypted_block)
-
-    print(f" -> [ VALIDATION ] SLIP-MAC Tag (Hex): {tag_bytes.hex()}")
-    print(f" -> Reconstructed Input Match: {validation_status}")
-    if validation_status:
-        print(" -> STATUS: Zero-Float v4.0 512-Bit Primorial AEAD Verified Secure.")
-        sys.exit(0)
-    else:
-        print(" -> STATUS: ERR - Crystalline AEAD Parity Check Failed.")
-        sys.exit(1)
+    res = run_crypt_resonance_verification()
+    print("[Module 16 - Cryptographic Resonance v4.5.0] Verified:", res)
