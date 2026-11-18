@@ -17,115 +17,208 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
-/* File: embedded/crypto/ptrc_crystal.c (Part 1 of 3 - Hardened Constant-Time v4.4.0) */
-
 #include "ptrc_crystal.h"
 
-static const uint64_t PTRC_COPRIME_ANCHORS[16] = {
-    11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 37ULL, 41ULL,
-    43ULL, 47ULL, 53ULL, 59ULL, 61ULL, 67ULL, 71ULL, 73ULL
-};
-
-/* Constant-time zero-free projection: maps 0 -> -1 without branches or signed UB */
-static inline int32_t ptrc_crypt_z_no_zero_u32(uint32_t u) {
-    uint32_t is_zero = ((u | (0U - u)) >> 31U) ^ 1U;
-    uint32_t res = u | (0U - is_zero);
-    return (int32_t)res;
-}
-
-static inline uint32_t ptrc_u32_no_zero(uint32_t u) {
-    uint32_t is_zero = ((u | (0U - u)) >> 31U) ^ 1U;
-    return u | (0U - is_zero);
-}
-
-static inline uint64_t ptrc_u64_no_zero(uint64_t u) {
-    uint64_t is_zero = ((u | (0ULL - u)) >> 63U) ^ 1ULL;
-    return u | (0ULL - is_zero);
-}
-
-static inline uint8_t ptrc_byte_no_zero(uint8_t b) {
-    uint32_t u = (uint32_t)b;
-    uint32_t is_zero = ((u | (0U - u)) >> 31U) ^ 1U;
-    return (uint8_t)(u | (0U - is_zero));
-}
-
-static inline uint64_t ptrc_rotl64(uint64_t v, uint32_t shift) {
-    uint32_t s = shift & 63U;
-    return (s == 0U) ? v : ((v << s) | (v >> (64U - s)));
-}
-
-static inline uint8_t ptrc_rotl8(uint8_t v, uint8_t shift) {
-    uint8_t s = shift & 7U;
-    return (s == 0U) ? v : (uint8_t)((v << s) | (v >> (8U - s)));
-}
-
-static uint64_t ptrc_load_le64(const uint8_t *src) {
-    uint64_t v = 0ULL;
-    for (uint32_t i = 0U; i < 8U; i++) {
-        v |= ((uint64_t)(*(src + i))) << (i * 8U);
+static void ptrc_secure_wipe(void *ptr, size_t len) {
+    volatile uint8_t *p = (volatile uint8_t *)ptr;
+    while (len--) {
+        *p++ = PTRC_ZERO_GUARD_U8;
     }
-    return v;
 }
 
-/* Constant-time O(1) coprime 64-bit modulus derivation (gcd(mod, 210) == 1 without loops) */
-static uint64_t ptrc_derive_coprime_mod64_ct(uint64_t raw_word, uint32_t idx) {
-    uint64_t acc = raw_word ^ PTRC_PRIMORIAL_P15 ^ ((uint64_t)(idx + 1U) * 137ULL);
-    for (uint32_t step = 0U; step < 16U; step++) {
-        uint64_t anchor = *(PTRC_COPRIME_ANCHORS + ((step + idx * 3U) & 15U));
-        acc = ptrc_rotl64(acc ^ (anchor * 211ULL), (step * 7U + idx * 5U + 3U) & 63U);
-        acc += (anchor * 137ULL) | 1ULL;
+static uint64_t ptrc_load_le64(const uint8_t *p) {
+    return ((uint64_t)p[0])       | ((uint64_t)p[1] << 8)  |
+           ((uint64_t)p[2] << 16) | ((uint64_t)p[3] << 24) |
+           ((uint64_t)p[4] << 32) | ((uint64_t)p[5] << 40) |
+           ((uint64_t)p[6] << 48) | ((uint64_t)p[7] << 56);
+}
+
+static void ptrc_store_le64(uint8_t *p, uint64_t v) {
+    p[0] = (uint8_t)(v & 0xFFu);
+    p[1] = (uint8_t)((v >> 8)  & 0xFFu);
+    p[2] = (uint8_t)((v >> 16) & 0xFFu);
+    p[3] = (uint8_t)((v >> 24) & 0xFFu);
+    p[4] = (uint8_t)((v >> 32) & 0xFFu);
+    p[5] = (uint8_t)((v >> 40) & 0xFFu);
+    p[6] = (uint8_t)((v >> 48) & 0xFFu);
+    p[7] = (uint8_t)((v >> 56) & 0xFFu);
+}
+
+static uint64_t ptrc_rotl64(uint64_t x, unsigned int r) {
+    r &= 63u;
+    return (x << r) | (x >> ((64u - r) & 63u));
+}
+
+static uint8_t ptrc_rotl8(uint8_t x, unsigned int r) {
+    r &= 7u;
+    return (uint8_t)(((x << r) | (x >> ((8u - r) & 7u))) & 0xFFu);
+}
+
+static uint8_t ptrc_byte_no_zero(uint8_t b) {
+    uint8_t z = (uint8_t)(((uint32_t)(b | (uint8_t)(-(int8_t)b)) >> 7) ^ 1u);
+    return (uint8_t)(b | (uint8_t)(0u - z));
+}
+
+static uint64_t ptrc_u64_no_zero(uint64_t v) {
+    uint64_t z = ((v | (0ULL - v)) >> 63) ^ 1ULL;
+    return v | (0ULL - z);
+}
+
+static uint32_t ptrc_u32_no_zero(uint32_t v) {
+    uint32_t z = ((v | (0U - v)) >> 31) ^ 1U;
+    return v | (0U - z);
+}
+
+/* Constant-time O(1) coprime derivation to 210 = 2*3*5*7 (64-bit) */
+static uint64_t ptrc_derive_coprime_mod64_ct(uint64_t raw) {
+    static const uint64_t cands[8] = {
+        UINT64_C(0xF5A3C9178B4D2E61),
+        UINT64_C(0xE9B7421D6C8A53F1),
+        UINT64_C(0xD3C89147A26F5B11),
+        UINT64_C(0xC7E158394D9B2A71),
+        UINT64_C(0xB9D47281E35C6F11),
+        UINT64_C(0xADF28643197E4C31),
+        UINT64_C(0x9E85371B624D9A51),
+        UINT64_C(0x8F61942D753B8E71)
+    };
+    uint64_t base = (raw | UINT64_C(0x8000000000000001));
+    uint64_t result = UINT64_C(0xFFFFFFFFFFFFFFFB);
+    uint32_t found = 0u;
+
+    for (uint32_t i = 0u; i < 8u; ++i) {
+        uint64_t cand = (base ^ (cands[i] & UINT64_C(0x7FFFFFFFFFFFFFFE))) | 1ULL;
+        uint32_t r3 = (uint32_t)(cand % 3ULL);
+        uint32_t r5 = (uint32_t)(cand % 5ULL);
+        uint32_t r7 = (uint32_t)(cand % 7ULL);
+
+        uint32_t nz3 = ((r3 | (0u - r3)) >> 31) & 1u;
+        uint32_t nz5 = ((r5 | (0u - r5)) >> 31) & 1u;
+        uint32_t nz7 = ((r7 | (0u - r7)) >> 31) & 1u;
+        uint32_t ok = nz3 & nz5 & nz7;
+
+        uint32_t pick = ok & (found ^ 1u);
+        uint64_t mask = 0ULL - (uint64_t)pick;
+        result = (result & ~mask) | (cand & mask);
+        found |= ok;
+    }
+    return result;
+}
+
+/* Constant-time O(1) coprime derivation to 210 (32-bit inner rings) */
+static uint32_t ptrc_derive_inner_mod32_ct(uint32_t raw) {
+    static const uint32_t cands[8] = {
+        UINT32_C(0xB5A3C911),
+        UINT32_C(0xC9B74211),
+        UINT32_C(0xD3C89141),
+        UINT32_C(0xE7E15831),
+        UINT32_C(0x99D47281),
+        UINT32_C(0xADF28641),
+        UINT32_C(0xBE853711),
+        UINT32_C(0xCF619421)
+    };
+    uint32_t base = (raw | UINT32_C(0x80000001));
+    uint32_t result = UINT32_C(0xFFFFFFFB);
+    uint32_t found = 0u;
+
+    for (uint32_t i = 0u; i < 8u; ++i) {
+        uint32_t cand = (base ^ (cands[i] & UINT32_C(0x7FFFFFFE))) | 1u;
+        uint32_t r3 = cand % 3u;
+        uint32_t r5 = cand % 5u;
+        uint32_t r7 = cand % 7u;
+
+        uint32_t nz3 = ((r3 | (0u - r3)) >> 31) & 1u;
+        uint32_t nz5 = ((r5 | (0u - r5)) >> 31) & 1u;
+        uint32_t nz7 = ((r7 | (0u - r7)) >> 31) & 1u;
+        uint32_t ok = nz3 & nz5 & nz7;
+
+        uint32_t pick = ok & (found ^ 1u);
+        uint32_t mask = 0u - pick;
+        result = (result & ~mask) | (cand & mask);
+        found |= ok;
+    }
+    return result;
+}
+
+static uint64_t ptrc_mulmod64(uint64_t a, uint64_t b, uint64_t m) {
+#if defined(__SIZEOF_INT128__)
+    return (uint64_t)(((__uint128_t)a * (__uint128_t)b) % (__uint128_t)m);
+#else
+    uint64_t res = 0ULL;
+    a %= m;
+    for (int i = 0; i < 64; ++i) {
+        uint64_t mask = 0ULL - (b & 1ULL);
+        uint64_t sum = res + a;
+        if (sum >= m || sum < res) {
+            sum -= m;
+        }
+        res = (res & ~mask) | (sum & mask);
+        b >>= 1;
+        uint64_t dbl = a + a;
+        if (dbl >= m || dbl < a) {
+            dbl -= m;
+        }
+        a = dbl;
+    }
+    return res;
+#endif
+}
+
+static void ptrc_crystal_permute_round(ptrc_crystal_ctx_t *ctx) {
+    /* 1. 64-bit 4-stage Primorial Macro-Cascade */
+    uint64_t prev_out = ptrc_u64_no_zero(ctx->p_state[3] ^ (ctx->counter + 1ULL));
+    for (int i = 0; i < 4; ++i) {
+        uint64_t m = ctx->p_ring[i];
+        uint64_t x = ctx->p_state[i] ^ ptrc_rotl64(prev_out, (unsigned int)(13 * (i + 1)));
+        x = (x % (m - 1ULL)) + 1ULL;
+        uint64_t y = ptrc_mulmod64(x, ctx->p_mult[i], m);
+        y = ptrc_u64_no_zero(y);
+        ctx->p_state[i] = y;
+        prev_out = y;
     }
 
-    /* Keep magnitude in upper 62-bit prime-ring range [2^61 .. 2^62] */
-    uint64_t mag = (acc & 0x1FFFFFFFFFFFFFFFULL) | 0x2000000000000000ULL;
-    uint64_t base_q = mag / PTRC_PRIMORIAL_210;
-    uint64_t rem = (mag % PTRC_PRIMORIAL_210) | 1ULL;
+    /* 2. Inner 32-bit coprime CRT rings coupled with 137-pulse */
+    uint64_t cascade_mix = ctx->p_state[0] ^ ptrc_rotl64(ctx->p_state[1], 17) ^
+                           ptrc_rotl64(ctx->p_state[2], 31) ^ ptrc_rotl64(ctx->p_state[3], 47);
 
-    /* Branchless coprimality nudges for 3, 5, 7 (gcd(70,3)=1, gcd(42,5)=1, gcd(30,7)=1) */
-    uint64_t r3 = rem % 3ULL;
-    uint64_t div3 = ((r3 | (0ULL - r3)) >> 63U) ^ 1ULL;
-    rem = (rem + (70ULL & (0ULL - div3))) % PTRC_PRIMORIAL_210;
+    for (int j = 0; j < 3; ++j) {
+        uint32_t im = ctx->inner_mod[j];
+        uint32_t inj = (uint32_t)((cascade_mix >> (j * 21)) & UINT32_C(0x1FFFFF));
+        uint32_t s = ctx->inner_state[j] ^ inj ^ (ctx->pulse_137 * (uint32_t)(j + 3));
+        s = (s % (im - 1u)) + 1u;
+        uint64_t prod = (uint64_t)s * (uint64_t)(137u + (uint32_t)j * 24u + 1u);
+        s = (uint32_t)(prod % (uint64_t)im);
+        ctx->inner_state[j] = ptrc_u32_no_zero(s);
+    }
 
-    uint64_t r5 = rem % 5ULL;
-    uint64_t div5 = ((r5 | (0ULL - r5)) >> 63U) ^ 1ULL;
-    rem = (rem + (42ULL & (0ULL - div5))) % PTRC_PRIMORIAL_210;
+    /* 3. 144-Facet Coupled Tri-Facet Sponge */
+    uint32_t base_idx = (ctx->takt_24 * 6u) % PTRC_FACET_COUNT;
+    uint32_t i0 = base_idx;
+    uint32_t i1 = (base_idx + 24u + (ctx->inner_state[0] % 23u)) % PTRC_FACET_COUNT;
+    uint32_t i2 = (base_idx + 72u + (ctx->inner_state[1] % 47u)) % PTRC_FACET_COUNT;
 
-    uint64_t r7 = rem % 7ULL;
-    uint64_t div7 = ((r7 | (0ULL - r7)) >> 63U) ^ 1ULL;
-    rem = (rem + (30ULL & (0ULL - div7))) % PTRC_PRIMORIAL_210;
+    uint8_t f0 = ctx->facets[i0];
+    uint8_t f1 = ctx->facets[i1];
+    uint8_t f2 = ctx->facets[i2];
 
-    return ptrc_u64_no_zero((base_q * PTRC_PRIMORIAL_210 + rem) | 1ULL);
+    uint8_t k_byte = (uint8_t)((cascade_mix >> ((ctx->takt_24 & 7u) * 8u)) & 0xFFu);
+    uint8_t n0 = ptrc_rotl8((uint8_t)(f0 ^ f1 ^ k_byte), 3);
+    uint8_t n1 = ptrc_rotl8((uint8_t)(f1 + f2 + (uint8_t)ctx->pulse_137), 5);
+    uint8_t n2 = (uint8_t)(~(f2 ^ n0 ^ (uint8_t)(ctx->inner_state[2] & 0xFFu)));
+
+    ctx->facets[i0] = ptrc_byte_no_zero(n0);
+    ctx->facets[i1] = ptrc_byte_no_zero(n1);
+    ctx->facets[i2] = ptrc_byte_no_zero(n2);
+
+    /* Advance 24-takt & 137-pulse clocks */
+    ctx->takt_24 = (ctx->takt_24 + 1u) % 24u;
+    ctx->pulse_137 = (ctx->pulse_137 + 1u) % 137u;
+    ctx->counter += 1ULL;
 }
 
-/* Constant-time O(1) coprime 32-bit inner CRT ring modulus (gcd(mod, 210) == 1) */
-static uint32_t ptrc_derive_inner_mod32_ct(uint64_t seed_word, uint32_t idx) {
-    uint64_t acc = ptrc_rotl64(seed_word ^ PTRC_PRIMORIAL_P15, (idx * 17U + 9U) & 63U) + 137ULL;
-    uint32_t base_q = (uint32_t)((acc % 65536ULL) + 4096ULL);
-    uint32_t rem = (uint32_t)(acc % 210ULL) | 1U;
-
-    uint32_t r3 = rem % 3U;
-    uint32_t div3 = ((r3 | (0U - r3)) >> 31U) ^ 1U;
-    rem = (rem + (70U & (0U - div3))) % 210U;
-
-    uint32_t r5 = rem % 5U;
-    uint32_t div5 = ((r5 | (0U - r5)) >> 31U) ^ 1U;
-    rem = (rem + (42U & (0U - div5))) % 210U;
-
-    uint32_t r7 = rem % 7U;
-    uint32_t div7 = ((r7 | (0U - r7)) >> 31U) ^ 1U;
-    rem = (rem + (30U & (0U - div7))) % 210U;
-
-    return ptrc_u32_no_zero((base_q * 210U + rem) | 1U);
-}
-
-static int32_t ptrc_plichta_crossed_mirror(int32_t val, uint32_t clock24, uint32_t ring_mod) {
-    uint32_t u = (uint32_t)ptrc_crypt_z_no_zero_u32((uint32_t)val);
-    uint32_t inv = ~u;
-    uint32_t sh = (clock24 & 7U) + 1U;
-    uint32_t rot = (inv << sh) | (inv >> (32U - sh));
-    uint32_t mixed = rot ^ (ring_mod * 211U) ^ (clock24 * 137U);
-    return ptrc_crypt_z_no_zero_u32(mixed);
-}
+/* ==============================================================================
+ * File: embedded/crypto/ptrc_crystal.c (Part 2 of 3 - Hardened Constant-Time v4.5.0)
+ * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+ * ============================================================================== */
 
 static void ptrc_sponge_step_ct(ptrc_crystal_ctx_t *ctx) {
     uint32_t phase = (uint32_t)(ctx->takt_counter % PTRC_CRYPT_FACETS);
@@ -218,9 +311,8 @@ int ptrc_crystal_init(
     return PTRC_CRYPT_OK;
 }
 
-/* File: embedded/crypto/ptrc_crystal.c (Part 2 of 3 - Hardened Constant-Time v4.4.0) */
-
-static uint8_t ptrc_next_keystream_byte_ct(ptrc_crystal_ctx_t *ctx) {
+/* Internal crystal keystream state strictly in Z \ {0}: {1 .. 256} (never 0) */
+static uint16_t ptrc_next_keystream_state_ct(ptrc_crystal_ctx_t *ctx) {
     ptrc_sponge_step_ct(ctx);
 
     uint32_t idx = (uint32_t)((ctx->takt_counter * 17ULL) % PTRC_CRYPT_FACETS);
@@ -241,7 +333,13 @@ static uint8_t ptrc_next_keystream_byte_ct(ptrc_crystal_ctx_t *ctx) {
     uint8_t rot_amt = (uint8_t)((ctx->session_salt >> (idx & 15U)) & 7U);
     uint8_t b = (uint8_t)((uint32_t)ptrc_rotl8(raw_byte, rot_amt) + nudge);
 
-    return ptrc_byte_no_zero(b);
+    return (uint16_t)((uint16_t)b + 1U);
+}
+
+/* Unbiased 8-bit XOR mask in {0..255} projected from {1..256} without 0xFF duplication */
+static uint8_t ptrc_next_keystream_byte_ct(ptrc_crystal_ctx_t *ctx) {
+    uint16_t nz_state = ptrc_next_keystream_state_ct(ctx);
+    return (uint8_t)((nz_state - 1U) & 0xFFU);
 }
 
 int ptrc_crystal_xor_stream(
@@ -259,6 +357,11 @@ int ptrc_crystal_xor_stream(
     }
     return PTRC_CRYPT_OK;
 }
+
+/* ==============================================================================
+ * File: embedded/crypto/ptrc_crystal.c (Part 3 of 3 - Hardened Constant-Time v4.5.0)
+ * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+ * ============================================================================== */
 
 static void ptrc_compute_slip_mac_ct(
     ptrc_crystal_ctx_t *ctx,
@@ -321,8 +424,6 @@ int ptrc_ct_memcmp(const uint8_t *a, const uint8_t *b, size_t len) {
     int32_t res = (int32_t)((1U & (~mask)) | ((uint32_t)PTRC_CRYPT_ERR & mask));
     return res;
 }
-
-/* File: embedded/crypto/ptrc_crystal.c (Part 3 of 3 - Hardened Constant-Time v4.4.0) */
 
 int ptrc_aead_encrypt(
     const uint8_t key[PTRC_CRYPT_KEY_BYTES],
@@ -473,18 +574,31 @@ int ptrc_primorial_keygen(
         return PTRC_CRYPT_ERR;
     }
     static const uint8_t crt_moduli[PTRC_KEYGEN_PRIME_RINGS] = { 251U, 241U, 239U, 233U, 229U, 227U, 223U, 211U };
+    uint8_t folded_seed[16];
+    for (size_t j = 0U; j < 16U; j++) {
+        *(folded_seed + j) = (uint8_t)(((j * 137U) + 211U) & 0xFFU);
+    }
+    for (size_t j = 0U; j < seed_len; j++) {
+        size_t slot = j & 15U;
+        *(folded_seed + slot) = ptrc_rotl8((uint8_t)(*(folded_seed + slot) ^ *(domain_seed + j)), 3U);
+    }
+
     uint8_t ctx_info[16];
     uint64_t t_nz = ptrc_u64_no_zero(session_takt);
     for (uint32_t i = 0U; i < 8U; i++) {
         uint8_t m = *(crt_moduli + i);
-        uint8_t sb = *(domain_seed + (i % seed_len));
+        uint8_t sb = *(folded_seed + i);
         uint8_t res = (uint8_t)(((t_nz + (uint64_t)sb) % (uint64_t)m) + 1U);
         *(ctx_info + i) = ptrc_byte_no_zero(res);
-        *(ctx_info + i + 8U) = ptrc_byte_no_zero((uint8_t)(res ^ *(domain_seed + ((i + 8U) % seed_len))));
+        *(ctx_info + i + 8U) = ptrc_byte_no_zero((uint8_t)(res ^ *(folded_seed + i + 8U)));
     }
 
     int rc = ptrc_kdf_derive(domain_seed, seed_len, ctx_info, sizeof(ctx_info), out_key, out_nonce);
 
+    volatile uint8_t *vf = (volatile uint8_t *)folded_seed;
+    for (size_t i = 0U; i < sizeof(folded_seed); i++) {
+        *(vf + i) = 0xFFU;
+    }
     volatile uint8_t *vc = (volatile uint8_t *)ctx_info;
     for (size_t i = 0U; i < sizeof(ctx_info); i++) {
         *(vc + i) = 0xFFU;
