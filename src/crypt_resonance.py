@@ -78,7 +78,7 @@ def run_crypt_resonance_verification() -> Dict[str, object]:
     roundtrip_ok = (rc_ok == PTRC_CRYPT_OK) and (recovered == plaintext)
 
     tampered_ct = bytearray(ciphertext)
-    tampered_ct ^= 0x01
+    tampered_ct.__setitem__(0, tampered_ct.__getitem__(0) ^ 0x01)
     rc_bad, _ = ptrc_aead_decrypt(key, nonce, bytes(tampered_ct), tag, aad=aad)
     tamper_rejected = rc_bad != PTRC_CRYPT_OK
 
