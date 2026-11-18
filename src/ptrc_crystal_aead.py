@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Cryptographic Engine v4.4.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Cryptographic Engine v4.5.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,12 +18,12 @@
 # ==============================================================================
 
 r"""
-pTRC v4.4.0 Hardened Constant-Time 512-Bit Primorial AEAD & KDF (Python Reference).
+pTRC v4.5.0 Hardened Constant-Time 512-Bit Primorial AEAD & KDF (Python Reference).
 File: src/ptrc_crystal_aead.py (Part 1 of 3)
 
-Bit-exact match to embedded/crypto/ptrc_crystal.c (v4.4.0):
+Bit-exact match to embedded/crypto/ptrc_crystal.c (v4.5.0):
   - Strictly constant-time O(1) coprime macro-ring & inner-ring derivation
-  - Strictly branchless zero-free projections in Z \ {0} (zero signed UB)
+  - Strictly branchless zero-free projections in Z \ {0} (internal state in {1..256}, unbiased XOR mask in {0..255})
   - 144-facet crystalline sponge + 137-takt observer mirror pulse
 """
 
@@ -166,9 +166,13 @@ def _plichta_crossed_mirror_py(val: int, clock24: int, ring_mod: int) -> int:
     mixed = (rot ^ ((ring_mod * 211) & U32_MASK) ^ ((clock24 * 137) & U32_MASK)) & U32_MASK
     return ptrc_crypt_z_no_zero_u32(mixed)
 
+# ==============================================================================
+# File: src/ptrc_crystal_aead.py (Part 2 of 3)
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+# ==============================================================================
 
 class PtrcCrystalContext:
-    r"""Python state mirror of ptrc_crystal_ctx_t (v4.4.0 Constant-Time)."""
+    r"""Python state mirror of ptrc_crystal_ctx_t (v4.5.0 Constant-Time Unbiased)."""
 
     def __init__(self, key: bytes, nonce: bytes) -> None:
         if len(key) != PTRC_CRYPT_KEY_BYTES or len(nonce) != PTRC_CRYPT_NONCE_BYTES:
@@ -247,7 +251,8 @@ class PtrcCrystalContext:
         self.takt_counter += 1
         self.clock_phase_24 = (self.clock_phase_24 % 24) + 1
 
-    def next_keystream_byte(self) -> int:
+    def next_keystream_state(self) -> int:
+        """Internal crystal keystream state strictly in Z \\ {0}: {1 .. 256} (never 0)."""
         self.sponge_step()
         idx = (self.takt_counter * 17) % PTRC_CRYPT_FACETS
         opp = (idx + 72) % PTRC_CRYPT_FACETS
@@ -262,7 +267,11 @@ class PtrcCrystalContext:
         bit0 = combined & 1
         nudge = ((bit0 << 1) - 1) & U32_MASK
         b = (_rotl8(raw_byte, (salt >> (idx & 15)) & 7) + nudge) & 0xFF
-        return ptrc_byte_no_zero(b)
+        return b + 1
+
+    def next_keystream_byte(self) -> int:
+        """Unbiased 8-bit XOR mask in {0..255} projected from {1..256}."""
+        return (self.next_keystream_state() - 1) & 0xFF
 
     def xor_stream(self, data: bytes) -> bytes:
         out = bytearray(len(data))
@@ -302,6 +311,10 @@ class PtrcCrystalContext:
             tag.__setitem__(t, self.next_keystream_byte())
         return bytes(tag)
 
+# ==============================================================================
+# File: src/ptrc_crystal_aead.py (Part 3 of 3)
+# Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
+# ==============================================================================
 
 def ptrc_aead_encrypt(key: bytes, nonce: bytes, plaintext: bytes, aad: bytes = b"") -> Tuple[bytes, bytes]:
     ctx = PtrcCrystalContext(key, nonce)
@@ -375,14 +388,19 @@ def ptrc_primorial_keygen(session_takt: int, domain_seed: bytes) -> Tuple[bytes,
     if len(domain_seed) == 0:
         raise ValueError("domain_seed must not be empty")
     crt_moduli = (251, 241, 239, 233, 229, 227, 223, 211)
+    folded_seed = bytearray(((j * 137) + 211) & 0xFF for j in range(16))
+    for j, sb in enumerate(domain_seed):
+        slot = j & 15
+        folded_seed.__setitem__(slot, _rotl8((folded_seed.__getitem__(slot) ^ sb) & 0xFF, 3))
+
     crt_ctx = bytearray(16)
     t_nz = ptrc_u64_no_zero(session_takt)
     for i in range(PTRC_KEYGEN_PRIME_RINGS):
         m = crt_moduli.__getitem__(i)
-        sb = domain_seed.__getitem__(i % len(domain_seed))
+        sb = folded_seed.__getitem__(i)
         res = (((t_nz + sb) % m) + 1) & 0xFF
         crt_ctx.__setitem__(i, ptrc_byte_no_zero(res))
-        crt_ctx.__setitem__(i + 8, ptrc_byte_no_zero((res ^ domain_seed.__getitem__((i + 8) % len(domain_seed))) & 0xFF))
+        crt_ctx.__setitem__(i + 8, ptrc_byte_no_zero((res ^ folded_seed.__getitem__(i + 8)) & 0xFF))
 
     return ptrc_kdf_derive(domain_seed, bytes(crt_ctx))
 
