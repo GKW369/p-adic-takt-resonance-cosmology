@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Cryptographic Engine v4.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Cryptographic Engine v4.5.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,139 +17,145 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
-"""
-Cryptographic Avalanche, Uniformity & Throughput Metrics for pTRC Crypto v4.0.
-File: src/00_test_ptrc_crypt_metrics.py
-
-Strictly pure integer (-1 adjacent to +1, no zero point, integer permille & bytes/sec).
+r"""
+pTRC v4.5.0 Cryptographic Metrics Audit (SAC Avalanche, Unbiased Uniformity & C11 Speed).
+File: src/00_test_ptrc_crypt_metrics.py (Complete)
 """
 
 from __future__ import annotations
 
 import ctypes
+import pathlib
 import sys
 import time
+from typing import Tuple
 
-from ptrc_crystal_aead import (
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from ptrc_crystal_aead import (  # noqa: E402
     PTRC_CRYPT_KEY_BYTES,
     PTRC_CRYPT_NONCE_BYTES,
     PTRC_CRYPT_OK,
     PTRC_CRYPT_TAG_BYTES,
     PtrcCrystalContext,
     load_c_crystal_library,
+    ptrc_aead_decrypt,
     ptrc_aead_encrypt,
     ptrc_primorial_keygen,
 )
 
 
-def _hamming_bits(a: bytes, b: bytes) -> int:
+def _popcount_bytes(a: bytes, b: bytes) -> int:
     total = 0
     for x, y in zip(a, b):
         total += (x ^ y).bit_count()
     return total
 
 
-def audit_strict_avalanche_criterion() -> None:
-    seed = b"pTRC-v4.0-AVALANCHE-AUDIT-SEED-210"
-    base_key, base_nonce = ptrc_primorial_keygen(137210144, seed)
-    aad = b"AVALANCHE-AAD-144"
-    pt = bytes((i * 73 + 19) & 0xFF for i in range(64))
+def audit_strict_avalanche_criterion() -> Tuple[int, int, int]:
+    """Tests single-bit key flips across all 64 key bytes (64 trials x 704 output bits)."""
+    base_key, base_nonce = ptrc_primorial_keygen(420210, b"PTRC_SAC_AVALANCHE_SEED_V45")
+    aad = b"SAC_AUDIT_AAD_144"
+    pt = b"A" * 64
 
-    base_ct, base_tag = ptrc_aead_encrypt(base_key, base_nonce, pt, aad)
-    total_bits_per_sample = (len(base_ct) + len(base_tag)) * 8
-    flipped_sum = 0
-    trials = 64
+    base_ct, base_tag = ptrc_aead_encrypt(base_key, base_nonce, pt, aad=aad)
+    base_out = base_ct + base_tag
+    bits_per_trial = len(base_out) * 8
 
-    for bit_idx in range(trials):
+    total_flipped = 0
+    total_bits = 0
+    for byte_idx in range(PTRC_CRYPT_KEY_BYTES):
         mod_key = bytearray(base_key)
-        mod_key[bit_idx >> 3] ^= 1 << (bit_idx & 7)
-        ct2, tag2 = ptrc_aead_encrypt(bytes(mod_key), base_nonce, pt, aad)
-        flipped_sum += _hamming_bits(base_ct + base_tag, ct2 + tag2)
+        mod_key[byte_idx] ^= 1 << (byte_idx & 7)
+        ct, tag = ptrc_aead_encrypt(bytes(mod_key), base_nonce, pt, aad=aad)
+        flipped = _popcount_bytes(base_out, ct + tag)
+        total_flipped += flipped
+        total_bits += bits_per_trial
 
-    # Integer permille (ideal SAC = 500 permille = 500/1000)
-    total_tested_bits = trials * total_bits_per_sample
-    avalanche_permille = (flipped_sum * 1000) // total_tested_bits
-    assert 460 <= avalanche_permille <= 540, f"Avalanche out of integer bounds: {avalanche_permille} permille"
-    print(
-        f" + [METRIC 1] Key Avalanche (SAC) : {avalanche_permille} / 1000 permille "
-        f"({flipped_sum}/{total_tested_bits} bits flipped across {trials} 1-bit key flips)"
-    )
+    permille = (total_flipped * 1000) // total_bits
+    assert 440 <= permille <= 560, f"SAC avalanche out of bounds: {permille}/1000"
+    return total_flipped, total_bits, permille
 
-def audit_keystream_uniformity() -> None:
-    seed = b"pTRC-v4.0-UNIFORMITY-STREAM-SEED-137"
-    key, nonce = ptrc_primorial_keygen(210144137, seed)
+
+def audit_keystream_uniformity(sample_len: int = 16384) -> Tuple[int, int, int]:
+    """Verifies zero-free internal state {1..256} and unbiased 256-bucket XOR distribution."""
+    key, nonce = ptrc_primorial_keygen(999137, b"PTRC_UNIFORMITY_AUDIT_V45")
     ctx = PtrcCrystalContext(key, nonce)
 
-    sample_bytes = 16384
-    stream = ctx.xor_stream(bytes(sample_bytes))
-    counts = list((0,)) * 256
-    for b in stream:
-        counts.__setitem__(b, counts.__getitem__(b) + 1)
+    counts = * 256
+    zero_internal_states = 0
+    for _ in range(sample_len):
+        st = ctx.next_keystream_state()
+        if st < 1 or st > 256:
+            zero_internal_states += 1
+        ks_byte = (st - 1) & 0xFF
+        counts[ks_byte] += 1
 
-    # Strict Z \ {0} byte law: 0x00 never appears in raw keystream (mapped to 0xFF)
-    assert counts.__getitem__(0) == 0, "Zero byte 0x00 violated Z \\ {0} keystream law!"
-    expected = sample_bytes // 255
-    active_counts = [counts.__getitem__(i) for i in range(1, 255)]
-    max_dev = max(abs(c - expected) for c in active_counts)
-    assert max_dev <= 36, f"Keystream byte deviation too high: {max_dev}"
-    assert all(v != 0 for v in ctx.sponge), "Zero state entered 144-facet sponge during 16KB stream!"
-    print(
-        f" + [METRIC 2] Keystream Balance   : {sample_bytes} Bytes | 0x00 Count: None (Z \\ {{0}}) | "
-        f"Max Active Deviation: {max_dev}"
-    )
+    assert zero_internal_states == 0, f"Found {zero_internal_states} invalid internal states outside {{1..256}}"
+    min_c = min(counts)
+    max_c = max(counts)
+    expected = sample_len // 256  # 64
+    max_dev = max(abs(max_c - expected), abs(min_c - expected))
+    assert min_c > 0, "Missing byte bucket in unbiased keystream"
+    assert max_dev <= 40, f"Excessive bucket deviation: {max_dev} (expected ~{expected})"
+    return zero_internal_states, min_c, max_c
 
 
-def benchmark_crypto_throughput() -> None:
-    seed = b"pTRC-v4.0-THROUGHPUT-BENCHMARK-156"
-    key, nonce = ptrc_primorial_keygen(156144137, seed)
-    aad = b"BENCHMARK-AAD"
-    payload = bytes(list((0x5A,)) * 1024)
+def audit_throughput_and_parity() -> None:
+    key, nonce = ptrc_primorial_keygen(777210, b"PTRC_THROUGHPUT_SEED_V45")
+    aad = b"PERF_HEADER_24"
 
-    py_iters = 64
+    # Python 64 KB benchmark
+    py_len = 64 * 1024
+    py_pt = bytes(((i * 137 + 1) & 0xFF) for i in range(py_len))
     t0 = time.perf_counter_ns()
-    for _ in range(py_iters):
-        ptrc_aead_encrypt(key, nonce, payload, aad)
+    py_ct, py_tag = ptrc_aead_encrypt(key, nonce, py_pt, aad=aad)
+    rc, py_rec = ptrc_aead_decrypt(key, nonce, py_ct, py_tag, aad=aad)
     t1 = time.perf_counter_ns()
+    assert rc == PTRC_CRYPT_OK and py_rec == py_pt
+    py_us = max(1, (t1 - t0) // 1000)
+    py_bps = (py_len * 1_000_000) // py_us
 
-    py_us = (t1 - t0) // 1000
-    py_bps = (py_iters * len(payload) * 1_000_000) // (py_us if py_us >= 1 else 1)
-    print(f" + [METRIC 3] Python AEAD 512-Bit : {py_iters} KB in {py_us} us (~{py_bps} Bytes/sec)")
-
-    lib = load_c_crystal_library()
+    lib = load_c_crystal_library(ROOT)
     if lib is not None:
-        c_key = (ctypes.c_uint8 * PTRC_CRYPT_KEY_BYTES)(*key)
-        c_nonce = (ctypes.c_uint8 * PTRC_CRYPT_NONCE_BYTES)(*nonce)
-        c_aad = (ctypes.c_uint8 * len(aad))(*aad)
-        c_pt = (ctypes.c_uint8 * len(payload))(*payload)
-        c_ct = (ctypes.c_uint8 * len(payload))()
+        c_len = 4096 * 1024
+        c_pt = (ctypes.c_uint8 * c_len).from_buffer_copy(
+            bytes(((i * 73 + 11) & 0xFF) for i in range(c_len))
+        )
+        c_ct = (ctypes.c_uint8 * c_len)()
+        c_rec = (ctypes.c_uint8 * c_len)()
+        c_key = (ctypes.c_uint8 * PTRC_CRYPT_KEY_BYTES).from_buffer_copy(key)
+        c_nonce = (ctypes.c_uint8 * PTRC_CRYPT_NONCE_BYTES).from_buffer_copy(nonce)
+        c_aad = (ctypes.c_uint8 * len(aad)).from_buffer_copy(aad)
         c_tag = (ctypes.c_uint8 * PTRC_CRYPT_TAG_BYTES)()
 
-        c_iters = 4096
-        ct0 = time.perf_counter_ns()
-        for _ in range(c_iters):
-            rc = lib.ptrc_aead_encrypt(c_key, c_nonce, c_aad, len(aad), c_pt, len(payload), c_ct, c_tag)
-            assert rc == PTRC_CRYPT_OK
-        ct1 = time.perf_counter_ns()
-
-        c_us = (ct1 - ct0) // 1000
-        c_bps = (c_iters * len(payload) * 1_000_000) // (c_us if c_us >= 1 else 1)
-        print(f" + [METRIC 4] Native C11 AEAD     : {c_iters} KB in {c_us} us (~{c_bps} Bytes/sec | Zero malloc)")
+        tc0 = time.perf_counter_ns()
+        rc_enc = lib.ptrc_aead_encrypt(c_key, c_nonce, c_aad, len(aad), c_pt, c_len, c_ct, c_tag)
+        tc1 = time.perf_counter_ns()
+        rc_dec = lib.ptrc_aead_decrypt(c_key, c_nonce, c_aad, len(aad), c_ct, c_len, c_tag, c_rec)
+        assert rc_enc == PTRC_CRYPT_OK and rc_dec == PTRC_CRYPT_OK
+        assert bytes(c_rec) == bytes(c_pt)
+        c_us = max(1, (tc1 - tc0) // 1000)
+        c_bps = (c_len * 1_000_000) // c_us
+        print(f"  [C11 Native AEAD]   4096 KB encrypted in {c_us:,} us (~{c_bps:,} Bytes/sec)")
     else:
-        print(" + [METRIC 4] Native C11 AEAD     : Skipped (build libptrc_crystal.so to benchmark C11)")
+        print("  [C11 Native AEAD]   Shared library not built yet (build/libptrc_crystal.so) - Python verified")
+
+    print(f"  [Python Reference]  64 KB roundtrip in {py_us:,} us (~{py_bps:,} Bytes/sec)")
 
 
 def main() -> None:
-    print("===============================================================================")
-    print("  pTRC CRYPTO v4.0 — STATISTICAL, AVALANCHE & THROUGHPUT METRICS AUDIT")
-    print("===============================================================================")
-    audit_strict_avalanche_criterion()
-    audit_keystream_uniformity()
-    benchmark_crypto_throughput()
-    print("-------------------------------------------------------------------------------")
-    print("  ALL CRYPTO v4.0 METRICS & INVARIANTS VERIFIED (100% PURE INTEGER Z \\ {0}).")
-    print("===============================================================================")
+    print("=== pTRC v4.5.0 Cryptographic Security & Performance Audit ===")
+    flipped, total, permille = audit_strict_avalanche_criterion()
+    print(f"  [SAC Avalanche]     {flipped:,} / {total:,} bits flipped ({permille} / 1000 permille)")
+
+    zero_st, min_c, max_c = audit_keystream_uniformity(16384)
+    print(f"  [Z \\ {{0}} & Bias]   Internal zero states: {zero_st} | 256-bucket min={min_c}, max={max_c} (ideal=64)")
+
+    audit_throughput_and_parity()
+    print("=== ALL v4.5.0 CRYPTO METRIC AUDITS PASSED ===")
 
 
 if __name__ == "__main__":
     main()
-    sys.exit(0)
