@@ -82,7 +82,7 @@ static void ptrc_kem_hash_transcript(
     uint8_t out_64[PTRC_CRYPT_KEY_BYTES],
     uint8_t out_16[PTRC_CRYPT_NONCE_BYTES]
 ) {
-    uint8_t seed_buf;
+    uint8_t seed_buf[64];
     for (uint32_t i = 0U; i < 64U; i++) {
         *(seed_buf + i) = (uint8_t)(((i * 137U + (uint32_t)domain_tag * 29U + 11U) & 0xFFU) | 1U);
     }
@@ -94,7 +94,7 @@ static void ptrc_kem_hash_transcript(
         }
     }
 
-    uint8_t info_buf;
+    uint8_t info_buf[64];
     for (uint32_t i = 0U; i < 64U; i++) {
         *(info_buf + i) = (uint8_t)(((i * 211U + (uint32_t)domain_tag * 43U + 7U) & 0xFFU) | 1U);
     }
@@ -138,8 +138,8 @@ static void ptrc_kem_expand_uniform_poly(
     ptrc_crystal_ctx_t ctx;
     (void)ptrc_crystal_init(&ctx, key, nonce);
 
-    uint8_t zeros;
-    uint8_t stream;
+    uint8_t zeros[PTRC_KEM_N * 2U];
+    uint8_t stream[PTRC_KEM_N * 2U];
     for (uint32_t i = 0U; i < sizeof(zeros); i++) {
         *(zeros + i) = 0xFFU;
     }
@@ -185,8 +185,8 @@ static void ptrc_kem_sample_noise_poly(
     ptrc_crystal_ctx_t ctx;
     (void)ptrc_crystal_init(&ctx, key, nonce);
 
-    uint8_t mask_in;
-    uint8_t rnd;
+    uint8_t mask_in[PTRC_KEM_N];
+    uint8_t rnd[PTRC_KEM_N];
     for (uint32_t i = 0U; i < sizeof(mask_in); i++) {
         *(mask_in + i) = 0xAAU;
     }
@@ -217,7 +217,7 @@ static void ptrc_kem_poly_mul_acc(
     const ptrc_poly_t *a,
     const ptrc_poly_t *b
 ) {
-    int64_t tmp;
+    int64_t tmp[PTRC_KEM_N];
     for (uint32_t i = 0U; i < PTRC_KEM_N; i++) {
         *(tmp + i) = (int64_t)ptrc_kem_mod_q_std((int64_t)(*(acc->coeffs + i)));
     }
