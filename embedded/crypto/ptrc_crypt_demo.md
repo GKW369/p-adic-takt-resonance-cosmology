@@ -160,3 +160,59 @@ PYTHONPATH=src python3 src/00_test_ptrc_crypt_metrics.py
 PYTHONPATH=src python3 src/00_test_ptrc_pq_kem.py
 ```
 
+# pTRC Embedded Bare-Metal Cryptography Hardware Integration Guide (v4.5.0)
+
+**Author:** Kurt Guido Wirminghaus (GKW369)  
+**License:** Dual-Licensed (GNU AGPLv3 + Commercial Freelancer Exemption § 18 EStG)  
+**Target Domain:** Bare-Metal C11 (`-std=c11 -Wall -Wextra -Wpedantic`), `0` Bytes `float`/`double`, `0` Bytes `malloc()`, `0` Bytes Lookup Tables
+
+---
+
+## 1. Architecture Overview (v4.5.0 Hardened Constant-Time & Unbiased)
+
+The pTRC cryptographic stack executes strictly inside the discrete zero-free integer domain $\mathbb{Z} \setminus \{0\}$ (`-1` directly adjacent to `+1`, no zero point) with constant-time $\mathcal{O}(1)$ execution across all key-dependent operations:
+
+1. **Symmetrical 512-Bit Primorial AEAD & KDF (`ptrc_crystal.h` / `ptrc_crystal.c`):**
+   * **Static Stack SRAM Footprint:** `672` bytes (`sizeof(ptrc_crystal_ctx_t) < 1 KB`).
+   * **Zero-Free Internal Crystal State (`{1 .. 256}`):** Every keystream state is computed in $\{1 \dots 256\}$ (never `0`) and projected unbiasedly onto $\{0 \dots 255\}$ (`state - 1`) for XOR stream masking—eliminating `0xFF` duplication while preserving $\mathbb{Z} \setminus \{0\}$ internally.
+   * **4-Stage 64-Bit Primorial Macro-Cascade + 144-Facet Sponge:** Constant-time $\mathcal{O}(1)$ coprime ring derivation ($\gcd(\text{mod}, 210) = 1$) coupled with the 24-Takt control clock and 137-Takt observer mirror pulse.
+   * **192-Bit SLIP-MAC & Fail-Closed Scrubbing:** Constant-time tag verification (`ptrc_ct_memcmp`) and branchless `volatile` SRAM scrubbing back to `-1` (`0xFF`) via `ptrc_crystal_wipe`.
+
+2. **Post-Quantum Cyclotomic Ring-KEM (`ptrc_pq_kem.h` / `ptrc_pq_kem.c` — FO-CCA2 + `comp5`):**
+   * **Algebraic Ring:** $\mathbb{Z}_{7681}[X]/(X^{256} + 1)$ over non-Mersenne prime $q = 7681$ ($\gcd(7681, 210) = 1$) with on-the-fly matrix expansion (`0` bytes lookup tables).
+   * **5-Bit Ciphertext Compression (`comp5`, `160` bytes):** Halves quantization rounding noise to $\pm 120$ for high-margin Fujisaki-Okamoto (FO) CCA2 re-encryption (`ct' == ct`) and constant-time implicit rejection.
+
+---
+
+## 2. Dual Hardware Profiles (v4.5.0)
+
+| Profile | Lattice Dimension | Public Key (`PK`) | Secret Key (`SK`, FO-CCA2) | Ciphertext (`CT`, `comp5`) | Shared Secret (`SS`) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Profile A (Standard)** | $k = 2, n = 256$ (`512-Dim`) | `1,056 B` | `2,112 B` | `1,184 B` | `64 B` (`512-Bit`) |
+| **Profile B (Ultra-Light IoT)** | $k = 1, n = 256$ (`256-Dim`) | `544 B` | `1,088 B` | `672 B` | `64 B` (`512-Bit`) |
+
+---
+
+## 3. Standalone Compilation & Cross-Compilation
+
+### Native Host Verification (GCC / Clang)
+```bash
+# Build native C11 verification binary
+gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -Iembedded/crypto \
+    embedded/crypto/ptrc_crypt_demo.c \
+    embedded/crypto/ptrc_crystal.c \
+    embedded/crypto/ptrc_pq_kem.c \
+    -o ptrc_crypt_demo && ./ptrc_crypt_demo
+
+# Build shared libraries for Python C11<->Python bit-parity audits
+mkdir -p build
+gcc -O3 -std=c11 -fPIC -shared -Iembedded/crypto embedded/crypto/ptrc_crystal.c -o build/libptrc_crystal.so
+gcc -O3 -std=c11 -fPIC -shared -Iembedded/crypto embedded/crypto/ptrc_pq_kem.c embedded/crypto/ptrc_crystal.c -o build/libptrc_pq_kem.so
+```
+
+### ARM Cortex-M0+ / M4 Bare-Metal Cross-Compilation (`arm-none-eabi-gcc`)
+```bash
+arm-none-eabi-gcc -O2 -std=c11 -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft \
+    -ffreestanding -nostdlib -Wall -Wextra -Wpedantic -Iembedded/crypto \
+    -c embedded/crypto/ptrc_crystal.c embedded/crypto/ptrc_pq_kem.c
+```
