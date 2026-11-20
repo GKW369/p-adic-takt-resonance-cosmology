@@ -17,7 +17,6 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
-
 #ifndef PTRC_LIGHT_UNIVERSE_H
 #define PTRC_LIGHT_UNIVERSE_H
 
