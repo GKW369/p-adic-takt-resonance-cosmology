@@ -20,12 +20,33 @@
 #include "ptrc_light_universe.h"
 #include <stdlib.h>
 
+typedef struct {
+    int8_t dx;
+    int8_t dy;
+    int8_t dz;
+} ptrc_dir3_t;
+
+typedef struct {
+    int32_t x;
+    int32_t y;
+    int32_t z;
+} ptrc_vec3_t;
+
+typedef struct {
+    uint8_t i0;
+    uint8_t i1;
+    uint8_t i2;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} ptrc_tri_face_t;
+
 static const uint32_t PTRC_GFX_RINGS[PTRC_GFX_PRIME_RINGS] = {
     11U, 13U, 17U, 19U, 23U, 29U, 37U, 41U,
     43U, 47U, 53U, 59U, 61U, 67U, 71U, 73U
 };
 
-static const int8_t PTRC_JUNCTION_DIRS_24[PTRC_GFX_JUNCTIONS] = {
+static const ptrc_dir3_t PTRC_JUNCTION_DIRS_24[PTRC_GFX_JUNCTIONS] = {
     { 1,  1, -1}, { 1, -1, -1}, {-1,  1, -1}, {-1, -1, -1},
     { 1,  1,  1}, { 1, -1,  1}, {-1,  1,  1}, {-1, -1,  1},
     { 2,  1, -1}, { 2, -1, -1}, {-2,  1, -1}, {-2, -1, -1},
@@ -52,7 +73,6 @@ static inline int32_t ptrc_z_no_zero(int32_t v) {
     return (v == 0) ? -1 : v;
 }
 
-/* Symmetrischer Plichta-Spiegel ohne Aufwaerts-Drift: wechselt zwischen -1 und +1 */
 static inline int32_t ptrc_z_sym_no_zero(int32_t v, uint32_t parity) {
     if (v != 0) return v;
     return ((parity & 1U) == 0U) ? 1 : -1;
@@ -97,8 +117,6 @@ static inline uint8_t ptrc_encode_1byte_cascade(
     return ptrc_u8_no_zero((uint8_t)((anc << 7U) | (opt << 5U) | wl));
 }
 
-/* Exakte 4-seitige quadratische Pyramide (scharfe Spitze oben, ebene Basis unten)
- * Rotiert um die vertikale Y-Achse und leicht geneigt um X, raeumlich mittig bei Z = 1 */
 static int ptrc_point_in_square_pyramid(
     int32_t px,
     int32_t py,
@@ -114,21 +132,16 @@ static int ptrc_point_in_square_pyramid(
         return 0;
     }
 
-    /* Leichte 3D-Kippung (ca. 15 Grad), damit man die Pyramide raeumlich plastisch sieht */
     int32_t ty = (dy * 966 - dz * 259) >> 10;
     int32_t tz = (dy * 259 + dz * 966) >> 10;
-
-    /* Rotation um die Pyramiden-Hochachse */
     int32_t lx = (dx * rot_u - tz * rot_v) >> 10;
     int32_t lz = (dx * rot_v + tz * rot_u) >> 10;
 
-    /* Pyramiden-Koordinaten: Spitze bei ty = -110 (oben), Basis bei ty = +110 (unten) */
-    int32_t half_h = PTRC_PYRAMID_HEIGHT >> 1; /* 110 */
+    int32_t half_h = PTRC_PYRAMID_HEIGHT >> 1;
     if (ty < -half_h || ty > half_h) {
         return 0;
     }
 
-    /* Lineare Verjuengung von der quadratischen Basis (120) bis zur scharfen Spitze (0) */
     int32_t allowed_half_width = ((ty + half_h) * PTRC_PYRAMID_HALF_BASE) / PTRC_PYRAMID_HEIGHT;
     if (ptrc_abs32(lx) <= allowed_half_width && ptrc_abs32(lz) <= allowed_half_width) {
         return 1;
@@ -175,7 +188,6 @@ int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed) {
         ctx->cell_density[s] = 1U;
     }
 
-    /* 60.000 Luftmolekuel-Agenten gleichmaessig im gesamten 32x18x8cm Kanal verteilen */
     for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
         rng = ptrc_u64_no_zero(rng * 6364136223846793005ULL + 1442695040888963407ULL);
         int32_t rx = (int32_t)(rng % (uint64_t)(PTRC_TUNNEL_HALF_X * 2)) - PTRC_TUNNEL_HALF_X;
@@ -195,7 +207,6 @@ int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed) {
         ctx->agents[a].x = (int16_t)x;
         ctx->agents[a].y = (int16_t)y;
         ctx->agents[a].z = (int16_t)z;
-        /* Laminare Hauptstroemung exakt horizontal nach rechts (+X), Y/Z im Mittel 0 */
         ctx->agents[a].vx = (int16_t)(7 + (int32_t)(a & 3U));
         ctx->agents[a].vy = (int16_t)(((a & 1U) == 0U) ? 1 : -1);
         ctx->agents[a].vz = (int16_t)((((a >> 1U) & 1U) == 0U) ? 1 : -1);
@@ -257,7 +268,6 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
         int32_t ny = ptrc_plichta_move((int32_t)ag->y, (int32_t)ag->vy);
         int32_t nz = ptrc_plichta_move((int32_t)ag->z, (int32_t)ag->vz);
 
-        /* Kontinuierlicher Ausstrom rechts (+960) & frischer laminarer Einstrom links (-960) */
         if (nx > PTRC_TUNNEL_HALF_X) {
             uint64_t mix = (uint64_t)a * 2654435761ULL + ctx->takt_counter * 137ULL;
             nx = -PTRC_TUNNEL_HALF_X + (int32_t)(mix & 7ULL) + 1;
@@ -272,13 +282,12 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
             ag->vx = 7;
         }
 
-        /* Wand-Einfluss (Decke/Boden +-540, Vorder-/Rueckwand +-240): Grenzschicht-Reibung + Reflexion */
         if (ny > (PTRC_TUNNEL_HALF_Y - 12)) {
             if (ny > PTRC_TUNNEL_HALF_Y) {
                 ny = PTRC_TUNNEL_HALF_Y - 1;
                 ag->vy = (int16_t)-ptrc_abs32((int32_t)ag->vy);
             }
-            if (ag->vx > 3) ag->vx--; /* Wandreibung bremst Luft an der Kanalwand ab */
+            if (ag->vx > 3) ag->vx--;
         } else if (ny < (-PTRC_TUNNEL_HALF_Y + 12)) {
             if (ny < -PTRC_TUNNEL_HALF_Y) {
                 ny = -PTRC_TUNNEL_HALF_Y + 1;
@@ -301,19 +310,17 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
             if (ag->vx > 3) ag->vx--;
         }
 
-        /* Kollision mit der scharfkantigen 3D-Pyramide (X = -320, Z = 1) */
         if (ptrc_point_in_square_pyramid(nx, ny, nz, rot_u, rot_v)) {
             pyramid_hits++;
             collisions++;
             uint32_t j_dir = (a + rot_idx + (uint32_t)ctx->takt_counter) % PTRC_GFX_JUNCTIONS;
-            int32_t jy = PTRC_JUNCTION_DIRS_24[j_dir];
-            int32_t jz = PTRC_JUNCTION_DIRS_24[j_dir];
+            int32_t jy = (int32_t)PTRC_JUNCTION_DIRS_24[j_dir].dy;
+            int32_t jz = (int32_t)PTRC_JUNCTION_DIRS_24[j_dir].dz;
 
-            /* Staudruck vor der Pyramide: Vorwaertstempo sinkt, Luft stroemt symmetrisch aussen vorbei */
             ag->vx = 2;
             ag->vy = ptrc_z_sym_no_zero(jy * 3 + ((ny >= 0) ? 3 : -3), sym_bit);
             ag->vz = ptrc_z_sym_no_zero(jz * 3 + ((nz >= 0) ? 3 : -3), sym_bit >> 1U);
-            nx = ptrc_plichta_move((int32_t)ag->x, -2); /* Zurueckprallen vor die Pyramidenflaeche */
+            nx = ptrc_plichta_move((int32_t)ag->x, -2);
             ny = ptrc_plichta_move((int32_t)ag->y, (int32_t)ag->vy);
             nz = ptrc_plichta_move((int32_t)ag->z, (int32_t)ag->vz);
             ag->state_byte = ptrc_encode_1byte_cascade(1U, PTRC_OPTICS_FIELD_COUPLED, (uint8_t)(22U + (a % 9U)));
@@ -325,7 +332,6 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
 
             if (occ_imp == 1U) {
                 ctx->cell_impulse[slot] = ag->impulse;
-                /* Symmetrische Relaxation zur horizontalen Grundstroemung (kein Drift nach oben!) */
                 if ((a & 3U) == (uint32_t)(ctx->takt_counter & 3ULL)) {
                     if (ag->vx < 7) ag->vx++;
                     if (ag->vx > 9) ag->vx--;
@@ -339,14 +345,13 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
                 }
             } else {
                 collisions++;
-                /* Teilchenstau-Effekt: Hohe Dichte vor der Pyramide bremst nachfolgende Teilchen ab */
                 if (dens >= 3U && nx < (PTRC_PYRAMID_CENTER_X + 60) && ptrc_abs32(ny) < 180) {
                     if (ag->vx > 2) ag->vx--;
                     ag->state_byte = ptrc_encode_1byte_cascade(1U, PTRC_OPTICS_CRYSTALLINE, 18U);
                 }
                 uint32_t alt_dir = (a + occ_imp + (uint32_t)ctx->takt_counter) % PTRC_GFX_JUNCTIONS;
-                int32_t nvy = (int32_t)ag->vy + PTRC_JUNCTION_DIRS_24[alt_dir];
-                int32_t nvz = (int32_t)ag->vz + PTRC_JUNCTION_DIRS_24[alt_dir];
+                int32_t nvy = (int32_t)ag->vy + (int32_t)PTRC_JUNCTION_DIRS_24[alt_dir].dy;
+                int32_t nvz = (int32_t)ag->vz + (int32_t)PTRC_JUNCTION_DIRS_24[alt_dir].dz;
                 ag->vy = (int16_t)ptrc_z_sym_no_zero(nvy, sym_bit);
                 ag->vz = (int16_t)ptrc_z_sym_no_zero(nvz, sym_bit >> 1U);
                 if (ag->vy > 7) ag->vy = 7;
@@ -407,7 +412,6 @@ static inline int32_t ptrc_edge_fn(int32_t ax, int32_t ay, int32_t bx, int32_t b
     return (cx - ax) * (by - ay) - (cy - ay) * (bx - ax);
 }
 
-/* Rastert ein scharfkantiges 3D-Dreieck der Pyramide mit exakter Z-Tiefen-Interpolation */
 static void ptrc_raster_pyramid_triangle(
     uint8_t *rgb_out,
     int16_t *z_buf,
@@ -444,7 +448,6 @@ static void ptrc_raster_pyramid_triangle(
                 if (pz <= (int32_t)z_buf[p_flat]) {
                     z_buf[p_flat] = (int16_t)pz;
                     size_t pix = p_flat * 3U;
-                    /* Kanten-Highlighting fuer kristallklare Pyramidengeometrie */
                     int32_t abs_a = ptrc_abs32(area);
                     int32_t edge_thresh = abs_a >> 5;
                     if (ptrc_abs32(w0) < edge_thresh || ptrc_abs32(w1) < edge_thresh || ptrc_abs32(w2) < edge_thresh) {
@@ -491,24 +494,22 @@ int ptrc_gfx_render_observer_rgb24(
     int32_t rot_u = PTRC_CLOCK24_U[rot_idx];
     int32_t rot_v = PTRC_CLOCK24_V[rot_idx];
 
-    /* 1. Scharfkantige 4-seitige 3D-Pyramide mittig bei (X=-320, Y=1, Z=1) projizieren */
     int32_t half_b = PTRC_PYRAMID_HALF_BASE;
     int32_t half_h = PTRC_PYRAMID_HEIGHT >> 1;
-    int32_t local_verts = {
-        {       1, -half_h,       1 }, /* 0: Scharfe Spitze oben */
-        { -half_b,  half_h, -half_b }, /* 1: Basis vorne-links */
-        {  half_b,  half_h, -half_b }, /* 2: Basis vorne-rechts */
-        {  half_b,  half_h,  half_b }, /* 3: Basis hinten-rechts */
-        { -half_b,  half_h,  half_b }  /* 4: Basis hinten-links */
+    const ptrc_vec3_t local_verts[] = {
+        {       1, -half_h,       1 },
+        { -half_b,  half_h, -half_b },
+        {  half_b,  half_h, -half_b },
+        {  half_b,  half_h,  half_b },
+        { -half_b,  half_h,  half_b }
     };
 
-    int32_t scr_x, scr_y, scr_z;
-    for (int v = 0; v < 5; v++) {
-        int32_t vx = local_verts[v];
-        int32_t vy = local_verts[v];
-        int32_t vz = local_verts[v];
+    ptrc_vec3_t scr_pts[sizeof(local_verts) / sizeof(local_verts[0U])];
+    for (size_t v = 0U; v < 5U; v++) {
+        int32_t vx = local_verts[v].x;
+        int32_t vy = local_verts[v].y;
+        int32_t vz = local_verts[v].z;
 
-        /* Inverse Kippung + Rotation passend zu ptrc_point_in_square_pyramid */
         int32_t rx = (vx * rot_u + vz * rot_v) >> 10;
         int32_t rz = (-vx * rot_v + vz * rot_u) >> 10;
         int32_t wy = (vy * 966 + rz * 259) >> 10;
@@ -519,32 +520,30 @@ int ptrc_gfx_render_observer_rgb24(
         int32_t sx = (wx * 1414) / persp;
         int32_t sy = (wy * 1414) / persp;
 
-        scr_x[v] = ((sx + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
-        scr_y[v] = ((sy + PTRC_TUNNEL_HALF_Y) * (int32_t)height) / (PTRC_TUNNEL_HALF_Y * 2);
-        scr_z[v] = wz;
+        scr_pts[v].x = ((sx + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
+        scr_pts[v].y = ((sy + PTRC_TUNNEL_HALF_Y) * (int32_t)height) / (PTRC_TUNNEL_HALF_Y * 2);
+        scr_pts[v].z = wz;
     }
 
-    /* 4 Seitenflaechen + 2 Basis-Dreiecke mit geraden Kanten rastern */
-    const int faces = {
-        {0, 1, 2, 215, 165,  55},
-        {0, 2, 3, 185, 138,  45},
-        {0, 3, 4, 145, 105,  35},
-        {0, 4, 1, 175, 130,  42},
-        {1, 3, 2, 110,  80,  28},
-        {1, 4, 3, 110,  80,  28}
+    const ptrc_tri_face_t faces[] = {
+        {0U, 1U, 2U, 215U, 165U,  55U},
+        {0U, 2U, 3U, 185U, 138U,  45U},
+        {0U, 3U, 4U, 145U, 105U,  35U},
+        {0U, 4U, 1U, 175U, 130U,  42U},
+        {1U, 3U, 2U, 110U,  80U,  28U},
+        {1U, 4U, 3U, 110U,  80U,  28U}
     };
-    for (int f = 0; f < 6; f++) {
-        int i0 = faces[f], i1 = faces[f], i2 = faces[f];
+    for (size_t f = 0U; f < 6U; f++) {
+        ptrc_tri_face_t tf = faces[f];
         ptrc_raster_pyramid_triangle(
             rgb_out, z_buf, width, height,
-            scr_x[i0], scr_y[i0], scr_z[i0],
-            scr_x[i1], scr_y[i1], scr_z[i1],
-            scr_x[i2], scr_y[i2], scr_z[i2],
-            (uint8_t)faces[f], (uint8_t)faces[f], (uint8_t)faces[f]
+            scr_pts[tf.i0].x, scr_pts[tf.i0].y, scr_pts[tf.i0].z,
+            scr_pts[tf.i1].x, scr_pts[tf.i1].y, scr_pts[tf.i1].z,
+            scr_pts[tf.i2].x, scr_pts[tf.i2].y, scr_pts[tf.i2].z,
+            tf.r, tf.g, tf.b
         );
     }
 
-    /* 2. Alle 60.000 Luftmolekuel-Cluster mit Tiefen-Groessenskalierung (Vordergrund groesser, Hintergrund kleiner) */
     for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
         const ptrc_wind_agent_t *ag = &ctx->agents[a];
 
@@ -556,7 +555,6 @@ int ptrc_gfx_render_observer_rgb24(
         int32_t px = ((sx + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
         int32_t py = ((sy + PTRC_TUNNEL_HALF_Y) * (int32_t)height) / (PTRC_TUNNEL_HALF_Y * 2);
 
-        /* Tiefen-abhaengige Agentengroesse: Vorne (-240..-80) = 2x2 Pixel, Mitte/Hinten = 1x1 Pixel */
         int32_t dot_size = (z_depth < -80) ? 2 : 1;
 
         int32_t depth_shade = 245 - ((z_depth + PTRC_TUNNEL_HALF_Z) >> 2);
