@@ -17,6 +17,7 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
+#define _GNU_SOURCE
 #include "ptrc_light_universe.h"
 #include <dlfcn.h>
 #include <pthread.h>
