@@ -40,7 +40,7 @@ from importlib import import_module
 from pathlib import Path
 from typing import Dict, List
 
-from ptrc_light_universe import PTRC_GFX_OK, PTRC_PARALLEL_ENGINES, PTRC_WIND_AGENTS
+from ptrc_light_universe import PTRC_GFX_OK, PTRC_MAX_ENGINES, PTRC_WIND_AGENTS
 
 parity_mod = import_module("00_test_ptrc_graphics_parity")
 
@@ -85,7 +85,7 @@ def run_benchmark(duration_sec: float, width: int, height: int, steps_per_frame:
 
         # Warmup (10 Frames)
         for _ in range(10):
-            lib.ptrc_gfx_step_takt_parallel(ctypes.byref(ctx))
+            lib.ptrc_gfx_step_takt_adaptive(ctypes.byref(ctx))
             lib.ptrc_gfx_render_observer_rgb24(ctypes.byref(ctx), width, height, rgb_buf)
 
         # Zaehler nach Warmup sauber starten
@@ -97,7 +97,7 @@ def run_benchmark(duration_sec: float, width: int, height: int, steps_per_frame:
 
             ts0 = time.perf_counter()
             for _ in range(steps_per_frame):
-                lib.ptrc_gfx_step_takt_parallel(ctypes.byref(ctx))
+                lib.ptrc_gfx_step_takt_adaptive(ctypes.byref(ctx))
             ts1 = time.perf_counter()
             step_times_ms.append(((ts1 - ts0) * 1000.0) / steps_per_frame)
 
@@ -135,7 +135,7 @@ def run_benchmark(duration_sec: float, width: int, height: int, steps_per_frame:
     print(f"System / CPU       : {platform.system()} {platform.machine()} ({os.cpu_count()} Logische Kerne)")
     print(f"Aufloesung         : {width} x {height} (Full-HD RGB24, 100% Integer, 0x00-frei)")
     print(f"Geometrie          : 32cm x 18cm x 8cm | {PTRC_WIND_AGENTS:,} Cluster (1+12 = {PTRC_WIND_AGENTS * 13:,} Kristalle)")
-    print(f"Parallel-Engines   : {PTRC_PARALLEL_ENGINES}x pTRC-Sektor-Engines | Takte/Frame: {steps_per_frame}")
+    print(f"Parallel-Engines   : {PTRC_MAX_ENGINES}x pTRC-Sektor-Engines | Takte/Frame: {steps_per_frame}")
     print(f"Messdauer          : {elapsed:.2f} s | Frames: {total_frames:,} | Takte: {total_takts:,}")
     print("-" * 78)
     print(f"Durchsatz Takte/s  : {takts_per_sec:,.2f} Takte/s")
@@ -156,7 +156,7 @@ def run_benchmark(duration_sec: float, width: int, height: int, steps_per_frame:
         "resolution": f"{width}x{height}",
         "agents_1_plus_12": PTRC_WIND_AGENTS,
         "total_crystals": PTRC_WIND_AGENTS * 13,
-        "parallel_engines": PTRC_PARALLEL_ENGINES,
+        "parallel_engines": PTRC_MAX_ENGINES,
         "elapsed_seconds": round(elapsed, 3),
         "total_frames": total_frames,
         "total_takts": total_takts,
