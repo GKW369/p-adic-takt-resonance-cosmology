@@ -19,7 +19,7 @@
 
 """
 Bit-Paritaets- & Nullfreiheits-Audit (Z^3 \\ {0}) zwischen C11 und Python
-fuer die pTRC 3D-Raumkristall-Engine v4.5.0.
+fuer die pTRC 3D-Raumkristall-Engine v4.5.0 (inkl. 1-Byte Kaskaden & Z-Occlusion).
 """
 
 from __future__ import annotations
@@ -67,6 +67,8 @@ class CPtrcImpulsePacket(ctypes.Structure):
         ("impulse", ctypes.c_uint8),
         ("wavelength_id", ctypes.c_uint8),
         ("element_id", ctypes.c_uint8),
+        ("optics_mode", ctypes.c_uint8),
+        ("cascade_root", ctypes.c_uint8),
     ]
 
 
