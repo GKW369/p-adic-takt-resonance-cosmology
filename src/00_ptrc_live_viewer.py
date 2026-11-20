@@ -18,13 +18,13 @@
 # ==============================================================================
 
 """
-Full-HD (1920x1080) 3D-Windkanal Live-Viewer (32cm x 18cm x 8cm, 60.000 Molekuel-Cluster,
-scharfkantige rotierende 3D-Pyramide mittig im linken Drittel, Z-Occlusion & Tiefenskalierung).
+Full-HD (1920x1080) Echtzeit-Live-Viewer fuer den pTRC 3D-Windkanal v4.5.0
+mit 4 parallelen pTRC-Sektor-Engines, 144-Facetten-Anisotropie & 1+12-Gitter.
 
 Steuerung im Fenster:
-  [+] / [-]   : Stroemungs-Takte pro Frame (1..8)
+  [+] / [-]   : Zeit-Skalierung (1..137 Takte pro Frame)
   [LEERTASTE] : Pause / Weiter
-  [R]         : Reset mit neuem Primzahl-Seed
+  [R]         : Reset mit neuem Primzahl-Seed & Zeitzaehler-Neustart
   [F]         : Vollbild (1920x1080) umschalten
   [ESC]       : Beenden
 """
@@ -39,7 +39,7 @@ import tkinter as tk
 from importlib import import_module
 from pathlib import Path
 
-from ptrc_light_universe import PTRC_RENDER_STALL, PTRC_WIND_AGENTS
+from ptrc_light_universe import PTRC_PARALLEL_ENGINES, PTRC_RENDER_STALL
 
 parity_mod = import_module("00_test_ptrc_graphics_parity")
 
@@ -47,7 +47,7 @@ FULL_HD_WIDTH = 1920
 FULL_HD_HEIGHT = 1080
 
 
-class PtrcWindtunnelLiveViewer:
+class PtrcFullHdLiveObserver:
     def __init__(self, width: int = FULL_HD_WIDTH, height: int = FULL_HD_HEIGHT) -> None:
         self.width = width
         self.height = height
@@ -69,10 +69,13 @@ class PtrcWindtunnelLiveViewer:
 
         self.paused = False
         self.fullscreen = False
-        self.steps_per_frame = 1
+        self.sub_steps_per_frame = 2
+        self.start_time = time.perf_counter()
+        self.pause_started = 0.0
+        self.paused_total = 0.0
 
         self.root = tk.Tk()
-        self.root.title("pTRC 3D-Windkanal v4.5.0 | 32x18x8 cm | 60.000 1+12-Cluster | Full-HD")
+        self.root.title("pTRC 3D Space-Crystal Windtunnel v4.5.0 | 4x Parallel Engines (1920x1080)")
         self.root.configure(bg="#010206")
         self.root.geometry(f"{self.width}x{self.height}")
 
@@ -87,14 +90,14 @@ class PtrcWindtunnelLiveViewer:
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.image_item = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
-        self.hud_bg = self.canvas.create_rectangle(16, 16, 1460, 56, fill="#08101E", outline="#1E3A5F")
+        self.hud_bg = self.canvas.create_rectangle(14, 14, 1890, 56, fill="#08101E", outline="#1E3A5F")
         self.hud_text = self.canvas.create_text(
-            28,
-            36,
+            26,
+            35,
             anchor=tk.W,
             fill="#93C5FD",
             font=("Consolas", 11, "bold"),
-            text="Initialisiere 3D-Windkanal (32x18x8 cm, 60.000 Molekuel-Cluster)...",
+            text="Initialisiere 4x parallele pTRC 3D-Raumkristall-Engines...",
         )
 
         self.root.bind("<space>", self.toggle_pause)
@@ -110,13 +113,18 @@ class PtrcWindtunnelLiveViewer:
         self.root.protocol("WM_DELETE_WINDOW", self.close)
 
     def speed_up(self, _event: tk.Event | None = None) -> None:
-        self.steps_per_frame = min(8, self.steps_per_frame + 1)
+        self.sub_steps_per_frame = min(137, self.sub_steps_per_frame + 1)
 
     def slow_down(self, _event: tk.Event | None = None) -> None:
-        self.steps_per_frame = max(1, self.steps_per_frame - 1)
+        self.sub_steps_per_frame = max(1, self.sub_steps_per_frame - 1)
 
     def toggle_pause(self, _event: tk.Event | None = None) -> None:
-        self.paused = not self.paused
+        if not self.paused:
+            self.paused = True
+            self.pause_started = time.perf_counter()
+        else:
+            self.paused = False
+            self.paused_total += time.perf_counter() - self.pause_started
 
     def toggle_fullscreen(self, _event: tk.Event | None = None) -> None:
         self.fullscreen = not self.fullscreen
@@ -125,29 +133,48 @@ class PtrcWindtunnelLiveViewer:
     def reset_universe(self, _event: tk.Event | None = None) -> None:
         self.seed = (self.seed + 137210) ^ 0x5A5A137
         self.lib.ptrc_gfx_init(ctypes.byref(self.ctx), self.seed)
+        self.start_time = time.perf_counter()
+        self.paused_total = 0.0
+
+    @staticmethod
+    def _format_elapsed(seconds: float) -> str:
+        total_s = int(seconds)
+        hrs = total_s // 3600
+        mins = (total_s % 3600) // 60
+        secs = total_s % 60
+        return f"{hrs:02d}:{mins:02d}:{secs:02d}"
 
     def update_loop(self) -> None:
         if not self.paused:
             t0 = time.perf_counter()
+            elapsed = max(0.001, t0 - self.start_time - self.paused_total)
 
-            for _ in range(self.steps_per_frame):
-                self.lib.ptrc_gfx_step_takt(ctypes.byref(self.ctx))
+            load_divisor = 1
+            if self.ctx.render_interval_takts > 137:
+                load_divisor = self.ctx.render_interval_takts // 137
+            effective_steps = max(1, self.sub_steps_per_frame // load_divisor)
+
+            for _ in range(effective_steps):
+                self.lib.ptrc_gfx_step_takt_parallel(ctypes.byref(self.ctx))
 
             rc = self.lib.ptrc_gfx_render_observer_rgb24(
                 ctypes.byref(self.ctx), self.width, self.height, self.rgb_ptr
             )
-            self.photo.configure(data=bytes(self.ppm_buf))
+
+            new_photo = tk.PhotoImage(width=self.width, height=self.height, data=bytes(self.ppm_buf))
+            self.canvas.itemconfigure(self.image_item, image=new_photo)
+            self.photo = new_photo
 
             dt_ms = (time.perf_counter() - t0) * 1000.0
             fps = 1000.0 / dt_ms if dt_ms > 0.0 else 0.0
-            status_str = "EVENT-HORIZON STALL" if rc == PTRC_RENDER_STALL else f"INTERVALL {self.ctx.render_interval_takts}T"
+            takts_per_sec = self.ctx.takt_counter / elapsed
+            status_str = "STALL" if rc == PTRC_RENDER_STALL else f"INT:{self.ctx.render_interval_takts}T"
 
             self.canvas.itemconfigure(
                 self.hud_text,
                 text=(
-                    f"3D-WINDKANAL 32x18x8cm | {PTRC_WIND_AGENTS:,} AGENTEN | "
-                    f"TAKT: {self.ctx.takt_counter:,} ({self.steps_per_frame}x) | "
-                    f"LAST: {self.ctx.active_load} | {status_str} | "
+                    f"ZEIT: {self._format_elapsed(elapsed)} | TAKTE: {self.ctx.takt_counter:,} ({takts_per_sec:.1f} T/s) | "
+                    f"ENGINES: {PTRC_PARALLEL_ENGINES}x | LAST: {self.ctx.active_load} ({status_str}) | "
                     f"KOLLISIONEN: {self.ctx.deflection_count:,} | {dt_ms:.1f} ms ({fps:.1f} FPS)"
                 ),
             )
@@ -166,6 +193,5 @@ class PtrcWindtunnelLiveViewer:
 
 
 if __name__ == "__main__":
-    viewer = PtrcWindtunnelLiveViewer(FULL_HD_WIDTH, FULL_HD_HEIGHT)
+    viewer = PtrcFullHdLiveObserver(FULL_HD_WIDTH, FULL_HD_HEIGHT)
     sys.exit(viewer.run())
-
