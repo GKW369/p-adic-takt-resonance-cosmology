@@ -27,12 +27,11 @@
 extern "C" {
 #endif
 
-/* ==============================================================================
- * 3D-WINDKANAL & 144-FACETTEN RAUMKRISTALL-KONSTANTEN (32cm x 18cm x 8cm, Z \ {0})
- * ============================================================================== */
 #define PTRC_GFX_FACETS             144U
 #define PTRC_GFX_JUNCTIONS          24U
 #define PTRC_GFX_MEM_FACETS         120U
+#define PTRC_GFX_SHELL_12           12U
+#define PTRC_GFX_CLUSTER_13         13U
 #define PTRC_GFX_STABLE_ELEMENTS    81U
 #define PTRC_GFX_PRIME_RINGS        16U
 #define PTRC_GFX_PRIMORIAL_210      210U
@@ -40,19 +39,17 @@ extern "C" {
 #define PTRC_GFX_INVARIANT_156      156
 #define PTRC_GFX_DEPTH_1414         1414
 
-/* Windkanal-Halbachsen in nullfreien Kristall-Einheiten (1 mm = 60 Einheiten)
- * Breite: 32 cm (-960..+960) | Hoehe: 18 cm (-540..+540) | Tiefe: 8 cm (-240..+240) */
+#define PTRC_PARALLEL_ENGINES       4U
+
 #define PTRC_TUNNEL_HALF_X          960
 #define PTRC_TUNNEL_HALF_Y          540
 #define PTRC_TUNNEL_HALF_Z          240
 
-/* 3D-Kristallpyramide im linken Drittel (X = -320, Hoehe = 540, Halbbasis = 192) */
 #define PTRC_PYRAMID_CENTER_X       (-320)
 #define PTRC_PYRAMID_HALF_BASE      192
 #define PTRC_PYRAMID_HEIGHT         540
 #define PTRC_PYRAMID_ROT_CYCLE      3288U
 
-/* 3D-Kristallkugel (ca. 2/3 der Pyramide) im oberen Drittel rechts nahe der Mitte */
 #define PTRC_SPHERE_CENTER_X        260
 #define PTRC_SPHERE_CENTER_Y        (-220)
 #define PTRC_SPHERE_CENTER_Z        (-15)
@@ -99,6 +96,7 @@ typedef struct {
 
 int  ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed);
 int  ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx);
+int  ptrc_gfx_step_takt_parallel(ptrc_gfx_ctx_t *ctx);
 int  ptrc_gfx_evaluate_observer_sync(ptrc_gfx_ctx_t *ctx);
 int  ptrc_gfx_render_observer_rgb24(ptrc_gfx_ctx_t *ctx, uint32_t width, uint32_t height, uint8_t *rgb_out);
 void ptrc_gfx_wipe(ptrc_gfx_ctx_t *ctx);
