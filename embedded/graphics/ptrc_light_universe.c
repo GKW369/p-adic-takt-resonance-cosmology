@@ -448,10 +448,11 @@ static inline void ptrc_splat_hex_crystal(
     int32_t px = ((sx + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
     int32_t py = ((sy + PTRC_TUNNEL_HALF_Y) * (int32_t)height) / (PTRC_TUNNEL_HALF_Y * 2);
 
-    static const ptrc_dir3_t hex_offsets = {
+    static const ptrc_dir3_t hex_offsets[7U] = {
         { 0,  0, 0}, {-1,  0, 0}, { 1,  0, 0},
         {-1, -1, 0}, { 1,  1, 0}, { 0, -1, 0}, { 0,  1, 0}
     };
+
 
     uint32_t count = (blend_mode == 0) ? 7U : ((wz < -60) ? 7U : 3U);
     for (uint32_t k = 0U; k < count; k++) {
