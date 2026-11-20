@@ -483,3 +483,115 @@ class PtrcGfxContext:
         else:
             self.observer_sub_takt += 1
         return PTRC_GFX_OK
+
+    def evaluate_observer_sync(self) -> int:
+        if self.active_load >= 2600:
+            self.render_interval_takts = 0
+            self.render_status = PTRC_RENDER_STALL
+            return PTRC_RENDER_STALL
+        if self.active_load >= 1900:
+            self.render_interval_takts = PTRC_GFX_TAKT_137 * 4
+        elif self.active_load >= 1350:
+            self.render_interval_takts = PTRC_GFX_TAKT_137 * 2
+        else:
+            self.render_interval_takts = PTRC_GFX_TAKT_137
+
+        if (self.takt_counter % self.render_interval_takts) == 0:
+            self.last_render_takt = self.takt_counter
+            self.render_status = PTRC_RENDER_READY
+        else:
+            self.render_status = PTRC_RENDER_WAIT
+        return self.render_status
+
+    def render_observer_rgb24(self, width: int, height: int) -> bytes:
+        total_pixels = width * height
+        z_buf = [1000 for _ in range(total_pixels)]
+        out = bytearray(b"\x01\x02\x06" * total_pixels)
+        if self.render_status == PTRC_RENDER_STALL:
+            return bytes(out)
+
+        rot_u, rot_v = ptrc_get_smooth_rotation(self.pyramid_angle_idx)
+        half_h = PTRC_PYRAMID_HEIGHT >> 1
+        step = 2
+
+        for ty in range(-half_h, half_h + 1, step):
+            ny = ptrc_z_no_zero(ty)
+            hw = max(1, ptrc_c_div((ty + half_h) * PTRC_PYRAMID_HALF_BASE, PTRC_PYRAMID_HEIGHT))
+            fcc_shift = (ty >> 1) & 1
+            for s in range(-hw + fcc_shift, hw + 1, step):
+                ns = ptrc_z_no_zero(s)
+                is_edge = abs(abs(s) - hw) <= step or ty <= (-half_h + step) or ty >= (half_h - step)
+                for wall in range(4):
+                    if wall == 0:
+                        lx, lz, wr, wg, wb = ns, -hw, 215, 165, 55
+                    elif wall == 1:
+                        lx, lz, wr, wg, wb = hw, ns, 185, 138, 45
+                    elif wall == 2:
+                        lx, lz, wr, wg, wb = ns, hw, 145, 105, 35
+                    else:
+                        lx, lz, wr, wg, wb = -hw, ns, 175, 130, 42
+                    if is_edge:
+                        wr, wg, wb = 252, 220, 115
+
+                    rx = ptrc_c_rshift(lx * rot_u + lz * rot_v, 10)
+                    rz = ptrc_c_rshift(-lx * rot_v + lz * rot_u, 10)
+                    wy = ptrc_c_rshift(ny * 951 + rz * 309, 10)
+                    wz = ptrc_c_rshift(-ny * 309 + rz * 951, 10)
+                    wx = rx + PTRC_PYRAMID_CENTER_X
+                    _splat_cluster_1_plus_12(out, z_buf, width, height, wx, wy, wz, wr, wg, wb, 0)
+
+        base_hw = PTRC_PYRAMID_HALF_BASE
+        for bz in range(-base_hw, base_hw + 1, step):
+            nbz = ptrc_z_no_zero(bz)
+            fcc_shift = (bz >> 1) & 1
+            for bx in range(-base_hw + fcc_shift, base_hw + 1, step):
+                nbx = ptrc_z_no_zero(bx)
+                is_border = abs(abs(bx) - base_hw) <= step or abs(abs(bz) - base_hw) <= step
+                br, bg, bb = (252, 220, 115) if is_border else (115, 84, 30)
+                rx = ptrc_c_rshift(nbx * rot_u + nbz * rot_v, 10)
+                rz = ptrc_c_rshift(-nbx * rot_v + nbz * rot_u, 10)
+                wy = ptrc_c_rshift(half_h * 951 + rz * 309, 10)
+                wz = ptrc_c_rshift(-half_h * 309 + rz * 951, 10)
+                wx = rx + PTRC_PYRAMID_CENTER_X
+                _splat_cluster_1_plus_12(out, z_buf, width, height, wx, wy, wz, br, bg, bb, 0)
+
+        r_sph = PTRC_SPHERE_RADIUS
+        r_sq = r_sph * r_sph
+        r_inner_sq = (r_sph - 5) * (r_sph - 5)
+        for ly in range(-r_sph, r_sph + 1, 4):
+            ny = ptrc_z_no_zero(ly)
+            fcc_y = (ly >> 1) & 1
+            for lz in range(-r_sph + fcc_y, r_sph + 1, 4):
+                nz = ptrc_z_no_zero(lz)
+                yz_sq = ny * ny + nz * nz
+                if yz_sq > r_sq:
+                    continue
+                for lx in range(-r_sph, r_sph + 1, 4):
+                    nx = ptrc_z_no_zero(lx)
+                    q = yz_sq + nx * nx
+                    if q > r_sq or q < r_inner_sq:
+                        continue
+
+                    rx = ptrc_c_rshift(nx * rot_u - nz * rot_v, 10)
+                    rz = ptrc_c_rshift(nx * rot_v + nz * rot_u, 10)
+                    light = max(55, min(250, 155 - ptrc_c_rshift(rx + ny - rz, 3)))
+                    is_ring = abs(ny) <= 4 or abs(nx) <= 4
+                    cr = 140 if is_ring else ((light * 3) >> 3)
+                    cg = 245 if is_ring else ((light * 7) >> 3)
+                    cb = 255 if is_ring else light
+
+                    _splat_cluster_1_plus_12(
+                        out, z_buf, width, height,
+                        rx + PTRC_SPHERE_CENTER_X,
+                        ny + PTRC_SPHERE_CENTER_Y,
+                        rz + PTRC_SPHERE_CENTER_Z,
+                        cr, cg, cb, 0,
+                    )
+
+        for ag in self.agents:
+            z_depth = ag.z
+            depth_shade = max(50, min(255, 245 - ((z_depth + PTRC_TUNNEL_HALF_Z) >> 2)))
+            r, g, b = ptrc_transpose_wavelength_to_rgb(ag.state_byte, depth_shade)
+            _splat_cluster_1_plus_12(out, z_buf, width, height, ag.x, ag.y, z_depth, r, g, b, 1)
+
+        return bytes(out)
