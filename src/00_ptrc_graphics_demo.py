@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.1
+# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.5.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,85 +17,64 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
-r"""
-Observer Universe Windtunnel Full-HD 1080p Render & 137-Takt Epoch Demo.
-File: src/00_ptrc_graphics_demo.py
+"""
+3D-Raumkristall-Demo (v4.5.0) mit lastabhaengigem 137-Takt-Beobachter-Render
+und optionaler nativer C11-Full-HD-Beschleunigung (1920x1080) ohne 0x00-Bytes.
 """
 
 from __future__ import annotations
 
 import ctypes
-import pathlib
+import sys
+import tempfile
 import time
+from pathlib import Path
 
-from ptrc_light_universe import (
-    PTRC_GFX_AGENT_COUNT,
-    PTRC_GFX_CRYSTAL_RAD,
-    PTRC_GFX_FACETS,
-    PTRC_GFX_FREE_FACETS,
-    PTRC_GFX_JUNCTIONS,
-    PTRC_GFX_OK,
-    PTRC_GFX_TAKT_137,
-    PtrcGfxContext,
-    _CGfxCtx,
-    load_c_gfx_library,
-    write_ppm_rgb24,
-)
+from ptrc_light_universe import PTRC_RENDER_READY, PTRC_RENDER_STALL, PtrcGfxContext
+
+# Importiert die C11-Bridge aus dem Paritaetstest fuer Full-HD-Geschwindigkeit
+from importlib import import_module
+
+parity_mod = import_module("00_test_ptrc_graphics_parity")
 
 
-def main() -> None:
-    print("===============================================================================")
-    print("  pTRC OBSERVER WINDTUNNEL v4.1 — 60,000-AGENT 1+12 CRYSTAL LATTICE (Z \\ {0})")
-    print(f"  Crystal  : {PTRC_GFX_FACETS} Facets (Radius {PTRC_GFX_CRYSTAL_RAD}) | {PTRC_GFX_JUNCTIONS} Junctions | {PTRC_GFX_FREE_FACETS} Memory")
-    print(f"  Dynamics : {PTRC_GFX_AGENT_COUNT} Agents | 1 Takt = Light Speed | Render Every {PTRC_GFX_TAKT_137} Takts")
-    print("===============================================================================")
+def save_ppm_p6(path: Path, width: int, height: int, rgb_bytes: bytes) -> None:
+    header = f"P6\n{width} {height}\n255\n".encode("ascii")
+    path.write_bytes(header + rgb_bytes)
 
-    seed = 137210144
-    lib = load_c_gfx_library()
-    root = pathlib.Path(__file__).resolve().parent.parent
-    out_dir = root / "build"
+
+def run_demo(width: int = 1920, height: int = 1080, steps: int = 274) -> int:
+    out_dir = Path(__file__).resolve().parent.parent / "build" / "observer_frames"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    if lib is not None:
-        c_ctx = _CGfxCtx()
-        lib.ptrc_gfx_init(ctypes.byref(c_ctx), seed)
+    with tempfile.TemporaryDirectory() as tmp:
+        lib = parity_mod.build_shared_lib(Path(tmp))
+        ctx = parity_mod.CPtrcGfxCtx()
+        lib.ptrc_gfx_init(ctypes.byref(ctx), 137210144)
 
-        # Advance 1 full Observer Epoch (137 light-speed takts)
-        t_ep0 = time.perf_counter_ns()
-        rc_ep = lib.ptrc_gfx_advance_observer_epoch(ctypes.byref(c_ctx))
-        t_ep1 = time.perf_counter_ns()
-        assert rc_ep == PTRC_GFX_OK
-        epoch_us = (t_ep1 - t_ep0) // 1000
+        frame_buf = (ctypes.c_uint8 * (width * height * 3))()
+        rendered_frames = 0
 
-        # Render Full-HD 1920x1080 Observer View at 137-Takt Pulse
-        fhd_w, fhd_h = 1920, 1080
-        fhd_buf = (ctypes.c_uint8 * (fhd_w * fhd_h * 3))()
-        t_ren0 = time.perf_counter_ns()
-        rc_ren = lib.ptrc_gfx_render_frame_rgb24(ctypes.byref(c_ctx), fhd_w, fhd_h, fhd_buf)
-        t_ren1 = time.perf_counter_ns()
-        assert rc_ren == PTRC_GFX_OK
+        t0 = time.perf_counter()
+        for _ in range(steps):
+            lib.ptrc_gfx_step_takt(ctypes.byref(ctx))
+            if ctx.render_status == PTRC_RENDER_READY:
+                lib.ptrc_gfx_render_observer_rgb24(ctypes.byref(ctx), width, height, frame_buf)
+                frame_path = out_dir / f"ptrc_crystal_takt_{ctx.last_render_takt:05d}.ppm"
+                save_ppm_p6(frame_path, width, height, bytes(frame_buf))
+                rendered_frames += 1
+            elif ctx.render_status == PTRC_RENDER_STALL:
+                print(f"[EVENT HORIZON] Takt {ctx.takt_counter}: Render-Stopp unter Volllast ({ctx.active_load})")
 
-        ren_us = (t_ren1 - t_ren0) // 1000
-        fhd_bytes = bytes(fhd_buf)
-        ppm_path = out_dir / "ptrc_light_universe_1080p.ppm"
-        write_ppm_rgb24(ppm_path, fhd_w, fhd_h, fhd_bytes)
+        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+        lib.ptrc_gfx_wipe(ctypes.byref(ctx))
 
-        print(f" + Native C11 Kernel    : ACTIVE (sizeof(ctx)={ctypes.sizeof(c_ctx)} bytes, Zero malloc)")
-        print(f" + 137-Takt Light Epoch : {PTRC_GFX_AGENT_COUNT} agents x 137 takts in {epoch_us} us (Pulses: {c_ctx.mirror_pulses})")
-        print(f" + Full-HD 1080p Render : {fhd_w}x{fhd_h} in {ren_us} us -> {ppm_path} (0x00 bytes: {fhd_bytes.count(0)})")
-        print(f" + Active Lattice Hits  : {c_ctx.active_hits} (60,000 Agents + Rotating 1+12 Pyramid)")
-        lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
-    else:
-        py_ctx = PtrcGfxContext(seed=seed)
-        py_ctx.advance_observer_epoch()
-        w, h = 640, 360
-        frame = py_ctx.render_frame_rgb24(w, h)
-        ppm_path = out_dir / "ptrc_light_universe_preview.ppm"
-        write_ppm_rgb24(ppm_path, w, h, frame)
-        print(f" + Python Reference     : 137-Takt Epoch -> {ppm_path}")
-
-    print("===============================================================================")
+        print(
+            f"[DONE] {steps} Takte in {elapsed_ms:.2f} ms | Aufloesung={width}x{height} | "
+            f"Gerenderte Beobachter-Frames={rendered_frames} -> {out_dir}"
+        )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(run_demo())
