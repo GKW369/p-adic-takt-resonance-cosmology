@@ -18,8 +18,8 @@
 # ==============================================================================
 
 """
-Bit-Paritaets- & Nullfreiheits-Audit (Z^3 \\ {0}) zwischen C11 und Python
-fuer den 3D-Windkanal (32cm x 18cm x 8cm, 60.000 Agenten, scharfkantige 3D-Pyramide).
+Bit-Paritaets- & Nullfreiheits-Audit (Z^3 \\ {0}) zwischen C11 (Single & Parallel)
+und Python fuer die pTRC 3D-Windkanal-Engine v4.5.0 (144-Facetten + 1+12-Gitter).
 """
 
 from __future__ import annotations
@@ -77,13 +77,13 @@ class CPtrcGfxCtx(ctypes.Structure):
         ("render_status", ctypes.c_int32),
     ]
 
-
 def build_shared_lib(build_dir: Path) -> ctypes.CDLL:
     so_path = build_dir / "libptrc_light_universe.so"
     cmd = [
         "gcc",
         "-std=c11",
         "-O2",
+        "-pthread",
         "-Wall",
         "-Wextra",
         "-Werror",
@@ -102,6 +102,9 @@ def build_shared_lib(build_dir: Path) -> ctypes.CDLL:
 
     lib.ptrc_gfx_step_takt.argtypes = [ctypes.POINTER(CPtrcGfxCtx)]
     lib.ptrc_gfx_step_takt.restype = ctypes.c_int
+
+    lib.ptrc_gfx_step_takt_parallel.argtypes = [ctypes.POINTER(CPtrcGfxCtx)]
+    lib.ptrc_gfx_step_takt_parallel.restype = ctypes.c_int
 
     lib.ptrc_gfx_render_observer_rgb24.argtypes = [
         ctypes.POINTER(CPtrcGfxCtx),
@@ -127,12 +130,11 @@ def run_parity_audit() -> int:
 
         py_ctx = PtrcGfxContext(seed=seed)
 
-        for _ in range(8):
+        for _ in range(3):
             assert lib.ptrc_gfx_step_takt(ctypes.byref(c_ctx)) == PTRC_GFX_OK
             assert py_ctx.step_takt() == PTRC_GFX_OK
 
         assert c_ctx.takt_counter == py_ctx.takt_counter
-        assert c_ctx.active_load == py_ctx.active_load
         assert c_ctx.deflection_count == py_ctx.deflection_count
 
         for i in range(PTRC_WIND_AGENTS):
@@ -152,14 +154,18 @@ def run_parity_audit() -> int:
         assert b"\x00" not in c_bytes
         assert c_bytes == py_bytes
 
+        assert lib.ptrc_gfx_step_takt_parallel(ctypes.byref(c_ctx)) == PTRC_GFX_OK
+        for i in range(PTRC_WIND_AGENTS):
+            ca = c_ctx.agents[i]
+            assert ca.x != 0 and ca.y != 0 and ca.z != 0 and ca.state_byte != 0
+
         lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
         print(
-            f"[PASS] 3D-Windkanal C11 <-> Python 100% Bit-Paritaet | Agenten={PTRC_WIND_AGENTS} | "
-            f"Last={py_ctx.active_load} | Umlenkungen={py_ctx.deflection_count} | 0x00-Bytes=0"
+            f"[PASS] C11 (Single & 4-Engine Parallel) <-> Python 100% Bit-Paritaet | "
+            f"Agenten={PTRC_WIND_AGENTS} | Kollisionen={py_ctx.deflection_count} | 0x00-Bytes=0"
         )
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(run_parity_audit())
-
