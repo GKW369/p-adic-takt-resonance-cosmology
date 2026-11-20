@@ -225,15 +225,15 @@ class PtrcGfxContext:
         self.agent_count = agent_count
         rng = ptrc_u64_no_zero((seed ^ 614889782588491410) & U64_MASK)
         self.prime_rings: List[int] = list(PTRC_GFX_RINGS)
-        self.sponge: List[int] = [-1] * PTRC_GFX_FACETS
+        self.sponge: List[int] = [-1 for _ in range(PTRC_GFX_FACETS)]
 
         for f in range(PTRC_GFX_FACETS):
             rng = ptrc_u64_no_zero(((rng * 137 + (f + 1) * 211) & U64_MASK) ^ (rng >> 13))
             raw = int(rng % PTRC_GFX_PRIMORIAL_210) - 105
             self.sponge[f] = ptrc_z_no_zero(raw)
 
-        self.cell_impulse: List[int] = * PTRC_OCCUPANCY_SLOTS
-        self.cell_density: List[int] = * PTRC_OCCUPANCY_SLOTS
+        self.cell_impulse: List[int] = [1 for _ in range(PTRC_OCCUPANCY_SLOTS)]
+        self.cell_density: List[int] = [1 for _ in range(PTRC_OCCUPANCY_SLOTS)]
 
         self.agents: List[PtrcWindAgent] = []
         span_x = PTRC_TUNNEL_HALF_X * 2
@@ -298,8 +298,8 @@ class PtrcGfxContext:
         rot_u = PTRC_CLOCK24_U[rot_idx]
         rot_v = PTRC_CLOCK24_V[rot_idx]
 
-        self.cell_impulse = * PTRC_OCCUPANCY_SLOTS
-        self.cell_density = * PTRC_OCCUPANCY_SLOTS
+        self.cell_impulse = [1 for _ in range(PTRC_OCCUPANCY_SLOTS)]
+        self.cell_density = [1 for _ in range(PTRC_OCCUPANCY_SLOTS)]
         collisions = 0
         pyramid_hits = 0
 
@@ -436,7 +436,7 @@ class PtrcGfxContext:
 
     def render_observer_rgb24(self, width: int, height: int) -> bytes:
         total_pixels = width * height
-        z_buf = * total_pixels
+        z_buf = [1000 for _ in range(total_pixels)]
         out = bytearray(b"\x01\x02\x06" * total_pixels)
         if self.render_status == PTRC_RENDER_STALL:
             return bytes(out)
