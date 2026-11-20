@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/* ==============================================================================
+ * 3D-WINDKANAL & 144-FACETTEN RAUMKRISTALL-KONSTANTEN (32cm x 18cm x 8cm, Z \ {0})
+ * ============================================================================== */
 #define PTRC_GFX_FACETS             144U
 #define PTRC_GFX_JUNCTIONS          24U
 #define PTRC_GFX_MEM_FACETS         120U
@@ -37,15 +40,18 @@ extern "C" {
 #define PTRC_GFX_INVARIANT_156      156
 #define PTRC_GFX_DEPTH_1414         1414
 
-/* 3D-Windkanal: 32cm x 18cm x 8cm in nullfreien Kristall-Einheiten (Z^3 \ {0}) */
+/* Windkanal-Halbachsen in nullfreien Kristall-Einheiten (1 mm = 60 Einheiten)
+ * Breite: 32 cm (-960..+960) | Hoehe: 18 cm (-540..+540) | Tiefe: 8 cm (-240..+240) */
 #define PTRC_TUNNEL_HALF_X          960
 #define PTRC_TUNNEL_HALF_Y          540
 #define PTRC_TUNNEL_HALF_Z          240
 
-/* 4-seitige 3D-Pyramide im linken Drittel (X = -320), raeumlich mittig (Y = 1, Z = 1) */
+/* Doppelt so grosse 3D-Kristallpyramide im linken Drittel (X = -320)
+ * Hoehe: 9.0 cm (540 Einheiten) | Basis: 6.4 cm x 6.4 cm (Halbbasis = 192) */
 #define PTRC_PYRAMID_CENTER_X       (-320)
-#define PTRC_PYRAMID_HALF_BASE      120
-#define PTRC_PYRAMID_HEIGHT         220
+#define PTRC_PYRAMID_HALF_BASE      192
+#define PTRC_PYRAMID_HEIGHT         540
+#define PTRC_PYRAMID_ROT_CYCLE      3288U   /* 24 * 137 feine Sub-Winkelstufen pro Umdrehung */
 
 #define PTRC_WIND_AGENTS            60000U
 #define PTRC_OCCUPANCY_SLOTS        65536U
@@ -77,7 +83,7 @@ typedef struct {
     uint64_t          takt_counter;
     uint32_t          clock_phase_24;
     uint32_t          observer_sub_takt;
-    uint32_t          pyramid_angle_idx;
+    uint32_t          pyramid_angle_idx;    /* 0..3287 (24 * 137 Sub-Rotation) */
     uint32_t          active_load;
     uint32_t          render_interval_takts;
     uint32_t          last_render_takt;
