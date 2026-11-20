@@ -26,21 +26,6 @@ typedef struct {
     int8_t dz;
 } ptrc_dir3_t;
 
-typedef struct {
-    int32_t x;
-    int32_t y;
-    int32_t z;
-} ptrc_vec3_t;
-
-typedef struct {
-    uint8_t i0;
-    uint8_t i1;
-    uint8_t i2;
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-} ptrc_tri_face_t;
-
 static const uint32_t PTRC_GFX_RINGS[PTRC_GFX_PRIME_RINGS] = {
     11U, 13U, 17U, 19U, 23U, 29U, 37U, 41U,
     43U, 47U, 53U, 59U, 61U, 67U, 71U, 73U
@@ -98,6 +83,17 @@ static inline int32_t ptrc_plichta_move(int32_t pos, int32_t delta) {
     return nxt;
 }
 
+static inline void ptrc_get_smooth_rotation(uint32_t angle_step, int32_t *rot_u, int32_t *rot_v) {
+    uint32_t step = angle_step % PTRC_PYRAMID_ROT_CYCLE;
+    uint32_t phase = (step / PTRC_GFX_TAKT_137) % PTRC_GFX_JUNCTIONS;
+    uint32_t next_phase = (phase + 1U) % PTRC_GFX_JUNCTIONS;
+    int32_t sub = (int32_t)(step % PTRC_GFX_TAKT_137);
+    int32_t inv_sub = (int32_t)PTRC_GFX_TAKT_137 - sub;
+
+    *rot_u = (PTRC_CLOCK24_U[phase] * inv_sub + PTRC_CLOCK24_U[next_phase] * sub) / (int32_t)PTRC_GFX_TAKT_137;
+    *rot_v = (PTRC_CLOCK24_V[phase] * inv_sub + PTRC_CLOCK24_V[next_phase] * sub) / (int32_t)PTRC_GFX_TAKT_137;
+}
+
 static inline uint32_t ptrc_fcc_slot_hash(int32_t x, int32_t y, int32_t z) {
     uint32_t qx = (uint32_t)((x + 1024) / 4);
     uint32_t qy = (uint32_t)((y + 1024) / 4);
@@ -128,7 +124,7 @@ static int ptrc_point_in_square_pyramid(
     int32_t dy = py;
     int32_t dz = pz;
 
-    if (ptrc_abs32(dx) > 190 || ptrc_abs32(dy) > 190 || ptrc_abs32(dz) > 190) {
+    if (ptrc_abs32(dx) > 320 || ptrc_abs32(dy) > 320 || ptrc_abs32(dz) > 320) {
         return 0;
     }
 
@@ -247,10 +243,9 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
         ctx->mirror_pulses++;
     }
 
-    uint32_t rot_idx = (uint32_t)((ctx->takt_counter / 4ULL) % PTRC_GFX_JUNCTIONS);
-    ctx->pyramid_angle_idx = rot_idx;
-    int32_t rot_u = PTRC_CLOCK24_U[rot_idx];
-    int32_t rot_v = PTRC_CLOCK24_V[rot_idx];
+    ctx->pyramid_angle_idx = (uint32_t)((ctx->takt_counter * 12ULL) % PTRC_PYRAMID_ROT_CYCLE);
+    int32_t rot_u, rot_v;
+    ptrc_get_smooth_rotation(ctx->pyramid_angle_idx, &rot_u, &rot_v);
 
     for (uint32_t s = 0U; s < PTRC_OCCUPANCY_SLOTS; s++) {
         ctx->cell_impulse[s] = 1U;
@@ -313,13 +308,13 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
         if (ptrc_point_in_square_pyramid(nx, ny, nz, rot_u, rot_v)) {
             pyramid_hits++;
             collisions++;
-            uint32_t j_dir = (a + rot_idx + (uint32_t)ctx->takt_counter) % PTRC_GFX_JUNCTIONS;
+            uint32_t j_dir = (a + (ctx->pyramid_angle_idx / 137U) + (uint32_t)ctx->takt_counter) % PTRC_GFX_JUNCTIONS;
             int32_t jy = (int32_t)PTRC_JUNCTION_DIRS_24[j_dir].dy;
             int32_t jz = (int32_t)PTRC_JUNCTION_DIRS_24[j_dir].dz;
 
             ag->vx = 2;
-            ag->vy = ptrc_z_sym_no_zero(jy * 3 + ((ny >= 0) ? 3 : -3), sym_bit);
-            ag->vz = ptrc_z_sym_no_zero(jz * 3 + ((nz >= 0) ? 3 : -3), sym_bit >> 1U);
+            ag->vy = ptrc_z_sym_no_zero(jy * 4 + ((ny >= 0) ? 4 : -4), sym_bit);
+            ag->vz = ptrc_z_sym_no_zero(jz * 4 + ((nz >= 0) ? 4 : -4), sym_bit >> 1U);
             nx = ptrc_plichta_move((int32_t)ag->x, -2);
             ny = ptrc_plichta_move((int32_t)ag->y, (int32_t)ag->vy);
             nz = ptrc_plichta_move((int32_t)ag->z, (int32_t)ag->vz);
@@ -345,7 +340,7 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
                 }
             } else {
                 collisions++;
-                if (dens >= 3U && nx < (PTRC_PYRAMID_CENTER_X + 60) && ptrc_abs32(ny) < 180) {
+                if (dens >= 3U && nx < (PTRC_PYRAMID_CENTER_X + 100) && ptrc_abs32(ny) < 280) {
                     if (ag->vx > 2) ag->vx--;
                     ag->state_byte = ptrc_encode_1byte_cascade(1U, PTRC_OPTICS_CRYSTALLINE, 18U);
                 }
@@ -354,10 +349,10 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
                 int32_t nvz = (int32_t)ag->vz + (int32_t)PTRC_JUNCTION_DIRS_24[alt_dir].dz;
                 ag->vy = (int16_t)ptrc_z_sym_no_zero(nvy, sym_bit);
                 ag->vz = (int16_t)ptrc_z_sym_no_zero(nvz, sym_bit >> 1U);
-                if (ag->vy > 7) ag->vy = 7;
-                if (ag->vy < -7) ag->vy = -7;
-                if (ag->vz > 7) ag->vz = 7;
-                if (ag->vz < -7) ag->vz = -7;
+                if (ag->vy > 8) ag->vy = 8;
+                if (ag->vy < -8) ag->vy = -8;
+                if (ag->vz > 8) ag->vz = 8;
+                if (ag->vz < -8) ag->vz = -8;
 
                 if (ag->impulse > occ_imp) {
                     ctx->cell_impulse[slot] = ag->impulse;
@@ -408,59 +403,113 @@ int ptrc_gfx_evaluate_observer_sync(ptrc_gfx_ctx_t *ctx) {
     return ctx->render_status;
 }
 
-static inline int32_t ptrc_edge_fn(int32_t ax, int32_t ay, int32_t bx, int32_t by, int32_t cx, int32_t cy) {
-    return (cx - ax) * (by - ay) - (cy - ay) * (bx - ax);
-}
-
-static void ptrc_raster_pyramid_triangle(
+static inline void ptrc_splat_pyramid_crystal(
     uint8_t *rgb_out,
     int16_t *z_buf,
     uint32_t width,
     uint32_t height,
-    int32_t x0, int32_t y0, int32_t z0,
-    int32_t x1, int32_t y1, int32_t z1,
-    int32_t x2, int32_t y2, int32_t z2,
-    uint8_t r, uint8_t g, uint8_t b
+    int32_t wx,
+    int32_t wy,
+    int32_t wz,
+    uint8_t r,
+    uint8_t g,
+    uint8_t b
 ) {
-    int32_t area = ptrc_edge_fn(x0, y0, x1, y1, x2, y2);
-    if (area == 0) return;
+    int32_t persp = 1414 + wz;
+    int32_t sx = (wx * 1414) / persp;
+    int32_t sy = (wy * 1414) / persp;
 
-    int32_t min_x = x0 < x1 ? (x0 < x2 ? x0 : x2) : (x1 < x2 ? x1 : x2);
-    int32_t max_x = x0 > x1 ? (x0 > x2 ? x0 : x2) : (x1 > x2 ? x1 : x2);
-    int32_t min_y = y0 < y1 ? (y0 < y2 ? y0 : y2) : (y1 < y2 ? y1 : y2);
-    int32_t max_y = y0 > y1 ? (y0 > y2 ? y0 : y2) : (y1 > y2 ? y1 : y2);
+    int32_t px = ((sx + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
+    int32_t py = ((sy + PTRC_TUNNEL_HALF_Y) * (int32_t)height) / (PTRC_TUNNEL_HALF_Y * 2);
 
-    if (min_x < 0) min_x = 0;
-    if (min_y < 0) min_y = 0;
-    if (max_x >= (int32_t)width) max_x = (int32_t)width - 1;
-    if (max_y >= (int32_t)height) max_y = (int32_t)height - 1;
-
-    for (int32_t py = min_y; py <= max_y; py++) {
-        for (int32_t px = min_x; px <= max_x; px++) {
-            int32_t w0 = ptrc_edge_fn(x1, y1, x2, y2, px, py);
-            int32_t w1 = ptrc_edge_fn(x2, y2, x0, y0, px, py);
-            int32_t w2 = ptrc_edge_fn(x0, y0, x1, y1, px, py);
-
-            if ((area > 0 && w0 >= 0 && w1 >= 0 && w2 >= 0) ||
-                (area < 0 && w0 <= 0 && w1 <= 0 && w2 <= 0)) {
-                int32_t pz = (w0 * z0 + w1 * z1 + w2 * z2) / area;
-                size_t p_flat = (size_t)py * (size_t)width + (size_t)px;
-                if (pz <= (int32_t)z_buf[p_flat]) {
-                    z_buf[p_flat] = (int16_t)pz;
-                    size_t pix = p_flat * 3U;
-                    int32_t abs_a = ptrc_abs32(area);
-                    int32_t edge_thresh = abs_a >> 5;
-                    if (ptrc_abs32(w0) < edge_thresh || ptrc_abs32(w1) < edge_thresh || ptrc_abs32(w2) < edge_thresh) {
-                        rgb_out[pix + 0U] = 250U;
-                        rgb_out[pix + 1U] = 215U;
-                        rgb_out[pix + 2U] = 110U;
-                    } else {
-                        rgb_out[pix + 0U] = r;
-                        rgb_out[pix + 1U] = g;
-                        rgb_out[pix + 2U] = b;
-                    }
-                }
+    for (int32_t oy = -1; oy <= 2; oy++) {
+        int32_t fpy = py + oy;
+        if (fpy < 0 || fpy >= (int32_t)height) continue;
+        for (int32_t ox = -1; ox <= 2; ox++) {
+            int32_t fpx = px + ox;
+            if (fpx < 0 || fpx >= (int32_t)width) continue;
+            size_t p_flat = (size_t)fpy * (size_t)width + (size_t)fpx;
+            if (wz <= (int32_t)z_buf[p_flat]) {
+                z_buf[p_flat] = (int16_t)wz;
+                size_t pix = p_flat * 3U;
+                rgb_out[pix + 0U] = r;
+                rgb_out[pix + 1U] = g;
+                rgb_out[pix + 2U] = b;
             }
+        }
+    }
+}
+
+static void ptrc_render_crystal_pyramid(
+    uint8_t *rgb_out,
+    int16_t *z_buf,
+    uint32_t width,
+    uint32_t height,
+    int32_t rot_u,
+    int32_t rot_v
+) {
+    int32_t half_h = PTRC_PYRAMID_HEIGHT >> 1;
+    const int32_t step = 4;
+
+    for (int32_t ty = -half_h; ty <= half_h; ty += step) {
+        int32_t ny = ptrc_z_no_zero(ty);
+        int32_t hw = ((ty + half_h) * PTRC_PYRAMID_HALF_BASE) / PTRC_PYRAMID_HEIGHT;
+        if (hw < 1) hw = 1;
+
+        for (int32_t s = -hw; s <= hw; s += step) {
+            int32_t ns = ptrc_z_no_zero(s);
+            int32_t is_edge = (ptrc_abs32(ptrc_abs32(s) - hw) <= step || ty <= (-half_h + step) || ty >= (half_h - step));
+
+            for (int32_t wall = 0; wall < 4; wall++) {
+                int32_t lx, lz;
+                uint8_t wr, wg, wb;
+                if (wall == 0) {
+                    lx = ns; lz = -hw;
+                    wr = 215U; wg = 165U; wb = 55U;
+                } else if (wall == 1) {
+                    lx = hw; lz = ns;
+                    wr = 185U; wg = 138U; wb = 45U;
+                } else if (wall == 2) {
+                    lx = ns; lz = hw;
+                    wr = 145U; wg = 105U; wb = 35U;
+                } else {
+                    lx = -hw; lz = ns;
+                    wr = 175U; wg = 130U; wb = 42U;
+                }
+
+                if (is_edge) {
+                    wr = 252U; wg = 220U; wb = 115U;
+                }
+
+                int32_t rx = (lx * rot_u + lz * rot_v) >> 10;
+                int32_t rz = (-lx * rot_v + lz * rot_u) >> 10;
+                int32_t wy = (ny * 951 + rz * 309) >> 10;
+                int32_t wz = (-ny * 309 + rz * 951) >> 10;
+                int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
+
+                ptrc_splat_pyramid_crystal(rgb_out, z_buf, width, height, wx, wy, wz, wr, wg, wb);
+            }
+        }
+    }
+
+    int32_t base_hw = PTRC_PYRAMID_HALF_BASE;
+    for (int32_t bz = -base_hw; bz <= base_hw; bz += step) {
+        int32_t nbz = ptrc_z_no_zero(bz);
+        for (int32_t bx = -base_hw; bx <= base_hw; bx += step) {
+            int32_t nbx = ptrc_z_no_zero(bx);
+            int32_t is_border = (ptrc_abs32(ptrc_abs32(bx) - base_hw) <= step ||
+                                 ptrc_abs32(ptrc_abs32(bz) - base_hw) <= step);
+            uint8_t br = is_border ? 252U : 115U;
+            uint8_t bg = is_border ? 220U : 84U;
+            uint8_t bb = is_border ? 115U : 30U;
+
+            int32_t rx = (nbx * rot_u + nbz * rot_v) >> 10;
+            int32_t rz = (-nbx * rot_v + nbz * rot_u) >> 10;
+            int32_t wy = (half_h * 951 + rz * 309) >> 10;
+            int32_t wz = (-half_h * 309 + rz * 951) >> 10;
+            int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
+
+            ptrc_splat_pyramid_crystal(rgb_out, z_buf, width, height, wx, wy, wz, br, bg, bb);
         }
     }
 }
@@ -490,59 +539,9 @@ int ptrc_gfx_render_observer_rgb24(
         return PTRC_RENDER_STALL;
     }
 
-    uint32_t rot_idx = ctx->pyramid_angle_idx % PTRC_GFX_JUNCTIONS;
-    int32_t rot_u = PTRC_CLOCK24_U[rot_idx];
-    int32_t rot_v = PTRC_CLOCK24_V[rot_idx];
-
-    int32_t half_b = PTRC_PYRAMID_HALF_BASE;
-    int32_t half_h = PTRC_PYRAMID_HEIGHT >> 1;
-    const ptrc_vec3_t local_verts[] = {
-        {       1, -half_h,       1 },
-        { -half_b,  half_h, -half_b },
-        {  half_b,  half_h, -half_b },
-        {  half_b,  half_h,  half_b },
-        { -half_b,  half_h,  half_b }
-    };
-
-    ptrc_vec3_t scr_pts[sizeof(local_verts) / sizeof(local_verts[0U])];
-    for (size_t v = 0U; v < 5U; v++) {
-        int32_t vx = local_verts[v].x;
-        int32_t vy = local_verts[v].y;
-        int32_t vz = local_verts[v].z;
-
-        int32_t rx = (vx * rot_u + vz * rot_v) >> 10;
-        int32_t rz = (-vx * rot_v + vz * rot_u) >> 10;
-        int32_t wy = (vy * 966 + rz * 259) >> 10;
-        int32_t wz = (-vy * 259 + rz * 966) >> 10;
-        int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
-
-        int32_t persp = 1414 + wz;
-        int32_t sx = (wx * 1414) / persp;
-        int32_t sy = (wy * 1414) / persp;
-
-        scr_pts[v].x = ((sx + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
-        scr_pts[v].y = ((sy + PTRC_TUNNEL_HALF_Y) * (int32_t)height) / (PTRC_TUNNEL_HALF_Y * 2);
-        scr_pts[v].z = wz;
-    }
-
-    const ptrc_tri_face_t faces[] = {
-        {0U, 1U, 2U, 215U, 165U,  55U},
-        {0U, 2U, 3U, 185U, 138U,  45U},
-        {0U, 3U, 4U, 145U, 105U,  35U},
-        {0U, 4U, 1U, 175U, 130U,  42U},
-        {1U, 3U, 2U, 110U,  80U,  28U},
-        {1U, 4U, 3U, 110U,  80U,  28U}
-    };
-    for (size_t f = 0U; f < 6U; f++) {
-        ptrc_tri_face_t tf = faces[f];
-        ptrc_raster_pyramid_triangle(
-            rgb_out, z_buf, width, height,
-            scr_pts[tf.i0].x, scr_pts[tf.i0].y, scr_pts[tf.i0].z,
-            scr_pts[tf.i1].x, scr_pts[tf.i1].y, scr_pts[tf.i1].z,
-            scr_pts[tf.i2].x, scr_pts[tf.i2].y, scr_pts[tf.i2].z,
-            tf.r, tf.g, tf.b
-        );
-    }
+    int32_t rot_u, rot_v;
+    ptrc_get_smooth_rotation(ctx->pyramid_angle_idx, &rot_u, &rot_v);
+    ptrc_render_crystal_pyramid(rgb_out, z_buf, width, height, rot_u, rot_v);
 
     for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
         const ptrc_wind_agent_t *ag = &ctx->agents[a];
