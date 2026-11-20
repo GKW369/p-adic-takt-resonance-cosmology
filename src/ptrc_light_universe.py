@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Tuple
 
 PTRC_GFX_FACETS = 144
@@ -32,9 +32,15 @@ PTRC_GFX_TAKT_137 = 137
 PTRC_GFX_INVARIANT_156 = 156
 PTRC_GFX_DEPTH_1414 = 1414
 
-PTRC_LATTICE_DIM = 16
-PTRC_LATTICE_CELLS = PTRC_LATTICE_DIM ** 3
-PTRC_MAX_IMPULSE_PACKETS = 1024
+PTRC_TUNNEL_HALF_X = 960
+PTRC_TUNNEL_HALF_Y = 540
+PTRC_TUNNEL_HALF_Z = 240
+
+PTRC_PYRAMID_CENTER_X = -320
+PTRC_PYRAMID_RADIUS = 135
+
+PTRC_WIND_AGENTS = 60000
+PTRC_OCCUPANCY_SLOTS = 65536
 
 PTRC_GFX_OK = 1
 PTRC_GFX_ERR = -1
@@ -92,30 +98,19 @@ def ptrc_u64_no_zero(v: int) -> int:
     return 1 if u == 0 else u
 
 
-def ptrc_plichta_step_axis(pos: int, delta: int) -> int:
+def ptrc_plichta_move(pos: int, delta: int) -> int:
     nxt = pos + delta
     if nxt == 0:
         nxt = 1 if delta >= 0 else -1
-    if nxt > 8:
-        nxt = -8 + ((nxt - 9) & 7)
-        if nxt == 0:
-            nxt = -1
-    elif nxt < -8:
-        nxt = 8 - ((-nxt - 9) & 7)
-        if nxt == 0:
-            nxt = 1
     return nxt
 
 
-def ptrc_coord_to_idx(c: int) -> int:
-    return (c + 8) if c < 0 else (c + 7)
-
-
-def ptrc_cell_linear_idx(x: int, y: int, z: int) -> int:
-    ix = ptrc_coord_to_idx(x) & 15
-    iy = ptrc_coord_to_idx(y) & 15
-    iz = ptrc_coord_to_idx(z) & 15
-    return (iz * PTRC_LATTICE_DIM + iy) * PTRC_LATTICE_DIM + ix
+def ptrc_fcc_slot_hash(x: int, y: int, z: int) -> int:
+    qx = int((x + 1024) // 3) & 0xFFFFFFFF
+    qy = int((y + 1024) // 3) & 0xFFFFFFFF
+    qz = int((z + 1024) // 3) & 0xFFFFFFFF
+    h = ((qx * 73856093) ^ (qy * 19349663) ^ (qz * 83492791)) & 0xFFFFFFFF
+    return h & (PTRC_OCCUPANCY_SLOTS - 1)
 
 
 def ptrc_encode_1byte_cascade(cascade_anchor: int, optics_mode: int, wavelength_id: int) -> int:
@@ -125,93 +120,106 @@ def ptrc_encode_1byte_cascade(cascade_anchor: int, optics_mode: int, wavelength_
     return ptrc_u8_no_zero((anc << 7) | (opt << 5) | wl)
 
 
+def ptrc_c_div(a: int, b: int) -> int:
+    return int(a / b)
+
+
+def ptrc_point_in_rotating_pyramid(px: int, py: int, pz: int, rot_u: int, rot_v: int) -> bool:
+    dx = px - PTRC_PYRAMID_CENTER_X
+    dy = py
+    dz = pz
+    if (dx * dx + dy * dy + dz * dz) > (PTRC_PYRAMID_RADIUS * PTRC_PYRAMID_RADIUS):
+        return False
+
+    lx = (dx * rot_u + dz * rot_v) >> 10
+    lz = (-dx * rot_v + dz * rot_u) >> 10
+    ly = (dy * rot_u + lz * rot_v) >> 10
+    fz = (-dy * rot_v + lz * rot_u) >> 10
+
+    lim = ptrc_c_div(PTRC_PYRAMID_RADIUS * 333, 1000)
+    if fz < -lim:
+        return False
+    if (943 * lx - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333):
+        return False
+    if (-471 * lx + 816 * ly - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333):
+        return False
+    if (-471 * lx - 816 * ly - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333):
+        return False
+    return True
+
+
 def ptrc_transpose_wavelength_to_rgb(state_byte: int, depth_shade: int) -> Tuple[int, int, int]:
     wl = state_byte & 0x1F
     opt = (state_byte >> 5) & 3
-    anc = (state_byte >> 7) & 1
-    r = (((wl * 8 + opt * 31 + anc * 23) & 0xFF) * depth_shade) >> 8
-    g = ((((32 - wl) * 7 + opt * 43) & 0xFF) * depth_shade) >> 8
-    b = ((((wl * 13) ^ (opt * 59) ^ (anc * 37)) & 0xFF) * depth_shade) >> 8
+    r = (((wl * 7 + opt * 41) & 0xFF) * depth_shade) >> 8
+    g = ((((32 - wl) * 6 + opt * 37 + 40) & 0xFF) * depth_shade) >> 8
+    b = (((110 + wl * 4 + opt * 23) & 0xFF) * depth_shade) >> 8
     return (1 if r == 0 else r, 1 if g == 0 else g, 1 if b == 0 else b)
 
 
-def _default_facet_mem() -> List[int]:
-    return [1 for _ in range(PTRC_GFX_MEM_FACETS)]
-
-
 @dataclass
-class PtrcCrystalCell:
-    cx: int
-    cy: int
-    cz: int
-    state_byte: int = 1
-    impulse: int = 1
-    observer_cluster: int = 1
-    facet_mem: List[int] = field(default_factory=_default_facet_mem)
-
-
-@dataclass
-class PtrcImpulsePacket:
+class PtrcWindAgent:
     x: int
     y: int
     z: int
-    dir_idx: int
+    vx: int
+    vy: int
+    vz: int
+    state_byte: int
     impulse: int
-    wavelength_id: int
-    element_id: int
-    optics_mode: int
-    cascade_root: int
 
 class PtrcGfxContext:
-    def __init__(self, seed: int = 137210144) -> None:
+    def __init__(self, seed: int = 137210144, agent_count: int = PTRC_WIND_AGENTS) -> None:
+        self.agent_count = agent_count
         rng = ptrc_u64_no_zero((seed ^ 614889782588491410) & U64_MASK)
         self.prime_rings: List[int] = list(PTRC_GFX_RINGS)
-        self.sponge: List[int] = [-1 for _ in range(PTRC_GFX_FACETS)]
+        self.sponge: List[int] = [-1] * PTRC_GFX_FACETS
 
         for f in range(PTRC_GFX_FACETS):
             rng = ptrc_u64_no_zero(((rng * 137 + (f + 1) * 211) & U64_MASK) ^ (rng >> 13))
             raw = int(rng % PTRC_GFX_PRIMORIAL_210) - 105
             self.sponge[f] = ptrc_z_no_zero(raw)
 
-        self.cells: List[PtrcCrystalCell] = []
-        for iz in range(PTRC_LATTICE_DIM):
-            cz = (iz - 8) if iz < 8 else (iz - 7)
-            for iy in range(PTRC_LATTICE_DIM):
-                cy = (iy - 8) if iy < 8 else (iy - 7)
-                for ix in range(PTRC_LATTICE_DIM):
-                    cx = (ix - 8) if ix < 8 else (ix - 7)
-                    self.cells.append(
-                        PtrcCrystalCell(
-                            cx=cx,
-                            cy=cy,
-                            cz=cz,
-                            observer_cluster=((ix + iy + iz) % 24) + 1,
-                        )
-                    )
+        self.cell_impulse: List[int] = [1] * PTRC_OCCUPANCY_SLOTS
+        self.cell_state: List[int] = [1] * PTRC_OCCUPANCY_SLOTS
 
-        self.packets: List[PtrcImpulsePacket] = []
-        for p in range(PTRC_MAX_IMPULSE_PACKETS):
+        self.agents: List[PtrcWindAgent] = []
+        span_x = PTRC_TUNNEL_HALF_X * 2
+        span_y = PTRC_TUNNEL_HALF_Y * 2
+        span_z = PTRC_TUNNEL_HALF_Z * 2
+
+        for a in range(self.agent_count):
             rng = ptrc_u64_no_zero(rng * 6364136223846793005 + 1442695040888963407)
-            sx = int(rng % 16) - 8
-            sy = int((rng >> 8) % 16) - 8
-            sz = int((rng >> 16) % 16) - 8
-            self.packets.append(
-                PtrcImpulsePacket(
-                    x=ptrc_z_no_zero(sx),
-                    y=ptrc_z_no_zero(sy),
-                    z=ptrc_z_no_zero(sz),
-                    dir_idx=p % PTRC_GFX_JUNCTIONS,
-                    impulse=(p % 240) + 10,
-                    wavelength_id=(p % 31) + 1,
-                    element_id=(p % PTRC_GFX_STABLE_ELEMENTS) + 1,
-                    optics_mode=p & 3,
-                    cascade_root=(p >> 3) & 1,
+            rx = int(rng % span_x) - PTRC_TUNNEL_HALF_X
+            ry = int((rng >> 16) % span_y) - PTRC_TUNNEL_HALF_Y
+            rz = int((rng >> 32) % span_z) - PTRC_TUNNEL_HALF_Z
+
+            x = ptrc_z_no_zero(rx)
+            y = ptrc_z_no_zero(ry)
+            z = ptrc_z_no_zero(rz)
+            if ((x + y + z) & 1) != 0:
+                x = ptrc_plichta_move(x, 1)
+
+            wl = (a % 16) + 1
+            opt = (a % 3) + 1
+            self.agents.append(
+                PtrcWindAgent(
+                    x=x,
+                    y=y,
+                    z=z,
+                    vx=6 + (a & 3),
+                    vy=ptrc_z_no_zero(int((rng >> 48) % 3) - 1),
+                    vz=ptrc_z_no_zero(int((rng >> 52) % 3) - 1),
+                    impulse=40 + (a % 180),
+                    state_byte=ptrc_encode_1byte_cascade(a & 1, opt, wl),
                 )
             )
 
         self.takt_counter: int = 1
         self.clock_phase_24: int = 1
-        self.active_load: int = PTRC_MAX_IMPULSE_PACKETS
+        self.observer_sub_takt: int = 1
+        self.pyramid_angle_idx: int = 0
+        self.active_load: int = 1024
         self.render_interval_takts: int = PTRC_GFX_TAKT_137
         self.last_render_takt: int = 1
         self.deflection_count: int = 1
@@ -233,67 +241,90 @@ class PtrcGfxContext:
                 self.sponge[f] = ptrc_z_no_zero(~self.sponge[f])
             self.mirror_pulses += 1
 
-        for cell in self.cells:
-            cell.impulse = 1
+        rot_idx = (self.takt_counter // 6) % PTRC_GFX_JUNCTIONS
+        self.pyramid_angle_idx = rot_idx
+        rot_u = PTRC_CLOCK24_U[rot_idx]
+        rot_v = PTRC_CLOCK24_V[rot_idx]
 
+        self.cell_impulse = [1] * PTRC_OCCUPANCY_SLOTS
         collisions = 0
-        occupied_cells = 0
+        pyramid_hits = 0
 
-        for p_idx, pkt in enumerate(self.packets):
-            d_idx = pkt.dir_idx % PTRC_GFX_JUNCTIONS
-            dx, dy, dz = PTRC_JUNCTION_DIRS_24[d_idx]
-            nx = ptrc_plichta_step_axis(pkt.x, dx)
-            ny = ptrc_plichta_step_axis(pkt.y, dy)
-            nz = ptrc_plichta_step_axis(pkt.z, dz)
+        for a, ag in enumerate(self.agents):
+            nx = ptrc_plichta_move(ag.x, ag.vx)
+            ny = ptrc_plichta_move(ag.y, ag.vy)
+            nz = ptrc_plichta_move(ag.z, ag.vz)
 
-            cell = self.cells[ptrc_cell_linear_idx(nx, ny, nz)]
-            if cell.impulse == 1:
-                cell.impulse = pkt.impulse
-                cell.state_byte = ptrc_encode_1byte_cascade(
-                    pkt.cascade_root, pkt.optics_mode, pkt.wavelength_id
-                )
-                slot = (self.takt_counter + p_idx) % (PTRC_GFX_MEM_FACETS - 2)
-                cell.facet_mem[slot] = ptrc_u8_no_zero(pkt.element_id)
-                cell.facet_mem[slot + 1] = ptrc_u8_no_zero(((pkt.element_id * 3) % 251) + 1)
-                pkt.x, pkt.y, pkt.z = nx, ny, nz
-                occupied_cells += 1
-            else:
+            if nx > PTRC_TUNNEL_HALF_X:
+                nx = -PTRC_TUNNEL_HALF_X + int((a + self.takt_counter) & 15)
+                if nx == 0:
+                    nx = -1
+                ag.vx = 6 + int((a + p_ring) & 3)
+                ag.vy = ptrc_z_no_zero((a % 3) - 1)
+                ag.vz = ptrc_z_no_zero(((a >> 2) % 3) - 1)
+                ag.state_byte = ptrc_encode_1byte_cascade(a & 1, 1, (a % 12) + 1)
+            elif nx < -PTRC_TUNNEL_HALF_X:
+                nx = -PTRC_TUNNEL_HALF_X + 1
+                ag.vx = 6
+
+            if ny > PTRC_TUNNEL_HALF_Y:
+                ny = PTRC_TUNNEL_HALF_Y - 1
+                ag.vy = -abs(ag.vy)
+            elif ny < -PTRC_TUNNEL_HALF_Y:
+                ny = -PTRC_TUNNEL_HALF_Y + 1
+                ag.vy = abs(ag.vy)
+
+            if nz > PTRC_TUNNEL_HALF_Z:
+                nz = PTRC_TUNNEL_HALF_Z - 1
+                ag.vz = -abs(ag.vz)
+            elif nz < -PTRC_TUNNEL_HALF_Z:
+                nz = -PTRC_TUNNEL_HALF_Z + 1
+                ag.vz = abs(ag.vz)
+
+            if ptrc_point_in_rotating_pyramid(nx, ny, nz, rot_u, rot_v):
+                pyramid_hits += 1
                 collisions += 1
-                weaker_imp = pkt.impulse
-                weaker_wl = pkt.wavelength_id
-                weaker_opt = pkt.optics_mode
-                weaker_anc = pkt.cascade_root
+                j_dir = (a + rot_idx + self.takt_counter) % PTRC_GFX_JUNCTIONS
+                jx, jy, jz = PTRC_JUNCTION_DIRS_24[j_dir]
+                ag.vx = ptrc_z_no_zero(3 + abs(jx))
+                ag.vy = ptrc_z_no_zero(jy * 3 + (2 if ny >= 0 else -2))
+                ag.vz = ptrc_z_no_zero(jz * 3 + (2 if nz >= 0 else -2))
+                nx = ptrc_plichta_move(ag.x, ag.vx)
+                ny = ptrc_plichta_move(ag.y, ag.vy)
+                nz = ptrc_plichta_move(ag.z, ag.vz)
+                ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_FIELD_COUPLED, 20 + (a % 11))
+            else:
+                slot = ptrc_fcc_slot_hash(nx, ny, nz)
+                occ_imp = self.cell_impulse[slot]
+                if occ_imp == 1:
+                    self.cell_impulse[slot] = ag.impulse
+                    self.cell_state[slot] = ag.state_byte
+                    if (a & 7) == (self.takt_counter & 7):
+                        ag.vx = ptrc_z_no_zero((ag.vx * 3 + 7) >> 2)
+                        ag.vy = ptrc_z_no_zero((ag.vy * 3) >> 2)
+                        ag.vz = ptrc_z_no_zero((ag.vz * 3) >> 2)
+                else:
+                    collisions += 1
+                    alt_dir = (a + occ_imp + self.takt_counter) % PTRC_GFX_JUNCTIONS
+                    _, dy_j, dz_j = PTRC_JUNCTION_DIRS_24[alt_dir]
+                    ag.vy = max(-8, min(8, ptrc_z_no_zero(ag.vy + dy_j)))
+                    ag.vz = max(-8, min(8, ptrc_z_no_zero(ag.vz + dz_j)))
+                    if ag.impulse > occ_imp:
+                        self.cell_impulse[slot] = ag.impulse
+                        self.cell_state[slot] = ag.state_byte
 
-                if pkt.impulse > cell.impulse:
-                    weaker_imp = cell.impulse
-                    cell.impulse = pkt.impulse
-                    cell.state_byte = ptrc_encode_1byte_cascade(
-                        pkt.cascade_root, pkt.optics_mode, pkt.wavelength_id
-                    )
-                    pkt.x, pkt.y, pkt.z = nx, ny, nz
-
-                alt_dir = (d_idx + (weaker_imp % 11) + 1) % PTRC_GFX_JUNCTIONS
-                adx, ady, adz = PTRC_JUNCTION_DIRS_24[alt_dir]
-                ax = ptrc_plichta_step_axis(nx, adx)
-                ay = ptrc_plichta_step_axis(ny, ady)
-                az = ptrc_plichta_step_axis(nz, adz)
-
-                alt_cell = self.cells[ptrc_cell_linear_idx(ax, ay, az)]
-                if alt_cell.impulse == 1:
-                    alt_cell.impulse = ptrc_u8_no_zero(weaker_imp)
-                    alt_cell.state_byte = ptrc_encode_1byte_cascade(
-                        weaker_anc, weaker_opt, weaker_wl
-                    )
-                    occupied_cells += 1
-                pkt.x, pkt.y, pkt.z = ax, ay, az
-                pkt.dir_idx = alt_dir
+            ag.x, ag.y, ag.z = nx, ny, nz
 
         self.deflection_count += collisions
-        self.active_load = occupied_cells + (collisions * 2)
+        self.active_load = (collisions >> 4) + (pyramid_hits >> 2) + 600
         self.evaluate_observer_sync()
 
         self.takt_counter += 1
-        self.clock_phase_24 = (self.clock_phase_24 % PTRC_GFX_JUNCTIONS) + 1
+        if self.observer_sub_takt >= PTRC_GFX_TAKT_137:
+            self.observer_sub_takt = 1
+            self.clock_phase_24 = (self.clock_phase_24 % PTRC_GFX_JUNCTIONS) + 1
+        else:
+            self.observer_sub_takt += 1
         return PTRC_GFX_OK
 
     def evaluate_observer_sync(self) -> int:
@@ -317,72 +348,65 @@ class PtrcGfxContext:
 
     def render_observer_rgb24(self, width: int, height: int) -> bytes:
         total_pixels = width * height
-        z_buf = [0x7FFF] * total_pixels
+        z_buf = [1000] * total_pixels
         out = bytearray(b"\x01\x02\x06" * total_pixels)
         if self.render_status == PTRC_RENDER_STALL:
             return bytes(out)
 
-        phase_idx = (self.clock_phase_24 - 1) % PTRC_GFX_JUNCTIONS
-        rot_u = PTRC_CLOCK24_U[phase_idx]
-        rot_v = PTRC_CLOCK24_V[phase_idx]
+        rot_idx = self.pyramid_angle_idx % PTRC_GFX_JUNCTIONS
+        rot_u = PTRC_CLOCK24_U[rot_idx]
+        rot_v = PTRC_CLOCK24_V[rot_idx]
 
-        for c_idx, cell in enumerate(self.cells):
-            if cell.impulse == 1:
+        pyr_cx = ptrc_c_div((PTRC_PYRAMID_CENTER_X + PTRC_TUNNEL_HALF_X) * width, PTRC_TUNNEL_HALF_X * 2)
+        pyr_cy = height >> 1
+        pyr_r_px = ptrc_c_div(PTRC_PYRAMID_RADIUS * width, PTRC_TUNNEL_HALF_X * 2)
+
+        for dy in range(-pyr_r_px, pyr_r_px + 1):
+            py = pyr_cy + dy
+            if py < 0 or py >= height:
                 continue
-            x = cell.cx * 28
-            y = cell.cy * 28
-            z = cell.cz * 28
+            wy = ptrc_c_div((py - (height >> 1)) * (PTRC_TUNNEL_HALF_Y * 2), height)
+            for dx in range(-pyr_r_px, pyr_r_px + 1):
+                px = pyr_cx + dx
+                if px < 0 or px >= width:
+                    continue
+                wx = ptrc_c_div((px - (width >> 1)) * (PTRC_TUNNEL_HALF_X * 2), width)
+                for wz in range(-PTRC_PYRAMID_RADIUS, PTRC_PYRAMID_RADIUS + 1, 4):
+                    if ptrc_point_in_rotating_pyramid(wx, wy, wz, rot_u, rot_v):
+                        p_flat = py * width + px
+                        z_buf[p_flat] = wz
+                        shade = max(60, min(250, 230 - ((wz + PTRC_PYRAMID_RADIUS) >> 1)))
+                        pix = p_flat * 3
+                        out[pix + 0] = shade
+                        out[pix + 1] = (shade * 3) >> 2
+                        out[pix + 2] = (shade >> 2) + 20
+                        break
 
-            rx = (x * rot_u - z * rot_v) >> 10
-            rz = ((x * rot_v + z * rot_u) >> 10) + 320
-            if rz <= 20:
-                continue
-
-            denom = int((rz * 1000) / PTRC_GFX_DEPTH_1414) + PTRC_GFX_INVARIANT_156
-            px = int((rx * width) / denom) + (width >> 1)
-            py = int((y * height) / denom) + (height >> 1)
+        for ag in self.agents:
+            z_depth = ag.z
+            persp = 1414 + z_depth
+            sx = ptrc_c_div(ag.x * 1414, persp)
+            sy = ptrc_c_div(ag.y * 1414, persp)
+            px = ptrc_c_div((sx + PTRC_TUNNEL_HALF_X) * width, PTRC_TUNNEL_HALF_X * 2)
+            py = ptrc_c_div((sy + PTRC_TUNNEL_HALF_Y) * height, PTRC_TUNNEL_HALF_Y * 2)
 
             if 0 <= px < width and 0 <= py < height:
                 p_flat = py * width + px
-                optics = (cell.state_byte >> 5) & 3
-
-                if rz <= z_buf[p_flat] or optics != PTRC_OPTICS_OPAQUE:
-                    depth_shade = max(48, min(255, 255 - ((rz - 100) >> 1)))
-                    r, g, b = ptrc_transpose_wavelength_to_rgb(cell.state_byte, depth_shade)
+                if z_depth <= z_buf[p_flat]:
+                    z_buf[p_flat] = z_depth
+                    depth_shade = max(55, min(255, 240 - ((z_depth + PTRC_TUNNEL_HALF_Z) >> 2)))
+                    r, g, b = ptrc_transpose_wavelength_to_rgb(ag.state_byte, depth_shade)
                     pix = p_flat * 3
-
-                    if rz <= z_buf[p_flat]:
-                        z_buf[p_flat] = rz
-                        if optics == PTRC_OPTICS_OPAQUE or out[pix] == 1:
-                            out[pix + 0] = r
-                            out[pix + 1] = g
-                            out[pix + 2] = b
-                        else:
-                            mr = (out[pix + 0] + r) >> 1
-                            mg = (out[pix + 1] + g) >> 1
-                            mb = (out[pix + 2] + b) >> 1
-                            out[pix + 0] = 1 if mr == 0 else mr
-                            out[pix + 1] = 1 if mg == 0 else mg
-                            out[pix + 2] = 1 if mb == 0 else mb
+                    if out[pix + 0] == 1 and out[pix + 1] == 2:
+                        out[pix + 0] = r
+                        out[pix + 1] = g
+                        out[pix + 2] = b
                     else:
-                        mr = (out[pix + 0] * 3 + r) >> 2
-                        mg = (out[pix + 1] * 3 + g) >> 2
-                        mb = (out[pix + 2] * 3 + b) >> 2
+                        mr = (out[pix + 0] + r) >> 1
+                        mg = (out[pix + 1] + g) >> 1
+                        mb = (out[pix + 2] + b) >> 1
                         out[pix + 0] = 1 if mr == 0 else mr
                         out[pix + 1] = 1 if mg == 0 else mg
                         out[pix + 2] = 1 if mb == 0 else mb
-
-                    if optics == PTRC_OPTICS_FIELD_COUPLED and (px + 1) < width:
-                        partner_idx = (c_idx + cell.observer_cluster) % PTRC_LATTICE_CELLS
-                        pr, pg, pb = ptrc_transpose_wavelength_to_rgb(
-                            self.cells[partner_idx].state_byte, depth_shade
-                        )
-                        halo_pix = (p_flat + 1) * 3
-                        hr = (out[halo_pix + 0] + pr) >> 1
-                        hg = (out[halo_pix + 1] + pg) >> 1
-                        hb = (out[halo_pix + 2] + pb) >> 1
-                        out[halo_pix + 0] = 1 if hr == 0 else hr
-                        out[halo_pix + 1] = 1 if hg == 0 else hg
-                        out[halo_pix + 2] = 1 if hb == 0 else hb
 
         return bytes(out)
