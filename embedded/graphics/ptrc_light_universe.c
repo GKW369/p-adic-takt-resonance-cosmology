@@ -17,7 +17,6 @@
  * If not, see <https://gnu.org>.
  * ============================================================================== */
 
-
 #include "ptrc_light_universe.h"
 
 static const uint32_t PTRC_GFX_RINGS[PTRC_GFX_PRIME_RINGS] = {
