@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.5.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.6.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,15 +18,9 @@
 # ==============================================================================
 
 """
-Full-HD (1920x1080) Echtzeit-Live-Viewer fuer den pTRC 3D-Windkanal v4.5.0
-mit 4 parallelen pTRC-Sektor-Engines, 144-Facetten-Anisotropie & 1+12-Gitter.
-
-Steuerung im Fenster:
-  [+] / [-]   : Zeit-Skalierung (1..137 Takte pro Frame)
-  [LEERTASTE] : Pause / Weiter
-  [R]         : Reset mit neuem Primzahl-Seed & Zeitzaehler-Neustart
-  [F]         : Vollbild (1920x1080) umschalten
-  [ESC]       : Beenden
+Full-HD (1920x1080) Echtzeit-Live-Viewer fuer den pTRC 3D-Windkanal v4.6.0
+mit adaptiver Multi-Engine-Zuweisung (1..8 Engines), Kohaesions-Clustern
+und automatischer int32-GPU/CPU-Erkennung.
 """
 
 from __future__ import annotations
@@ -39,7 +33,7 @@ import tkinter as tk
 from importlib import import_module
 from pathlib import Path
 
-from ptrc_light_universe import PTRC_PARALLEL_ENGINES, PTRC_RENDER_STALL
+from ptrc_light_universe import PTRC_RENDER_STALL
 
 parity_mod = import_module("00_test_ptrc_graphics_parity")
 
@@ -75,7 +69,7 @@ class PtrcFullHdLiveObserver:
         self.paused_total = 0.0
 
         self.root = tk.Tk()
-        self.root.title("pTRC 3D Space-Crystal Windtunnel v4.5.0 | 4x Parallel Engines (1920x1080)")
+        self.root.title("pTRC 3D Space-Crystal Windtunnel v4.6.0 | Adaptive 1..8 Engines (1920x1080)")
         self.root.configure(bg="#010206")
         self.root.geometry(f"{self.width}x{self.height}")
 
@@ -90,14 +84,14 @@ class PtrcFullHdLiveObserver:
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.image_item = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
-        self.hud_bg = self.canvas.create_rectangle(14, 14, 1890, 56, fill="#08101E", outline="#1E3A5F")
+        self.hud_bg = self.canvas.create_rectangle(14, 14, 1904, 56, fill="#08101E", outline="#1E3A5F")
         self.hud_text = self.canvas.create_text(
-            26,
+            24,
             35,
             anchor=tk.W,
             fill="#93C5FD",
-            font=("Consolas", 11, "bold"),
-            text="Initialisiere 4x parallele pTRC 3D-Raumkristall-Engines...",
+            font=("Consolas", 10, "bold"),
+            text="Initialisiere pTRC 3D-Raumkristall-Engine v4.6.0...",
         )
 
         self.root.bind("<space>", self.toggle_pause)
@@ -155,7 +149,7 @@ class PtrcFullHdLiveObserver:
             effective_steps = max(1, self.sub_steps_per_frame // load_divisor)
 
             for _ in range(effective_steps):
-                self.lib.ptrc_gfx_step_takt_parallel(ctypes.byref(self.ctx))
+                self.lib.ptrc_gfx_step_takt_adaptive(ctypes.byref(self.ctx))
 
             rc = self.lib.ptrc_gfx_render_observer_rgb24(
                 ctypes.byref(self.ctx), self.width, self.height, self.rgb_ptr
@@ -168,14 +162,15 @@ class PtrcFullHdLiveObserver:
             dt_ms = (time.perf_counter() - t0) * 1000.0
             fps = 1000.0 / dt_ms if dt_ms > 0.0 else 0.0
             takts_per_sec = self.ctx.takt_counter / elapsed
+            hw_tag = "INT32-GPU" if self.ctx.gpu_int32_active == 1 else "CPU-INT"
             status_str = "STALL" if rc == PTRC_RENDER_STALL else f"INT:{self.ctx.render_interval_takts}T"
 
             self.canvas.itemconfigure(
                 self.hud_text,
                 text=(
-                    f"ZEIT: {self._format_elapsed(elapsed)} | TAKTE: {self.ctx.takt_counter:,} ({takts_per_sec:.1f} T/s) | "
-                    f"ENGINES: {PTRC_PARALLEL_ENGINES}x | LAST: {self.ctx.active_load} ({status_str}) | "
-                    f"KOLLISIONEN: {self.ctx.deflection_count:,} | {dt_ms:.1f} ms ({fps:.1f} FPS)"
+                    f"ZEIT:{self._format_elapsed(elapsed)} | TAKTE:{self.ctx.takt_counter:,} ({takts_per_sec:.1f} T/s) | "
+                    f"HW:{hw_tag} | ENG:{self.ctx.assigned_engines}/8 | KOHAESION:{self.ctx.bound_clusters:,} | "
+                    f"LAST:{self.ctx.active_load} ({status_str}) | KOLL:{self.ctx.deflection_count:,} | {fps:.1f} FPS"
                 ),
             )
 
