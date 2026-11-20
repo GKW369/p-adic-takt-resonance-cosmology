@@ -27,9 +27,6 @@
 extern "C" {
 #endif
 
-/* ==============================================================================
- * 3D-WINDKANAL & 144-FACETTEN RAUMKRISTALL-KONSTANTEN (32cm x 18cm x 8cm, Z \ {0})
- * ============================================================================== */
 #define PTRC_GFX_FACETS             144U
 #define PTRC_GFX_JUNCTIONS          24U
 #define PTRC_GFX_MEM_FACETS         120U
@@ -40,19 +37,18 @@ extern "C" {
 #define PTRC_GFX_INVARIANT_156      156
 #define PTRC_GFX_DEPTH_1414         1414
 
-/* Windkanal-Halbachsen in nullfreien Kristall-Einheiten (1 mm = 60 Einheiten)
- * Breite: 32 cm (-960..+960) | Hoehe: 18 cm (-540..+540) | Tiefe: 8 cm (-240..+240) */
+/* 3D-Windkanal: 32cm x 18cm x 8cm in nullfreien Kristall-Einheiten (Z^3 \ {0}) */
 #define PTRC_TUNNEL_HALF_X          960
 #define PTRC_TUNNEL_HALF_Y          540
 #define PTRC_TUNNEL_HALF_Z          240
 
-/* Rotierende 3D-Pyramide im linken Drittel (X = -320, Kantenlaenge 4.5 cm -> R = 135) */
+/* 4-seitige 3D-Pyramide im linken Drittel (X = -320), raeumlich mittig (Y = 1, Z = 1) */
 #define PTRC_PYRAMID_CENTER_X       (-320)
-#define PTRC_PYRAMID_RADIUS         135
+#define PTRC_PYRAMID_HALF_BASE      120
+#define PTRC_PYRAMID_HEIGHT         220
 
-/* 60.000 Luftmolekuel-Agenten (je 1+12 = 13 Raumkristalle) + 3D-Hashgitter */
 #define PTRC_WIND_AGENTS            60000U
-#define PTRC_OCCUPANCY_SLOTS        65536U  /* 2^16 Kollisions-Slots auf dem 1+12-Gitter */
+#define PTRC_OCCUPANCY_SLOTS        65536U
 
 #define PTRC_GFX_OK                 1
 #define PTRC_GFX_ERR                (-1)
@@ -66,16 +62,16 @@ extern "C" {
 #define PTRC_OPTICS_FIELD_COUPLED   3U
 
 typedef struct {
-    int16_t  x, y, z;               /* Nullfreie 3D-Koordinaten im 1+12-Gitter (Z^3 \ {0}) */
-    int16_t  vx, vy, vz;            /* Ganzzahl-Impulsvektor */
-    uint8_t  state_byte;            /* 1-Byte Kaskade (1..255): Element, Optik, Wellenlaenge */
-    uint8_t  impulse;               /* Impuls-Staerke (1..255) */
+    int16_t  x, y, z;
+    int16_t  vx, vy, vz;
+    uint8_t  state_byte;
+    uint8_t  impulse;
 } ptrc_wind_agent_t;
 
 typedef struct {
     ptrc_wind_agent_t agents[PTRC_WIND_AGENTS];
     uint8_t           cell_impulse[PTRC_OCCUPANCY_SLOTS];
-    uint8_t           cell_state[PTRC_OCCUPANCY_SLOTS];
+    uint8_t           cell_density[PTRC_OCCUPANCY_SLOTS];
     int32_t           sponge[PTRC_GFX_FACETS];
     uint32_t          prime_rings[PTRC_GFX_PRIME_RINGS];
     uint64_t          takt_counter;
