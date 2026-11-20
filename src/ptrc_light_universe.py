@@ -26,6 +26,7 @@ PTRC_GFX_FACETS = 144
 PTRC_GFX_JUNCTIONS = 24
 PTRC_GFX_MEM_FACETS = 120
 PTRC_GFX_STABLE_ELEMENTS = 81
+PTRC_GFX_PRIME_RINGS = 16
 PTRC_GFX_PRIMORIAL_210 = 210
 PTRC_GFX_TAKT_137 = 137
 PTRC_GFX_INVARIANT_156 = 156
@@ -40,6 +41,11 @@ PTRC_GFX_ERR = -1
 PTRC_RENDER_READY = 1
 PTRC_RENDER_WAIT = 2
 PTRC_RENDER_STALL = -2
+
+PTRC_OPTICS_OPAQUE = 0
+PTRC_OPTICS_TRANSLUCENT = 1
+PTRC_OPTICS_CRYSTALLINE = 2
+PTRC_OPTICS_FIELD_COUPLED = 3
 
 U64_MASK = 0xFFFFFFFFFFFFFFFF
 
@@ -112,18 +118,20 @@ def ptrc_cell_linear_idx(x: int, y: int, z: int) -> int:
     return (iz * PTRC_LATTICE_DIM + iy) * PTRC_LATTICE_DIM + ix
 
 
-def ptrc_encode_1byte_state(element_id: int, wavelength_id: int) -> int:
+def ptrc_encode_1byte_cascade(cascade_anchor: int, optics_mode: int, wavelength_id: int) -> int:
     wl = ((wavelength_id - 1) & 30) + 1
-    el_band = (element_id % 7) + 1
-    return ptrc_u8_no_zero((el_band << 5) | (wl & 0x1F))
+    opt = optics_mode & 3
+    anc = cascade_anchor & 1
+    return ptrc_u8_no_zero((anc << 7) | (opt << 5) | wl)
 
 
 def ptrc_transpose_wavelength_to_rgb(state_byte: int, depth_shade: int) -> Tuple[int, int, int]:
     wl = state_byte & 0x1F
-    band = (state_byte >> 5) & 7
-    r = (((wl * 8 + band * 19) & 0xFF) * depth_shade) >> 8
-    g = ((((32 - wl) * 7 + band * 29) & 0xFF) * depth_shade) >> 8
-    b = ((((wl * 13) ^ (band * 41)) & 0xFF) * depth_shade) >> 8
+    opt = (state_byte >> 5) & 3
+    anc = (state_byte >> 7) & 1
+    r = (((wl * 8 + opt * 31 + anc * 23) & 0xFF) * depth_shade) >> 8
+    g = ((((32 - wl) * 7 + opt * 43) & 0xFF) * depth_shade) >> 8
+    b = ((((wl * 13) ^ (opt * 59) ^ (anc * 37)) & 0xFF) * depth_shade) >> 8
     return (1 if r == 0 else r, 1 if g == 0 else g, 1 if b == 0 else b)
 
 
@@ -151,6 +159,8 @@ class PtrcImpulsePacket:
     impulse: int
     wavelength_id: int
     element_id: int
+    optics_mode: int
+    cascade_root: int
 
 class PtrcGfxContext:
     def __init__(self, seed: int = 137210144) -> None:
@@ -194,6 +204,8 @@ class PtrcGfxContext:
                     impulse=(p % 240) + 10,
                     wavelength_id=(p % 31) + 1,
                     element_id=(p % PTRC_GFX_STABLE_ELEMENTS) + 1,
+                    optics_mode=p & 3,
+                    cascade_root=(p >> 3) & 1,
                 )
             )
 
@@ -237,20 +249,27 @@ class PtrcGfxContext:
             cell = self.cells[ptrc_cell_linear_idx(nx, ny, nz)]
             if cell.impulse == 1:
                 cell.impulse = pkt.impulse
-                cell.state_byte = ptrc_encode_1byte_state(pkt.element_id, pkt.wavelength_id)
-                cell.facet_mem[(self.takt_counter + p_idx) % PTRC_GFX_MEM_FACETS] = pkt.element_id
+                cell.state_byte = ptrc_encode_1byte_cascade(
+                    pkt.cascade_root, pkt.optics_mode, pkt.wavelength_id
+                )
+                slot = (self.takt_counter + p_idx) % (PTRC_GFX_MEM_FACETS - 2)
+                cell.facet_mem[slot] = ptrc_u8_no_zero(pkt.element_id)
+                cell.facet_mem[slot + 1] = ptrc_u8_no_zero(((pkt.element_id * 3) % 251) + 1)
                 pkt.x, pkt.y, pkt.z = nx, ny, nz
                 occupied_cells += 1
             else:
                 collisions += 1
                 weaker_imp = pkt.impulse
                 weaker_wl = pkt.wavelength_id
-                weaker_el = pkt.element_id
+                weaker_opt = pkt.optics_mode
+                weaker_anc = pkt.cascade_root
 
                 if pkt.impulse > cell.impulse:
                     weaker_imp = cell.impulse
                     cell.impulse = pkt.impulse
-                    cell.state_byte = ptrc_encode_1byte_state(pkt.element_id, pkt.wavelength_id)
+                    cell.state_byte = ptrc_encode_1byte_cascade(
+                        pkt.cascade_root, pkt.optics_mode, pkt.wavelength_id
+                    )
                     pkt.x, pkt.y, pkt.z = nx, ny, nz
 
                 alt_dir = (d_idx + (weaker_imp % 11) + 1) % PTRC_GFX_JUNCTIONS
@@ -262,7 +281,9 @@ class PtrcGfxContext:
                 alt_cell = self.cells[ptrc_cell_linear_idx(ax, ay, az)]
                 if alt_cell.impulse == 1:
                     alt_cell.impulse = ptrc_u8_no_zero(weaker_imp)
-                    alt_cell.state_byte = ptrc_encode_1byte_state(weaker_el, weaker_wl)
+                    alt_cell.state_byte = ptrc_encode_1byte_cascade(
+                        weaker_anc, weaker_opt, weaker_wl
+                    )
                     occupied_cells += 1
                 pkt.x, pkt.y, pkt.z = ax, ay, az
                 pkt.dir_idx = alt_dir
@@ -295,7 +316,9 @@ class PtrcGfxContext:
         return self.render_status
 
     def render_observer_rgb24(self, width: int, height: int) -> bytes:
-        out = bytearray(b"\x01\x02\x06" * (width * height))
+        total_pixels = width * height
+        z_buf = [0x7FFF] * total_pixels
+        out = bytearray(b"\x01\x02\x06" * total_pixels)
         if self.render_status == PTRC_RENDER_STALL:
             return bytes(out)
 
@@ -303,7 +326,7 @@ class PtrcGfxContext:
         rot_u = PTRC_CLOCK24_U[phase_idx]
         rot_v = PTRC_CLOCK24_V[phase_idx]
 
-        for cell in self.cells:
+        for c_idx, cell in enumerate(self.cells):
             if cell.impulse == 1:
                 continue
             x = cell.cx * 28
@@ -320,11 +343,46 @@ class PtrcGfxContext:
             py = int((y * height) / denom) + (height >> 1)
 
             if 0 <= px < width and 0 <= py < height:
-                depth_shade = max(48, min(255, 255 - ((rz - 100) >> 1)))
-                r, g, b = ptrc_transpose_wavelength_to_rgb(cell.state_byte, depth_shade)
-                pix = (py * width + px) * 3
-                out[pix + 0] = r
-                out[pix + 1] = g
-                out[pix + 2] = b
+                p_flat = py * width + px
+                optics = (cell.state_byte >> 5) & 3
+
+                if rz <= z_buf[p_flat] or optics != PTRC_OPTICS_OPAQUE:
+                    depth_shade = max(48, min(255, 255 - ((rz - 100) >> 1)))
+                    r, g, b = ptrc_transpose_wavelength_to_rgb(cell.state_byte, depth_shade)
+                    pix = p_flat * 3
+
+                    if rz <= z_buf[p_flat]:
+                        z_buf[p_flat] = rz
+                        if optics == PTRC_OPTICS_OPAQUE or out[pix] == 1:
+                            out[pix + 0] = r
+                            out[pix + 1] = g
+                            out[pix + 2] = b
+                        else:
+                            mr = (out[pix + 0] + r) >> 1
+                            mg = (out[pix + 1] + g) >> 1
+                            mb = (out[pix + 2] + b) >> 1
+                            out[pix + 0] = 1 if mr == 0 else mr
+                            out[pix + 1] = 1 if mg == 0 else mg
+                            out[pix + 2] = 1 if mb == 0 else mb
+                    else:
+                        mr = (out[pix + 0] * 3 + r) >> 2
+                        mg = (out[pix + 1] * 3 + g) >> 2
+                        mb = (out[pix + 2] * 3 + b) >> 2
+                        out[pix + 0] = 1 if mr == 0 else mr
+                        out[pix + 1] = 1 if mg == 0 else mg
+                        out[pix + 2] = 1 if mb == 0 else mb
+
+                    if optics == PTRC_OPTICS_FIELD_COUPLED and (px + 1) < width:
+                        partner_idx = (c_idx + cell.observer_cluster) % PTRC_LATTICE_CELLS
+                        pr, pg, pb = ptrc_transpose_wavelength_to_rgb(
+                            self.cells[partner_idx].state_byte, depth_shade
+                        )
+                        halo_pix = (p_flat + 1) * 3
+                        hr = (out[halo_pix + 0] + pr) >> 1
+                        hg = (out[halo_pix + 1] + pg) >> 1
+                        hb = (out[halo_pix + 2] + pb) >> 1
+                        out[halo_pix + 0] = 1 if hr == 0 else hr
+                        out[halo_pix + 1] = 1 if hg == 0 else hg
+                        out[halo_pix + 2] = 1 if hb == 0 else hb
 
         return bytes(out)
