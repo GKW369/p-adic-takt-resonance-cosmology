@@ -37,7 +37,8 @@ PTRC_TUNNEL_HALF_Y = 540
 PTRC_TUNNEL_HALF_Z = 240
 
 PTRC_PYRAMID_CENTER_X = -320
-PTRC_PYRAMID_RADIUS = 135
+PTRC_PYRAMID_HALF_BASE = 120
+PTRC_PYRAMID_HEIGHT = 220
 
 PTRC_WIND_AGENTS = 60000
 PTRC_OCCUPANCY_SLOTS = 65536
@@ -88,6 +89,12 @@ def ptrc_z_no_zero(v: int) -> int:
     return -1 if v == 0 else int(v)
 
 
+def ptrc_z_sym_no_zero(v: int, parity: int) -> int:
+    if v != 0:
+        return int(v)
+    return 1 if (parity & 1) == 0 else -1
+
+
 def ptrc_u8_no_zero(v: int) -> int:
     b = v & 0xFF
     return 0xFF if b == 0 else b
@@ -98,6 +105,10 @@ def ptrc_u64_no_zero(v: int) -> int:
     return 1 if u == 0 else u
 
 
+def ptrc_c_div(a: int, b: int) -> int:
+    return int(a / b)
+
+
 def ptrc_plichta_move(pos: int, delta: int) -> int:
     nxt = pos + delta
     if nxt == 0:
@@ -106,9 +117,9 @@ def ptrc_plichta_move(pos: int, delta: int) -> int:
 
 
 def ptrc_fcc_slot_hash(x: int, y: int, z: int) -> int:
-    qx = int((x + 1024) // 3) & 0xFFFFFFFF
-    qy = int((y + 1024) // 3) & 0xFFFFFFFF
-    qz = int((z + 1024) // 3) & 0xFFFFFFFF
+    qx = int((x + 1024) // 4) & 0xFFFFFFFF
+    qy = int((y + 1024) // 4) & 0xFFFFFFFF
+    qz = int((z + 1024) // 4) & 0xFFFFFFFF
     h = ((qx * 73856093) ^ (qy * 19349663) ^ (qz * 83492791)) & 0xFFFFFFFF
     return h & (PTRC_OCCUPANCY_SLOTS - 1)
 
@@ -120,32 +131,24 @@ def ptrc_encode_1byte_cascade(cascade_anchor: int, optics_mode: int, wavelength_
     return ptrc_u8_no_zero((anc << 7) | (opt << 5) | wl)
 
 
-def ptrc_c_div(a: int, b: int) -> int:
-    return int(a / b)
-
-
-def ptrc_point_in_rotating_pyramid(px: int, py: int, pz: int, rot_u: int, rot_v: int) -> bool:
+def ptrc_point_in_square_pyramid(px: int, py: int, pz: int, rot_u: int, rot_v: int) -> bool:
     dx = px - PTRC_PYRAMID_CENTER_X
     dy = py
     dz = pz
-    if (dx * dx + dy * dy + dz * dz) > (PTRC_PYRAMID_RADIUS * PTRC_PYRAMID_RADIUS):
+    if abs(dx) > 190 or abs(dy) > 190 or abs(dz) > 190:
         return False
 
-    lx = (dx * rot_u + dz * rot_v) >> 10
-    lz = (-dx * rot_v + dz * rot_u) >> 10
-    ly = (dy * rot_u + lz * rot_v) >> 10
-    fz = (-dy * rot_v + lz * rot_u) >> 10
+    ty = (dy * 966 - dz * 259) >> 10
+    tz = (dy * 259 + dz * 966) >> 10
+    lx = (dx * rot_u - tz * rot_v) >> 10
+    lz = (dx * rot_v + tz * rot_u) >> 10
 
-    lim = ptrc_c_div(PTRC_PYRAMID_RADIUS * 333, 1000)
-    if fz < -lim:
+    half_h = PTRC_PYRAMID_HEIGHT >> 1
+    if ty < -half_h or ty > half_h:
         return False
-    if (943 * lx - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333):
-        return False
-    if (-471 * lx + 816 * ly - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333):
-        return False
-    if (-471 * lx - 816 * ly - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333):
-        return False
-    return True
+
+    allowed_half_w = ptrc_c_div((ty + half_h) * PTRC_PYRAMID_HALF_BASE, PTRC_PYRAMID_HEIGHT)
+    return abs(lx) <= allowed_half_w and abs(lz) <= allowed_half_w
 
 
 def ptrc_transpose_wavelength_to_rgb(state_byte: int, depth_shade: int) -> Tuple[int, int, int]:
@@ -155,6 +158,55 @@ def ptrc_transpose_wavelength_to_rgb(state_byte: int, depth_shade: int) -> Tuple
     g = ((((32 - wl) * 6 + opt * 37 + 40) & 0xFF) * depth_shade) >> 8
     b = (((110 + wl * 4 + opt * 23) & 0xFF) * depth_shade) >> 8
     return (1 if r == 0 else r, 1 if g == 0 else g, 1 if b == 0 else b)
+
+
+def _edge_fn(ax: int, ay: int, bx: int, by: int, cx: int, cy: int) -> int:
+    return (cx - ax) * (by - ay) - (cy - ay) * (bx - ax)
+
+
+def ptrc_raster_pyramid_triangle(
+    out: bytearray,
+    z_buf: List[int],
+    width: int,
+    height: int,
+    x0: int, y0: int, z0: int,
+    x1: int, y1: int, z1: int,
+    x2: int, y2: int, z2: int,
+    r: int, g: int, b: int,
+) -> None:
+    area = _edge_fn(x0, y0, x1, y1, x2, y2)
+    if area == 0:
+        return
+
+    min_x = max(0, min(x0, x1, x2))
+    max_x = min(width - 1, max(x0, x1, x2))
+    min_y = max(0, min(y0, y1, y2))
+    max_y = min(height - 1, max(y0, y1, y2))
+    abs_a = abs(area)
+    edge_thresh = abs_a >> 5
+
+    for py in range(min_y, max_y + 1):
+        for px in range(min_x, max_x + 1):
+            w0 = _edge_fn(x1, y1, x2, y2, px, py)
+            w1 = _edge_fn(x2, y2, x0, y0, px, py)
+            w2 = _edge_fn(x0, y0, x1, y1, px, py)
+
+            if (area > 0 and w0 >= 0 and w1 >= 0 and w2 >= 0) or (
+                area < 0 and w0 <= 0 and w1 <= 0 and w2 <= 0
+            ):
+                pz = ptrc_c_div(w0 * z0 + w1 * z1 + w2 * z2, area)
+                p_flat = py * width + px
+                if pz <= z_buf[p_flat]:
+                    z_buf[p_flat] = pz
+                    pix = p_flat * 3
+                    if abs(w0) < edge_thresh or abs(w1) < edge_thresh or abs(w2) < edge_thresh:
+                        out[pix + 0] = 250
+                        out[pix + 1] = 215
+                        out[pix + 2] = 110
+                    else:
+                        out[pix + 0] = r
+                        out[pix + 1] = g
+                        out[pix + 2] = b
 
 
 @dataclass
@@ -180,8 +232,8 @@ class PtrcGfxContext:
             raw = int(rng % PTRC_GFX_PRIMORIAL_210) - 105
             self.sponge[f] = ptrc_z_no_zero(raw)
 
-        self.cell_impulse: List[int] = [1] * PTRC_OCCUPANCY_SLOTS
-        self.cell_state: List[int] = [1] * PTRC_OCCUPANCY_SLOTS
+        self.cell_impulse: List[int] = * PTRC_OCCUPANCY_SLOTS
+        self.cell_density: List[int] = * PTRC_OCCUPANCY_SLOTS
 
         self.agents: List[PtrcWindAgent] = []
         span_x = PTRC_TUNNEL_HALF_X * 2
@@ -194,9 +246,9 @@ class PtrcGfxContext:
             ry = int((rng >> 16) % span_y) - PTRC_TUNNEL_HALF_Y
             rz = int((rng >> 32) % span_z) - PTRC_TUNNEL_HALF_Z
 
-            x = ptrc_z_no_zero(rx)
-            y = ptrc_z_no_zero(ry)
-            z = ptrc_z_no_zero(rz)
+            x = ptrc_z_sym_no_zero(rx, a)
+            y = ptrc_z_sym_no_zero(ry, a >> 1)
+            z = ptrc_z_sym_no_zero(rz, a >> 2)
             if ((x + y + z) & 1) != 0:
                 x = ptrc_plichta_move(x, 1)
 
@@ -207,9 +259,9 @@ class PtrcGfxContext:
                     x=x,
                     y=y,
                     z=z,
-                    vx=6 + (a & 3),
-                    vy=ptrc_z_no_zero(int((rng >> 48) % 3) - 1),
-                    vz=ptrc_z_no_zero(int((rng >> 52) % 3) - 1),
+                    vx=7 + (a & 3),
+                    vy=1 if (a & 1) == 0 else -1,
+                    vz=1 if ((a >> 1) & 1) == 0 else -1,
                     impulse=40 + (a % 180),
                     state_byte=ptrc_encode_1byte_cascade(a & 1, opt, wl),
                 )
@@ -241,77 +293,113 @@ class PtrcGfxContext:
                 self.sponge[f] = ptrc_z_no_zero(~self.sponge[f])
             self.mirror_pulses += 1
 
-        rot_idx = (self.takt_counter // 6) % PTRC_GFX_JUNCTIONS
+        rot_idx = (self.takt_counter // 4) % PTRC_GFX_JUNCTIONS
         self.pyramid_angle_idx = rot_idx
         rot_u = PTRC_CLOCK24_U[rot_idx]
         rot_v = PTRC_CLOCK24_V[rot_idx]
 
-        self.cell_impulse = [1] * PTRC_OCCUPANCY_SLOTS
+        self.cell_impulse = * PTRC_OCCUPANCY_SLOTS
+        self.cell_density = * PTRC_OCCUPANCY_SLOTS
         collisions = 0
         pyramid_hits = 0
 
         for a, ag in enumerate(self.agents):
+            sym_bit = a + self.takt_counter
             nx = ptrc_plichta_move(ag.x, ag.vx)
             ny = ptrc_plichta_move(ag.y, ag.vy)
             nz = ptrc_plichta_move(ag.z, ag.vz)
 
             if nx > PTRC_TUNNEL_HALF_X:
-                nx = -PTRC_TUNNEL_HALF_X + int((a + self.takt_counter) & 15)
-                if nx == 0:
-                    nx = -1
-                ag.vx = 6 + int((a + p_ring) & 3)
-                ag.vy = ptrc_z_no_zero((a % 3) - 1)
-                ag.vz = ptrc_z_no_zero(((a >> 2) % 3) - 1)
+                mix = (a * 2654435761 + self.takt_counter * 137) & U64_MASK
+                nx = -PTRC_TUNNEL_HALF_X + int(mix & 7) + 1
+                ny = ptrc_z_sym_no_zero(int((mix >> 8) % (PTRC_TUNNEL_HALF_Y * 2)) - PTRC_TUNNEL_HALF_Y, a)
+                nz = ptrc_z_sym_no_zero(int((mix >> 24) % (PTRC_TUNNEL_HALF_Z * 2)) - PTRC_TUNNEL_HALF_Z, a >> 1)
+                ag.vx = 7 + int((a + p_ring) & 3)
+                ag.vy = 1 if (sym_bit & 1) == 0 else -1
+                ag.vz = 1 if ((sym_bit >> 1) & 1) == 0 else -1
                 ag.state_byte = ptrc_encode_1byte_cascade(a & 1, 1, (a % 12) + 1)
             elif nx < -PTRC_TUNNEL_HALF_X:
                 nx = -PTRC_TUNNEL_HALF_X + 1
-                ag.vx = 6
+                ag.vx = 7
 
-            if ny > PTRC_TUNNEL_HALF_Y:
-                ny = PTRC_TUNNEL_HALF_Y - 1
-                ag.vy = -abs(ag.vy)
-            elif ny < -PTRC_TUNNEL_HALF_Y:
-                ny = -PTRC_TUNNEL_HALF_Y + 1
-                ag.vy = abs(ag.vy)
+            if ny > (PTRC_TUNNEL_HALF_Y - 12):
+                if ny > PTRC_TUNNEL_HALF_Y:
+                    ny = PTRC_TUNNEL_HALF_Y - 1
+                    ag.vy = -abs(ag.vy)
+                if ag.vx > 3:
+                    ag.vx -= 1
+            elif ny < (-PTRC_TUNNEL_HALF_Y + 12):
+                if ny < -PTRC_TUNNEL_HALF_Y:
+                    ny = -PTRC_TUNNEL_HALF_Y + 1
+                    ag.vy = abs(ag.vy)
+                if ag.vx > 3:
+                    ag.vx -= 1
 
-            if nz > PTRC_TUNNEL_HALF_Z:
-                nz = PTRC_TUNNEL_HALF_Z - 1
-                ag.vz = -abs(ag.vz)
-            elif nz < -PTRC_TUNNEL_HALF_Z:
-                nz = -PTRC_TUNNEL_HALF_Z + 1
-                ag.vz = abs(ag.vz)
+            if nz > (PTRC_TUNNEL_HALF_Z - 10):
+                if nz > PTRC_TUNNEL_HALF_Z:
+                    nz = PTRC_TUNNEL_HALF_Z - 1
+                    ag.vz = -abs(ag.vz)
+                if ag.vx > 3:
+                    ag.vx -= 1
+            elif nz < (-PTRC_TUNNEL_HALF_Z + 10):
+                if nz < -PTRC_TUNNEL_HALF_Z:
+                    nz = -PTRC_TUNNEL_HALF_Z + 1
+                    ag.vz = abs(ag.vz)
+                if ag.vx > 3:
+                    ag.vx -= 1
 
-            if ptrc_point_in_rotating_pyramid(nx, ny, nz, rot_u, rot_v):
+            if ptrc_point_in_square_pyramid(nx, ny, nz, rot_u, rot_v):
                 pyramid_hits += 1
                 collisions += 1
                 j_dir = (a + rot_idx + self.takt_counter) % PTRC_GFX_JUNCTIONS
-                jx, jy, jz = PTRC_JUNCTION_DIRS_24[j_dir]
-                ag.vx = ptrc_z_no_zero(3 + abs(jx))
-                ag.vy = ptrc_z_no_zero(jy * 3 + (2 if ny >= 0 else -2))
-                ag.vz = ptrc_z_no_zero(jz * 3 + (2 if nz >= 0 else -2))
-                nx = ptrc_plichta_move(ag.x, ag.vx)
+                _, jy, jz = PTRC_JUNCTION_DIRS_24[j_dir]
+                ag.vx = 2
+                ag.vy = ptrc_z_sym_no_zero(jy * 3 + (3 if ny >= 0 else -3), sym_bit)
+                ag.vz = ptrc_z_sym_no_zero(jz * 3 + (3 if nz >= 0 else -3), sym_bit >> 1)
+                nx = ptrc_plichta_move(ag.x, -2)
                 ny = ptrc_plichta_move(ag.y, ag.vy)
                 nz = ptrc_plichta_move(ag.z, ag.vz)
-                ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_FIELD_COUPLED, 20 + (a % 11))
+                ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_FIELD_COUPLED, 22 + (a % 9))
             else:
                 slot = ptrc_fcc_slot_hash(nx, ny, nz)
                 occ_imp = self.cell_impulse[slot]
+                dens = self.cell_density[slot]
+                if dens < 250:
+                    self.cell_density[slot] = dens + 1
+
                 if occ_imp == 1:
                     self.cell_impulse[slot] = ag.impulse
-                    self.cell_state[slot] = ag.state_byte
-                    if (a & 7) == (self.takt_counter & 7):
-                        ag.vx = ptrc_z_no_zero((ag.vx * 3 + 7) >> 2)
-                        ag.vy = ptrc_z_no_zero((ag.vy * 3) >> 2)
-                        ag.vz = ptrc_z_no_zero((ag.vz * 3) >> 2)
+                    if (a & 3) == (self.takt_counter & 3):
+                        if ag.vx < 7:
+                            ag.vx += 1
+                        if ag.vx > 9:
+                            ag.vx -= 1
+                        if ag.vy > 1:
+                            ag.vy -= 1
+                        elif ag.vy < -1:
+                            ag.vy += 1
+                        else:
+                            ag.vy = 1 if (sym_bit & 1) == 0 else -1
+
+                        if ag.vz > 1:
+                            ag.vz -= 1
+                        elif ag.vz < -1:
+                            ag.vz += 1
+                        else:
+                            ag.vz = 1 if ((sym_bit >> 1) & 1) == 0 else -1
                 else:
                     collisions += 1
+                    if dens >= 3 and nx < (PTRC_PYRAMID_CENTER_X + 60) and abs(ny) < 180:
+                        if ag.vx > 2:
+                            ag.vx -= 1
+                        ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_CRYSTALLINE, 18)
+
                     alt_dir = (a + occ_imp + self.takt_counter) % PTRC_GFX_JUNCTIONS
                     _, dy_j, dz_j = PTRC_JUNCTION_DIRS_24[alt_dir]
-                    ag.vy = max(-8, min(8, ptrc_z_no_zero(ag.vy + dy_j)))
-                    ag.vz = max(-8, min(8, ptrc_z_no_zero(ag.vz + dz_j)))
+                    ag.vy = max(-7, min(7, ptrc_z_sym_no_zero(ag.vy + dy_j, sym_bit)))
+                    ag.vz = max(-7, min(7, ptrc_z_sym_no_zero(ag.vz + dz_j, sym_bit >> 1)))
                     if ag.impulse > occ_imp:
                         self.cell_impulse[slot] = ag.impulse
-                        self.cell_state[slot] = ag.state_byte
 
             ag.x, ag.y, ag.z = nx, ny, nz
 
@@ -348,7 +436,7 @@ class PtrcGfxContext:
 
     def render_observer_rgb24(self, width: int, height: int) -> bytes:
         total_pixels = width * height
-        z_buf = [1000] * total_pixels
+        z_buf = * total_pixels
         out = bytearray(b"\x01\x02\x06" * total_pixels)
         if self.render_status == PTRC_RENDER_STALL:
             return bytes(out)
@@ -357,30 +445,49 @@ class PtrcGfxContext:
         rot_u = PTRC_CLOCK24_U[rot_idx]
         rot_v = PTRC_CLOCK24_V[rot_idx]
 
-        pyr_cx = ptrc_c_div((PTRC_PYRAMID_CENTER_X + PTRC_TUNNEL_HALF_X) * width, PTRC_TUNNEL_HALF_X * 2)
-        pyr_cy = height >> 1
-        pyr_r_px = ptrc_c_div(PTRC_PYRAMID_RADIUS * width, PTRC_TUNNEL_HALF_X * 2)
+        half_b = PTRC_PYRAMID_HALF_BASE
+        half_h = PTRC_PYRAMID_HEIGHT >> 1
+        local_verts = (
+            (1, -half_h, 1),
+            (-half_b, half_h, -half_b),
+            (half_b, half_h, -half_b),
+            (half_b, half_h, half_b),
+            (-half_b, half_h, half_b),
+        )
 
-        for dy in range(-pyr_r_px, pyr_r_px + 1):
-            py = pyr_cy + dy
-            if py < 0 or py >= height:
-                continue
-            wy = ptrc_c_div((py - (height >> 1)) * (PTRC_TUNNEL_HALF_Y * 2), height)
-            for dx in range(-pyr_r_px, pyr_r_px + 1):
-                px = pyr_cx + dx
-                if px < 0 or px >= width:
-                    continue
-                wx = ptrc_c_div((px - (width >> 1)) * (PTRC_TUNNEL_HALF_X * 2), width)
-                for wz in range(-PTRC_PYRAMID_RADIUS, PTRC_PYRAMID_RADIUS + 1, 4):
-                    if ptrc_point_in_rotating_pyramid(wx, wy, wz, rot_u, rot_v):
-                        p_flat = py * width + px
-                        z_buf[p_flat] = wz
-                        shade = max(60, min(250, 230 - ((wz + PTRC_PYRAMID_RADIUS) >> 1)))
-                        pix = p_flat * 3
-                        out[pix + 0] = shade
-                        out[pix + 1] = (shade * 3) >> 2
-                        out[pix + 2] = (shade >> 2) + 20
-                        break
+        scr_x: List[int] = []
+        scr_y: List[int] = []
+        scr_z: List[int] = []
+        for vx, vy, vz in local_verts:
+            rx = (vx * rot_u + vz * rot_v) >> 10
+            rz = (-vx * rot_v + vz * rot_u) >> 10
+            wy = (vy * 966 + rz * 259) >> 10
+            wz = (-vy * 259 + rz * 966) >> 10
+            wx = rx + PTRC_PYRAMID_CENTER_X
+
+            persp = 1414 + wz
+            sx = ptrc_c_div(wx * 1414, persp)
+            sy = ptrc_c_div(wy * 1414, persp)
+            scr_x.append(ptrc_c_div((sx + PTRC_TUNNEL_HALF_X) * width, PTRC_TUNNEL_HALF_X * 2))
+            scr_y.append(ptrc_c_div((sy + PTRC_TUNNEL_HALF_Y) * height, PTRC_TUNNEL_HALF_Y * 2))
+            scr_z.append(wz)
+
+        faces = (
+            (0, 1, 2, 215, 165, 55),
+            (0, 2, 3, 185, 138, 45),
+            (0, 3, 4, 145, 105, 35),
+            (0, 4, 1, 175, 130, 42),
+            (1, 3, 2, 110, 80, 28),
+            (1, 4, 3, 110, 80, 28),
+        )
+        for i0, i1, i2, r, g, b in faces:
+            ptrc_raster_pyramid_triangle(
+                out, z_buf, width, height,
+                scr_x[i0], scr_y[i0], scr_z[i0],
+                scr_x[i1], scr_y[i1], scr_z[i1],
+                scr_x[i2], scr_y[i2], scr_z[i2],
+                r, g, b,
+            )
 
         for ag in self.agents:
             z_depth = ag.z
@@ -390,23 +497,32 @@ class PtrcGfxContext:
             px = ptrc_c_div((sx + PTRC_TUNNEL_HALF_X) * width, PTRC_TUNNEL_HALF_X * 2)
             py = ptrc_c_div((sy + PTRC_TUNNEL_HALF_Y) * height, PTRC_TUNNEL_HALF_Y * 2)
 
-            if 0 <= px < width and 0 <= py < height:
-                p_flat = py * width + px
-                if z_depth <= z_buf[p_flat]:
-                    z_buf[p_flat] = z_depth
-                    depth_shade = max(55, min(255, 240 - ((z_depth + PTRC_TUNNEL_HALF_Z) >> 2)))
-                    r, g, b = ptrc_transpose_wavelength_to_rgb(ag.state_byte, depth_shade)
-                    pix = p_flat * 3
-                    if out[pix + 0] == 1 and out[pix + 1] == 2:
-                        out[pix + 0] = r
-                        out[pix + 1] = g
-                        out[pix + 2] = b
-                    else:
-                        mr = (out[pix + 0] + r) >> 1
-                        mg = (out[pix + 1] + g) >> 1
-                        mb = (out[pix + 2] + b) >> 1
-                        out[pix + 0] = 1 if mr == 0 else mr
-                        out[pix + 1] = 1 if mg == 0 else mg
-                        out[pix + 2] = 1 if mb == 0 else mb
+            dot_size = 2 if z_depth < -80 else 1
+            depth_shade = max(50, min(255, 245 - ((z_depth + PTRC_TUNNEL_HALF_Z) >> 2)))
+            r, g, b = ptrc_transpose_wavelength_to_rgb(ag.state_byte, depth_shade)
+
+            for oy in range(dot_size):
+                fpy = py + oy
+                if fpy < 0 or fpy >= height:
+                    continue
+                for ox in range(dot_size):
+                    fpx = px + ox
+                    if fpx < 0 or fpx >= width:
+                        continue
+                    p_flat = fpy * width + fpx
+                    if z_depth <= z_buf[p_flat]:
+                        z_buf[p_flat] = z_depth
+                        pix = p_flat * 3
+                        if out[pix + 0] == 1 and out[pix + 1] == 2:
+                            out[pix + 0] = r
+                            out[pix + 1] = g
+                            out[pix + 2] = b
+                        else:
+                            mr = (out[pix + 0] + r) >> 1
+                            mg = (out[pix + 1] + g) >> 1
+                            mb = (out[pix + 2] + b) >> 1
+                            out[pix + 0] = 1 if mr == 0 else mr
+                            out[pix + 1] = 1 if mg == 0 else mg
+                            out[pix + 2] = 1 if mb == 0 else mb
 
         return bytes(out)
