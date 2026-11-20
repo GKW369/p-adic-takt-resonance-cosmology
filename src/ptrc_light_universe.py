@@ -107,7 +107,7 @@ def ptrc_c_div(num: int, den: int) -> int:
 
 
 def ptrc_c_rshift(val: int, shift: int) -> int:
-    return val >> shift if val >= 0 else -((-val) >> shift)
+    return val >> shift
 
 
 def ptrc_z_no_zero(v: int) -> int:
