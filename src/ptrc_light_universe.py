@@ -367,3 +367,119 @@ class PtrcGfxContext:
             elif nx < -PTRC_TUNNEL_HALF_X:
                 nx = -PTRC_TUNNEL_HALF_X + 1
                 ag.vx = 7
+
+            if ny > (PTRC_TUNNEL_HALF_Y - 12):
+                if ny > PTRC_TUNNEL_HALF_Y:
+                    ny = PTRC_TUNNEL_HALF_Y - 1
+                    ag.vy = -abs(ag.vy)
+                if ag.vx > 3:
+                    ag.vx -= 1
+            elif ny < (-PTRC_TUNNEL_HALF_Y + 12):
+                if ny < -PTRC_TUNNEL_HALF_Y:
+                    ny = -PTRC_TUNNEL_HALF_Y + 1
+                    ag.vy = abs(ag.vy)
+                if ag.vx > 3:
+                    ag.vx -= 1
+
+            if nz > (PTRC_TUNNEL_HALF_Z - 10):
+                if nz > PTRC_TUNNEL_HALF_Z:
+                    nz = PTRC_TUNNEL_HALF_Z - 1
+                    ag.vz = -abs(ag.vz)
+                if ag.vx > 3:
+                    ag.vx -= 1
+            elif nz < (-PTRC_TUNNEL_HALF_Z + 10):
+                if nz < -PTRC_TUNNEL_HALF_Z:
+                    nz = -PTRC_TUNNEL_HALF_Z + 1
+                    ag.vz = abs(ag.vz)
+                if ag.vx > 3:
+                    ag.vx -= 1
+
+            if ptrc_point_in_square_pyramid(nx, ny, nz, rot_u, rot_v):
+                obstacle_hits += 1
+                collisions += 1
+                facet_144 = (a + (self.pyramid_angle_idx // 137) * 6 + phase_24) % PTRC_GFX_FACETS
+                aniso_bias = 1 if self.sponge[facet_144] >= 0 else -1
+                j_dir = (facet_144 + self.takt_counter) % PTRC_GFX_JUNCTIONS
+                _, jy, jz = PTRC_JUNCTION_DIRS_24[j_dir]
+
+                ag.vx = 2
+                ag.vy = ptrc_z_sym_no_zero(jy * 4 + (4 if ny >= 0 else -4) + aniso_bias, sym_bit)
+                ag.vz = ptrc_z_sym_no_zero(jz * 4 + (4 if nz >= 0 else -4) - aniso_bias, sym_bit >> 1)
+                nx = ptrc_plichta_move(ag.x, -2)
+                ny = ptrc_plichta_move(ag.y, ag.vy)
+                nz = ptrc_plichta_move(ag.z, ag.vz)
+                ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_FIELD_COUPLED, 22 + (a % 9))
+            elif ptrc_point_in_crystal_sphere(nx, ny, nz):
+                obstacle_hits += 1
+                collisions += 1
+                facet_144 = (a * 3 + phase_24) % PTRC_GFX_FACETS
+                aniso_bias = 1 if self.sponge[facet_144] >= 0 else -1
+                sdy = ny - PTRC_SPHERE_CENTER_Y
+                sdz = nz - PTRC_SPHERE_CENTER_Z
+                ag.vx = 3
+                ag.vy = ptrc_z_sym_no_zero((5 if sdy >= 0 else -5) + aniso_bias, sym_bit)
+                ag.vz = ptrc_z_sym_no_zero((4 if sdz >= 0 else -4) - aniso_bias, sym_bit >> 1)
+                nx = ptrc_plichta_move(ag.x, -2)
+                ny = ptrc_plichta_move(ag.y, ag.vy)
+                nz = ptrc_plichta_move(ag.z, ag.vz)
+                ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_CRYSTALLINE, 25 + (a % 6))
+            else:
+                slot = ptrc_fcc_slot_hash(nx, ny, nz)
+                occ_imp = self.cell_impulse[slot]
+                dens = self.cell_density[slot]
+                slot_coh = self.cell_cohesion[slot]
+                if dens < 250:
+                    self.cell_density[slot] = dens + 1
+                if is_cohesive != 0 and slot_coh < 250:
+                    self.cell_cohesion[slot] = slot_coh + 1
+
+                if occ_imp == 1:
+                    self.cell_impulse[slot] = ag.impulse
+                    if (a & 3) == (self.takt_counter & 3):
+                        if ag.vx < 7:
+                            ag.vx += 1
+                        if ag.vx > 9:
+                            ag.vx -= 1
+                        if ag.vy > 1:
+                            ag.vy -= 1
+                        elif ag.vy < -1:
+                            ag.vy += 1
+                        else:
+                            ag.vy = 1 if (sym_bit & 1) == 0 else -1
+                        if ag.vz > 1:
+                            ag.vz -= 1
+                        elif ag.vz < -1:
+                            ag.vz += 1
+                        else:
+                            ag.vz = 1 if ((sym_bit >> 1) & 1) == 0 else -1
+                else:
+                    collisions += 1
+                    if (is_cohesive != 0 or slot_coh >= 2) and dens >= 3:
+                        if ag.vx > 2:
+                            ag.vx -= 1
+                        ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_CRYSTALLINE, 19)
+                    else:
+                        facet_144 = (slot + occ_imp + phase_24) % PTRC_GFX_FACETS
+                        alt_dir = (facet_144 + abs(self.sponge[facet_144])) % PTRC_GFX_JUNCTIONS
+                        _, dy_j, dz_j = PTRC_JUNCTION_DIRS_24[alt_dir]
+                        ag.vy = max(-8, min(8, ptrc_z_sym_no_zero(ag.vy + dy_j, sym_bit)))
+                        ag.vz = max(-8, min(8, ptrc_z_sym_no_zero(ag.vz + dz_j, sym_bit >> 1)))
+                    if ag.impulse > occ_imp:
+                        self.cell_impulse[slot] = ag.impulse
+
+            ag.x, ag.y, ag.z = nx, ny, nz
+
+        self.deflection_count += collisions
+        self.bound_clusters = bound_cnt
+        self.active_load = (collisions >> 4) + (obstacle_hits >> 2) + (bound_cnt >> 8) + 600
+        eff = self.active_load + (bound_cnt >> 7)
+        self.assigned_engines = 8 if eff >= 1900 else (4 if eff >= 1350 else (2 if eff >= 950 else 1))
+        self.evaluate_observer_sync()
+
+        self.takt_counter += 1
+        if self.observer_sub_takt >= PTRC_GFX_TAKT_137:
+            self.observer_sub_takt = 1
+            self.clock_phase_24 = (self.clock_phase_24 % PTRC_GFX_JUNCTIONS) + 1
+        else:
+            self.observer_sub_takt += 1
+        return PTRC_GFX_OK
