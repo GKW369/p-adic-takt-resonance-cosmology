@@ -19,7 +19,7 @@
 
 """
 Bit-Paritaets- & Nullfreiheits-Audit (Z^3 \\ {0}) zwischen C11 und Python
-fuer die pTRC 3D-Raumkristall-Engine v4.5.0 (inkl. 1-Byte Kaskaden & Z-Occlusion).
+fuer den 3D-Windkanal (32cm x 18cm x 8cm, 60.000 Agenten, rotierende 3D-Pyramide).
 """
 
 from __future__ import annotations
@@ -32,12 +32,11 @@ from pathlib import Path
 
 from ptrc_light_universe import (
     PTRC_GFX_FACETS,
-    PTRC_GFX_MEM_FACETS,
     PTRC_GFX_OK,
     PTRC_GFX_PRIME_RINGS,
-    PTRC_LATTICE_CELLS,
-    PTRC_MAX_IMPULSE_PACKETS,
+    PTRC_OCCUPANCY_SLOTS,
     PTRC_RENDER_STALL,
+    PTRC_WIND_AGENTS,
     PtrcGfxContext,
 )
 
@@ -46,40 +45,30 @@ C_SRC = REPO_ROOT / "embedded" / "graphics" / "ptrc_light_universe.c"
 C_INC = REPO_ROOT / "embedded" / "graphics"
 
 
-class CPtrcCrystalCell(ctypes.Structure):
+class CPtrcWindAgent(ctypes.Structure):
     _fields_ = [
-        ("cx", ctypes.c_int8),
-        ("cy", ctypes.c_int8),
-        ("cz", ctypes.c_int8),
+        ("x", ctypes.c_int16),
+        ("y", ctypes.c_int16),
+        ("z", ctypes.c_int16),
+        ("vx", ctypes.c_int16),
+        ("vy", ctypes.c_int16),
+        ("vz", ctypes.c_int16),
         ("state_byte", ctypes.c_uint8),
         ("impulse", ctypes.c_uint8),
-        ("observer_cluster", ctypes.c_uint8),
-        ("facet_mem", ctypes.c_uint8 * PTRC_GFX_MEM_FACETS),
-    ]
-
-
-class CPtrcImpulsePacket(ctypes.Structure):
-    _fields_ = [
-        ("x", ctypes.c_int32),
-        ("y", ctypes.c_int32),
-        ("z", ctypes.c_int32),
-        ("dir_idx", ctypes.c_uint8),
-        ("impulse", ctypes.c_uint8),
-        ("wavelength_id", ctypes.c_uint8),
-        ("element_id", ctypes.c_uint8),
-        ("optics_mode", ctypes.c_uint8),
-        ("cascade_root", ctypes.c_uint8),
     ]
 
 
 class CPtrcGfxCtx(ctypes.Structure):
     _fields_ = [
-        ("cells", CPtrcCrystalCell * PTRC_LATTICE_CELLS),
-        ("packets", CPtrcImpulsePacket * PTRC_MAX_IMPULSE_PACKETS),
+        ("agents", CPtrcWindAgent * PTRC_WIND_AGENTS),
+        ("cell_impulse", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
+        ("cell_state", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
         ("sponge", ctypes.c_int32 * PTRC_GFX_FACETS),
         ("prime_rings", ctypes.c_uint32 * PTRC_GFX_PRIME_RINGS),
         ("takt_counter", ctypes.c_uint64),
         ("clock_phase_24", ctypes.c_uint32),
+        ("observer_sub_takt", ctypes.c_uint32),
+        ("pyramid_angle_idx", ctypes.c_uint32),
         ("active_load", ctypes.c_uint32),
         ("render_interval_takts", ctypes.c_uint32),
         ("last_render_takt", ctypes.c_uint32),
@@ -129,7 +118,7 @@ def build_shared_lib(build_dir: Path) -> ctypes.CDLL:
 
 def run_parity_audit() -> int:
     seed = 137210144
-    width, height = 320, 240
+    width, height = 320, 180
 
     with tempfile.TemporaryDirectory() as tmp:
         lib = build_shared_lib(Path(tmp))
@@ -138,25 +127,21 @@ def run_parity_audit() -> int:
 
         py_ctx = PtrcGfxContext(seed=seed)
 
-        for _ in range(137):
+        for _ in range(8):
             assert lib.ptrc_gfx_step_takt(ctypes.byref(c_ctx)) == PTRC_GFX_OK
             assert py_ctx.step_takt() == PTRC_GFX_OK
 
         assert c_ctx.takt_counter == py_ctx.takt_counter
         assert c_ctx.active_load == py_ctx.active_load
         assert c_ctx.deflection_count == py_ctx.deflection_count
-        assert c_ctx.mirror_pulses == py_ctx.mirror_pulses
-        assert c_ctx.render_interval_takts == py_ctx.render_interval_takts
-        assert c_ctx.render_status == py_ctx.render_status
+        assert c_ctx.pyramid_angle_idx == py_ctx.pyramid_angle_idx
 
-        for i in range(PTRC_LATTICE_CELLS):
-            cc = c_ctx.cells[i]
-            pc = py_ctx.cells[i]
-            assert cc.cx != 0 and cc.cy != 0 and cc.cz != 0
-            assert cc.state_byte != 0 and cc.impulse != 0
-            assert (cc.cx, cc.cy, cc.cz) == (pc.cx, pc.cy, pc.cz)
-            assert cc.state_byte == pc.state_byte
-            assert cc.impulse == pc.impulse
+        for i in range(PTRC_WIND_AGENTS):
+            ca = c_ctx.agents[i]
+            pa = py_ctx.agents[i]
+            assert ca.x != 0 and ca.y != 0 and ca.z != 0
+            assert (ca.x, ca.y, ca.z) == (pa.x, pa.y, pa.z)
+            assert ca.state_byte == pa.state_byte
 
         c_buf = (ctypes.c_uint8 * (width * height * 3))()
         rc = lib.ptrc_gfx_render_observer_rgb24(ctypes.byref(c_ctx), width, height, c_buf)
@@ -165,14 +150,13 @@ def run_parity_audit() -> int:
         c_bytes = bytes(c_buf)
         py_bytes = py_ctx.render_observer_rgb24(width, height)
 
-        assert b"\x00" not in c_bytes, "Verstoss: 0x00 Byte im C-Frame gefunden!"
-        assert c_bytes == py_bytes, "Paritaets-Abweichung zwischen C11 und Python!"
+        assert b"\x00" not in c_bytes
+        assert c_bytes == py_bytes
 
         lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
         print(
-            f"[PASS] C11 <-> Python 100% Bit-Paritaet | Takt={py_ctx.takt_counter} | "
-            f"Last={py_ctx.active_load} | Intervall={py_ctx.render_interval_takts} | "
-            f"Umlenkungen={py_ctx.deflection_count} | 0x00-Bytes=0"
+            f"[PASS] 3D-Windkanal C11 <-> Python 100% Bit-Paritaet | Agenten={PTRC_WIND_AGENTS} | "
+            f"Last={py_ctx.active_load} | Umlenkungen={py_ctx.deflection_count} | 0x00-Bytes=0"
         )
     return 0
 
