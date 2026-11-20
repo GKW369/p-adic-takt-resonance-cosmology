@@ -1,82 +1,74 @@
 /* ==============================================================================
- * pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.1
+ * pTRC Framework - Discrete 1-Bit Integer Physics & 3D Crystal Universe v4.5.0
  * Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program (see the LICENSE file in the root directory).
- * If not, see <https://gnu.org>.
+ * Strictly Z \ {0}, Zero-Float, Zero-Trigonometry, 100% C11 <-> Python Parity.
  * ============================================================================== */
-
-/* File: embedded/graphics/ptrc_light_universe.h */
 
 #ifndef PTRC_LIGHT_UNIVERSE_H
 #define PTRC_LIGHT_UNIVERSE_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define PTRC_GFX_FACETS         144U
-#define PTRC_GFX_FREE_FACETS    120U
-#define PTRC_GFX_JUNCTIONS      24U
-#define PTRC_GFX_CRYSTAL_RAD    9
-#define PTRC_GFX_PRIME_RINGS    16U
-#define PTRC_GFX_PRIMORIAL_210  210U
-#define PTRC_GFX_TAKT_137       137U
-#define PTRC_GFX_AGENT_COUNT    60000U
+#define PTRC_GFX_FACETS             144U
+#define PTRC_GFX_JUNCTIONS          24U
+#define PTRC_GFX_MEM_FACETS         120U
+#define PTRC_GFX_STABLE_ELEMENTS    81U
+#define PTRC_GFX_PRIME_RINGS        16U
+#define PTRC_GFX_PRIMORIAL_210      210U
+#define PTRC_GFX_TAKT_137           137U
+#define PTRC_GFX_INVARIANT_156      156
+#define PTRC_GFX_DEPTH_1414         1414
 
-#define PTRC_GFX_OK             1
-#define PTRC_GFX_ERR            (-1)
+#define PTRC_LATTICE_DIM            16U
+#define PTRC_LATTICE_CELLS          (PTRC_LATTICE_DIM * PTRC_LATTICE_DIM * PTRC_LATTICE_DIM)
+#define PTRC_MAX_IMPULSE_PACKETS    1024U
 
-/* Static stack context for Z \ {0} Observer Universe & 60,000-Agent Windtunnel */
+#define PTRC_GFX_OK                 1
+#define PTRC_GFX_ERR                (-1)
+#define PTRC_RENDER_READY           1
+#define PTRC_RENDER_WAIT            2
+#define PTRC_RENDER_STALL           (-2)
+
 typedef struct {
-    int32_t  sponge[PTRC_GFX_FACETS];
-    uint8_t  crystal_state[PTRC_GFX_FACETS];
-    uint32_t prime_rings[PTRC_GFX_PRIME_RINGS];
-    int32_t  agent_x[PTRC_GFX_AGENT_COUNT];
-    int32_t  agent_y[PTRC_GFX_AGENT_COUNT];
-    int32_t  agent_vx[PTRC_GFX_AGENT_COUNT];
-    int32_t  agent_vy[PTRC_GFX_AGENT_COUNT];
-    uint8_t  agent_state[PTRC_GFX_AGENT_COUNT];
-    uint64_t takt_counter;
-    uint32_t clock_phase_24;
-    int32_t  pyramid_cx;
-    int32_t  pyramid_cy;
-    uint32_t active_hits;
-    uint32_t mirror_pulses;
+    int8_t   cx, cy, cz;
+    uint8_t  state_byte;
+    uint8_t  impulse;
+    uint8_t  observer_cluster;
+    uint8_t  facet_mem[PTRC_GFX_MEM_FACETS];
+} ptrc_crystal_cell_t;
+
+typedef struct {
+    int32_t  x, y, z;
+    uint8_t  dir_idx;
+    uint8_t  impulse;
+    uint8_t  wavelength_id;
+    uint8_t  element_id;
+} ptrc_impulse_packet_t;
+
+typedef struct {
+    ptrc_crystal_cell_t   cells[PTRC_LATTICE_CELLS];
+    ptrc_impulse_packet_t packets[PTRC_MAX_IMPULSE_PACKETS];
+    int32_t               sponge[PTRC_GFX_FACETS];
+    uint32_t              prime_rings[PTRC_GFX_PRIME_RINGS];
+    uint64_t              takt_counter;
+    uint32_t              clock_phase_24;
+    uint32_t              active_load;
+    uint32_t              render_interval_takts;
+    uint32_t              last_render_takt;
+    uint32_t              deflection_count;
+    uint32_t              mirror_pulses;
+    int32_t               render_status;
 } ptrc_gfx_ctx_t;
 
-/* Initialize 1+12 crystal lattice and 60,000 agents strictly inside Z \ {0} */
-int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed);
-
-/* Advance one discrete light-speed takt (lattice interaction + agent flow) */
-int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx);
-
-/* Advance 137 light-speed takts up to the Observer Render Pulse */
-int ptrc_gfx_advance_observer_epoch(ptrc_gfx_ctx_t *ctx);
-
-/* Render Full-HD / arbitrary RGB24 Observer View without float or zero point */
-int ptrc_gfx_render_frame_rgb24(
-    ptrc_gfx_ctx_t *ctx,
-    uint32_t width,
-    uint32_t height,
-    uint8_t *rgb_out
-);
-
-/* Scrub context memory back to Z \ {0} ground state (-1 / 0xFF) */
+int  ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed);
+int  ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx);
+int  ptrc_gfx_evaluate_observer_sync(ptrc_gfx_ctx_t *ctx);
+int  ptrc_gfx_render_observer_rgb24(ptrc_gfx_ctx_t *ctx, uint32_t width, uint32_t height, uint8_t *rgb_out);
 void ptrc_gfx_wipe(ptrc_gfx_ctx_t *ctx);
 
 #ifdef __cplusplus
