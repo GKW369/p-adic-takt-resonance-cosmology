@@ -47,6 +47,12 @@ extern "C" {
 #define PTRC_RENDER_WAIT            2
 #define PTRC_RENDER_STALL           (-2)
 
+/* 1-Byte Kaskaden- & Fernwirkungs-Modi (Bits 5..7 in state_byte, Werte 1..255) */
+#define PTRC_OPTICS_OPAQUE          0U
+#define PTRC_OPTICS_TRANSLUCENT     1U
+#define PTRC_OPTICS_CRYSTALLINE     2U
+#define PTRC_OPTICS_FIELD_COUPLED   3U  /* Magnetisch-induktive Fernwirkung */
+
 typedef struct {
     int8_t   cx, cy, cz;
     uint8_t  state_byte;
@@ -61,6 +67,8 @@ typedef struct {
     uint8_t  impulse;
     uint8_t  wavelength_id;
     uint8_t  element_id;
+    uint8_t  optics_mode;
+    uint8_t  cascade_root;
 } ptrc_impulse_packet_t;
 
 typedef struct {
