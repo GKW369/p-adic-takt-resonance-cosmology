@@ -19,7 +19,7 @@
 
 """
 Bit-Paritaets- & Nullfreiheits-Audit (Z^3 \\ {0}) zwischen C11 und Python
-fuer den 3D-Windkanal (32cm x 18cm x 8cm, 60.000 Agenten, rotierende 3D-Pyramide).
+fuer den 3D-Windkanal (32cm x 18cm x 8cm, 60.000 Agenten, scharfkantige 3D-Pyramide).
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ class CPtrcGfxCtx(ctypes.Structure):
     _fields_ = [
         ("agents", CPtrcWindAgent * PTRC_WIND_AGENTS),
         ("cell_impulse", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
-        ("cell_state", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
+        ("cell_density", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
         ("sponge", ctypes.c_int32 * PTRC_GFX_FACETS),
         ("prime_rings", ctypes.c_uint32 * PTRC_GFX_PRIME_RINGS),
         ("takt_counter", ctypes.c_uint64),
@@ -134,7 +134,6 @@ def run_parity_audit() -> int:
         assert c_ctx.takt_counter == py_ctx.takt_counter
         assert c_ctx.active_load == py_ctx.active_load
         assert c_ctx.deflection_count == py_ctx.deflection_count
-        assert c_ctx.pyramid_angle_idx == py_ctx.pyramid_angle_idx
 
         for i in range(PTRC_WIND_AGENTS):
             ca = c_ctx.agents[i]
@@ -163,3 +162,4 @@ def run_parity_audit() -> int:
 
 if __name__ == "__main__":
     sys.exit(run_parity_audit())
+
