@@ -60,36 +60,26 @@ static inline uint64_t ptrc_u64_no_zero(uint64_t v) {
     return (v == 0ULL) ? 1ULL : v;
 }
 
-static inline int32_t ptrc_plichta_step_axis(int32_t pos, int32_t delta) {
-    int32_t next = pos + delta;
-    if (next == 0) {
-        next = (delta >= 0) ? 1 : -1;
+static inline int32_t ptrc_abs32(int32_t x) {
+    return (x < 0) ? -x : x;
+}
+
+static inline int32_t ptrc_plichta_move(int32_t pos, int32_t delta) {
+    int32_t nxt = pos + delta;
+    if (nxt == 0) {
+        nxt = (delta >= 0) ? 1 : -1;
     }
-    if (next > 8) {
-        next = -8 + ((next - 9) & 7);
-        if (next == 0) next = -1;
-    } else if (next < -8) {
-        next = 8 - ((-next - 9) & 7);
-        if (next == 0) next = 1;
-    }
-    return next;
+    return nxt;
 }
 
-static inline uint32_t ptrc_coord_to_idx(int32_t c) {
-    return (c < 0) ? (uint32_t)(c + 8) : (uint32_t)(c + 7);
+static inline uint32_t ptrc_fcc_slot_hash(int32_t x, int32_t y, int32_t z) {
+    uint32_t qx = (uint32_t)((x + 1024) / 3);
+    uint32_t qy = (uint32_t)((y + 1024) / 3);
+    uint32_t qz = (uint32_t)((z + 1024) / 3);
+    uint32_t h = (qx * 73856093U) ^ (qy * 19349663U) ^ (qz * 83492791U);
+    return h & (PTRC_OCCUPANCY_SLOTS - 1U);
 }
 
-static inline uint32_t ptrc_cell_linear_idx(int32_t x, int32_t y, int32_t z) {
-    uint32_t ix = ptrc_coord_to_idx(x) & 15U;
-    uint32_t iy = ptrc_coord_to_idx(y) & 15U;
-    uint32_t iz = ptrc_coord_to_idx(z) & 15U;
-    return (iz * PTRC_LATTICE_DIM + iy) * PTRC_LATTICE_DIM + ix;
-}
-
-/* Kodiert 1-Byte Kaskaden-Zustand (1..255):
- * Bit 7: Kaskaden-Anker (0 = Element, 1 = Cluster/DNS-Stamm)
- * Bit 5..6: Transparenz- & Fernwirkungs-Modus (0..3)
- * Bit 0..4: Digitale Wellenlaengen-Stufe (1..31) */
 static inline uint8_t ptrc_encode_1byte_cascade(
     uint8_t cascade_anchor,
     uint8_t optics_mode,
@@ -101,6 +91,35 @@ static inline uint8_t ptrc_encode_1byte_cascade(
     return ptrc_u8_no_zero((uint8_t)((anc << 7U) | (opt << 5U) | wl));
 }
 
+static int ptrc_point_in_rotating_pyramid(
+    int32_t px,
+    int32_t py,
+    int32_t pz,
+    int32_t rot_u,
+    int32_t rot_v
+) {
+    int32_t dx = px - PTRC_PYRAMID_CENTER_X;
+    int32_t dy = py;
+    int32_t dz = pz;
+
+    int32_t q_dist = dx * dx + dy * dy + dz * dz;
+    if (q_dist > (PTRC_PYRAMID_RADIUS * PTRC_PYRAMID_RADIUS)) {
+        return 0;
+    }
+
+    int32_t lx = (dx * rot_u + dz * rot_v) >> 10;
+    int32_t lz = (-dx * rot_v + dz * rot_u) >> 10;
+    int32_t ly = (dy * rot_u + lz * rot_v) >> 10;
+    int32_t fz = (-dy * rot_v + lz * rot_u) >> 10;
+
+    int32_t lim = (PTRC_PYRAMID_RADIUS * 333) / 1000;
+    if (fz < -lim) return 0;
+    if ((943 * lx - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333)) return 0;
+    if ((-471 * lx + 816 * ly - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333)) return 0;
+    if ((-471 * lx - 816 * ly - 333 * fz) > (PTRC_PYRAMID_RADIUS * 333)) return 0;
+    return 1;
+}
+
 static void ptrc_transpose_wavelength_to_rgb(
     uint8_t state_byte,
     int32_t depth_shade,
@@ -110,11 +129,10 @@ static void ptrc_transpose_wavelength_to_rgb(
 ) {
     uint32_t wl = (uint32_t)(state_byte & 0x1FU);
     uint32_t opt = (uint32_t)((state_byte >> 5U) & 3U);
-    uint32_t anc = (uint32_t)((state_byte >> 7U) & 1U);
 
-    uint32_t r = (((wl * 8U + opt * 31U + anc * 23U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
-    uint32_t g = ((((32U - wl) * 7U + opt * 43U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
-    uint32_t b = ((((wl * 13U) ^ (opt * 59U) ^ (anc * 37U)) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
+    uint32_t r = (((wl * 7U + opt * 41U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
+    uint32_t g = ((((32U - wl) * 6U + opt * 37U + 40U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
+    uint32_t b = (((110U + wl * 4U + opt * 23U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
 
     *r_out = (r == 0U) ? 1U : (uint8_t)r;
     *g_out = (g == 0U) ? 1U : (uint8_t)g;
@@ -136,46 +154,42 @@ int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed) {
         ctx->sponge[f] = ptrc_z_no_zero(raw);
     }
 
-    uint32_t idx = 0U;
-    for (int32_t iz = 0; iz < (int32_t)PTRC_LATTICE_DIM; iz++) {
-        int8_t cz = (int8_t)((iz < 8) ? (iz - 8) : (iz - 7));
-        for (int32_t iy = 0; iy < (int32_t)PTRC_LATTICE_DIM; iy++) {
-            int8_t cy = (int8_t)((iy < 8) ? (iy - 8) : (iy - 7));
-            for (int32_t ix = 0; ix < (int32_t)PTRC_LATTICE_DIM; ix++) {
-                int8_t cx = (int8_t)((ix < 8) ? (ix - 8) : (ix - 7));
-                ptrc_crystal_cell_t *cell = &ctx->cells[idx++];
-                cell->cx = cx;
-                cell->cy = cy;
-                cell->cz = cz;
-                cell->state_byte = 1U;
-                cell->impulse = 1U;
-                cell->observer_cluster = (uint8_t)(((ix + iy + iz) % 24) + 1);
-                for (uint32_t m = 0U; m < PTRC_GFX_MEM_FACETS; m++) {
-                    cell->facet_mem[m] = 1U;
-                }
-            }
-        }
+    for (uint32_t s = 0U; s < PTRC_OCCUPANCY_SLOTS; s++) {
+        ctx->cell_impulse[s] = 1U;
+        ctx->cell_state[s] = 1U;
     }
 
-    for (uint32_t p = 0U; p < PTRC_MAX_IMPULSE_PACKETS; p++) {
+    for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
         rng = ptrc_u64_no_zero(rng * 6364136223846793005ULL + 1442695040888963407ULL);
-        int32_t sx = (int32_t)(rng % 16ULL) - 8;
-        int32_t sy = (int32_t)((rng >> 8U) % 16ULL) - 8;
-        int32_t sz = (int32_t)((rng >> 16U) % 16ULL) - 8;
-        ctx->packets[p].x = ptrc_z_no_zero(sx);
-        ctx->packets[p].y = ptrc_z_no_zero(sy);
-        ctx->packets[p].z = ptrc_z_no_zero(sz);
-        ctx->packets[p].dir_idx = (uint8_t)(p % PTRC_GFX_JUNCTIONS);
-        ctx->packets[p].impulse = (uint8_t)((p % 240U) + 10U);
-        ctx->packets[p].wavelength_id = (uint8_t)((p % 31U) + 1U);
-        ctx->packets[p].element_id = (uint8_t)((p % PTRC_GFX_STABLE_ELEMENTS) + 1U);
-        ctx->packets[p].optics_mode = (uint8_t)(p & 3U);
-        ctx->packets[p].cascade_root = (uint8_t)((p >> 3U) & 1U);
+        int32_t rx = (int32_t)(rng % (uint64_t)(PTRC_TUNNEL_HALF_X * 2)) - PTRC_TUNNEL_HALF_X;
+        int32_t ry = (int32_t)((rng >> 16U) % (uint64_t)(PTRC_TUNNEL_HALF_Y * 2)) - PTRC_TUNNEL_HALF_Y;
+        int32_t rz = (int32_t)((rng >> 32U) % (uint64_t)(PTRC_TUNNEL_HALF_Z * 2)) - PTRC_TUNNEL_HALF_Z;
+
+        int32_t x = ptrc_z_no_zero(rx);
+        int32_t y = ptrc_z_no_zero(ry);
+        int32_t z = ptrc_z_no_zero(rz);
+        if (((x + y + z) & 1) != 0) {
+            x = ptrc_plichta_move(x, 1);
+        }
+
+        uint8_t wl = (uint8_t)((a % 16U) + 1U);
+        uint8_t opt = (uint8_t)((a % 3U) + 1U);
+
+        ctx->agents[a].x = (int16_t)x;
+        ctx->agents[a].y = (int16_t)y;
+        ctx->agents[a].z = (int16_t)z;
+        ctx->agents[a].vx = (int16_t)(6 + (int32_t)(a & 3U));
+        ctx->agents[a].vy = ptrc_z_no_zero((int32_t)((rng >> 48U) % 3ULL) - 1);
+        ctx->agents[a].vz = ptrc_z_no_zero((int32_t)((rng >> 52U) % 3ULL) - 1);
+        ctx->agents[a].impulse = (uint8_t)(40U + (a % 180U));
+        ctx->agents[a].state_byte = ptrc_encode_1byte_cascade((uint8_t)(a & 1U), opt, wl);
     }
 
     ctx->takt_counter = 1ULL;
     ctx->clock_phase_24 = 1U;
-    ctx->active_load = PTRC_MAX_IMPULSE_PACKETS;
+    ctx->observer_sub_takt = 1U;
+    ctx->pyramid_angle_idx = 0U;
+    ctx->active_load = 1024U;
     ctx->render_interval_takts = PTRC_GFX_TAKT_137;
     ctx->last_render_takt = 1U;
     ctx->deflection_count = 1U;
@@ -204,81 +218,111 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
         ctx->mirror_pulses++;
     }
 
-    for (uint32_t c = 0U; c < PTRC_LATTICE_CELLS; c++) {
-        ctx->cells[c].impulse = 1U;
+    uint32_t rot_idx = (uint32_t)((ctx->takt_counter / 6ULL) % PTRC_GFX_JUNCTIONS);
+    ctx->pyramid_angle_idx = rot_idx;
+    int32_t rot_u = PTRC_CLOCK24_U[rot_idx];
+    int32_t rot_v = PTRC_CLOCK24_V[rot_idx];
+
+    for (uint32_t s = 0U; s < PTRC_OCCUPANCY_SLOTS; s++) {
+        ctx->cell_impulse[s] = 1U;
     }
 
     uint32_t collisions = 0U;
-    uint32_t occupied_cells = 0U;
+    uint32_t pyramid_hits = 0U;
 
-    for (uint32_t p = 0U; p < PTRC_MAX_IMPULSE_PACKETS; p++) {
-        ptrc_impulse_packet_t *pkt = &ctx->packets[p];
-        uint8_t d_idx = pkt->dir_idx % PTRC_GFX_JUNCTIONS;
+    for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
+        ptrc_wind_agent_t *ag = &ctx->agents[a];
 
-        int32_t nx = ptrc_plichta_step_axis(pkt->x, PTRC_JUNCTION_DIRS_24[d_idx][0]);
-        int32_t ny = ptrc_plichta_step_axis(pkt->y, PTRC_JUNCTION_DIRS_24[d_idx][1]);
-        int32_t nz = ptrc_plichta_step_axis(pkt->z, PTRC_JUNCTION_DIRS_24[d_idx][2]);
+        int32_t nx = ptrc_plichta_move((int32_t)ag->x, (int32_t)ag->vx);
+        int32_t ny = ptrc_plichta_move((int32_t)ag->y, (int32_t)ag->vy);
+        int32_t nz = ptrc_plichta_move((int32_t)ag->z, (int32_t)ag->vz);
 
-        uint32_t target_cell_idx = ptrc_cell_linear_idx(nx, ny, nz);
-        ptrc_crystal_cell_t *cell = &ctx->cells[target_cell_idx];
-
-        if (cell->impulse == 1U) {
-            cell->impulse = pkt->impulse;
-            cell->state_byte = ptrc_encode_1byte_cascade(
-                pkt->cascade_root, pkt->optics_mode, pkt->wavelength_id
-            );
-            /* Kaskaden-Hierarchie in die 120 lokalen Facettenspeicher schreiben */
-            uint32_t slot = (uint32_t)((ctx->takt_counter + p) % (PTRC_GFX_MEM_FACETS - 2U));
-            cell->facet_mem[slot] = ptrc_u8_no_zero(pkt->element_id);
-            cell->facet_mem[slot + 1U] = ptrc_u8_no_zero((uint8_t)((pkt->element_id * 3U) % 251U + 1U));
-            pkt->x = nx;
-            pkt->y = ny;
-            pkt->z = nz;
-            occupied_cells++;
-        } else {
-            collisions++;
-            uint8_t weaker_impulse = pkt->impulse;
-            uint8_t weaker_wl = pkt->wavelength_id;
-            uint8_t weaker_opt = pkt->optics_mode;
-            uint8_t weaker_anc = pkt->cascade_root;
-
-            if (pkt->impulse > cell->impulse) {
-                weaker_impulse = cell->impulse;
-                cell->impulse = pkt->impulse;
-                cell->state_byte = ptrc_encode_1byte_cascade(
-                    pkt->cascade_root, pkt->optics_mode, pkt->wavelength_id
-                );
-                pkt->x = nx;
-                pkt->y = ny;
-                pkt->z = nz;
-            }
-
-            uint8_t alt_dir = (uint8_t)((d_idx + (weaker_impulse % 11U) + 1U) % PTRC_GFX_JUNCTIONS);
-            int32_t ax = ptrc_plichta_step_axis(nx, PTRC_JUNCTION_DIRS_24[alt_dir][0]);
-            int32_t ay = ptrc_plichta_step_axis(ny, PTRC_JUNCTION_DIRS_24[alt_dir][1]);
-            int32_t az = ptrc_plichta_step_axis(nz, PTRC_JUNCTION_DIRS_24[alt_dir][2]);
-
-            uint32_t alt_idx = ptrc_cell_linear_idx(ax, ay, az);
-            if (ctx->cells[alt_idx].impulse == 1U) {
-                ctx->cells[alt_idx].impulse = ptrc_u8_no_zero(weaker_impulse);
-                ctx->cells[alt_idx].state_byte = ptrc_encode_1byte_cascade(
-                    weaker_anc, weaker_opt, weaker_wl
-                );
-                occupied_cells++;
-            }
-            pkt->x = ax;
-            pkt->y = ay;
-            pkt->z = az;
-            pkt->dir_idx = alt_dir;
+        if (nx > PTRC_TUNNEL_HALF_X) {
+            nx = -PTRC_TUNNEL_HALF_X + (int32_t)((a + ctx->takt_counter) & 15ULL);
+            if (nx == 0) nx = -1;
+            ag->vx = (int16_t)(6 + (int32_t)((a + p_ring) & 3U));
+            ag->vy = ptrc_z_no_zero((int32_t)((a % 3U) - 1));
+            ag->vz = ptrc_z_no_zero((int32_t)(((a >> 2U) % 3U) - 1));
+            ag->state_byte = ptrc_encode_1byte_cascade((uint8_t)(a & 1U), 1U, (uint8_t)((a % 12U) + 1U));
+        } else if (nx < -PTRC_TUNNEL_HALF_X) {
+            nx = -PTRC_TUNNEL_HALF_X + 1;
+            ag->vx = 6;
         }
+
+        if (ny > PTRC_TUNNEL_HALF_Y) {
+            ny = PTRC_TUNNEL_HALF_Y - 1;
+            ag->vy = (int16_t)-ptrc_abs32((int32_t)ag->vy);
+        } else if (ny < -PTRC_TUNNEL_HALF_Y) {
+            ny = -PTRC_TUNNEL_HALF_Y + 1;
+            ag->vy = (int16_t)ptrc_abs32((int32_t)ag->vy);
+        }
+
+        if (nz > PTRC_TUNNEL_HALF_Z) {
+            nz = PTRC_TUNNEL_HALF_Z - 1;
+            ag->vz = (int16_t)-ptrc_abs32((int32_t)ag->vz);
+        } else if (nz < -PTRC_TUNNEL_HALF_Z) {
+            nz = -PTRC_TUNNEL_HALF_Z + 1;
+            ag->vz = (int16_t)ptrc_abs32((int32_t)ag->vz);
+        }
+
+        if (ptrc_point_in_rotating_pyramid(nx, ny, nz, rot_u, rot_v)) {
+            pyramid_hits++;
+            collisions++;
+            uint32_t j_dir = (a + rot_idx + (uint32_t)ctx->takt_counter) % PTRC_GFX_JUNCTIONS;
+            int32_t jx = PTRC_JUNCTION_DIRS_24[j_dir][0];
+            int32_t jy = PTRC_JUNCTION_DIRS_24[j_dir][1];
+            int32_t jz = PTRC_JUNCTION_DIRS_24[j_dir][2];
+
+            ag->vx = ptrc_z_no_zero(3 + ptrc_abs32(jx));
+            ag->vy = ptrc_z_no_zero(jy * 3 + ((ny >= 0) ? 2 : -2));
+            ag->vz = ptrc_z_no_zero(jz * 3 + ((nz >= 0) ? 2 : -2));
+            nx = ptrc_plichta_move((int32_t)ag->x, (int32_t)ag->vx);
+            ny = ptrc_plichta_move((int32_t)ag->y, (int32_t)ag->vy);
+            nz = ptrc_plichta_move((int32_t)ag->z, (int32_t)ag->vz);
+            ag->state_byte = ptrc_encode_1byte_cascade(1U, PTRC_OPTICS_FIELD_COUPLED, (uint8_t)(20U + (a % 11U)));
+        } else {
+            uint32_t slot = ptrc_fcc_slot_hash(nx, ny, nz);
+            uint8_t occ_imp = ctx->cell_impulse[slot];
+            if (occ_imp == 1U) {
+                ctx->cell_impulse[slot] = ag->impulse;
+                ctx->cell_state[slot] = ag->state_byte;
+                if ((a & 7U) == (uint32_t)(ctx->takt_counter & 7ULL)) {
+                    ag->vx = ptrc_z_no_zero(((int32_t)ag->vx * 3 + 7) >> 2);
+                    ag->vy = ptrc_z_no_zero(((int32_t)ag->vy * 3) >> 2);
+                    ag->vz = ptrc_z_no_zero(((int32_t)ag->vz * 3) >> 2);
+                }
+            } else {
+                collisions++;
+                uint32_t alt_dir = (a + occ_imp + (uint32_t)ctx->takt_counter) % PTRC_GFX_JUNCTIONS;
+                ag->vy = ptrc_z_no_zero((int32_t)ag->vy + PTRC_JUNCTION_DIRS_24[alt_dir][1]);
+                ag->vz = ptrc_z_no_zero((int32_t)ag->vz + PTRC_JUNCTION_DIRS_24[alt_dir][2]);
+                if (ag->vy > 8) ag->vy = 8;
+                if (ag->vy < -8) ag->vy = -8;
+                if (ag->vz > 8) ag->vz = 8;
+                if (ag->vz < -8) ag->vz = -8;
+                if (ag->impulse > occ_imp) {
+                    ctx->cell_impulse[slot] = ag->impulse;
+                    ctx->cell_state[slot] = ag->state_byte;
+                }
+            }
+        }
+
+        ag->x = (int16_t)nx;
+        ag->y = (int16_t)ny;
+        ag->z = (int16_t)nz;
     }
 
     ctx->deflection_count += collisions;
-    ctx->active_load = occupied_cells + (collisions * 2U);
+    ctx->active_load = (collisions >> 4U) + (pyramid_hits >> 2U) + 600U;
     (void)ptrc_gfx_evaluate_observer_sync(ctx);
 
     ctx->takt_counter++;
-    ctx->clock_phase_24 = (ctx->clock_phase_24 % PTRC_GFX_JUNCTIONS) + 1U;
+    if (ctx->observer_sub_takt >= PTRC_GFX_TAKT_137) {
+        ctx->observer_sub_takt = 1U;
+        ctx->clock_phase_24 = (ctx->clock_phase_24 % PTRC_GFX_JUNCTIONS) + 1U;
+    } else {
+        ctx->observer_sub_takt++;
+    }
     return PTRC_GFX_OK;
 }
 
@@ -315,11 +359,11 @@ int ptrc_gfx_render_observer_rgb24(
     if (!ctx || !rgb_out || width < 2U || height < 2U) return PTRC_GFX_ERR;
 
     size_t total_pixels = (size_t)width * (size_t)height;
-    int32_t *z_buf = (int32_t *)malloc(total_pixels * sizeof(int32_t));
+    int16_t *z_buf = (int16_t *)malloc(total_pixels * sizeof(int16_t));
     if (!z_buf) return PTRC_GFX_ERR;
 
     for (size_t p = 0U; p < total_pixels; p++) {
-        z_buf[p] = 0x7FFF; /* Nullfreier Fern-Initialwert */
+        z_buf[p] = 1000;
         size_t idx = p * 3U;
         rgb_out[idx + 0U] = 1U;
         rgb_out[idx + 1U] = 2U;
@@ -331,77 +375,78 @@ int ptrc_gfx_render_observer_rgb24(
         return PTRC_RENDER_STALL;
     }
 
-    uint32_t phase_idx = (ctx->clock_phase_24 - 1U) % PTRC_GFX_JUNCTIONS;
-    int32_t rot_u = PTRC_CLOCK24_U[phase_idx];
-    int32_t rot_v = PTRC_CLOCK24_V[phase_idx];
+    uint32_t rot_idx = ctx->pyramid_angle_idx % PTRC_GFX_JUNCTIONS;
+    int32_t rot_u = PTRC_CLOCK24_U[rot_idx];
+    int32_t rot_v = PTRC_CLOCK24_V[rot_idx];
 
-    for (uint32_t c = 0U; c < PTRC_LATTICE_CELLS; c++) {
-        const ptrc_crystal_cell_t *cell = &ctx->cells[c];
-        if (cell->impulse == 1U) continue;
+    /* 1. Solide rotierende 3D-Pyramide im linken Drittel rendern (Z-Occlusion) */
+    int32_t pyr_cx = ((PTRC_PYRAMID_CENTER_X + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
+    int32_t pyr_cy = (int32_t)(height >> 1U);
+    int32_t pyr_r_px = (PTRC_PYRAMID_RADIUS * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
 
-        int32_t x = (int32_t)cell->cx * 28;
-        int32_t y = (int32_t)cell->cy * 28;
-        int32_t z = (int32_t)cell->cz * 28;
+    for (int32_t dy = -pyr_r_px; dy <= pyr_r_px; dy++) {
+        int32_t py = pyr_cy + dy;
+        if (py < 0 || py >= (int32_t)height) continue;
+        int32_t wy = ((py - (int32_t)(height >> 1U)) * (PTRC_TUNNEL_HALF_Y * 2)) / (int32_t)height;
 
-        int32_t rx = (x * rot_u - z * rot_v) >> 10;
-        int32_t rz = ((x * rot_v + z * rot_u) >> 10) + 320;
-        if (rz <= 20) continue;
+        for (int32_t dx = -pyr_r_px; dx <= pyr_r_px; dx++) {
+            int32_t px = pyr_cx + dx;
+            if (px < 0 || px >= (int32_t)width) continue;
+            int32_t wx = ((px - (int32_t)(width >> 1U)) * (PTRC_TUNNEL_HALF_X * 2)) / (int32_t)width;
 
-        int32_t denom = ((rz * 1000) / PTRC_GFX_DEPTH_1414) + PTRC_GFX_INVARIANT_156;
-        int32_t px = ((rx * (int32_t)width) / denom) + (int32_t)(width >> 1U);
-        int32_t py = ((y * (int32_t)height) / denom) + (int32_t)(height >> 1U);
+            for (int32_t wz = -PTRC_PYRAMID_RADIUS; wz <= PTRC_PYRAMID_RADIUS; wz += 4) {
+                if (ptrc_point_in_rotating_pyramid(wx, wy, wz, rot_u, rot_v)) {
+                    size_t p_flat = (size_t)py * (size_t)width + (size_t)px;
+                    z_buf[p_flat] = (int16_t)wz;
+                    int32_t shade = 230 - ((wz + PTRC_PYRAMID_RADIUS) >> 1);
+                    if (shade < 60) shade = 60;
+                    if (shade > 250) shade = 250;
+                    size_t pix = p_flat * 3U;
+                    rgb_out[pix + 0U] = (uint8_t)shade;
+                    rgb_out[pix + 1U] = (uint8_t)((shade * 3) >> 2);
+                    rgb_out[pix + 2U] = (uint8_t)((shade >> 2) + 20);
+                    break;
+                }
+            }
+        }
+    }
+
+    /* 2. Alle 60.000 Luftmolekuel-Cluster (1+12) mit Z-Occlusion & Transparenz projizieren */
+    for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
+        const ptrc_wind_agent_t *ag = &ctx->agents[a];
+
+        int32_t z_depth = (int32_t)ag->z;
+        int32_t persp = 1414 + z_depth;
+        int32_t sx = ((int32_t)ag->x * 1414) / persp;
+        int32_t sy = ((int32_t)ag->y * 1414) / persp;
+
+        int32_t px = ((sx + PTRC_TUNNEL_HALF_X) * (int32_t)width) / (PTRC_TUNNEL_HALF_X * 2);
+        int32_t py = ((sy + PTRC_TUNNEL_HALF_Y) * (int32_t)height) / (PTRC_TUNNEL_HALF_Y * 2);
 
         if (px >= 0 && px < (int32_t)width && py >= 0 && py < (int32_t)height) {
             size_t p_flat = (size_t)py * (size_t)width + (size_t)px;
-            uint32_t optics = (uint32_t)((cell->state_byte >> 5U) & 3U);
 
-            /* Z-Occlusion & Transparenz-Staffelung in reinen Ganzzahlen */
-            if (rz <= z_buf[p_flat] || optics != PTRC_OPTICS_OPAQUE) {
-                int32_t depth_shade = 255 - ((rz - 100) >> 1);
-                if (depth_shade < 48) depth_shade = 48;
+            if (z_depth <= (int32_t)z_buf[p_flat]) {
+                z_buf[p_flat] = (int16_t)z_depth;
+                int32_t depth_shade = 240 - ((z_depth + PTRC_TUNNEL_HALF_Z) >> 2);
+                if (depth_shade < 55) depth_shade = 55;
                 if (depth_shade > 255) depth_shade = 255;
 
                 uint8_t r, g, b;
-                ptrc_transpose_wavelength_to_rgb(cell->state_byte, depth_shade, &r, &g, &b);
+                ptrc_transpose_wavelength_to_rgb(ag->state_byte, depth_shade, &r, &g, &b);
 
                 size_t pix = p_flat * 3U;
-                if (rz <= z_buf[p_flat]) {
-                    z_buf[p_flat] = rz;
-                    if (optics == PTRC_OPTICS_OPAQUE || rgb_out[pix] == 1U) {
-                        rgb_out[pix + 0U] = r;
-                        rgb_out[pix + 1U] = g;
-                        rgb_out[pix + 2U] = b;
-                    } else {
-                        /* Transparente Ueberlagerung (50/50 Integer-Mix ohne 0) */
-                        uint8_t mr = (uint8_t)((rgb_out[pix + 0U] + r) >> 1U);
-                        uint8_t mg = (uint8_t)((rgb_out[pix + 1U] + g) >> 1U);
-                        uint8_t mb = (uint8_t)((rgb_out[pix + 2U] + b) >> 1U);
-                        rgb_out[pix + 0U] = (mr == 0U) ? 1U : mr;
-                        rgb_out[pix + 1U] = (mg == 0U) ? 1U : mg;
-                        rgb_out[pix + 2U] = (mb == 0U) ? 1U : mb;
-                    }
+                if (rgb_out[pix + 0U] == 1U && rgb_out[pix + 1U] == 2U) {
+                    rgb_out[pix + 0U] = r;
+                    rgb_out[pix + 1U] = g;
+                    rgb_out[pix + 2U] = b;
                 } else {
-                    /* Kristall liegt dahinter, scheint aber durch Transparenz durch */
-                    uint8_t mr = (uint8_t)((rgb_out[pix + 0U] * 3U + r) >> 2U);
-                    uint8_t mg = (uint8_t)((rgb_out[pix + 1U] * 3U + g) >> 2U);
-                    uint8_t mb = (uint8_t)((rgb_out[pix + 2U] * 3U + b) >> 2U);
+                    uint8_t mr = (uint8_t)((rgb_out[pix + 0U] + r) >> 1U);
+                    uint8_t mg = (uint8_t)((rgb_out[pix + 1U] + g) >> 1U);
+                    uint8_t mb = (uint8_t)((rgb_out[pix + 2U] + b) >> 1U);
                     rgb_out[pix + 0U] = (mr == 0U) ? 1U : mr;
                     rgb_out[pix + 1U] = (mg == 0U) ? 1U : mg;
                     rgb_out[pix + 2U] = (mb == 0U) ? 1U : mb;
-                }
-
-                /* Fernwirkungs-Ueberdeckung (magnetisch-induktive Cluster-Kopplung) */
-                if (optics == PTRC_OPTICS_FIELD_COUPLED && (px + 1) < (int32_t)width) {
-                    uint32_t partner_idx = (c + (uint32_t)cell->observer_cluster) % PTRC_LATTICE_CELLS;
-                    uint8_t pr, pg, pb;
-                    ptrc_transpose_wavelength_to_rgb(ctx->cells[partner_idx].state_byte, depth_shade, &pr, &pg, &pb);
-                    size_t halo_pix = (p_flat + 1U) * 3U;
-                    uint8_t hr = (uint8_t)((rgb_out[halo_pix + 0U] + pr) >> 1U);
-                    uint8_t hg = (uint8_t)((rgb_out[halo_pix + 1U] + pg) >> 1U);
-                    uint8_t hb = (uint8_t)((rgb_out[halo_pix + 2U] + pb) >> 1U);
-                    rgb_out[halo_pix + 0U] = (hr == 0U) ? 1U : hr;
-                    rgb_out[halo_pix + 1U] = (hg == 0U) ? 1U : hg;
-                    rgb_out[halo_pix + 2U] = (hb == 0U) ? 1U : hb;
                 }
             }
         }
