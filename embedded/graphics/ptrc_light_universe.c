@@ -651,3 +651,183 @@ static inline void ptrc_splat_cluster_1_plus_12(
         }
     }
 }
+
+static void ptrc_render_crystal_pyramid(
+    uint8_t *rgb_out,
+    int16_t *z_buf,
+    uint32_t width,
+    uint32_t height,
+    int32_t rot_u,
+    int32_t rot_v
+) {
+    int32_t half_h = PTRC_PYRAMID_HEIGHT >> 1;
+    const int32_t step = 2;
+
+    for (int32_t ty = -half_h; ty <= half_h; ty += step) {
+        int32_t ny = ptrc_z_no_zero(ty);
+        int32_t hw = ((ty + half_h) * PTRC_PYRAMID_HALF_BASE) / PTRC_PYRAMID_HEIGHT;
+        if (hw < 1) hw = 1;
+        int32_t fcc_shift = ((ty >> 1) & 1);
+
+        for (int32_t s = -hw + fcc_shift; s <= hw; s += step) {
+            int32_t ns = ptrc_z_no_zero(s);
+            int32_t is_edge = (ptrc_abs32(ptrc_abs32(s) - hw) <= step || ty <= (-half_h + step) || ty >= (half_h - step));
+
+            for (int32_t wall = 0; wall < 4; wall++) {
+                int32_t lx, lz;
+                uint8_t wr, wg, wb;
+                if (wall == 0) {
+                    lx = ns; lz = -hw; wr = 215U; wg = 165U; wb = 55U;
+                } else if (wall == 1) {
+                    lx = hw; lz = ns; wr = 185U; wg = 138U; wb = 45U;
+                } else if (wall == 2) {
+                    lx = ns; lz = hw; wr = 145U; wg = 105U; wb = 35U;
+                } else {
+                    lx = -hw; lz = ns; wr = 175U; wg = 130U; wb = 42U;
+                }
+                if (is_edge) {
+                    wr = 252U; wg = 220U; wb = 115U;
+                }
+
+                int32_t rx = (lx * rot_u + lz * rot_v) >> 10;
+                int32_t rz = (-lx * rot_v + lz * rot_u) >> 10;
+                int32_t wy = (ny * 951 + rz * 309) >> 10;
+                int32_t wz = (-ny * 309 + rz * 951) >> 10;
+                int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
+
+                ptrc_splat_cluster_1_plus_12(rgb_out, z_buf, width, height, wx, wy, wz, wr, wg, wb, 0);
+            }
+        }
+    }
+
+    int32_t base_hw = PTRC_PYRAMID_HALF_BASE;
+    for (int32_t bz = -base_hw; bz <= base_hw; bz += step) {
+        int32_t nbz = ptrc_z_no_zero(bz);
+        int32_t fcc_shift = ((bz >> 1) & 1);
+        for (int32_t bx = -base_hw + fcc_shift; bx <= base_hw; bx += step) {
+            int32_t nbx = ptrc_z_no_zero(bx);
+            int32_t is_border = (ptrc_abs32(ptrc_abs32(bx) - base_hw) <= step ||
+                                 ptrc_abs32(ptrc_abs32(bz) - base_hw) <= step);
+            uint8_t br = is_border ? 252U : 115U;
+            uint8_t bg = is_border ? 220U : 84U;
+            uint8_t bb = is_border ? 115U : 30U;
+
+            int32_t rx = (nbx * rot_u + nbz * rot_v) >> 10;
+            int32_t rz = (-nbx * rot_v + nbz * rot_u) >> 10;
+            int32_t wy = (half_h * 951 + rz * 309) >> 10;
+            int32_t wz = (-half_h * 309 + rz * 951) >> 10;
+            int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
+
+            ptrc_splat_cluster_1_plus_12(rgb_out, z_buf, width, height, wx, wy, wz, br, bg, bb, 0);
+        }
+    }
+}
+
+static void ptrc_render_crystal_sphere(
+    uint8_t *rgb_out,
+    int16_t *z_buf,
+    uint32_t width,
+    uint32_t height,
+    int32_t rot_u,
+    int32_t rot_v
+) {
+    const int32_t r_sph = PTRC_SPHERE_RADIUS;
+    const int32_t r_sq = r_sph * r_sph;
+    const int32_t r_inner_sq = (r_sph - 5) * (r_sph - 5);
+    const int32_t step = 4;
+
+    for (int32_t ly = -r_sph; ly <= r_sph; ly += step) {
+        int32_t ny = ptrc_z_no_zero(ly);
+        int32_t fcc_y = ((ly >> 1) & 1);
+        for (int32_t lz = -r_sph + fcc_y; lz <= r_sph; lz += step) {
+            int32_t nz = ptrc_z_no_zero(lz);
+            int32_t yz_sq = ny * ny + nz * nz;
+            if (yz_sq > r_sq) continue;
+
+            for (int32_t lx = -r_sph; lx <= r_sph; lx += step) {
+                int32_t nx = ptrc_z_no_zero(lx);
+                int32_t q = yz_sq + nx * nx;
+                if (q > r_sq || q < r_inner_sq) continue;
+
+                int32_t rx = (nx * rot_u - nz * rot_v) >> 10;
+                int32_t rz = (nx * rot_v + nz * rot_u) >> 10;
+
+                int32_t light = 155 - ((rx + ny - rz) >> 3);
+                if (light < 55) light = 55;
+                if (light > 250) light = 250;
+
+                int32_t is_ring = (ptrc_abs32(ny) <= 4 || ptrc_abs32(nx) <= 4) ? 1 : 0;
+                uint8_t cr = is_ring ? 140U : (uint8_t)((light * 3) >> 3);
+                uint8_t cg = is_ring ? 245U : (uint8_t)((light * 7) >> 3);
+                uint8_t cb = is_ring ? 255U : (uint8_t)light;
+
+                ptrc_splat_cluster_1_plus_12(
+                    rgb_out, z_buf, width, height,
+                    rx + PTRC_SPHERE_CENTER_X,
+                    ny + PTRC_SPHERE_CENTER_Y,
+                    rz + PTRC_SPHERE_CENTER_Z,
+                    cr, cg, cb, 0
+                );
+            }
+        }
+    }
+}
+
+int ptrc_gfx_render_observer_rgb24(
+    ptrc_gfx_ctx_t *ctx,
+    uint32_t width,
+    uint32_t height,
+    uint8_t *rgb_out
+) {
+    if (!ctx || !rgb_out || width < 2U || height < 2U) return PTRC_GFX_ERR;
+
+    size_t total_pixels = (size_t)width * (size_t)height;
+    if (total_pixels > PTRC_MAX_ZBUF_PIXELS) return PTRC_GFX_ERR;
+
+    int16_t *z_buf = PTRC_STATIC_ZBUF;
+    for (size_t p = 0U; p < total_pixels; p++) {
+        z_buf[p] = 1000;
+        size_t idx = p * 3U;
+        rgb_out[idx + 0U] = 1U;
+        rgb_out[idx + 1U] = 2U;
+        rgb_out[idx + 2U] = 6U;
+    }
+
+    if (ctx->render_status == PTRC_RENDER_STALL) {
+        return PTRC_RENDER_STALL;
+    }
+
+    int32_t rot_u, rot_v;
+    ptrc_get_smooth_rotation(ctx->pyramid_angle_idx, &rot_u, &rot_v);
+
+    ptrc_render_crystal_pyramid(rgb_out, z_buf, width, height, rot_u, rot_v);
+    ptrc_render_crystal_sphere(rgb_out, z_buf, width, height, rot_u, rot_v);
+
+    for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
+        const ptrc_wind_agent_t *ag = &ctx->agents[a];
+        int32_t z_depth = (int32_t)ag->z;
+
+        int32_t depth_shade = 245 - ((z_depth + PTRC_TUNNEL_HALF_Z) >> 2);
+        if (depth_shade < 50) depth_shade = 50;
+        if (depth_shade > 255) depth_shade = 255;
+
+        uint8_t r, g, b;
+        ptrc_transpose_wavelength_to_rgb(ag->state_byte, depth_shade, &r, &g, &b);
+
+        ptrc_splat_cluster_1_plus_12(
+            rgb_out, z_buf, width, height,
+            (int32_t)ag->x, (int32_t)ag->y, z_depth,
+            r, g, b, 1
+        );
+    }
+
+    return PTRC_GFX_OK;
+}
+
+void ptrc_gfx_wipe(ptrc_gfx_ctx_t *ctx) {
+    if (!ctx) return;
+    volatile uint8_t *p = (volatile uint8_t *)ctx;
+    for (size_t i = 0U; i < sizeof(*ctx); i++) {
+        p[i] = 0xFFU;
+    }
+}
