@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.5.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.6.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,8 @@
 # ==============================================================================
 
 """
-Bit-Paritaets- & Nullfreiheits-Audit (Z^3 \\ {0}) zwischen C11 (Single & Parallel)
-und Python fuer die pTRC 3D-Windkanal-Engine v4.5.0 (144-Facetten + 1+12-Gitter).
+Bit-Paritaets- & Nullfreiheits-Audit (Z^3 \\ {0}) zwischen C11 (Single & Adaptive 1..8)
+und Python fuer die pTRC 3D-Windkanal-Engine v4.6.0.
 """
 
 from __future__ import annotations
@@ -63,6 +63,7 @@ class CPtrcGfxCtx(ctypes.Structure):
         ("agents", CPtrcWindAgent * PTRC_WIND_AGENTS),
         ("cell_impulse", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
         ("cell_density", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
+        ("cell_cohesion", ctypes.c_uint8 * PTRC_OCCUPANCY_SLOTS),
         ("sponge", ctypes.c_int32 * PTRC_GFX_FACETS),
         ("prime_rings", ctypes.c_uint32 * PTRC_GFX_PRIME_RINGS),
         ("takt_counter", ctypes.c_uint64),
@@ -70,6 +71,9 @@ class CPtrcGfxCtx(ctypes.Structure):
         ("observer_sub_takt", ctypes.c_uint32),
         ("pyramid_angle_idx", ctypes.c_uint32),
         ("active_load", ctypes.c_uint32),
+        ("assigned_engines", ctypes.c_uint32),
+        ("bound_clusters", ctypes.c_uint32),
+        ("gpu_int32_active", ctypes.c_uint32),
         ("render_interval_takts", ctypes.c_uint32),
         ("last_render_takt", ctypes.c_uint32),
         ("deflection_count", ctypes.c_uint32),
@@ -91,6 +95,7 @@ def build_shared_lib(build_dir: Path) -> ctypes.CDLL:
         "-fPIC",
         f"-I{C_INC}",
         str(C_SRC),
+        "-ldl",
         "-o",
         str(so_path),
     ]
@@ -103,8 +108,8 @@ def build_shared_lib(build_dir: Path) -> ctypes.CDLL:
     lib.ptrc_gfx_step_takt.argtypes = [ctypes.POINTER(CPtrcGfxCtx)]
     lib.ptrc_gfx_step_takt.restype = ctypes.c_int
 
-    lib.ptrc_gfx_step_takt_parallel.argtypes = [ctypes.POINTER(CPtrcGfxCtx)]
-    lib.ptrc_gfx_step_takt_parallel.restype = ctypes.c_int
+    lib.ptrc_gfx_step_takt_adaptive.argtypes = [ctypes.POINTER(CPtrcGfxCtx)]
+    lib.ptrc_gfx_step_takt_adaptive.restype = ctypes.c_int
 
     lib.ptrc_gfx_render_observer_rgb24.argtypes = [
         ctypes.POINTER(CPtrcGfxCtx),
@@ -136,6 +141,8 @@ def run_parity_audit() -> int:
 
         assert c_ctx.takt_counter == py_ctx.takt_counter
         assert c_ctx.deflection_count == py_ctx.deflection_count
+        assert c_ctx.assigned_engines == py_ctx.assigned_engines
+        assert c_ctx.bound_clusters == py_ctx.bound_clusters
 
         for i in range(PTRC_WIND_AGENTS):
             ca = c_ctx.agents[i]
@@ -154,15 +161,16 @@ def run_parity_audit() -> int:
         assert b"\x00" not in c_bytes
         assert c_bytes == py_bytes
 
-        assert lib.ptrc_gfx_step_takt_parallel(ctypes.byref(c_ctx)) == PTRC_GFX_OK
+        assert lib.ptrc_gfx_step_takt_adaptive(ctypes.byref(c_ctx)) == PTRC_GFX_OK
         for i in range(PTRC_WIND_AGENTS):
             ca = c_ctx.agents[i]
             assert ca.x != 0 and ca.y != 0 and ca.z != 0 and ca.state_byte != 0
 
+        hw_str = "GPU-INT32" if c_ctx.gpu_int32_active == 1 else "CPU-INT"
         lib.ptrc_gfx_wipe(ctypes.byref(c_ctx))
         print(
-            f"[PASS] C11 (Single & 4-Engine Parallel) <-> Python 100% Bit-Paritaet | "
-            f"Agenten={PTRC_WIND_AGENTS} | Kollisionen={py_ctx.deflection_count} | 0x00-Bytes=0"
+            f"[PASS] C11 <-> Python 100% Bit-Paritaet | Hardware={hw_str} | "
+            f"Engines={py_ctx.assigned_engines}..8 | GebundeneCluster={py_ctx.bound_clusters} | 0x00=0"
         )
     return 0
 
