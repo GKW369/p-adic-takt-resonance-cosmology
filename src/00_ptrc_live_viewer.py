@@ -19,7 +19,7 @@
 
 """
 Full-HD (1920x1080) 3D-Windkanal Live-Viewer (32cm x 18cm x 8cm, 60.000 Molekuel-Cluster,
-rotierende 3D-Pyramide im linken Drittel, Z-Occlusion & Transparenz in Z^3 \\ {0}).
+scharfkantige rotierende 3D-Pyramide mittig im linken Drittel, Z-Occlusion & Tiefenskalierung).
 
 Steuerung im Fenster:
   [+] / [-]   : Stroemungs-Takte pro Frame (1..8)
@@ -168,3 +168,4 @@ class PtrcWindtunnelLiveViewer:
 if __name__ == "__main__":
     viewer = PtrcWindtunnelLiveViewer(FULL_HD_WIDTH, FULL_HD_HEIGHT)
     sys.exit(viewer.run())
+
