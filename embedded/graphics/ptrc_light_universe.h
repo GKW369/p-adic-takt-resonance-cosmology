@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/* ==============================================================================
+ * 3D-WINDKANAL & 144-FACETTEN RAUMKRISTALL-KONSTANTEN (32cm x 18cm x 8cm, Z \ {0})
+ * ============================================================================== */
 #define PTRC_GFX_FACETS             144U
 #define PTRC_GFX_JUNCTIONS          24U
 #define PTRC_GFX_MEM_FACETS         120U
@@ -37,9 +40,19 @@ extern "C" {
 #define PTRC_GFX_INVARIANT_156      156
 #define PTRC_GFX_DEPTH_1414         1414
 
-#define PTRC_LATTICE_DIM            16U
-#define PTRC_LATTICE_CELLS          (PTRC_LATTICE_DIM * PTRC_LATTICE_DIM * PTRC_LATTICE_DIM)
-#define PTRC_MAX_IMPULSE_PACKETS    1024U
+/* Windkanal-Halbachsen in nullfreien Kristall-Einheiten (1 mm = 60 Einheiten)
+ * Breite: 32 cm (-960..+960) | Hoehe: 18 cm (-540..+540) | Tiefe: 8 cm (-240..+240) */
+#define PTRC_TUNNEL_HALF_X          960
+#define PTRC_TUNNEL_HALF_Y          540
+#define PTRC_TUNNEL_HALF_Z          240
+
+/* Rotierende 3D-Pyramide im linken Drittel (X = -320, Kantenlaenge 4.5 cm -> R = 135) */
+#define PTRC_PYRAMID_CENTER_X       (-320)
+#define PTRC_PYRAMID_RADIUS         135
+
+/* 60.000 Luftmolekuel-Agenten (je 1+12 = 13 Raumkristalle) + 3D-Hashgitter */
+#define PTRC_WIND_AGENTS            60000U
+#define PTRC_OCCUPANCY_SLOTS        65536U  /* 2^16 Kollisions-Slots auf dem 1+12-Gitter */
 
 #define PTRC_GFX_OK                 1
 #define PTRC_GFX_ERR                (-1)
@@ -47,43 +60,34 @@ extern "C" {
 #define PTRC_RENDER_WAIT            2
 #define PTRC_RENDER_STALL           (-2)
 
-/* 1-Byte Kaskaden- & Fernwirkungs-Modi (Bits 5..7 in state_byte, Werte 1..255) */
 #define PTRC_OPTICS_OPAQUE          0U
 #define PTRC_OPTICS_TRANSLUCENT     1U
 #define PTRC_OPTICS_CRYSTALLINE     2U
-#define PTRC_OPTICS_FIELD_COUPLED   3U  /* Magnetisch-induktive Fernwirkung */
+#define PTRC_OPTICS_FIELD_COUPLED   3U
 
 typedef struct {
-    int8_t   cx, cy, cz;
-    uint8_t  state_byte;
-    uint8_t  impulse;
-    uint8_t  observer_cluster;
-    uint8_t  facet_mem[PTRC_GFX_MEM_FACETS];
-} ptrc_crystal_cell_t;
+    int16_t  x, y, z;               /* Nullfreie 3D-Koordinaten im 1+12-Gitter (Z^3 \ {0}) */
+    int16_t  vx, vy, vz;            /* Ganzzahl-Impulsvektor */
+    uint8_t  state_byte;            /* 1-Byte Kaskade (1..255): Element, Optik, Wellenlaenge */
+    uint8_t  impulse;               /* Impuls-Staerke (1..255) */
+} ptrc_wind_agent_t;
 
 typedef struct {
-    int32_t  x, y, z;
-    uint8_t  dir_idx;
-    uint8_t  impulse;
-    uint8_t  wavelength_id;
-    uint8_t  element_id;
-    uint8_t  optics_mode;
-    uint8_t  cascade_root;
-} ptrc_impulse_packet_t;
-
-typedef struct {
-    ptrc_crystal_cell_t   cells[PTRC_LATTICE_CELLS];
-    ptrc_impulse_packet_t packets[PTRC_MAX_IMPULSE_PACKETS];
-    int32_t               sponge[PTRC_GFX_FACETS];
-    uint32_t              prime_rings[PTRC_GFX_PRIME_RINGS];
-    uint64_t              takt_counter;
-    uint32_t              clock_phase_24;
-    uint32_t              active_load;
-    uint32_t              render_interval_takts;
-    uint32_t              last_render_takt;
-    uint32_t              deflection_count;
-    uint32_t              mirror_pulses;
-    int32_t               render_status;
+    ptrc_wind_agent_t agents[PTRC_WIND_AGENTS];
+    uint8_t           cell_impulse[PTRC_OCCUPANCY_SLOTS];
+    uint8_t           cell_state[PTRC_OCCUPANCY_SLOTS];
+    int32_t           sponge[PTRC_GFX_FACETS];
+    uint32_t          prime_rings[PTRC_GFX_PRIME_RINGS];
+    uint64_t          takt_counter;
+    uint32_t          clock_phase_24;
+    uint32_t          observer_sub_takt;
+    uint32_t          pyramid_angle_idx;
+    uint32_t          active_load;
+    uint32_t          render_interval_takts;
+    uint32_t          last_render_takt;
+    uint32_t          deflection_count;
+    uint32_t          mirror_pulses;
+    int32_t           render_status;
 } ptrc_gfx_ctx_t;
 
 int  ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed);
