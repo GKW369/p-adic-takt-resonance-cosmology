@@ -17,7 +17,6 @@
 # If not, see <https://gnu.org>.
 # ==============================================================================
 
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -128,6 +127,10 @@ def ptrc_transpose_wavelength_to_rgb(state_byte: int, depth_shade: int) -> Tuple
     return (1 if r == 0 else r, 1 if g == 0 else g, 1 if b == 0 else b)
 
 
+def _default_facet_mem() -> List[int]:
+    return [1 for _ in range(PTRC_GFX_MEM_FACETS)]
+
+
 @dataclass
 class PtrcCrystalCell:
     cx: int
@@ -136,7 +139,7 @@ class PtrcCrystalCell:
     state_byte: int = 1
     impulse: int = 1
     observer_cluster: int = 1
-    facet_mem: List[int] = field(default_factory=lambda: [1] * PTRC_GFX_MEM_FACETS)
+    facet_mem: List[int] = field(default_factory=_default_facet_mem)
 
 
 @dataclass
@@ -153,7 +156,7 @@ class PtrcGfxContext:
     def __init__(self, seed: int = 137210144) -> None:
         rng = ptrc_u64_no_zero((seed ^ 614889782588491410) & U64_MASK)
         self.prime_rings: List[int] = list(PTRC_GFX_RINGS)
-        self.sponge: List[int] = [1] * PTRC_GFX_FACETS
+        self.sponge: List[int] = [-1 for _ in range(PTRC_GFX_FACETS)]
 
         for f in range(PTRC_GFX_FACETS):
             rng = ptrc_u64_no_zero(((rng * 137 + (f + 1) * 211) & U64_MASK) ^ (rng >> 13))
