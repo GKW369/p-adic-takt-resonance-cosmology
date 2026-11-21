@@ -62,6 +62,8 @@ class PtrcFullHdLiveObserver:
         self.lib.ptrc_gfx_init(ctypes.byref(self.ctx), self.seed)
 
         self.paused = False
+        self.closing = False
+        self.after_id = None
         self.fullscreen = False
         self.sub_steps_per_frame = 2
         self.start_time = time.perf_counter()
@@ -118,6 +120,8 @@ class PtrcFullHdLiveObserver:
             self.pause_started = time.perf_counter()
         else:
             self.paused = False
+        self.closing = False
+        self.after_id = None
             self.paused_total += time.perf_counter() - self.pause_started
 
     def toggle_fullscreen(self, _event: tk.Event | None = None) -> None:
@@ -139,6 +143,8 @@ class PtrcFullHdLiveObserver:
         return f"{hrs:02d}:{mins:02d}:{secs:02d}"
 
     def update_loop(self) -> None:
+        if self.closing:
+            return
         if not self.paused:
             t0 = time.perf_counter()
             elapsed = max(0.001, t0 - self.start_time - self.paused_total)
@@ -174,15 +180,23 @@ class PtrcFullHdLiveObserver:
                 ),
             )
 
-        self.root.after(1, self.update_loop)
+        if not self.closing:
+            self.after_id = self.root.after(1, self.update_loop)
 
     def close(self, _event: tk.Event | None = None) -> None:
         self.lib.ptrc_gfx_wipe(ctypes.byref(self.ctx))
         self.tmp_dir.cleanup()
+        self.closing = True
+        if self.after_id is not None:
+            try:
+                self.root.after_cancel(self.after_id)
+            except Exception:
+                pass
+        self.root.quit()
         self.root.destroy()
 
     def run(self) -> int:
-        self.root.after(5, self.update_loop)
+        self.after_id = self.root.after(5, self.update_loop)
         self.root.mainloop()
         return 0
 
