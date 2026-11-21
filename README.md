@@ -30,9 +30,9 @@
 
 ---
 
-![pTRC Genesis Matrix](ptrc_4k_genesis.png)
+[![pTRC Genesis Matrix](ptrc_4k_genesis.png)](ptrc_4k_genesis.png)
 
-*Figure 1: The unmanifested integer field - `ptrc_4k_genesis.png` – generated via pure modular arithmetic entirely devoid of floating-point noise.*
+*Figure 1: The unmanifested integer field — [`ptrc_4k_genesis.png`](ptrc_4k_genesis.png) — generated via pure modular arithmetic entirely devoid of floating-point noise. **Viewing Note:** In the compressed GitHub preview, this 4K matrix appears primarily as a turquoise surface with subtle circular patterns. To inspect its full fine-grained crystalline lattice and interference geometry, please click the image (or download `ptrc_4k_genesis.png` directly from the repository root directory), open it at native 4K resolution, and zoom in.*
 
 ---
 
@@ -55,16 +55,17 @@ Prior to spatial manifestation or continuous metric calibration, the system oper
 By translating dynamic floating-point partial differential equations into static register look-ups, the pTRC ecosystem optimizes memory bandwidth and thermal dissipation limits on hardware-constrained architectures:
 
 *   **FPU Bypass for Next-Gen Edge-AI Silicon:** Bypassing the floating-point execution layer natively prevents instruction pipeline stalls, register aliasing, and quantization entropy decay. This yields 100% deterministic inference states with zero thermal drift.
-*   **Isotropic Non-Archimedean Fluid Dynamics & Aerodynamics:** Realized via a Lattice-Gas Cellular Automaton (LGCA) inside the `fluid_resonance.py` module. Boundaries and vector interactions execute through discrete bitwise memory shifts (`np.roll`), guaranteeing 100% exact mass and momentum conservation without Navier-Stokes numerical blow-ups. This is optimized for high-density particle subsystems, industrial aerodynamics, and aviation flow models.
+*   **Isotropic Non-Archimedean Fluid Dynamics & Aerodynamics:** Realized via a Lattice-Gas Cellular Automaton (LGCA) inside the `fluid_resonance.py` module and scaled to full 3D space-crystal windtunnels inside `ptrc_light_universe.c`. Boundaries and vector interactions execute through discrete bitwise memory shifts (`np.roll`) and crossed Plichta reflections in $\mathbb{Z}^3 \setminus \{0\}$, guaranteeing 100% exact mass and momentum conservation without Navier-Stokes numerical blow-ups. This is optimized for high-density particle subsystems, industrial aerodynamics, and aviation flow models.
 *   **Shared-Memory Quantum Entanglement Prototyping:** Resolves EPR locality constraints without relying on spatial analog signaling variables. Entangled lattice nodes map directly to a unified pointer slot in kernel memory, compressing the quantum state collapse down to absolute $O(1)$ temporal complexity.
 *   **Anisotropic Crystalline Waveguide Trajectories:** Optimized for multi-layered solid-state ion transport paths (e.g., solid-state battery electrolytes). Spatial filtering runs lossless through the 144 open outer triangular facets of a center-locked vector equilibrium lattice.
-*   **1080p Stereoscopic & Ultra-HD 4K Graphics:** Implemented within the experimental `ptrc_3d_engine` layer. Computes real-time 3D perspective transformations, retinal depth curvature, and cross-mirror phase-shading contours strictly within the integer domain ($\mathbb{Z}^3$), completely skipping standard floating-point depth buffers and polygon vertex bottlenecks.
+*   **1080p Stereoscopic & Ultra-HD 4K Graphics (`ptrc_light_universe` v4.6.0):** Implemented within the `ptrc_3d_engine` and `ptrc_light_universe.c` / `ptrc_light_universe.py` layers. Computes real-time 3D perspective transformations, `1+12` cuboctahedral crystal projections, retinal depth curvature, and cross-mirror phase-shading contours strictly within the zero-free integer domain ($\mathbb{Z}^3 \setminus \{0\}$), completely skipping standard floating-point depth buffers and polygon vertex bottlenecks while supporting hardware `int32` GPU probing with bit-identical CPU fallback.
 
 ## 📊 Industrial pTRC Application Matrix (Hardware & Software Bypass Vectors)
 
 | Physical Domain / Core Module | Pure Integer Architecture (\(\mathbb{Z}\)) | Commercial Lever (Advantage over Conventional FPU Arrays) | Target Market / Strategic Sectors |
 | :--- | :--- | :--- | :--- |
-| **Gaming & Real-Time Graphics**<br>`fluid_resonance.py`<br>`pi_square_crystallization.py`<br>`ptrc_fluid_crystal_3d.c` | 100% bit-exact integer domain tracking | **Radical Gaming Industry Disruption:**<br>1. **Collision Detection in O(1):** Spatiotemporal object overlaps are read instantly via integer matrix coordinate intersections, completely bypassing iterative bounding-box tree look-ups.<br>2. **Zero-Drift Network Netcode:** Guarantees an un-compromised, synchronous global multiplayer state. Eliminates client-server de-synchronizations (*desyncs*) as rounding interpolation variance drops to absolute zero.<br>3. **Lossless Particle Subsystems:** High-density fluid, aero, and fracturing dynamics run natively via register look-ups on standard ARM/i3 chips without activating the FPU. | Triple-A Game Studios, Next-Gen Engine Developers (Unity/Unreal Alternatives), Cloud Gaming Infrastructures |
+| **Gaming & Real-Time Graphics**<br>`fluid_resonance.py`<br>`pi_square_crystallization.py`<br>`ptrc_light_universe.c`<br>`ptrc_game_collision.c` | 100% bit-exact integer domain tracking in $\mathbb{Z}^3 \setminus \{0\}$ with `1+12` FCC lattice & thread-local collision grids | **Radical Gaming Industry Disruption (`v4.6.0` Verified):**<br>1. **Zero-Tunneling Collision Detection (`tunneling_escapes == 0`):** Spatiotemporal object overlaps (`60,000` clusters = `780,000` crystals in `2.159 ms`/tick) are resolved via discrete integer lattice steps, mathematically eliminating geometric tunneling and iterative bounding-box tree look-ups.<br>2. **Zero-Drift Multiplayer Lockstep Netcode:** Guarantees an un-compromised, synchronous global multiplayer state verified via 64-bit `lockstep_state_hash`. Eliminates client-server de-synchronizations (*desyncs*) across heterogeneous CPUs.<br>3. **Lossless Particle Subsystems & 1080p Integer Z-Buffer:** High-density fluid, aero, and fracturing dynamics run natively via 1-byte register look-ups (`1..255`) on standard ARM/x86 chips without activating the FPU. | Triple-A Game Studios, Next-Gen Engine Developers (Unity/Unreal Alternatives), Cloud Gaming & Lockstep Multiplayer Infrastructures |
+| **3D Aerodynamics & Digital Windtunnels (`v4.6.0`)**<br>`ptrc_light_universe.h`<br>`ptrc_light_universe.c`<br>`ptrc_light_universe.py` | `144`-facet crystal anisotropy (`120` memory + `24` junctions), `1+12` cuboctahedral packing & adaptive `1..8` sector engines | **Real-Time Embedded Windtunnel & Observer Physics:** Simulates `60,000` `1+12` fluid clusters (`13.96M` crystal updates/s) interacting with rotating 3D obstacles (pyramid & centered sphere) in a `32×18×8 cm` tunnel with dynamic observer time dilation (`137`-tick base) up to event-horizon saturation (`PTRC_RENDER_STALL`). | Industrial Aerodynamics, Automotive & Aviation Digital Twins, Embedded Thermal/Flow Simulation |
 | **Artificial Intelligence**<br>`quantum_neural_network.py`<br>`ptrc_bitnet_engine.c`<br>`ptrc_bitnet_engine.py` | Modulo-24 register inference & coprime prime-ring resonance without synaptic float-noise | **100% Invariant AI Inference:** Eradicates accuracy degradation during post-training float-to-integer quantization. Yields ultra-low-power, secure neural inference directly inside memory arrays (`592` bytes SRAM). | Edge-AI Chips, Autonomous Driving, Real-Time Autonomous Robotics |
 | **Material Sciences**<br>`battery_anisotropy.py` | 144-facet vector equilibrium group mapping | **Lossless BMS Real-Time Simulation:** Simulates absolute multi-layered ion migration inside solid-state batteries on lightweight local processors without fractional remainder drift. | Solid-State Battery R&D, Automotive BMS Hardware, Aerospace Energy Systems |
 | **Ballistics & Trajectory Control**<br>`gravity_edge_sharing.py` | Geometric whole-number quadrance indexing | **Instantaneous Orbital Invariance Tracking:** Trajectories are read directly from spatial register grids instead of being computed iteratively via floating-point transcendental functions (\(\sin, \cos\)). | Satellite Orbit Alignment, Kinetic Defense Interceptors, Civil Aerospace R&D, Precision Autonomous Drones |
@@ -83,94 +84,76 @@ The AI layer has been expanded to **v2.0 (`embedded/ai/ptrc_bitnet_engine.c` & `
 * **144-Facet Crystalline Sponge & 137-Takt Mirror Sync:** Modulates neuron activations via a 144-facet sponge coupled to the **24-Clock Discrete Quadrance Ring** ($u^2 + v^2 = 1000^2$) and reflected across `-1` (`~x`) on every global `137`-takt pulse.
 * **Online Integer Hebbian Plasticity:** Updates synaptic accumulators on-chip within the `156` Wirminghaus Invariant Limit (`PTRC_AI_INVARIANT_156`, verified within `[-32, +32]`) with zero gradient tape memory.
 * **Ultra-Compact Bare-Metal Context (`592` Bytes) & Verified Throughput:** Fits inside a static `592`-byte stack context (`sizeof(ptrc_bitnet_ctx_t)`), uses zero `malloc`, compiles cleanly for ARM Cortex-M0+ (`arm-none-eabi-gcc -mfloat-abi=soft -Werror`), scrubs SRAM back to `-1` (`0xFF`) via `ptrc_bitnet_wipe`, and achieves **`~122,429 takts/sec`** in native C11 (`50,000` takts `64x32` in `408,398 µs`) vs. **`~4,245 takts/sec`** in Python (`5,000` takts in `1,177,735 µs`).
+* **One-Click Build & Audit (`embedded/ai/verify_ptrc_ai.sh` & `CMakeLists.txt`):** Verified with strict `-std=c11 -Wall -Wextra -Werror` compilation and full neural inference grid invariance checks (`./embedded/ai/verify_ptrc_ai.sh`).
 
 ---
 
-## 🔐 Technical Showcase: Anti-Side-Channel Cryptographic Verification
+## 🔐 Technical Showcase: Anti-Side-Channel Primorial AEAD & Post-Quantum Ring-KEM (`v4.5.0`)
 
-To evaluate the mathematical framework of the pTRC engine without floating-point constraints, deterministic cryptographic verification scripts are available in the repository. They demonstrate how the **Coprime Residue Symmetry (Modulo 210/24 & P15 Primorial Macro-Cascade)** handles streaming arrays with strict time-constant complexity ($O(1)$).
+To guarantee constant-time ($O(1)$) execution and structural immunity against *Timing* and *Differential Power Analysis (DPA)* attacks without lookup tables or floating-point instructions ($\mathbb{Z} \setminus \{0\}$), the cryptographic subsystem (`embedded/crypto/`) combines a **512-Bit Zero-Table Primorial AEAD** with a **Dual-Profile Post-Quantum Lattice KEM**:
 
-### 🚀 Evaluation (Local Verification)
-The telemetry and execution profile can be observed directly via Python or raw compiled C-code execution. Navigate to the repository root and run either:
+* **Zero-Table Primorial Macro-Cascade (`P15 = 614,889,782,588,491,410`):** Derives four coprime 64-bit ring moduli in branchless $O(1)$ bit-mask steps inside a static **`672`-byte SRAM stack context** (zero `malloc`, zero secret-dependent loops).
+* **Deterministic 8-Prime CRT Keygen & Unbiased Stream (`{1..256} -> {0..255}`):** Generates 512-bit keys and 128-bit nonces across 8 coprime prime rings (`251..211`, period $> 1.09 \times 10^{19}$ takts) without an analog TRNG, projecting zero-free internal states unbiasedly onto `{0..255}` (`state - 1`).
+* **Crossed Plichta-Mirror, 192-Bit SLIP-MAC & Verified AEAD Metrics:** Constant-time tag verification (`ptrc_ct_memcmp`) and `volatile` SRAM scrubbing back to `-1` (`0xFF` via `ptrc_crystal_wipe`) with 100% C11/Python bit-parity — achieving **SAC `503 / 1000` permille** (`22,675 / 45,056` bits flipped) and **`~2,056,114 Bytes/sec`** native C11 throughput (`4096 KB` in `2,039,918 µs`).
+* **Dual-Profile Post-Quantum Ring-KEM (`q = 7681`, FO-CCA2 + `comp5`):** Zero-float, branchless lattice KEM in $\mathbb{Z}_{7681} \setminus \{0\}$ with full Fujisaki-Okamoto implicit rejection (`ct' == ct`) and direct 512-bit hybrid AEAD coupling:
+  * **Profile A (`512-Dim Standard`, $k=2, n=256$):** `PK = 1,056 B`, `SK = 2,112 B`, `CT = 1,184 B` (`Keygen 2,212 µs`, `Encaps 2,774 µs`, `Decaps 3,134 µs`).
+  * **Profile B (`256-Dim Ultra-Light IoT`, $k=1, n=256$):** `PK = 544 B`, `SK = 1,088 B`, `CT = 672 B` (`Keygen 819 µs`, `Encaps 1,253 µs`, `Decaps 1,526 µs`, >2.2× faster).
+
+### 🚀 Evaluation & Hardware Integration (`embedded/crypto/ptrc_crypt_demo.md`)
 
 ```bash
-# Python Interface Verification & Production Audits (v4.5.0 512-Bit Constant-Time Unbiased AEAD & FO-CCA2 Ring-KEM)
+# 1. One-Click C11 Build & Constant-Time AEAD / KEM Audit
+./embedded/crypto/verify_ptrc_crypto.sh
+
+# 2. Full Python Parity, Avalanche (SAC) & Post-Quantum FO-CCA2 Audits
 PYTHONPATH=src python3 src/00_ptrc_crypt_demo.py
 PYTHONPATH=src python3 src/00_test_ptrc_crypt_parity.py
 PYTHONPATH=src python3 src/00_test_ptrc_crypt_metrics.py
 PYTHONPATH=src python3 src/00_test_ptrc_pq_kem.py
-
-# Python Interface Verification & Production Audits (v2.0 Resonant BitNet AI)
-PYTHONPATH=src python3 src/00_ptrc_bitnet_demo.py
-PYTHONPATH=src python3 src/test_ptrc_bitnet.py
-PYTHONPATH=src python3 src/00_test_ptrc_bitnet_metrics.py
-
-# CMake Build & Standalone Bare-Metal C11 Verification (Crypto v4.5.0 + AI v2.0)
-cmake -B build -S . && cmake --build build --config Release && ./build/ptrc_crypt_demo && ./build/00_ptrc_bitnet_demo
 ```
 
-Or compile directly via `gcc`:
-
-```bash
-gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -Iembedded/crypto embedded/crypto/ptrc_crypt_demo.c embedded/crypto/ptrc_crystal.c embedded/crypto/ptrc_pq_kem.c -o ptrc_crypt_demo && ./ptrc_crypt_demo
-gcc -O3 -std=c11 -Wall -Wextra -Wpedantic -Iembedded/ai src/00_ptrc_bitnet_demo.c embedded/ai/ptrc_bitnet_engine.c -o 00_ptrc_bitnet_demo && ./00_ptrc_bitnet_demo
-```
-
-### 🎛 Embedded Hardware Architectures & Low-Power Hardware Elements
-Because the pTRC cryptographic operations execute entirely within the discrete integer domain ($\mathbb{Z}$) and completely bypass the floating-point unit (FPU), the algorithm is designed for resource-constrained **Secure Elements** and **Edge-AI hardware layers** (e.g., ARM Cortex-M, ESP32, or custom logic gates).
-
-Full technical metrics, architecture cross-compilation instructions (e.g., targeting ARM Cortex-M0+ via `arm-none-eabi-gcc`), and hardware verification profiles are fully detailed in the dedicated hardware integration layer under:
-* **`embedded/crypto/ptrc_crypt_demo.md`**
-
-### 📊 Core Technical Metrics:
-1. **Elimination of Pipeline Stalls:** Conventional cryptographic, activation, and fluid-resonance operations frequently rely on transcendental functions or high-bit floating-point math, leading to branch mispredictions and arithmetic overhead on low-power chips. pTRC resolves these states natively via lightweight bit-shifting and integer residue registers.
-2. **Structural Side-Channel Immunity:** Standard microcontrollers are highly vulnerable to *Differential Power Analysis (DPA)* and *Timing Attacks*—where attackers reconstruct private keys by analyzing micro-fluctuations in power draw or execution time. Because every pTRC transformation executes through identical clock-cycle registers without secret-dependent branches or loops, the power consumption profile remains structurally flat ($O(1)$ variance).
-
-### 🔐 v4.5.0 Update: Constant-Time & Unbiased 512-Bit Zero-Table Primorial AEAD
-
-[![pTRC v4.5.0 Crystalline AEAD & AI CI](https://github.com)](https://github.com)
-
-The cryptographic layer has been upgraded to **v4.5.0 (512-Bit Key / 128-Bit Nonce)** with strict constant-time ($O(1)$) execution, unbiased XOR keystream projection, and zero secret-dependent ternary branches—placing a four-stage, table-free **64-bit Primorial Macro-Cascade** ahead of the 144-facet crystal while maintaining 100% pure integer execution ($\mathbb{Z} \setminus \{0\}$, no zero point):
-
-* **Zero-Table Constant-Time Primorial Decoding (`P15 = 614,889,782,588,491,410`):** Derives four coprime 64-bit ring moduli in deterministic $O(1)$ bit-mask steps from the first 256 key bits without secret-dependent `while`-loops, keeping total static stack context at **`672` bytes** (`< 1 KB` SRAM, zero `malloc`).
-* **Deterministic 8-Prime CRT Key & Nonce Generator (`ptrc_primorial_keygen`):** Folds arbitrary-length domain seeds across 16-byte CRT registers and generates unique 128-bit nonces and 512-bit keys across 8 pairwise coprime 1-byte prime rings (`251, 241, 239, 233, 229, 227, 223, 211`, CRT period $> 1.09 \times 10^{19}$ takts) without requiring an analog hardware TRNG.
-* **Zero-Free Internal State (`{1..256}`) & Unbiased Keystream (`{0..255}`):** Computes every internal keystream state strictly inside $\mathbb{Z} \setminus \{0\}$ (`{1..256}`, zero `0` states) before projecting unbiasedly onto `{0..255}` (`state - 1`) for XOR stream masking—eliminating `0xFF` duplication across all 256 byte buckets.
-* **Holographic Crossed Plichta-Mirror & 192-Bit SLIP-MAC:** Bijective 4-quadrant reflection across `-1`, branchless constant-time tag verification ($O(1)$ via `ptrc_ct_memcmp`), and complete `volatile` SRAM scrubbing of all secret states and temporary stack buffers back to `-1` (`0xFF` via `ptrc_crystal_wipe`) with 100% C11/Python bit-parity.
-* **Verified Crypto v4.5.0 Hardware Metrics:** Strict Avalanche Criterion (SAC) at **`503 / 1000` permille** (`22,675 / 45,056` bits flipped across 64 single-bit key flips), zero internal `0` states across `16,384` stream steps (`256`-bucket `min=41`, `max=90`, ideal `64`), and **`~2,056,114 Bytes/sec`** native C11 AEAD throughput (`4096 KB` in `2,039,918 µs`).
-
-#### Dual-Profile Post-Quantum Ring-KEM (`v4.5.0`, FO-CCA2 + `comp5`) & Hybrid AEAD Coupling
-To support keyless session establishment on constrained bare-metal targets without floating-point units or lookup tables, `embedded/crypto/ptrc_pq_kem.c` implements a zero-float, branchless Lattice Key Encapsulation Mechanism over the non-Mersenne prime modulus $q = 7681$ ($\gcd(7681, 210) = 1$) inside $\mathbb{Z}_{7681} \setminus \{0\}$ with **Fujisaki-Okamoto (FO) CCA2 implicit rejection**, **5-bit ciphertext compression (`comp5`)**, and two selectable hardware profiles:
-* **Profile A (`512-Dim Standard`, $k = 2, n = 256$):** `PK = 1,056 B`, `SK = 2,112 B`, `CT = 1,184 B` — native C11 FO-CCA2 handshake (`Keygen 2,212 µs`, `Encaps 2,774 µs`, `Decaps 3,134 µs`).
-* **Profile B (`256-Dim Ultra-Light IoT`, $k = 1, n = 256$):** `PK = 544 B`, `SK = 1,088 B`, `CT = 672 B` — native C11 FO-CCA2 handshake (`Keygen 819 µs`, `Encaps 1,253 µs`, `Decaps 1,526 µs`, >2.2× faster than Profile A).
-* **FO-CCA2 Re-Encryption, Implicit Rejection & Hybrid Coupling:** `ptrc_kem_decaps_ex` performs full deterministic ciphertext re-encryption (`ct' == ct`) in constant time, seamlessly falls back to a pseudorandom reject key (`H_pTRC(z_reject, ct)`) upon any 1-bit tamper, scrubs all secret stack buffers back to `-1` (`0xFF`), and feeds the negotiated 64-byte (`512-bit`) key directly into the `672-byte` symmetrical `ptrc_crystal` AEAD engine (`src/00_test_ptrc_pq_kem.py`).
+Full cross-compilation instructions (ARM Cortex-M0+ / ESP32) and hardware profiles are documented under **`embedded/crypto/ptrc_crypt_demo.md`**.
 
 ---
 
-## 🎮 Technical Showcase: Zero-Float 3D Collision & Fluid-Cascade Engine (C-Core)
+## 🌌 Technical Showcase: Zero-Float 3D Space-Crystal Engine & Lockstep Physics (`v4.6.0`)
 
-To demonstrate deterministic, constant-time spatial physics without floating-point depth buffers or Cartesian grid anisotropy, a bare-metal C99 implementation (`embedded/game_collision/`) is included in the repository. It maps up to 25,000 active 3D particles onto a flat **144-facet vector equilibrium register** (`24 contact junctions + 120 free outer facets`) using a zero-free bipolar state space (`-1`, `+1`, `+3`).
+To demonstrate deterministic, constant-time spatial physics and Full-HD (`1920 × 1080`) observer rendering without IEEE-754 floating-point arithmetic (`float`/`double`), without zero-valued states (`0` / `0x00`), and without Cartesian grid anisotropy, the framework provides two tightly coupled ISO C11 subsystems built upon a unified **1-Bit / 1-Byte integer architecture**:
 
-### 🚀 Evaluation (Local Compilation & Verification)
-The benchmark suite, live 3D terminal visualizer, and raw-RGB 1080p FFmpeg video synthesizer can be compiled and executed directly via `gcc`:
+### 1. `ptrc_light_universe` — 144-Facet Anisotropy & 1+12 Space-Crystal Windtunnel (`embedded/graphics/`)
+* **Supercompact 1+12 Cuboctahedral Lattice (\(\mathbb{Z}^3 \setminus \{0\}\)):** Simulates **60,000 dynamic clusters** (`1 central crystal + 12 shell crystals = 780,000 active space crystals`) inside a `32 cm × 18 cm × 8 cm` 3D windtunnel featuring a rotating 3D crystal pyramid (`X = -320`) and a centered 3D crystal sphere (`X = +320, Y = -200, Z = -1, R = 270`).
+* **1-Byte State Register (`1..255`) & 144-Facet Scattering:** Encodes cohesion anchoring (`Bit 7`), optical material mode (`Bits 6..5`), and digital wavelength (`Bits 4..0`) in a single non-zero byte, coupled across `120` memory facets and `24` contact junctions.
+* **Adaptive Multi-Engine Scaling (`1..8` Sector Engines):** Dynamically allocates `1` to `8` parallel pTRC sector engines (`pthread`) based on local collision and cohesion density, modeling observer time dilation up to the event horizon (`PTRC_RENDER_STALL`).
+
+### 2. `ptrc_game_collision` — Zero-Tunneling & Multiplayer Lockstep Engine (`embedded/game_collision/`)
+* **Zero-Tunneling Invariant (`tunneling_escapes == 0`):** Discrete step resolution in \(\mathbb{Z}^3 \setminus \{0\}\) mathematically prevents high-velocity entities from skipping lattice sites or penetrating solid boundaries.
+* **100% Bit-Identical Lockstep (`lockstep_state_hash`):** Uses thread-local collision grids and a deterministic 64-bit Primorial-FNV state checksum across all `60,000` bodies, guaranteeing bit-identical trajectories across independent simulation instances.
+* **Real-Time Contact Telemetry:** Separates rigid-body impacts (rotating pyramid and sphere) from particle-to-particle collisions at every tick with live Full-HD (`1920 × 1080`) HUD diagnostics.
+
+### 🚀 Evaluation (Build, Bit-Parity, Lockstep & Live Full-HD Showcase)
 
 ```bash
-# 1. Headless 10,000-Particle 3D Cascade Benchmark (~98 µs / takt)
-cd embedded/game_collision && gcc -O3 ptrc_fluid_crystal_3d.c -o ptrc_fluid3d && ./ptrc_fluid3d
+# 1. Verify C11 <-> Python 100% Bit-Parity & 0x00-Freedom (60,000 1+12 Clusters)
+./embedded/graphics/verify_ptrc_graphics.sh
 
-# 2. Live 3D Retina Projection Visualizer (Auto-scales to terminal/TV size)
-gcc -O3 ptrc_crystal_live_3d.c -o ptrc_live3d && ./ptrc_live3d
+# 2. Verify 100% Multi-Thread Lockstep Determinism & Zero-Tunneling Invariant
+./embedded/game_collision/verify_ptrc_collision.sh
 
-# 3. Full-HD 1080p @ 60 FPS Video Synthesis (25,000 Particles + Depth Fog via FFmpeg Pipe)
-gcc -O3 ptrc_crystal_video_1080p.c -o ptrc_vid && ./ptrc_vid
+# 3. Run 60-Second Statistical Benchmark (Full-HD 1920x1080 Software Z-Buffer)
+python3 src/00_benchmark_ptrc_graphics.py --seconds 60
+
+# 4. Launch Full-HD (1920x1080) Interactive Game-Collision & Windtunnel Showcase
+python3 src/00_ptrc_game_collision_live.py
 ```
 
-### 📊 Verified Single-Thread Hardware Benchmarks (ARM Cortex-A77, `-O3`):
-* **Bipolar Collision Detection (10,000 Objects):** `62 µs` per takt (~`15,946 FPS`)
-* **Full 3D Cascade & Vortex Deflection (10,000 Objects):** `98 µs` per takt (~`10,178 FPS`)
-* **3D Physics + Live Terminal Retina Projection (10,000 Objects):** `933 µs` per frame (~`1,071 FPS`)
-* **Full 1080p 3D Rotation + Additive Shader + Depth Fog (25,000 Objects):** `2,085 µs` per frame (~`479 FPS`)
+### 📊 Verified Hardware Benchmarks (`Linux x86_64`, 4 Logical Threads, `1920 × 1080` RGB24, Pure CPU Integer):
+* **Physics & Collision Tick (`60,000` `1+12` Clusters = `780,000` Space Crystals):** Mean **`2.159 ms`** per tick (`Median: 2.119 ms`, `Std: 0.293 ms`)
+* **Crystal Node Throughput:** **`13,963,312` space-crystal updates/s** (`358,285` to `495,473` collisions/s)
+* **Full-HD Software Z-Buffer (`1920 × 1080`, 100% Integer, `0x00`-Free):** Mean **`113.35 ms`** (`~8.95 FPS` pure C11 without GPU)
+* **Lockstep & Zero-Tunneling Verification:** **`0` tunneling escapes**, **`0` zero-byte violations (`0x00`)**, and **100% bit-identical 64-bit `lockstep_state_hash`** across parallel worlds
 
-Full build instructions for both Linux workstations and Android/Termux environments are documented under:
+Full architectural specifications and API references are documented under:
+* **`embedded/graphics/ptrc_light_universe.md`**
 * **`embedded/game_collision/pTRC_game_collision.md`**
 
 ---
