@@ -33,8 +33,8 @@ License: GNU Affero General Public License v3.0 (AGPL-3.0).
 | :--- | :--- | :--- | :--- |
 | **Windtunnel Volume** | **32 cm × 18 cm × 8 cm** | `X ∈ [-960..+960]`, `Y ∈ [-540..+540]`, `Z ∈ [-240..+240]` | Laminar inflow at left boundary (`-X`), outflow & recirculation at right (`+X`) |
 | **Fluid Molecule Agents** | **60,000 Clusters** | **1+12 = 13 crystals each** (`780,000` active crystals) | Momentum exchange across `65,536` FCC slots + `144`-facet anisotropic scattering |
-| **Rotating 3D Pyramid** | **Height 9.0 cm, Base 6.4 cm** | Center `X = -320` (left third), `3,288` sub-angular steps | Splits primary flow, forming stagnation pressure wedge & Kármán vortex street |
-| **Rotating 3D Sphere** | **Ø 9.0 cm** (`R = 270`) | Center `X = +320, Y = -200, Z = -1` (100% channel depth) | Centered in the upper stream for maximum flow interaction & Magnus deflection |
+| **Rotating 3D Pyramid** | **Height 9.0 cm, Base 6.4 cm** | Center `X = -320, Y = 0, Z = +55` (`3,288` sub-angular steps) | Positioned `0.9 cm` toward rear wall (`0.6 cm` front flow clearance), splitting primary inflow |
+| **Rotating 3D Sphere** | **Ø 5.8 cm** (`R = 175`) | Center `X = +320, Y = -140, Z = +75` | Suspended `1.25 cm` toward rear wall (`2.3 cm` front flow clearance) with zero wall friction & balanced impact rate |
 
 ## 4. Verified Benchmark Statistics (`v4.6.0`, 60 s Continuous Run, Linux x86_64)
 
