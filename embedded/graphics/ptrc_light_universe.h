@@ -48,14 +48,15 @@ extern "C" {
 #define PTRC_TUNNEL_HALF_Z          240
 
 #define PTRC_PYRAMID_CENTER_X       (-320)
+#define PTRC_PYRAMID_CENTER_Z       55
 #define PTRC_PYRAMID_HALF_BASE      192
 #define PTRC_PYRAMID_HEIGHT         540
 #define PTRC_PYRAMID_ROT_CYCLE      3288U
 
 #define PTRC_SPHERE_CENTER_X        320
-#define PTRC_SPHERE_CENTER_Y        (-200)
-#define PTRC_SPHERE_CENTER_Z        (-1)
-#define PTRC_SPHERE_RADIUS          270
+#define PTRC_SPHERE_CENTER_Y        (-140)
+#define PTRC_SPHERE_CENTER_Z        75
+#define PTRC_SPHERE_RADIUS          175
 
 #define PTRC_WIND_AGENTS            60000U
 #define PTRC_OCCUPANCY_SLOTS        65536U
