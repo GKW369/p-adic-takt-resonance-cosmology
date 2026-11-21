@@ -467,7 +467,10 @@ class PtrcGfxContext:
                     if ag.impulse > occ_imp:
                         self.cell_impulse[slot] = ag.impulse
 
-            ag.x, ag.y, ag.z = nx, ny, nz
+            nx = max(-PTRC_TUNNEL_HALF_X, min(PTRC_TUNNEL_HALF_X, nx))
+            ny = max(-PTRC_TUNNEL_HALF_Y, min(PTRC_TUNNEL_HALF_Y, ny))
+            nz = max(-PTRC_TUNNEL_HALF_Z, min(PTRC_TUNNEL_HALF_Z, nz))
+            ag.x, ag.y, ag.z = ptrc_z_no_zero(nx), ptrc_z_no_zero(ny), ptrc_z_no_zero(nz)
 
         self.deflection_count += collisions
         self.bound_clusters = bound_cnt
