@@ -155,7 +155,7 @@ static int ptrc_point_in_square_pyramid(
 ) {
     int32_t dx = px - PTRC_PYRAMID_CENTER_X;
     int32_t dy = py;
-    int32_t dz = pz;
+    int32_t dz = pz - PTRC_PYRAMID_CENTER_Z;
 
     if (ptrc_abs32(dx) > 320 || ptrc_abs32(dy) > 320 || ptrc_abs32(dz) > 320) {
         return 0;
@@ -270,6 +270,14 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
     uint32_t obstacle_hits = 0U;
     uint32_t bound_cnt = 0U;
     uint32_t phase_24 = ctx->clock_phase_24;
+    uint8_t local_impulse[PTRC_OCCUPANCY_SLOTS];
+    uint8_t local_density[PTRC_OCCUPANCY_SLOTS];
+    uint8_t local_cohesion[PTRC_OCCUPANCY_SLOTS];
+    for (uint32_t s = 0U; s < PTRC_OCCUPANCY_SLOTS; s++) {
+        local_impulse[s] = 1U;
+        local_density[s] = 1U;
+        local_cohesion[s] = 1U;
+    }
 
     for (uint32_t a = w->start_idx; a < w->end_idx; a++) {
         ptrc_wind_agent_t *ag = &ctx->agents[a];
@@ -357,14 +365,14 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
             ag->state_byte = ptrc_encode_1byte_cascade(1U, PTRC_OPTICS_CRYSTALLINE, (uint8_t)(25U + (a % 6U)));
         } else {
             uint32_t slot = ptrc_fcc_slot_hash(nx, ny, nz);
-            uint8_t occ_imp = ctx->cell_impulse[slot];
-            uint8_t dens = ctx->cell_density[slot];
-            uint8_t slot_coh = ctx->cell_cohesion[slot];
-            if (dens < 250U) ctx->cell_density[slot] = (uint8_t)(dens + 1U);
-            if (is_cohesive != 0U && slot_coh < 250U) ctx->cell_cohesion[slot] = (uint8_t)(slot_coh + 1U);
+            uint8_t occ_imp = local_impulse[slot];
+            uint8_t dens = local_density[slot];
+            uint8_t slot_coh = local_cohesion[slot];
+            if (dens < 250U) local_density[slot] = (uint8_t)(dens + 1U);
+            if (is_cohesive != 0U && slot_coh < 250U) local_cohesion[slot] = (uint8_t)(slot_coh + 1U);
 
             if (occ_imp == 1U) {
-                ctx->cell_impulse[slot] = ag->impulse;
+                local_impulse[slot] = ag->impulse;
                 if ((a & 3U) == (uint32_t)(ctx->takt_counter & 3ULL)) {
                     if (ag->vx < 7) ag->vx++;
                     if (ag->vx > 9) ag->vx--;
@@ -394,14 +402,20 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
                     if (ag->vz < -8) ag->vz = -8;
                 }
                 if (ag->impulse > occ_imp) {
-                    ctx->cell_impulse[slot] = ag->impulse;
+                    local_impulse[slot] = ag->impulse;
                 }
             }
         }
 
-        ag->x = (int16_t)nx;
-        ag->y = (int16_t)ny;
-        ag->z = (int16_t)nz;
+        if (nx > PTRC_TUNNEL_HALF_X) nx = PTRC_TUNNEL_HALF_X;
+        if (nx < -PTRC_TUNNEL_HALF_X) nx = -PTRC_TUNNEL_HALF_X;
+        if (ny > PTRC_TUNNEL_HALF_Y) ny = PTRC_TUNNEL_HALF_Y;
+        if (ny < -PTRC_TUNNEL_HALF_Y) ny = -PTRC_TUNNEL_HALF_Y;
+        if (nz > PTRC_TUNNEL_HALF_Z) nz = PTRC_TUNNEL_HALF_Z;
+        if (nz < -PTRC_TUNNEL_HALF_Z) nz = -PTRC_TUNNEL_HALF_Z;
+        ag->x = (int16_t)ptrc_z_no_zero(nx);
+        ag->y = (int16_t)ptrc_z_no_zero(ny);
+        ag->z = (int16_t)ptrc_z_no_zero(nz);
     }
 
     w->collisions_out = collisions;
@@ -693,7 +707,7 @@ static void ptrc_render_crystal_pyramid(
                 int32_t rx = (lx * rot_u + lz * rot_v) >> 10;
                 int32_t rz = (-lx * rot_v + lz * rot_u) >> 10;
                 int32_t wy = (ny * 951 + rz * 309) >> 10;
-                int32_t wz = (-ny * 309 + rz * 951) >> 10;
+                int32_t wz = ((-ny * 309 + rz * 951) >> 10) + PTRC_PYRAMID_CENTER_Z;
                 int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
 
                 ptrc_splat_cluster_1_plus_12(rgb_out, z_buf, width, height, wx, wy, wz, wr, wg, wb, 0);
@@ -716,7 +730,7 @@ static void ptrc_render_crystal_pyramid(
             int32_t rx = (nbx * rot_u + nbz * rot_v) >> 10;
             int32_t rz = (-nbx * rot_v + nbz * rot_u) >> 10;
             int32_t wy = (half_h * 951 + rz * 309) >> 10;
-            int32_t wz = (-half_h * 309 + rz * 951) >> 10;
+            int32_t wz = ((-half_h * 309 + rz * 951) >> 10) + PTRC_PYRAMID_CENTER_Z;
             int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
 
             ptrc_splat_cluster_1_plus_12(rgb_out, z_buf, width, height, wx, wy, wz, br, bg, bb, 0);
