@@ -1,5 +1,5 @@
 # ==============================================================================
-# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.5.0
+# pTRC Framework - Discrete 1-Bit Integer Physics & Observer Windtunnel v4.6.0
 # Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
