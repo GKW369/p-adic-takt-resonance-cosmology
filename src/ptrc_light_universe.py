@@ -43,14 +43,15 @@ PTRC_TUNNEL_HALF_Y = 540
 PTRC_TUNNEL_HALF_Z = 240
 
 PTRC_PYRAMID_CENTER_X = -320
+PTRC_PYRAMID_CENTER_Z = 55
 PTRC_PYRAMID_HALF_BASE = 192
 PTRC_PYRAMID_HEIGHT = 540
 PTRC_PYRAMID_ROT_CYCLE = 3288
 
 PTRC_SPHERE_CENTER_X = 320
-PTRC_SPHERE_CENTER_Y = -200
-PTRC_SPHERE_CENTER_Z = -1
-PTRC_SPHERE_RADIUS = 270
+PTRC_SPHERE_CENTER_Y = -140
+PTRC_SPHERE_CENTER_Z = 75
+PTRC_SPHERE_RADIUS = 175
 
 PTRC_WIND_AGENTS = 60000
 PTRC_OCCUPANCY_SLOTS = 65536
@@ -167,7 +168,7 @@ def ptrc_encode_1byte_cascade(cohesion_anchor: int, optics_mode: int, wavelength
 def ptrc_point_in_square_pyramid(px: int, py: int, pz: int, rot_u: int, rot_v: int) -> bool:
     dx = px - PTRC_PYRAMID_CENTER_X
     dy = py
-    dz = pz
+    dz = pz - PTRC_PYRAMID_CENTER_Z
     if abs(dx) > 320 or abs(dy) > 320 or abs(dz) > 320:
         return False
 
@@ -539,7 +540,7 @@ class PtrcGfxContext:
                     rx = ptrc_c_rshift(lx * rot_u + lz * rot_v, 10)
                     rz = ptrc_c_rshift(-lx * rot_v + lz * rot_u, 10)
                     wy = ptrc_c_rshift(ny * 951 + rz * 309, 10)
-                    wz = ptrc_c_rshift(-ny * 309 + rz * 951, 10)
+                    wz = ptrc_c_rshift(-ny * 309 + rz * 951, 10) + PTRC_PYRAMID_CENTER_Z
                     wx = rx + PTRC_PYRAMID_CENTER_X
                     _splat_cluster_1_plus_12(out, z_buf, width, height, wx, wy, wz, wr, wg, wb, 0)
 
@@ -554,7 +555,7 @@ class PtrcGfxContext:
                 rx = ptrc_c_rshift(nbx * rot_u + nbz * rot_v, 10)
                 rz = ptrc_c_rshift(-nbx * rot_v + nbz * rot_u, 10)
                 wy = ptrc_c_rshift(half_h * 951 + rz * 309, 10)
-                wz = ptrc_c_rshift(-half_h * 309 + rz * 951, 10)
+                wz = ptrc_c_rshift(-half_h * 309 + rz * 951, 10) + PTRC_PYRAMID_CENTER_Z
                 wx = rx + PTRC_PYRAMID_CENTER_X
                 _splat_cluster_1_plus_12(out, z_buf, width, height, wx, wy, wz, br, bg, bb, 0)
 
