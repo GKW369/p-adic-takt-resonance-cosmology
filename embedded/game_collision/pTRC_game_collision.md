@@ -1,4 +1,4 @@
-# pTRC Game-Collision Engine (`ptrc_game_collision`) — v4.6.0
+# pTRC Game-Collision Engine (`ptrc_game_collision`) — `v4.6.0`
 
 **Deterministic 1-Bit Integer Physics, Zero-Tunneling Guarantee & Lockstep Multiplayer Verification**  
 Copyright (c) 2026 Kurt Guido Wirminghaus. All Rights Reserved.  
@@ -6,38 +6,38 @@ License: GNU Affero General Public License v3.0 (AGPL-3.0).
 
 ---
 
-## 1. Warum pTRC für Spiele-Engines & Echtzeit-Physik?
+## 1. Motivation: Deterministic Collision Detection for Real-Time Simulation
 
-Klassische Spiele-Physik-Engines basieren auf Gleitkommazahlen (`float`/`double`), kontinuierlichen Zeit-Deltas (`dt`) und kubischen Octrees. Das führt in der Praxis zu drei bekannten Problemen:
-1. **Tunneling:** Schnelle Projektile oder Partikel durchdringen dünne Wände zwischen zwei Frames.
-2. **Multiplayer-Desync:** Unterschiedliche CPU-Architekturen oder Compiler-Optimierungen erzeugen leichte Gleitkomma-Abweichungen über viele Ticks.
-3. **Kubische Gitter-Artefakte:** Achsenparallele Kollisionsgitter verursachen diagonale Ungenauigkeiten.
+Conventional game physics engines rely on IEEE-754 floating-point arithmetic (`float`/`double`), continuous time deltas (`dt`), and axis-aligned octrees. In high-density or networked environments, this introduces three fundamental failure modes:
+1. **Geometric Tunneling:** High-velocity projectiles or particles pass through thin boundaries between discrete integration steps.
+2. **Multiplayer Desynchronization:** Differences in CPU instruction sets, FMA contractions, or compiler optimizations cause floating-point state drift across clients.
+3. **Cubic Lattice Artifacts:** Axis-aligned spatial grids introduce directional bias and diagonal aliasing.
 
-**`ptrc_game_collision` löst diese Probleme architektonisch auf Basis von `ptrc_light_universe` v4.6.0:**
-* **0-Tunneling-Invariante (`tunneling_escapes == 0`):** Alle `60.000` dynamischen Körper (`780.000` Raumkristalle) bewegen sich auf einem diskreten, nullfreien `1+12`-Kuboktaeder-Raumgitter (\(\mathbb{Z}^3 \setminus \{0\}\)). Kein Objekt kann einen Gitterpunkt überspringen oder eine Kollisionshülle durchdringen.
-* **100 % Bit-identischer Lockstep (`lockstep_state_hash`):** Nach jedem Physik-Tick wird ein deterministischer 64-Bit-Primorial-FNV-Hash über sämtliche `60.000` Positionen und `1-Byte`-Zustände berechnet. Zwei unabhängige Simulationen liefern auf das letzte Bit identische Hashes.
-* **Echtzeit-Trefferklassifikation:** Trennt in jedem Tick exakt zwischen **Rigid-Body-Treffern** (rotierende 3D-Kristallpyramide & zentrierte 3D-Kristallkugel) und **Partikel-zu-Partikel-Kollisionen** (über `65.536` FCC-Slots und `144`-Facetten-Anisotropie).
+**`ptrc_game_collision` resolves these limitations architecturally on top of `ptrc_light_universe` v4.6.0:**
+* **Zero-Tunneling Invariant (`tunneling_escapes == 0`):** All `60,000` dynamic bodies (`780,000` space crystals) evolve on a discrete, zero-free `1+12` cuboctahedral lattice (\(\mathbb{Z}^3 \setminus \{0\}\)). No entity can skip a lattice site or penetrate a solid boundary without triggering a deterministic deflection.
+* **100% Bit-Identical Lockstep (`lockstep_state_hash`):** After every physics tick, a deterministic 64-bit Primorial-FNV checksum is computed over all `60,000` spatial coordinates and `1-byte` state registers. Independent simulation instances produce bit-identical hashes across arbitrary tick horizons.
+* **Real-Time Contact Classification:** Separates every tick's interactions into **rigid-body impacts** (rotating 3D crystal pyramid and centered 3D crystal sphere) and **particle-to-particle collisions** (mediated across `65,536` FCC occupancy slots and `144`-facet anisotropic scattering).
 
 ---
 
-## 2. API-Übersicht (`ptrc_game_collision.h`)
+## 2. Core C11 API (`ptrc_game_collision.h`)
 
-| Funktion | Aufgabe |
+| Function | Description |
 | :--- | :--- |
-| `ptrc_gc_init(world, seed)` | Initialisiert den 3D-Windkanal, `60.000` `1+12`-Cluster und den initialen Lockstep-Hash. |
-| `ptrc_gc_step_tick(world)` | Führt einen deterministischen Physik-Tick (inkl. adaptiver `1..8` Sektor-Engines) aus, aktualisiert alle Trefferzähler und prüft `tunneling_escapes == 0`. |
-| `ptrc_gc_compute_lockstep_hash(world)` | Berechnet die 64-Bit-Prüfsumme über den gesamten Weltzustand. |
-| `ptrc_gc_render_rgb24(world, w, h, out)` | Rendert die Beobachterperspektive in `0x00`-freies RGB24 (`1920 × 1080`). |
+| `ptrc_gc_init(world, seed)` | Initializes the 3D windtunnel domain, `60,000` `1+12` clusters, and the initial 64-bit lockstep hash. |
+| `ptrc_gc_step_tick(world)` | Advances the simulation by one deterministic tick (via adaptive `1..8` sector engines), updates hit counters, and verifies `tunneling_escapes == 0`. |
+| `ptrc_gc_compute_lockstep_hash(world)` | Computes the deterministic 64-bit state checksum across all active bodies. |
+| `ptrc_gc_render_rgb24(world, w, h, out)` | Renders the observer perspective into `0x00`-free RGB24 (`1920 × 1080`). |
 
 ---
 
-## 3. Verifikation & Live-Showcase im Terminal
+## 3. Verification & Live Telemetry Showcase
 
 ```bash
-# 1. Build- & Lockstep-Determinismus-Audit ausfuehren
+# 1. Execute C11 build, lockstep determinism & zero-tunneling audit
 chmod +x embedded/game_collision/verify_ptrc_collision.sh
 ./embedded/game_collision/verify_ptrc_collision.sh
 
-# 2. Full-HD Game-Collision Live-Showcase (inkl. Echtzeit-Trefferzaehler & Lockstep-Hash) starten
+# 2. Launch Full-HD Game-Collision Live Showcase (with real-time hit counters & lockstep hash)
 python3 src/00_ptrc_game_collision_live.py
 ```
