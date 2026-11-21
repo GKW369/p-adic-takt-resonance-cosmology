@@ -184,22 +184,27 @@ class PtrcGameCollisionLiveViewer:
             t0 = time.perf_counter()
             for _ in range(self.steps_per_frame):
                 self.lib.ptrc_gc_step_tick(ctypes.byref(self.world))
+            t_phys = time.perf_counter()
 
             rc = self.lib.ptrc_gc_render_rgb24(ctypes.byref(self.world), self.width, self.height, self.rgb_ptr)
+            t_rend = time.perf_counter()
+
             new_photo = tk.PhotoImage(width=self.width, height=self.height, data=bytes(self.ppm_buf))
             self.canvas.itemconfigure(self.image_item, image=new_photo)
             self.photo = new_photo
 
-            dt_ms = (time.perf_counter() - t0) * 1000.0
-            fps = 1000.0 / dt_ms if dt_ms > 0.0 else 0.0
+            phys_ms = ((t_phys - t0) * 1000.0) / self.steps_per_frame
+            rend_ms = (t_rend - t_phys) * 1000.0
+            c_total_ms = (t_rend - t0) * 1000.0
+            c_fps = 1000.0 / c_total_ms if c_total_ms > 0.0 else 0.0
             elapsed = max(0.001, time.perf_counter() - self.start_time)
             w = self.world
 
             self.canvas.itemconfigure(
                 self.hud_top_txt,
                 text=(
-                    f"ZEIT:{elapsed:06.1f}s | TICK:{w.sim.takt_counter:,} | KRISTALLE:{w.active_crystal_nodes:,} "
-                    f"(60k 1+12-Cluster) | ENGINES:{w.sim.assigned_engines}/8 | {dt_ms:.1f}ms ({fps:.1f} FPS)"
+                    f"ZEIT:{elapsed:06.1f}s | TICK:{w.sim.takt_counter:,} | KRISTALLE:{w.active_crystal_nodes:,} | "
+                    f"ENG:{w.sim.assigned_engines}/8 | C11-PHYS:{phys_ms:.2f}ms | ZBUF:{rend_ms:.1f}ms | C11-MAX:{c_fps:.1f} FPS"
                 ),
             )
             stall_info = "STALL" if rc == PTRC_RENDER_STALL else "LOCKSTEP-OK"
