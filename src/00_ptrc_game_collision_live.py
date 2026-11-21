@@ -143,6 +143,8 @@ class PtrcGameCollisionLiveViewer:
         self.lib.ptrc_gc_init(ctypes.byref(self.world), self.seed)
 
         self.paused = False
+        self.closing = False
+        self.after_id = None
         self.fullscreen = False
         self.steps_per_frame = 2
         self.start_time = time.perf_counter()
@@ -180,6 +182,8 @@ class PtrcGameCollisionLiveViewer:
         self.root.attributes("-fullscreen", self.fullscreen)
 
     def update_loop(self) -> None:
+        if self.closing:
+            return
         if not self.paused:
             t0 = time.perf_counter()
             for _ in range(self.steps_per_frame):
@@ -216,15 +220,23 @@ class PtrcGameCollisionLiveViewer:
                     f"TUNNELING:{w.tunneling_escapes} | HASH:0x{w.lockstep_state_hash:016X} [{stall_info}]"
                 ),
             )
-        self.root.after(1, self.update_loop)
+        if not self.closing:
+            self.after_id = self.root.after(1, self.update_loop)
 
     def close(self) -> None:
         self.lib.ptrc_gc_wipe(ctypes.byref(self.world))
         self.tmp_dir.cleanup()
+        self.closing = True
+        if self.after_id is not None:
+            try:
+                self.root.after_cancel(self.after_id)
+            except Exception:
+                pass
+        self.root.quit()
         self.root.destroy()
 
     def run(self) -> int:
-        self.root.after(5, self.update_loop)
+        self.after_id = self.root.after(5, self.update_loop)
         self.root.mainloop()
         return 0
 
