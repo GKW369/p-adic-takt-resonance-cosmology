@@ -54,11 +54,11 @@ extern "C" {
 #define PTRC_PYRAMID_ROT_CYCLE      3288U
 
 #define PTRC_SPHERE_CENTER_X        320
-#define PTRC_SPHERE_CENTER_Y        (-140)
-#define PTRC_SPHERE_CENTER_Z        75
-#define PTRC_SPHERE_RADIUS          175
+#define PTRC_SPHERE_CENTER_Y        (-170)
+#define PTRC_SPHERE_CENTER_Z        5
+#define PTRC_SPHERE_RADIUS          230
 
-#define PTRC_WIND_AGENTS            60000U
+#define PTRC_WIND_AGENTS            30000U
 #define PTRC_OCCUPANCY_SLOTS        65536U
 
 #define PTRC_GFX_OK                 1
