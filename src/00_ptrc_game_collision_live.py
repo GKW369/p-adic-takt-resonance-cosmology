@@ -163,10 +163,10 @@ class PtrcGameCollisionLiveViewer:
 
         self.hud_top = self.canvas.create_rectangle(14, 14, 1904, 76, fill="#08101E", outline="#2563EB")
         self.hud_top_txt = self.canvas.create_text(
-            24, 31, anchor=tk.W, fill="#93C5FD", font=("Consolas", 10, "bold"), text="Initialisiere..."
+            24, 31, anchor=tk.W, fill="#93C5FD", font=("Consolas", 10, "bold"), text="Initializing..."
         )
         self.hud_bot_txt = self.canvas.create_text(
-            24, 57, anchor=tk.W, fill="#6EE7B7", font=("Consolas", 10, "bold"), text="Berechne Lockstep..."
+            24, 57, anchor=tk.W, fill="#6EE7B7", font=("Consolas", 10, "bold"), text="Computing deterministic lockstep..."
         )
 
         self.root.bind("<space>", lambda _e: setattr(self, "paused", not self.paused))
@@ -215,13 +215,15 @@ class PtrcGameCollisionLiveViewer:
             self.canvas.itemconfigure(
                 self.hud_bot_txt,
                 text=(
-                    f"KOLLISIONEN GESAMT:{w.total_collisions:,} | RIGID-PYRAMIDE:{w.rigid_pyramid_hits:,} | "
-                    f"RIGID-KUGEL:{w.rigid_sphere_hits:,} | PARTIKEL:{w.particle_collisions:,} | "
+                    f"TOTAL COLLISIONS:{w.total_collisions:,} | RIGID PYRAMID:{w.rigid_pyramid_hits:,} | "
+                    f"RIGID SPHERE:{w.rigid_sphere_hits:,} | PARTICLES:{w.particle_collisions:,} | "
                     f"TUNNELING:{w.tunneling_escapes} | HASH:0x{w.lockstep_state_hash:016X} [{stall_info}]"
                 ),
             )
         if not self.closing:
-            self.after_id = self.root.after(1, self.update_loop)
+            elapsed_ms = int((time.perf_counter() - t0) * 1000.0)
+            delay_ms = max(2, 16 - elapsed_ms)
+            self.after_id = self.root.after(delay_ms, self.update_loop)
 
     def close(self) -> None:
         self.lib.ptrc_gc_wipe(ctypes.byref(self.world))
