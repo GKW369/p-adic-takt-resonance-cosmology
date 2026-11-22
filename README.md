@@ -121,19 +121,19 @@ Full cross-compilation instructions (ARM Cortex-M0+ / ESP32) and hardware profil
 To demonstrate deterministic, constant-time spatial physics and Full-HD (`1920 × 1080`) observer rendering without IEEE-754 floating-point arithmetic (`float`/`double`), without zero-valued states (`0` / `0x00`), and without Cartesian grid anisotropy, the framework provides two tightly coupled ISO C11 subsystems built upon a unified **1-Bit / 1-Byte integer architecture**:
 
 ### 1. `ptrc_light_universe` — 144-Facet Anisotropy & 1+12 Space-Crystal Windtunnel (`embedded/graphics/`)
-* **Supercompact 1+12 Cuboctahedral Lattice (\(\mathbb{Z}^3 \setminus \{0\}\)):** Simulates **60,000 dynamic clusters** (`1 central crystal + 12 shell crystals = 780,000 active space crystals`) inside a `32 cm × 18 cm × 8 cm` 3D windtunnel featuring a rotating 3D crystal pyramid (`X = -320, Y = 0, Z = +55`) and a freely suspended 3D crystal sphere (`X = +320, Y = -140, Z = +75, R = 175`, leaving unrestricted flow clearance on all sides).
+* **Supercompact 1+12 Cuboctahedral Lattice (\(\mathbb{Z}^3 \setminus \{0\}\)):** Simulates **30,000 dynamic clusters** (`1 central crystal + 12 shell crystals = 390,000 active space crystals`) with strict `c = 1` lattice-step quantization (`|Δx| = |Δy| = |Δz| = 1` per tick) inside a `32 cm × 18 cm × 8 cm` 3D windtunnel featuring a dual-axis horizontal propeller crystal pyramid (`X = -320, Y = 0, Z = +55`) and a solid, freely suspended 3D crystal sphere (`X = +320, Y = -170, Z = +5, R = 230`, leaving unrestricted flow clearance on all sides).
 * **1-Byte State Register (`1..255`) & 144-Facet Scattering:** Encodes cohesion anchoring (`Bit 7`), optical material mode (`Bits 6..5`), and digital wavelength (`Bits 4..0`) in a single non-zero byte, coupled across `120` memory facets and `24` contact junctions.
 * **Adaptive Multi-Engine Scaling (`1..8` Sector Engines):** Dynamically allocates `1` to `8` parallel pTRC sector engines (`pthread`) based on local collision and cohesion density, modeling observer time dilation up to the event horizon (`PTRC_RENDER_STALL`).
 
 ### 2. `ptrc_game_collision` — Zero-Tunneling & Multiplayer Lockstep Engine (`embedded/game_collision/`)
-* **Zero-Tunneling Invariant (`tunneling_escapes == 0`):** Discrete step resolution in \(\mathbb{Z}^3 \setminus \{0\}\) mathematically prevents high-velocity entities from skipping lattice sites or penetrating solid boundaries.
-* **100% Bit-Identical Lockstep (`lockstep_state_hash`):** Uses thread-local collision grids and a deterministic 64-bit Primorial-FNV state checksum across all `60,000` bodies, guaranteeing bit-identical trajectories across independent simulation instances.
-* **Real-Time Contact Telemetry:** Separates rigid-body impacts (rotating pyramid and sphere) from particle-to-particle collisions at every tick with live Full-HD (`1920 × 1080`) HUD diagnostics.
+* **Zero-Tunneling Invariant (`tunneling_escapes == 0`):** Discrete `c = 1` step resolution in \(\mathbb{Z}^3 \setminus \{0\}\) mathematically prevents entities from skipping lattice sites or penetrating solid boundaries.
+* **100% Bit-Identical Lockstep (`lockstep_state_hash`):** Uses thread-local collision grids and a deterministic 64-bit Primorial-FNV state checksum across all `30,000` `1+12` clusters, guaranteeing bit-identical trajectories across independent simulation instances.
+* **Real-Time Contact Telemetry:** Separates rigid-body impacts (propeller pyramid and sphere) from particle-to-particle collisions at every tick with live Full-HD (`1920 × 1080`) HUD diagnostics.
 
 ### 🚀 Evaluation (Build, Bit-Parity, Lockstep & Live Full-HD Showcase)
 
 ```bash
-# 1. Verify C11 <-> Python 100% Bit-Parity & 0x00-Freedom (60,000 1+12 Clusters)
+# 1. Verify C11 <-> Python 100% Bit-Parity & 0x00-Freedom (30,000 1+12 Clusters)
 ./embedded/graphics/verify_ptrc_graphics.sh
 
 # 2. Verify 100% Multi-Thread Lockstep Determinism & Zero-Tunneling Invariant
@@ -147,9 +147,9 @@ python3 src/00_ptrc_game_collision_live.py
 ```
 
 ### 📊 Verified Hardware Benchmarks (`Linux x86_64`, 4 Logical Threads, `1920 × 1080` RGB24, Pure CPU Integer):
-* **Physics & Collision Tick (`60,000` `1+12` Clusters = `780,000` Space Crystals):** Mean **`1.986 ms`** per tick (`Median: 2.003 ms`, `Std: 0.123 ms`)
-* **Crystal Node Throughput:** **`15,990,039` space-crystal updates/s** (`358,285` to `495,473` collisions/s)
-* **Full-HD Software Z-Buffer (`1920 × 1080`, 100% Integer, `0x00`-Free):** Mean **`91.587 ms`** (`~10.25 FPS` pure C11 without GPU)
+* **Physics & Collision Tick (`30,000` `1+12` Clusters = `390,000` Space Crystals):** Mean **`1.232 ms`** per tick (`Median: 1.246 ms`, `Std: 0.081 ms`)
+* **Crystal Node Throughput:** **`5,817,646` to `6,767,783` space-crystal updates/s** (`57,074` to `61,813` collisions/s)
+* **Full-HD Software Z-Buffer (`1920 × 1080`, 100% Integer, `0x00`-Free):** Mean **`129.511 ms`** (`~7.46 FPS` pure C11 without GPU, continuous intercept-theorem `1+12` shell quantization)
 * **Lockstep & Zero-Tunneling Verification:** **`0` tunneling escapes**, **`0` zero-byte violations (`0x00`)**, and **100% bit-identical 64-bit `lockstep_state_hash`** across parallel worlds
 
 Full architectural specifications and API references are documented under:
