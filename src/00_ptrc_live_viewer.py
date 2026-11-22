@@ -25,6 +25,8 @@ und automatischer int32-GPU/CPU-Erkennung.
 
 from __future__ import annotations
 
+import os
+
 import ctypes
 import sys
 import tempfile
@@ -193,7 +195,7 @@ class PtrcFullHdLiveObserver:
             except Exception:
                 pass
         self.root.quit()
-        self.root.destroy()
+        os._exit(0)
 
     def run(self) -> int:
         self.after_id = self.root.after(5, self.update_loop)
