@@ -146,23 +146,42 @@ static inline uint8_t ptrc_encode_1byte_cascade(
     return ptrc_u8_no_zero((uint8_t)((anc << 7U) | (opt << 5U) | wl));
 }
 
+static void ptrc_get_pyramid_dual_axes(uint32_t angle_idx, int32_t *rot_u, int32_t *rot_v, int32_t *tilt_u, int32_t *tilt_v) {
+    uint32_t norm_idx = angle_idx % PTRC_PYRAMID_ROT_CYCLE;
+    uint32_t rev_idx = (PTRC_PYRAMID_ROT_CYCLE - norm_idx) % PTRC_PYRAMID_ROT_CYCLE;
+
+    /* 1. Propeller-Hauptachse nahe der Waagerechten (volle 360-Grad-Rotor-Drehung) */
+    ptrc_get_smooth_rotation(rev_idx, tilt_u, tilt_v);
+
+    /* 2. Sanfter, formtreuer Anstellwinkel der Rotorachse (~18 Grad +/- 6 Grad, 0 Sprung) */
+    uint32_t pitch_idx = (norm_idx + (PTRC_PYRAMID_ROT_CYCLE >> 2U)) % PTRC_PYRAMID_ROT_CYCLE;
+    int32_t raw_pu = 1024, raw_pv = 0;
+    ptrc_get_smooth_rotation(pitch_idx, &raw_pu, &raw_pv);
+    int32_t mod_u = 1018 + ((raw_pu - 1024) >> 7);
+    int32_t mod_v = raw_pv >> 3;
+    *rot_u = (316 * mod_u - 974 * mod_v) >> 10;
+    *rot_v = (316 * mod_v + 974 * mod_u) >> 10;
+}
+
 static int ptrc_point_in_square_pyramid(
     int32_t px,
     int32_t py,
     int32_t pz,
     int32_t rot_u,
-    int32_t rot_v
+    int32_t rot_v,
+    int32_t tilt_u,
+    int32_t tilt_v
 ) {
     int32_t dx = px - PTRC_PYRAMID_CENTER_X;
     int32_t dy = py;
     int32_t dz = pz - PTRC_PYRAMID_CENTER_Z;
 
-    if (ptrc_abs32(dx) > 320 || ptrc_abs32(dy) > 320 || ptrc_abs32(dz) > 320) {
+    if (ptrc_abs32(dx) > 350 || ptrc_abs32(dy) > 350 || ptrc_abs32(dz) > 350) {
         return 0;
     }
 
-    int32_t ty = (dy * 951 - dz * 309) >> 10;
-    int32_t tz = (dy * 309 + dz * 951) >> 10;
+    int32_t ty = (dy * tilt_u - dz * tilt_v) >> 10;
+    int32_t tz = (dy * tilt_v + dz * tilt_u) >> 10;
     int32_t lx = (dx * rot_u - tz * rot_v) >> 10;
     int32_t lz = (dx * rot_v + tz * rot_u) >> 10;
 
@@ -223,17 +242,17 @@ int ptrc_gfx_init(ptrc_gfx_ctx_t *ctx, uint64_t seed) {
         }
 
         uint8_t wl = (uint8_t)((a % 16U) + 1U);
-        uint8_t opt = (uint8_t)((a % 3U) + 1U);
+        uint8_t opt = PTRC_OPTICS_TRANSLUCENT; (void)opt;
         uint8_t coh = ((a % 5U) == 0U) ? 1U : 0U;
 
         ctx->agents[a].x = (int16_t)x;
         ctx->agents[a].y = (int16_t)y;
         ctx->agents[a].z = (int16_t)z;
-        ctx->agents[a].vx = (int16_t)(7 + (int32_t)(a & 3U));
+        ctx->agents[a].vx = 1;
         ctx->agents[a].vy = (int16_t)(((a & 1U) == 0U) ? 1 : -1);
         ctx->agents[a].vz = (int16_t)((((a >> 1U) & 1U) == 0U) ? 1 : -1);
         ctx->agents[a].impulse = (uint8_t)(40U + (a % 180U));
-        ctx->agents[a].state_byte = ptrc_encode_1byte_cascade(coh, opt, wl);
+        ctx->agents[a].state_byte = ptrc_encode_1byte_cascade(coh, PTRC_OPTICS_TRANSLUCENT, wl);
     }
 
     ctx->takt_counter = 1ULL;
@@ -258,6 +277,8 @@ typedef struct {
     uint32_t end_idx;
     int32_t  rot_u;
     int32_t  rot_v;
+    int32_t         tilt_u;
+    int32_t         tilt_v;
     uint32_t p_ring;
     uint32_t collisions_out;
     uint32_t obstacle_hits_out;
@@ -296,13 +317,13 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
             nx = -PTRC_TUNNEL_HALF_X + (int32_t)(mix & 7ULL) + 1;
             ny = ptrc_z_sym_no_zero((int32_t)((mix >> 8U) % (uint64_t)(PTRC_TUNNEL_HALF_Y * 2)) - PTRC_TUNNEL_HALF_Y, a);
             nz = ptrc_z_sym_no_zero((int32_t)((mix >> 24U) % (uint64_t)(PTRC_TUNNEL_HALF_Z * 2)) - PTRC_TUNNEL_HALF_Z, a >> 1U);
-            ag->vx = (int16_t)(7 + (int32_t)((a + w->p_ring) & 3U));
+            ag->vx = 1;
             ag->vy = (int16_t)(((sym_bit & 1U) == 0U) ? 1 : -1);
             ag->vz = (int16_t)((((sym_bit >> 1U) & 1U) == 0U) ? 1 : -1);
             ag->state_byte = ptrc_encode_1byte_cascade((uint8_t)is_cohesive, 1U, (uint8_t)((a % 12U) + 1U));
         } else if (nx < -PTRC_TUNNEL_HALF_X) {
             nx = -PTRC_TUNNEL_HALF_X + 1;
-            ag->vx = 7;
+            ag->vx = 1;
         }
 
         if (ny > (PTRC_TUNNEL_HALF_Y - 12)) {
@@ -333,7 +354,7 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
             if (ag->vx > 3) ag->vx--;
         }
 
-        if (ptrc_point_in_square_pyramid(nx, ny, nz, w->rot_u, w->rot_v)) {
+        if (ptrc_point_in_square_pyramid(nx, ny, nz, w->rot_u, w->rot_v, w->tilt_u, w->tilt_v)) {
             obstacle_hits++;
             collisions++;
             uint32_t facet_144 = (a + (ctx->pyramid_angle_idx / 137U) * 6U + phase_24) % PTRC_GFX_FACETS;
@@ -342,9 +363,9 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
             int32_t jy = (int32_t)PTRC_JUNCTION_DIRS_24[j_dir].dy;
             int32_t jz = (int32_t)PTRC_JUNCTION_DIRS_24[j_dir].dz;
 
-            ag->vx = 2;
-            ag->vy = ptrc_z_sym_no_zero(jy * 4 + ((ny >= 0) ? 4 : -4) + aniso_bias, sym_bit);
-            ag->vz = ptrc_z_sym_no_zero(jz * 4 + ((nz >= 0) ? 4 : -4) - aniso_bias, sym_bit >> 1U);
+            ag->vx = 1;
+            ag->vy = ptrc_z_sym_no_zero(jy + ((ny >= 0) ? 1 : -1) + aniso_bias, sym_bit);
+            ag->vz = ptrc_z_sym_no_zero(jz + ((nz >= 0) ? 1 : -1) - aniso_bias, sym_bit >> 1U);
             nx = ptrc_plichta_move((int32_t)ag->x, -2);
             ny = ptrc_plichta_move((int32_t)ag->y, (int32_t)ag->vy);
             nz = ptrc_plichta_move((int32_t)ag->z, (int32_t)ag->vz);
@@ -356,9 +377,9 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
             int32_t aniso_bias = (ctx->sponge[facet_144] >= 0) ? 1 : -1;
             int32_t sdy = ny - PTRC_SPHERE_CENTER_Y;
             int32_t sdz = nz - PTRC_SPHERE_CENTER_Z;
-            ag->vx = 3;
-            ag->vy = ptrc_z_sym_no_zero(((sdy >= 0) ? 5 : -5) + aniso_bias, sym_bit);
-            ag->vz = ptrc_z_sym_no_zero(((sdz >= 0) ? 4 : -4) - aniso_bias, sym_bit >> 1U);
+            ag->vx = 1;
+            ag->vy = ptrc_z_sym_no_zero(((sdy >= 0) ? 1 : -1) + aniso_bias, sym_bit);
+            ag->vz = ptrc_z_sym_no_zero(((sdz >= 0) ? 1 : -1) - aniso_bias, sym_bit >> 1U);
             nx = ptrc_plichta_move((int32_t)ag->x, -2);
             ny = ptrc_plichta_move((int32_t)ag->y, (int32_t)ag->vy);
             nz = ptrc_plichta_move((int32_t)ag->z, (int32_t)ag->vz);
@@ -373,22 +394,15 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
 
             if (occ_imp == 1U) {
                 local_impulse[slot] = ag->impulse;
-                if ((a & 3U) == (uint32_t)(ctx->takt_counter & 3ULL)) {
-                    if (ag->vx < 7) ag->vx++;
-                    if (ag->vx > 9) ag->vx--;
-                    if (ag->vy > 1) ag->vy--;
-                    else if (ag->vy < -1) ag->vy++;
-                    else ag->vy = ((sym_bit & 1U) == 0U) ? 1 : -1;
-                    if (ag->vz > 1) ag->vz--;
-                    else if (ag->vz < -1) ag->vz += 1;
-                    else ag->vz = (((sym_bit >> 1U) & 1U) == 0U) ? 1 : -1;
-                }
+                ag->vx = 1;
+                ag->vy = (ag->vy > 0) ? -1 : 1;
+                ag->vz = (ag->vz > 0) ? -1 : 1;
             } else {
                 collisions++;
                 /* Kohaesions-Anker ("Liebes-/Bindungsvariable"): gebundene Cluster halten zusammen */
                 if ((is_cohesive != 0U || slot_coh >= 2U) && dens >= 3U) {
-                    if (ag->vx > 2) ag->vx--;
-                    ag->state_byte = ptrc_encode_1byte_cascade(1U, PTRC_OPTICS_CRYSTALLINE, 19U);
+                    ag->vx = 1;
+                    ag->state_byte = ptrc_encode_1byte_cascade(1U, PTRC_OPTICS_TRANSLUCENT, 19U);
                 } else {
                     uint32_t facet_144 = (slot + occ_imp + phase_24) % PTRC_GFX_FACETS;
                     uint32_t alt_dir = (facet_144 + (uint32_t)ptrc_abs32(ctx->sponge[facet_144])) % PTRC_GFX_JUNCTIONS;
@@ -396,10 +410,8 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
                     int32_t nvz = (int32_t)ag->vz + (int32_t)PTRC_JUNCTION_DIRS_24[alt_dir].dz;
                     ag->vy = (int16_t)ptrc_z_sym_no_zero(nvy, sym_bit);
                     ag->vz = (int16_t)ptrc_z_sym_no_zero(nvz, sym_bit >> 1U);
-                    if (ag->vy > 8) ag->vy = 8;
-                    if (ag->vy < -8) ag->vy = -8;
-                    if (ag->vz > 8) ag->vz = 8;
-                    if (ag->vz < -8) ag->vz = -8;
+                    ag->vy = (ag->vy >= 0) ? 1 : -1;
+                    ag->vz = (ag->vz >= 0) ? 1 : -1;
                 }
                 if (ag->impulse > occ_imp) {
                     local_impulse[slot] = ag->impulse;
@@ -413,6 +425,9 @@ static void ptrc_process_agent_range(ptrc_worker_args_t *w) {
         if (ny < -PTRC_TUNNEL_HALF_Y) ny = -PTRC_TUNNEL_HALF_Y;
         if (nz > PTRC_TUNNEL_HALF_Z) nz = PTRC_TUNNEL_HALF_Z;
         if (nz < -PTRC_TUNNEL_HALF_Z) nz = -PTRC_TUNNEL_HALF_Z;
+        ag->vx = 1;
+        ag->vy = (ag->vy >= 0) ? 1 : -1;
+        ag->vz = (ag->vz >= 0) ? 1 : -1;
         ag->x = (int16_t)ptrc_z_no_zero(nx);
         ag->y = (int16_t)ptrc_z_no_zero(ny);
         ag->z = (int16_t)ptrc_z_no_zero(nz);
@@ -457,7 +472,7 @@ static void ptrc_advance_takt_metadata(
     }
 }
 
-static void ptrc_prepare_takt_fields(ptrc_gfx_ctx_t *ctx, int32_t *rot_u, int32_t *rot_v, uint32_t *p_ring) {
+static void ptrc_prepare_takt_fields(ptrc_gfx_ctx_t *ctx, int32_t *rot_u, int32_t *rot_v, int32_t *tilt_u, int32_t *tilt_v, uint32_t *p_ring) {
     uint32_t phase_idx = (ctx->clock_phase_24 - 1U) % PTRC_GFX_JUNCTIONS;
     *p_ring = ctx->prime_rings[phase_idx & 15U];
 
@@ -475,8 +490,8 @@ static void ptrc_prepare_takt_fields(ptrc_gfx_ctx_t *ctx, int32_t *rot_u, int32_
         ctx->mirror_pulses++;
     }
 
-    ctx->pyramid_angle_idx = (uint32_t)((ctx->takt_counter * 12ULL) % PTRC_PYRAMID_ROT_CYCLE);
-    ptrc_get_smooth_rotation(ctx->pyramid_angle_idx, rot_u, rot_v);
+    ctx->pyramid_angle_idx = (uint32_t)((ctx->takt_counter * 3ULL) % PTRC_PYRAMID_ROT_CYCLE);
+    ptrc_get_pyramid_dual_axes(ctx->pyramid_angle_idx, rot_u, rot_v, tilt_u, tilt_v);
 
     for (uint32_t s = 0U; s < PTRC_OCCUPANCY_SLOTS; s++) {
         ctx->cell_impulse[s] = 1U;
@@ -487,11 +502,11 @@ static void ptrc_prepare_takt_fields(ptrc_gfx_ctx_t *ctx, int32_t *rot_u, int32_
 
 int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
     if (!ctx) return PTRC_GFX_ERR;
-    int32_t rot_u, rot_v;
+    int32_t rot_u, rot_v, tilt_u, tilt_v;
     uint32_t p_ring;
-    ptrc_prepare_takt_fields(ctx, &rot_u, &rot_v, &p_ring);
+    ptrc_prepare_takt_fields(ctx, &rot_u, &rot_v, &tilt_u, &tilt_v, &p_ring);
 
-    ptrc_worker_args_t single = {ctx, 0U, PTRC_WIND_AGENTS, rot_u, rot_v, p_ring, 0U, 0U, 0U};
+    ptrc_worker_args_t single = {ctx, 0U, PTRC_WIND_AGENTS, rot_u, rot_v, tilt_u, tilt_v, p_ring, 0U, 0U, 0U};
     ptrc_process_agent_range(&single);
     ptrc_advance_takt_metadata(ctx, single.collisions_out, single.obstacle_hits_out, single.bound_out);
     return PTRC_GFX_OK;
@@ -500,16 +515,16 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
 /* Weist jedem Beobachtercluster dynamisch 1..8 parallele pTRC-Engines zu */
 int ptrc_gfx_step_takt_adaptive(ptrc_gfx_ctx_t *ctx) {
     if (!ctx) return PTRC_GFX_ERR;
-    int32_t rot_u, rot_v;
+    int32_t rot_u, rot_v, tilt_u, tilt_v;
     uint32_t p_ring;
-    ptrc_prepare_takt_fields(ctx, &rot_u, &rot_v, &p_ring);
+    ptrc_prepare_takt_fields(ctx, &rot_u, &rot_v, &tilt_u, &tilt_v, &p_ring);
 
     uint32_t n_eng = ctx->assigned_engines;
     if (n_eng < PTRC_MIN_ENGINES) n_eng = PTRC_MIN_ENGINES;
     if (n_eng > PTRC_MAX_ENGINES) n_eng = PTRC_MAX_ENGINES;
 
     if (n_eng == 1U) {
-        ptrc_worker_args_t single = {ctx, 0U, PTRC_WIND_AGENTS, rot_u, rot_v, p_ring, 0U, 0U, 0U};
+        ptrc_worker_args_t single = {ctx, 0U, PTRC_WIND_AGENTS, rot_u, rot_v, tilt_u, tilt_v, p_ring, 0U, 0U, 0U};
         ptrc_process_agent_range(&single);
         ptrc_advance_takt_metadata(ctx, single.collisions_out, single.obstacle_hits_out, single.bound_out);
         return PTRC_GFX_OK;
@@ -525,6 +540,8 @@ int ptrc_gfx_step_takt_adaptive(ptrc_gfx_ctx_t *ctx) {
         args[t].end_idx = (t == (n_eng - 1U)) ? PTRC_WIND_AGENTS : ((t + 1U) * chunk);
         args[t].rot_u = rot_u;
         args[t].rot_v = rot_v;
+        args[t].tilt_u = tilt_u;
+        args[t].tilt_v = tilt_v;
         args[t].p_ring = p_ring;
         args[t].collisions_out = 0U;
         args[t].obstacle_hits_out = 0U;
@@ -577,10 +594,21 @@ static void ptrc_transpose_wavelength_to_rgb(
 ) {
     uint32_t wl = (uint32_t)(state_byte & 0x1FU);
     uint32_t opt = (uint32_t)((state_byte >> 5U) & 3U);
+    uint32_t br, bg, bb;
 
-    uint32_t r = (((wl * 7U + opt * 41U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
-    uint32_t g = ((((32U - wl) * 6U + opt * 37U + 40U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
-    uint32_t b = (((110U + wl * 4U + opt * 23U) & 0xFFU) * (uint32_t)depth_shade) >> 8U;
+    if (opt == PTRC_OPTICS_CRYSTALLINE || opt == PTRC_OPTICS_FIELD_COUPLED) {
+        br = 255U;
+        bg = 65U + (wl & 31U);
+        bb = 195U + (wl & 31U);
+    } else {
+        br = 68U + (wl & 15U);
+        bg = 152U + (wl & 31U);
+        bb = 235U + (wl & 15U);
+    }
+
+    uint32_t r = (br * (uint32_t)depth_shade) >> 8U;
+    uint32_t g = (bg * (uint32_t)depth_shade) >> 8U;
+    uint32_t b = (bb * (uint32_t)depth_shade) >> 8U;
 
     *r_out = (r == 0U) ? 1U : (uint8_t)r;
     *g_out = (g == 0U) ? 1U : (uint8_t)g;
@@ -647,7 +675,13 @@ static inline void ptrc_splat_cluster_1_plus_12(
 ) {
     ptrc_project_single_crystal(rgb_out, z_buf, width, height, wx, wy, wz, r, g, b, blend_mode);
 
-    if (blend_mode == 0 || wz < -30) {
+    int32_t obs_dist = PTRC_GFX_DEPTH_1414 + wz;
+    if (obs_dist <= 100) return;
+
+    /* Kontinuierliche Strahlensatz-Quantelung der 1+12 Huelle nach Beobachterdistanz */
+    int32_t shell_span = (blend_mode == 0) ? 1 : ((PTRC_GFX_DEPTH_1414 * 5) / (obs_dist * 3));
+    uint32_t shell_limit = (blend_mode == 0) ? 6U : PTRC_GFX_SHELL_12;
+    if (shell_span > 0) {
         uint8_t sr = (uint8_t)((r * 7U) >> 3U);
         uint8_t sg = (uint8_t)((g * 7U) >> 3U);
         uint8_t sb = (uint8_t)((b * 7U) >> 3U);
@@ -655,14 +689,16 @@ static inline void ptrc_splat_cluster_1_plus_12(
         if (sg == 0U) sg = 1U;
         if (sb == 0U) sb = 1U;
 
-        for (uint32_t s = 0U; s < PTRC_GFX_SHELL_12; s++) {
-            ptrc_project_single_crystal(
-                rgb_out, z_buf, width, height,
-                wx + (int32_t)PTRC_SHELL_12_DIRS[s].dx,
-                wy + (int32_t)PTRC_SHELL_12_DIRS[s].dy,
-                wz + (int32_t)PTRC_SHELL_12_DIRS[s].dz,
-                sr, sg, sb, blend_mode
-            );
+        for (int32_t ring = 1; ring <= shell_span; ring++) {
+            for (uint32_t s = 0U; s < shell_limit; s++) {
+                ptrc_project_single_crystal(
+                    rgb_out, z_buf, width, height,
+                    wx + (((int32_t)PTRC_SHELL_12_DIRS[s].dx * ring + 1) >> 1),
+                    wy + (((int32_t)PTRC_SHELL_12_DIRS[s].dy * ring + 1) >> 1),
+                    wz + (((int32_t)PTRC_SHELL_12_DIRS[s].dz * ring + 1) >> 1),
+                    sr, sg, sb, blend_mode
+                );
+            }
         }
     }
 }
@@ -673,7 +709,9 @@ static void ptrc_render_crystal_pyramid(
     uint32_t width,
     uint32_t height,
     int32_t rot_u,
-    int32_t rot_v
+    int32_t rot_v,
+    int32_t tilt_u,
+    int32_t tilt_v
 ) {
     int32_t half_h = PTRC_PYRAMID_HEIGHT >> 1;
     const int32_t step = 2;
@@ -706,8 +744,8 @@ static void ptrc_render_crystal_pyramid(
 
                 int32_t rx = (lx * rot_u + lz * rot_v) >> 10;
                 int32_t rz = (-lx * rot_v + lz * rot_u) >> 10;
-                int32_t wy = (ny * 951 + rz * 309) >> 10;
-                int32_t wz = ((-ny * 309 + rz * 951) >> 10) + PTRC_PYRAMID_CENTER_Z;
+                int32_t wy = (ny * tilt_u + rz * tilt_v) >> 10;
+                int32_t wz = ((-ny * tilt_v + rz * tilt_u) >> 10) + PTRC_PYRAMID_CENTER_Z;
                 int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
 
                 ptrc_splat_cluster_1_plus_12(rgb_out, z_buf, width, height, wx, wy, wz, wr, wg, wb, 0);
@@ -729,8 +767,8 @@ static void ptrc_render_crystal_pyramid(
 
             int32_t rx = (nbx * rot_u + nbz * rot_v) >> 10;
             int32_t rz = (-nbx * rot_v + nbz * rot_u) >> 10;
-            int32_t wy = (half_h * 951 + rz * 309) >> 10;
-            int32_t wz = ((-half_h * 309 + rz * 951) >> 10) + PTRC_PYRAMID_CENTER_Z;
+            int32_t wy = (half_h * tilt_u + rz * tilt_v) >> 10;
+            int32_t wz = ((-half_h * tilt_v + rz * tilt_u) >> 10) + PTRC_PYRAMID_CENTER_Z;
             int32_t wx = rx + PTRC_PYRAMID_CENTER_X;
 
             ptrc_splat_cluster_1_plus_12(rgb_out, z_buf, width, height, wx, wy, wz, br, bg, bb, 0);
@@ -748,8 +786,8 @@ static void ptrc_render_crystal_sphere(
 ) {
     const int32_t r_sph = PTRC_SPHERE_RADIUS;
     const int32_t r_sq = r_sph * r_sph;
-    const int32_t r_inner_sq = (r_sph - 5) * (r_sph - 5);
-    const int32_t step = 4;
+    const int32_t r_inner_sq = (r_sph - 4) * (r_sph - 4);
+    const int32_t step = 2;
 
     for (int32_t ly = -r_sph; ly <= r_sph; ly += step) {
         int32_t ny = ptrc_z_no_zero(ly);
@@ -812,10 +850,10 @@ int ptrc_gfx_render_observer_rgb24(
         return PTRC_RENDER_STALL;
     }
 
-    int32_t rot_u, rot_v;
-    ptrc_get_smooth_rotation(ctx->pyramid_angle_idx, &rot_u, &rot_v);
+    int32_t rot_u, rot_v, tilt_u, tilt_v;
+    ptrc_get_pyramid_dual_axes(ctx->pyramid_angle_idx, &rot_u, &rot_v, &tilt_u, &tilt_v);
 
-    ptrc_render_crystal_pyramid(rgb_out, z_buf, width, height, rot_u, rot_v);
+    ptrc_render_crystal_pyramid(rgb_out, z_buf, width, height, rot_u, rot_v, tilt_u, tilt_v);
     ptrc_render_crystal_sphere(rgb_out, z_buf, width, height, rot_u, rot_v);
 
     for (uint32_t a = 0U; a < PTRC_WIND_AGENTS; a++) {
