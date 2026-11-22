@@ -183,7 +183,9 @@ class PtrcFullHdLiveObserver:
             )
 
         if not self.closing:
-            self.after_id = self.root.after(1, self.update_loop)
+            elapsed_ms = int((time.perf_counter() - t0) * 1000.0)
+            delay_ms = max(2, 16 - elapsed_ms)
+            self.after_id = self.root.after(delay_ms, self.update_loop)
 
     def close(self, _event: tk.Event | None = None) -> None:
         self.lib.ptrc_gfx_wipe(ctypes.byref(self.ctx))
