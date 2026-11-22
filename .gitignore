@@ -17,19 +17,19 @@
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE SYSTEMATICALLY DISCLAIMED.
 # ==============================================================================
 -->
-# 🚫 OS & System-Spezifische Cache-Dateien (Ubuntu / Linux)
+# OS & system-specific cache files (Ubuntu / Linux)
 *~
 .*.swp
 .*.swo
 .DS_Store
 .directory
 
-# 🚫 Texteditor- & Office-Sicherungsdateien (OpenOffice / LibreOffice / Vim)
+# Text editor & office backup files (OpenOffice / LibreOffice / Vim)
 .~lock.*.odt#
 .~lock.*.doc#
 .~lock.*.csv#
 
-# 🚫 Python-Kompilate & Runtime-Caches (Erzwingt sauberes Z-Clock-Routing)
+# Python bytecode & runtime caches (enforces clean Z-Clock routing)
 __pycache__/
 *.pyc
 *.pyo
@@ -37,24 +37,24 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 
-# 🚫 LaTeX-Dokumentations-Hilfsdateien (Paper-Kompilierung)
+# LaTeX documentation auxiliary files
 *.aux
 *.log
 *.toc
 *.out
 *.synctex.gz
-*.fdb_圧倒
+*.fdb_latexmk
 *.fdb_latexmk
 *.fls
 *.blg
 *.bbl
 
-# 🚫 Temporäre Render-Frames & Datenströme der pTRC-Engines
-# Verhindert, dass flüchtige PNG-Massen den GitHub-Speicher verstopfen
+# Temporary render frames & data streams of the pTRC engines
+# Prevents transient frame dumps from cluttering the repository
 ptrc_temp_frames/
 ptrc_complete_context_bundle.txt
 
-# 🚫 Lokale Output-Medien (Werden direkt auf dem Target-System generiert)
+# Local output media (generated directly on target systems)
 ptrc_4k_genesis.ppm
 ptrc_3d_stereoscopic_retina.mp4
 
