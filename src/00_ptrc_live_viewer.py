@@ -122,8 +122,6 @@ class PtrcFullHdLiveObserver:
             self.pause_started = time.perf_counter()
         else:
             self.paused = False
-        self.closing = False
-        self.after_id = None
             self.paused_total += time.perf_counter() - self.pause_started
 
     def toggle_fullscreen(self, _event: tk.Event | None = None) -> None:
