@@ -512,7 +512,7 @@ int ptrc_gfx_step_takt(ptrc_gfx_ctx_t *ctx) {
     return PTRC_GFX_OK;
 }
 
-/* Weist jedem Beobachtercluster dynamisch 1..8 parallele pTRC-Engines zu */
+/* Dynamically assigns 1..8 parallel pTRC sector engines to each observer cluster */
 int ptrc_gfx_step_takt_adaptive(ptrc_gfx_ctx_t *ctx) {
     if (!ctx) return PTRC_GFX_ERR;
     int32_t rot_u, rot_v, tilt_u, tilt_v;
@@ -678,7 +678,7 @@ static inline void ptrc_splat_cluster_1_plus_12(
     int32_t obs_dist = PTRC_GFX_DEPTH_1414 + wz;
     if (obs_dist <= 100) return;
 
-    /* Kontinuierliche Strahlensatz-Quantelung der 1+12 Huelle nach Beobachterdistanz */
+    /* Continuous intercept-theorem quantization of 1+12 shell by observer distance */
     int32_t shell_span = (blend_mode == 0) ? 1 : ((PTRC_GFX_DEPTH_1414 * 5) / (obs_dist * 3));
     uint32_t shell_limit = (blend_mode == 0) ? 6U : PTRC_GFX_SHELL_12;
     if (shell_span > 0) {
