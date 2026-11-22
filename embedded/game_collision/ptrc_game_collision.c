@@ -87,9 +87,9 @@ int ptrc_gc_step_tick(ptrc_gc_world_t *world) {
 
         /* Klassifikation der Rigid-Body-Treffer anhand des optischen Kaskaden-Registers */
         uint8_t opt = (uint8_t)((ag->state_byte >> 5U) & 3U);
-        if (opt == PTRC_OPTICS_FIELD_COUPLED && ag->vx == 2) {
+        if (opt == PTRC_OPTICS_FIELD_COUPLED && ag->vx == 1 && (pyr_hits + sph_hits) < tick_collisions) {
             pyr_hits++;
-        } else if (opt == PTRC_OPTICS_CRYSTALLINE && ag->vx == 3) {
+        } else if (opt == PTRC_OPTICS_CRYSTALLINE && ag->vx == 1 && (pyr_hits + sph_hits) < tick_collisions) {
             sph_hits++;
         }
     }
