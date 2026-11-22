@@ -57,3 +57,7 @@ ptrc_complete_context_bundle.txt
 # 🚫 Lokale Output-Medien (Werden direkt auf dem Target-System generiert)
 ptrc_4k_genesis.ppm
 ptrc_3d_stereoscopic_retina.mp4
+
+# Local benchmark & image artifacts
+ptrc_graphics_benchmark_report.json
+*.ppm
