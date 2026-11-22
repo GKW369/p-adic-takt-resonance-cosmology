@@ -24,6 +24,8 @@ auf Basis der pTRC Light-Universe Engine v4.6.0.
 
 from __future__ import annotations
 
+import os
+
 import argparse
 import ctypes
 import subprocess
@@ -146,7 +148,7 @@ class PtrcGameCollisionLiveViewer:
         self.closing = False
         self.after_id = None
         self.fullscreen = False
-        self.steps_per_frame = 2
+        self.steps_per_frame = 1
         self.start_time = time.perf_counter()
 
         self.root = tk.Tk()
@@ -159,14 +161,12 @@ class PtrcGameCollisionLiveViewer:
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.image_item = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
-        self.hud_top = self.canvas.create_rectangle(14, 14, 1904, 54, fill="#08101E", outline="#2563EB")
+        self.hud_top = self.canvas.create_rectangle(14, 14, 1904, 76, fill="#08101E", outline="#2563EB")
         self.hud_top_txt = self.canvas.create_text(
-            24, 34, anchor=tk.W, fill="#93C5FD", font=("Consolas", 10, "bold"), text="Initialisiere..."
+            24, 31, anchor=tk.W, fill="#93C5FD", font=("Consolas", 10, "bold"), text="Initialisiere..."
         )
-
-        self.hud_bot = self.canvas.create_rectangle(14, 1026, 1904, 1066, fill="#08101E", outline="#10B981")
         self.hud_bot_txt = self.canvas.create_text(
-            24, 1046, anchor=tk.W, fill="#6EE7B7", font=("Consolas", 10, "bold"), text="Berechne Lockstep..."
+            24, 57, anchor=tk.W, fill="#6EE7B7", font=("Consolas", 10, "bold"), text="Berechne Lockstep..."
         )
 
         self.root.bind("<space>", lambda _e: setattr(self, "paused", not self.paused))
@@ -233,7 +233,7 @@ class PtrcGameCollisionLiveViewer:
             except Exception:
                 pass
         self.root.quit()
-        self.root.destroy()
+        os._exit(0)
 
     def run(self) -> int:
         self.after_id = self.root.after(5, self.update_loop)
