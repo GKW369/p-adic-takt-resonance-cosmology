@@ -49,11 +49,11 @@ PTRC_PYRAMID_HEIGHT = 540
 PTRC_PYRAMID_ROT_CYCLE = 3288
 
 PTRC_SPHERE_CENTER_X = 320
-PTRC_SPHERE_CENTER_Y = -140
-PTRC_SPHERE_CENTER_Z = 75
-PTRC_SPHERE_RADIUS = 175
+PTRC_SPHERE_CENTER_Y = -170
+PTRC_SPHERE_CENTER_Z = 5
+PTRC_SPHERE_RADIUS = 230
 
-PTRC_WIND_AGENTS = 60000
+PTRC_WIND_AGENTS = 30000
 PTRC_OCCUPANCY_SLOTS = 65536
 
 PTRC_GFX_OK = 1
@@ -165,15 +165,28 @@ def ptrc_encode_1byte_cascade(cohesion_anchor: int, optics_mode: int, wavelength
     return ptrc_u8_no_zero((anc << 7) | (opt << 5) | wl)
 
 
-def ptrc_point_in_square_pyramid(px: int, py: int, pz: int, rot_u: int, rot_v: int) -> bool:
+def ptrc_get_pyramid_dual_axes(angle_idx: int) -> Tuple[int, int, int, int]:
+    norm_idx = angle_idx % PTRC_PYRAMID_ROT_CYCLE
+    rev_idx = (PTRC_PYRAMID_ROT_CYCLE - norm_idx) % PTRC_PYRAMID_ROT_CYCLE
+    tilt_u, tilt_v = ptrc_get_smooth_rotation(rev_idx)
+    pitch_idx = (norm_idx + (PTRC_PYRAMID_ROT_CYCLE >> 2)) % PTRC_PYRAMID_ROT_CYCLE
+    raw_pu, raw_pv = ptrc_get_smooth_rotation(pitch_idx)
+    mod_u = 1018 + ptrc_c_rshift(raw_pu - 1024, 7)
+    mod_v = ptrc_c_rshift(raw_pv, 3)
+    rot_u = ptrc_c_rshift(316 * mod_u - 974 * mod_v, 10)
+    rot_v = ptrc_c_rshift(316 * mod_v + 974 * mod_u, 10)
+    return rot_u, rot_v, tilt_u, tilt_v
+
+
+def ptrc_point_in_square_pyramid(px: int, py: int, pz: int, rot_u: int, rot_v: int, tilt_u: int, tilt_v: int) -> bool:
     dx = px - PTRC_PYRAMID_CENTER_X
     dy = py
     dz = pz - PTRC_PYRAMID_CENTER_Z
-    if abs(dx) > 320 or abs(dy) > 320 or abs(dz) > 320:
+    if abs(dx) > 350 or abs(dy) > 350 or abs(dz) > 350:
         return False
 
-    ty = ptrc_c_rshift(dy * 951 - dz * 309, 10)
-    tz = ptrc_c_rshift(dy * 309 + dz * 951, 10)
+    ty = ptrc_c_rshift(dy * tilt_u - dz * tilt_v, 10)
+    tz = ptrc_c_rshift(dy * tilt_v + dz * tilt_u, 10)
     lx = ptrc_c_rshift(dx * rot_u - tz * rot_v, 10)
     lz = ptrc_c_rshift(dx * rot_v + tz * rot_u, 10)
 
@@ -197,9 +210,18 @@ def ptrc_point_in_crystal_sphere(px: int, py: int, pz: int) -> bool:
 def ptrc_transpose_wavelength_to_rgb(state_byte: int, depth_shade: int) -> Tuple[int, int, int]:
     wl = state_byte & 0x1F
     opt = (state_byte >> 5) & 3
-    r = (((wl * 7 + opt * 41) & 0xFF) * depth_shade) >> 8
-    g = ((((32 - wl) * 6 + opt * 37 + 40) & 0xFF) * depth_shade) >> 8
-    b = (((110 + wl * 4 + opt * 23) & 0xFF) * depth_shade) >> 8
+    if opt == PTRC_OPTICS_CRYSTALLINE or opt == PTRC_OPTICS_FIELD_COUPLED:
+        br = 255
+        bg = 65 + (wl & 31)
+        bb = 195 + (wl & 31)
+    else:
+        br = 68 + (wl & 15)
+        bg = 152 + (wl & 31)
+        bb = 235 + (wl & 15)
+
+    r = (br * depth_shade) >> 8
+    g = (bg * depth_shade) >> 8
+    b = (bb * depth_shade) >> 8
     return (1 if r == 0 else r, 1 if g == 0 else g, 1 if b == 0 else b)
 
 
@@ -240,12 +262,22 @@ def _splat_cluster_1_plus_12(
     wx: int, wy: int, wz: int, r: int, g: int, b: int, blend_mode: int,
 ) -> None:
     _project_single_crystal(out, z_buf, width, height, wx, wy, wz, r, g, b, blend_mode)
-    if blend_mode == 0 or wz < -30:
+    obs_dist = PTRC_GFX_DEPTH_1414 + wz
+    if obs_dist <= 100:
+        return
+    shell_span = 1 if blend_mode == 0 else ptrc_c_div(PTRC_GFX_DEPTH_1414 * 5, obs_dist * 3)
+    if shell_span > 0:
         sr = max(1, (r * 7) >> 3)
         sg = max(1, (g * 7) >> 3)
         sb = max(1, (b * 7) >> 3)
-        for dx, dy, dz in PTRC_SHELL_12_DIRS:
-            _project_single_crystal(out, z_buf, width, height, wx + dx, wy + dy, wz + dz, sr, sg, sb, blend_mode)
+        dirs = PTRC_SHELL_12_DIRS[:6] if blend_mode == 0 else PTRC_SHELL_12_DIRS
+        for ring in range(1, shell_span + 1):
+            for dx, dy, dz in dirs:
+                _project_single_crystal(
+                    out, z_buf, width, height,
+                    wx + ((dx * ring + 1) >> 1), wy + ((dy * ring + 1) >> 1), wz + ((dz * ring + 1) >> 1),
+                    sr, sg, sb, blend_mode,
+                )
 
 
 @dataclass
@@ -293,16 +325,16 @@ class PtrcGfxContext:
                 x = ptrc_plichta_move(x, 1)
 
             wl = (a % 16) + 1
-            opt = (a % 3) + 1
+            opt = PTRC_OPTICS_TRANSLUCENT
             coh = 1 if (a % 5) == 0 else 0
             self.agents.append(
                 PtrcWindAgent(
                     x=x, y=y, z=z,
-                    vx=7 + (a & 3),
+                    vx = 1,
                     vy=1 if (a & 1) == 0 else -1,
                     vz=1 if ((a >> 1) & 1) == 0 else -1,
                     impulse=40 + (a % 180),
-                    state_byte=ptrc_encode_1byte_cascade(coh, opt, wl),
+                    state_byte=ptrc_encode_1byte_cascade(coh, PTRC_OPTICS_TRANSLUCENT, wl),
                 )
             )
 
@@ -335,8 +367,8 @@ class PtrcGfxContext:
                 self.sponge[f] = ptrc_z_no_zero(~self.sponge[f])
             self.mirror_pulses += 1
 
-        self.pyramid_angle_idx = (self.takt_counter * 12) % PTRC_PYRAMID_ROT_CYCLE
-        rot_u, rot_v = ptrc_get_smooth_rotation(self.pyramid_angle_idx)
+        self.pyramid_angle_idx = (self.takt_counter * 3) % PTRC_PYRAMID_ROT_CYCLE
+        rot_u, rot_v, tilt_u, tilt_v = ptrc_get_pyramid_dual_axes(self.pyramid_angle_idx)
 
         self.cell_impulse = [1 for _ in range(PTRC_OCCUPANCY_SLOTS)]
         self.cell_density = [1 for _ in range(PTRC_OCCUPANCY_SLOTS)]
@@ -361,13 +393,13 @@ class PtrcGfxContext:
                 nx = -PTRC_TUNNEL_HALF_X + int(mix & 7) + 1
                 ny = ptrc_z_sym_no_zero(int((mix >> 8) % (PTRC_TUNNEL_HALF_Y * 2)) - PTRC_TUNNEL_HALF_Y, a)
                 nz = ptrc_z_sym_no_zero(int((mix >> 24) % (PTRC_TUNNEL_HALF_Z * 2)) - PTRC_TUNNEL_HALF_Z, a >> 1)
-                ag.vx = 7 + int((a + p_ring) & 3)
+                ag.vx = 1
                 ag.vy = 1 if (sym_bit & 1) == 0 else -1
                 ag.vz = 1 if ((sym_bit >> 1) & 1) == 0 else -1
                 ag.state_byte = ptrc_encode_1byte_cascade(is_cohesive, 1, (a % 12) + 1)
             elif nx < -PTRC_TUNNEL_HALF_X:
                 nx = -PTRC_TUNNEL_HALF_X + 1
-                ag.vx = 7
+                ag.vx = 1
 
             if ny > (PTRC_TUNNEL_HALF_Y - 12):
                 if ny > PTRC_TUNNEL_HALF_Y:
@@ -395,7 +427,7 @@ class PtrcGfxContext:
                 if ag.vx > 3:
                     ag.vx -= 1
 
-            if ptrc_point_in_square_pyramid(nx, ny, nz, rot_u, rot_v):
+            if ptrc_point_in_square_pyramid(nx, ny, nz, rot_u, rot_v, tilt_u, tilt_v):
                 obstacle_hits += 1
                 collisions += 1
                 facet_144 = (a + (self.pyramid_angle_idx // 137) * 6 + phase_24) % PTRC_GFX_FACETS
@@ -403,9 +435,9 @@ class PtrcGfxContext:
                 j_dir = (facet_144 + self.takt_counter) % PTRC_GFX_JUNCTIONS
                 _, jy, jz = PTRC_JUNCTION_DIRS_24[j_dir]
 
-                ag.vx = 2
-                ag.vy = ptrc_z_sym_no_zero(jy * 4 + (4 if ny >= 0 else -4) + aniso_bias, sym_bit)
-                ag.vz = ptrc_z_sym_no_zero(jz * 4 + (4 if nz >= 0 else -4) - aniso_bias, sym_bit >> 1)
+                ag.vx = 1
+                ag.vy = ptrc_z_sym_no_zero(jy + (1 if ny >= 0 else -1) + aniso_bias, sym_bit)
+                ag.vz = ptrc_z_sym_no_zero(jz + (1 if nz >= 0 else -1) - aniso_bias, sym_bit >> 1)
                 nx = ptrc_plichta_move(ag.x, -2)
                 ny = ptrc_plichta_move(ag.y, ag.vy)
                 nz = ptrc_plichta_move(ag.z, ag.vz)
@@ -417,9 +449,9 @@ class PtrcGfxContext:
                 aniso_bias = 1 if self.sponge[facet_144] >= 0 else -1
                 sdy = ny - PTRC_SPHERE_CENTER_Y
                 sdz = nz - PTRC_SPHERE_CENTER_Z
-                ag.vx = 3
-                ag.vy = ptrc_z_sym_no_zero((5 if sdy >= 0 else -5) + aniso_bias, sym_bit)
-                ag.vz = ptrc_z_sym_no_zero((4 if sdz >= 0 else -4) - aniso_bias, sym_bit >> 1)
+                ag.vx = 1
+                ag.vy = ptrc_z_sym_no_zero((1 if sdy >= 0 else -1) + aniso_bias, sym_bit)
+                ag.vz = ptrc_z_sym_no_zero((1 if sdz >= 0 else -1) - aniso_bias, sym_bit >> 1)
                 nx = ptrc_plichta_move(ag.x, -2)
                 ny = ptrc_plichta_move(ag.y, ag.vy)
                 nz = ptrc_plichta_move(ag.z, ag.vz)
@@ -436,41 +468,30 @@ class PtrcGfxContext:
 
                 if occ_imp == 1:
                     self.cell_impulse[slot] = ag.impulse
-                    if (a & 3) == (self.takt_counter & 3):
-                        if ag.vx < 7:
-                            ag.vx += 1
-                        if ag.vx > 9:
-                            ag.vx -= 1
-                        if ag.vy > 1:
-                            ag.vy -= 1
-                        elif ag.vy < -1:
-                            ag.vy += 1
-                        else:
-                            ag.vy = 1 if (sym_bit & 1) == 0 else -1
-                        if ag.vz > 1:
-                            ag.vz -= 1
-                        elif ag.vz < -1:
-                            ag.vz += 1
-                        else:
-                            ag.vz = 1 if ((sym_bit >> 1) & 1) == 0 else -1
+                    ag.vx = 1
+                    ag.vy = -1 if ag.vy > 0 else 1
+                    ag.vz = -1 if ag.vz > 0 else 1
                 else:
                     collisions += 1
                     if (is_cohesive != 0 or slot_coh >= 2) and dens >= 3:
                         if ag.vx > 2:
                             ag.vx -= 1
-                        ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_CRYSTALLINE, 19)
+                        ag.state_byte = ptrc_encode_1byte_cascade(1, PTRC_OPTICS_TRANSLUCENT, 19)
                     else:
                         facet_144 = (slot + occ_imp + phase_24) % PTRC_GFX_FACETS
                         alt_dir = (facet_144 + abs(self.sponge[facet_144])) % PTRC_GFX_JUNCTIONS
                         _, dy_j, dz_j = PTRC_JUNCTION_DIRS_24[alt_dir]
-                        ag.vy = max(-8, min(8, ptrc_z_sym_no_zero(ag.vy + dy_j, sym_bit)))
-                        ag.vz = max(-8, min(8, ptrc_z_sym_no_zero(ag.vz + dz_j, sym_bit >> 1)))
+                        ag.vy = 1 if ptrc_z_sym_no_zero(ag.vy + dy_j, sym_bit) >= 0 else -1
+                        ag.vz = 1 if ptrc_z_sym_no_zero(ag.vz + dz_j, sym_bit >> 1) >= 0 else -1
                     if ag.impulse > occ_imp:
                         self.cell_impulse[slot] = ag.impulse
 
             nx = max(-PTRC_TUNNEL_HALF_X, min(PTRC_TUNNEL_HALF_X, nx))
             ny = max(-PTRC_TUNNEL_HALF_Y, min(PTRC_TUNNEL_HALF_Y, ny))
             nz = max(-PTRC_TUNNEL_HALF_Z, min(PTRC_TUNNEL_HALF_Z, nz))
+            ag.vx = 1
+            ag.vy = 1 if ag.vy >= 0 else -1
+            ag.vz = 1 if ag.vz >= 0 else -1
             ag.x, ag.y, ag.z = ptrc_z_no_zero(nx), ptrc_z_no_zero(ny), ptrc_z_no_zero(nz)
 
         self.deflection_count += collisions
@@ -514,7 +535,7 @@ class PtrcGfxContext:
         if self.render_status == PTRC_RENDER_STALL:
             return bytes(out)
 
-        rot_u, rot_v = ptrc_get_smooth_rotation(self.pyramid_angle_idx)
+        rot_u, rot_v, tilt_u, tilt_v = ptrc_get_pyramid_dual_axes(self.pyramid_angle_idx)
         half_h = PTRC_PYRAMID_HEIGHT >> 1
         step = 2
 
@@ -539,8 +560,8 @@ class PtrcGfxContext:
 
                     rx = ptrc_c_rshift(lx * rot_u + lz * rot_v, 10)
                     rz = ptrc_c_rshift(-lx * rot_v + lz * rot_u, 10)
-                    wy = ptrc_c_rshift(ny * 951 + rz * 309, 10)
-                    wz = ptrc_c_rshift(-ny * 309 + rz * 951, 10) + PTRC_PYRAMID_CENTER_Z
+                    wy = ptrc_c_rshift(ny * tilt_u + rz * tilt_v, 10)
+                    wz = ptrc_c_rshift(-ny * tilt_v + rz * tilt_u, 10) + PTRC_PYRAMID_CENTER_Z
                     wx = rx + PTRC_PYRAMID_CENTER_X
                     _splat_cluster_1_plus_12(out, z_buf, width, height, wx, wy, wz, wr, wg, wb, 0)
 
@@ -554,23 +575,23 @@ class PtrcGfxContext:
                 br, bg, bb = (252, 220, 115) if is_border else (115, 84, 30)
                 rx = ptrc_c_rshift(nbx * rot_u + nbz * rot_v, 10)
                 rz = ptrc_c_rshift(-nbx * rot_v + nbz * rot_u, 10)
-                wy = ptrc_c_rshift(half_h * 951 + rz * 309, 10)
-                wz = ptrc_c_rshift(-half_h * 309 + rz * 951, 10) + PTRC_PYRAMID_CENTER_Z
+                wy = ptrc_c_rshift(half_h * tilt_u + rz * tilt_v, 10)
+                wz = ptrc_c_rshift(-half_h * tilt_v + rz * tilt_u, 10) + PTRC_PYRAMID_CENTER_Z
                 wx = rx + PTRC_PYRAMID_CENTER_X
                 _splat_cluster_1_plus_12(out, z_buf, width, height, wx, wy, wz, br, bg, bb, 0)
 
         r_sph = PTRC_SPHERE_RADIUS
         r_sq = r_sph * r_sph
-        r_inner_sq = (r_sph - 5) * (r_sph - 5)
-        for ly in range(-r_sph, r_sph + 1, 4):
+        r_inner_sq = (r_sph - 4) * (r_sph - 4)
+        for ly in range(-r_sph, r_sph + 1, 2):
             ny = ptrc_z_no_zero(ly)
             fcc_y = (ly >> 1) & 1
-            for lz in range(-r_sph + fcc_y, r_sph + 1, 4):
+            for lz in range(-r_sph + fcc_y, r_sph + 1, 2):
                 nz = ptrc_z_no_zero(lz)
                 yz_sq = ny * ny + nz * nz
                 if yz_sq > r_sq:
                     continue
-                for lx in range(-r_sph, r_sph + 1, 4):
+                for lx in range(-r_sph, r_sph + 1, 2):
                     nx = ptrc_z_no_zero(lx)
                     q = yz_sq + nx * nx
                     if q > r_sq or q < r_inner_sq:
