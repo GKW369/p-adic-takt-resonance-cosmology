@@ -41,7 +41,7 @@ def bundle_repository():
     # Hauptordner im Root-Verzeichnis scannen (Experimental bleibt für spekulatve Texte gesperrt)
     target_root_folders = ["src", "paper", "embedded"]
     
-    print(f"[ START ] Erzeuge das geschützte pTRC-Kontext-Bundle im Hauptverzeichnis: {root_dir}")
+    print(f"[ START ] Generating pTRC context bundle in root directory: {root_dir}")
     
     # Listen, um die gefundenen Pfade für das Inhaltsverzeichnis zu sammeln
     files_to_bundle = []
