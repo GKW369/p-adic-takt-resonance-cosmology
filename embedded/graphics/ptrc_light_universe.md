@@ -32,18 +32,18 @@ License: GNU Affero General Public License v3.0 (AGPL-3.0).
 | Component | Physical Dimensions | Zero-Free Lattice (\(\mathbb{Z}^3 \setminus \{0\}\)) | Physical Role |
 | :--- | :--- | :--- | :--- |
 | **Windtunnel Volume** | **32 cm × 18 cm × 8 cm** | `X ∈ [-960..+960]`, `Y ∈ [-540..+540]`, `Z ∈ [-240..+240]` | Laminar inflow at left boundary (`-X`), outflow & recirculation at right (`+X`) |
-| **Fluid Molecule Agents** | **60,000 Clusters** | **1+12 = 13 crystals each** (`780,000` active crystals) | Momentum exchange across `65,536` FCC slots + `144`-facet anisotropic scattering |
+| **Fluid Molecule Agents** | **30,000 Clusters** | **1+12 = 13 crystals each** (`390,000` active crystals) | Momentum exchange across `65,536` FCC slots + `144`-facet anisotropic scattering |
 | **Rotating 3D Pyramid** | **Height 9.0 cm, Base 6.4 cm** | Center `X = -320, Y = 0, Z = +55` (`3,288` sub-angular steps) | Positioned `0.9 cm` toward rear wall (`0.6 cm` front flow clearance), splitting primary inflow |
 | **Rotating 3D Sphere** | **Ø 5.8 cm** (`R = 175`) | Center `X = +320, Y = -140, Z = +75` | Suspended `1.25 cm` toward rear wall (`2.3 cm` front flow clearance) with zero wall friction & balanced impact rate |
 
 ## 4. Verified Benchmark Statistics (`v4.6.0`, 60 s Continuous Run, Linux x86_64)
 
-Measured using `src/00_benchmark_ptrc_graphics.py --seconds 60` at native **Full-HD resolution (`1920 × 1080`)**, **8 adaptive pTRC sector engines (`1..8` dynamic)**, and `60,000` `1+12` clusters (`780,000` space crystals, including `20,080` bound cohesive clusters):
+Measured using `src/00_benchmark_ptrc_graphics.py --seconds 60` at native **Full-HD resolution (`1920 × 1080`)**, **8 adaptive pTRC sector engines (`1..8` dynamic)**, and `30,000` `1+12` clusters (`390,000` space crystals, including `20,080` bound cohesive clusters):
 
 | Metric | Measured Value (`v4.6.0`) |
 | :--- | :--- |
 | **Duration / Frames / Ticks** | `60.07 s` \| `511` Full-HD Frames \| `1,022` Physics Ticks |
-| **Physics Tick Latency (60,000 Clusters)** | **Mean `2.372 ms`** \| Std `0.263 ms` \| Median `2.291 ms` \| P95 `2.846 ms` \| P99 `3.642 ms` |
+| **Physics Tick Latency (30,000 Clusters)** | **Mean `2.372 ms`** \| Std `0.263 ms` \| Median `2.291 ms` \| P95 `2.846 ms` \| P99 `3.642 ms` |
 | **Full-HD Software Z-Buffer (`1+12` Projection)** | **Mean `113.425 ms`** \| Std `3.565 ms` \| Median `113.283 ms` \| P95 `119.100 ms` \| P99 `126.723 ms` |
 | **Total Frame Rate (`2 Ticks + Full-HD Render`)** | **`8.51 FPS`** (Mean `115.851 ms`, Median `117.881 ms`) |
 | **Collision & Interaction Throughput** | **`21,522,758` Collisions** (`358,285` interactions/s) |
